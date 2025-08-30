@@ -1,0 +1,9 @@
+syntax = "proto3";
+package bootstrap;
+
+option go_package = "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1";
+
+message BootstrapToken {
+  string ID     = 1;
+  string Secret = 2;
+}
