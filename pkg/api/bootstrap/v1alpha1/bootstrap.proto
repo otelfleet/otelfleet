@@ -1,9 +1,36 @@
 syntax = "proto3";
 package bootstrap;
 
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
 option go_package = "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1";
 
 message BootstrapToken {
-  string ID     = 1;
-  string Secret = 2;
+  string                             ID     = 1;
+  string                             Secret = 2;
+  google.protobuf.Duration           TTL    = 3;
+  optional google.protobuf.Timestamp Expiry = 4;
+}
+
+message ListTokenReponse {
+  repeated BootstrapToken tokens = 1;
+}
+
+message CreateTokenRequest {
+  google.protobuf.Duration TTL = 1;
+}
+
+message DeleteTokenRequest {
+  string ID = 1;
+}
+
+message SignatureResponse {
+  map<string, bytes> signatures = 1;
+}
+
+message BootstrapRequest {
+  string ID           = 1;
+  string name         = 2;
+  bytes  clientPubKey = 3;
 }

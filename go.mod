@@ -1,6 +1,10 @@
 module github.com/otelfleet/otelfleet
 
-go 1.24.1
+go 1.25.1
+
+ignore(
+	ui/
+)
 
 require (
 	github.com/cockroachdb/pebble/v2 v2.0.7

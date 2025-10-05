@@ -9,6 +9,8 @@ package v1alpha1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -25,6 +27,8 @@ type BootstrapToken struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ID            string                 `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	Secret        string                 `protobuf:"bytes,2,opt,name=Secret,proto3" json:"Secret,omitempty"`
+	TTL           *durationpb.Duration   `protobuf:"bytes,3,opt,name=TTL,proto3" json:"TTL,omitempty"`
+	Expiry        *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=Expiry,proto3,oneof" json:"Expiry,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -73,14 +77,284 @@ func (x *BootstrapToken) GetSecret() string {
 	return ""
 }
 
+func (x *BootstrapToken) GetTTL() *durationpb.Duration {
+	if x != nil {
+		return x.TTL
+	}
+	return nil
+}
+
+func (x *BootstrapToken) GetExpiry() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Expiry
+	}
+	return nil
+}
+
+type ListTokenReponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tokens        []*BootstrapToken      `protobuf:"bytes,1,rep,name=tokens,proto3" json:"tokens,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListTokenReponse) Reset() {
+	*x = ListTokenReponse{}
+	mi := &file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListTokenReponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListTokenReponse) ProtoMessage() {}
+
+func (x *ListTokenReponse) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListTokenReponse.ProtoReflect.Descriptor instead.
+func (*ListTokenReponse) Descriptor() ([]byte, []int) {
+	return file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ListTokenReponse) GetTokens() []*BootstrapToken {
+	if x != nil {
+		return x.Tokens
+	}
+	return nil
+}
+
+type CreateTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TTL           *durationpb.Duration   `protobuf:"bytes,1,opt,name=TTL,proto3" json:"TTL,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateTokenRequest) Reset() {
+	*x = CreateTokenRequest{}
+	mi := &file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateTokenRequest) ProtoMessage() {}
+
+func (x *CreateTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateTokenRequest.ProtoReflect.Descriptor instead.
+func (*CreateTokenRequest) Descriptor() ([]byte, []int) {
+	return file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CreateTokenRequest) GetTTL() *durationpb.Duration {
+	if x != nil {
+		return x.TTL
+	}
+	return nil
+}
+
+type DeleteTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ID            string                 `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteTokenRequest) Reset() {
+	*x = DeleteTokenRequest{}
+	mi := &file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteTokenRequest) ProtoMessage() {}
+
+func (x *DeleteTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteTokenRequest.ProtoReflect.Descriptor instead.
+func (*DeleteTokenRequest) Descriptor() ([]byte, []int) {
+	return file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *DeleteTokenRequest) GetID() string {
+	if x != nil {
+		return x.ID
+	}
+	return ""
+}
+
+type SignatureResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Signatures    map[string][]byte      `protobuf:"bytes,1,rep,name=signatures,proto3" json:"signatures,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignatureResponse) Reset() {
+	*x = SignatureResponse{}
+	mi := &file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignatureResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignatureResponse) ProtoMessage() {}
+
+func (x *SignatureResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignatureResponse.ProtoReflect.Descriptor instead.
+func (*SignatureResponse) Descriptor() ([]byte, []int) {
+	return file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *SignatureResponse) GetSignatures() map[string][]byte {
+	if x != nil {
+		return x.Signatures
+	}
+	return nil
+}
+
+type BootstrapRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ID            string                 `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	ClientPubKey  []byte                 `protobuf:"bytes,3,opt,name=clientPubKey,proto3" json:"clientPubKey,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BootstrapRequest) Reset() {
+	*x = BootstrapRequest{}
+	mi := &file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BootstrapRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BootstrapRequest) ProtoMessage() {}
+
+func (x *BootstrapRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BootstrapRequest.ProtoReflect.Descriptor instead.
+func (*BootstrapRequest) Descriptor() ([]byte, []int) {
+	return file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *BootstrapRequest) GetID() string {
+	if x != nil {
+		return x.ID
+	}
+	return ""
+}
+
+func (x *BootstrapRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *BootstrapRequest) GetClientPubKey() []byte {
+	if x != nil {
+		return x.ClientPubKey
+	}
+	return nil
+}
+
 var File_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto protoreflect.FileDescriptor
 
 const file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDesc = "" +
 	"\n" +
-	"Igithub.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1/bootstrap.proto\x12\tbootstrap\"8\n" +
+	"Igithub.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1/bootstrap.proto\x12\tbootstrap\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa9\x01\n" +
 	"\x0eBootstrapToken\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\tR\x02ID\x12\x16\n" +
-	"\x06Secret\x18\x02 \x01(\tR\x06SecretB;Z9github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1b\x06proto3"
+	"\x06Secret\x18\x02 \x01(\tR\x06Secret\x12+\n" +
+	"\x03TTL\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\x03TTL\x127\n" +
+	"\x06Expiry\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampH\x00R\x06Expiry\x88\x01\x01B\t\n" +
+	"\a_Expiry\"E\n" +
+	"\x10ListTokenReponse\x121\n" +
+	"\x06tokens\x18\x01 \x03(\v2\x19.bootstrap.BootstrapTokenR\x06tokens\"A\n" +
+	"\x12CreateTokenRequest\x12+\n" +
+	"\x03TTL\x18\x01 \x01(\v2\x19.google.protobuf.DurationR\x03TTL\"$\n" +
+	"\x12DeleteTokenRequest\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\tR\x02ID\"\xa0\x01\n" +
+	"\x11SignatureResponse\x12L\n" +
+	"\n" +
+	"signatures\x18\x01 \x03(\v2,.bootstrap.SignatureResponse.SignaturesEntryR\n" +
+	"signatures\x1a=\n" +
+	"\x0fSignaturesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\fR\x05value:\x028\x01\"Z\n" +
+	"\x10BootstrapRequest\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\tR\x02ID\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\"\n" +
+	"\fclientPubKey\x18\x03 \x01(\fR\fclientPubKeyB;Z9github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1b\x06proto3"
 
 var (
 	file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescOnce sync.Once
@@ -94,16 +368,29 @@ func file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_pr
 	return file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescData
 }
 
-var file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_goTypes = []any{
-	(*BootstrapToken)(nil), // 0: bootstrap.BootstrapToken
+	(*BootstrapToken)(nil),        // 0: bootstrap.BootstrapToken
+	(*ListTokenReponse)(nil),      // 1: bootstrap.ListTokenReponse
+	(*CreateTokenRequest)(nil),    // 2: bootstrap.CreateTokenRequest
+	(*DeleteTokenRequest)(nil),    // 3: bootstrap.DeleteTokenRequest
+	(*SignatureResponse)(nil),     // 4: bootstrap.SignatureResponse
+	(*BootstrapRequest)(nil),      // 5: bootstrap.BootstrapRequest
+	nil,                           // 6: bootstrap.SignatureResponse.SignaturesEntry
+	(*durationpb.Duration)(nil),   // 7: google.protobuf.Duration
+	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
 }
 var file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	7, // 0: bootstrap.BootstrapToken.TTL:type_name -> google.protobuf.Duration
+	8, // 1: bootstrap.BootstrapToken.Expiry:type_name -> google.protobuf.Timestamp
+	0, // 2: bootstrap.ListTokenReponse.tokens:type_name -> bootstrap.BootstrapToken
+	7, // 3: bootstrap.CreateTokenRequest.TTL:type_name -> google.protobuf.Duration
+	6, // 4: bootstrap.SignatureResponse.signatures:type_name -> bootstrap.SignatureResponse.SignaturesEntry
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_init() }
@@ -111,13 +398,14 @@ func file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_pr
 	if File_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto != nil {
 		return
 	}
+	file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDesc), len(file_github_com_otelfleet_otelfleet_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

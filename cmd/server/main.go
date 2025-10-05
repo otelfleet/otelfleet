@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto"
+	"crypto/tls"
 	"log/slog"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"database/sql"
 
@@ -18,17 +21,40 @@ import (
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
 )
 
+var (
+	servingCertDataFile = "./localhost.pem"
+	servingKeyDataFile  = "./localhost-key.pem"
+)
+
 func init() {
 	gin.SetMode(gin.ReleaseMode)
+}
+
+func loadCerts() *tls.Certificate {
+	servingCertData, err := os.ReadFile(servingCertDataFile)
+	if err != nil {
+		panic(err)
+	}
+	servingKeyData, err := os.ReadFile(servingKeyDataFile)
+	if err != nil {
+		panic(err)
+	}
+	servingCert, err := tls.X509KeyPair(servingCertData, servingKeyData)
+	if err != nil {
+		panic(err)
+	}
+	return &servingCert
 }
 
 func main() {
 	logger := slog.Default()
 	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	ctx, ca := context.WithCancel(context.Background())
 	defer ca()
+
+	servingCert := loadCerts()
 
 	relDB, err := sql.Open("sqlite3", "./otelfleet.db")
 	if err != nil {
@@ -62,11 +88,10 @@ func main() {
 
 	srv := server.NewServer(logger.With("component", "opamp"))
 	logger.Info("otelfleet starting...")
-	if err := srv.Start(); err != nil {
-		logger.Error("failed to start main otelfleet server")
-	}
 
 	bootstrapSrv := server.NewBootstrapServer(
+		logger.With("component", "bootstrap"),
+		servingCert.PrivateKey.(crypto.Signer),
 		tokenKv,
 		agentkv,
 	)
@@ -78,13 +103,18 @@ func main() {
 	}
 	go func() {
 		logger.With("addr", httpListenAddr).Info("starting HTTP server...")
-		if err := r.Run(httpListenAddr); err != nil {
+		if err := r.RunTLS(httpListenAddr, servingCertDataFile, servingKeyDataFile); err != nil {
 			logger.With("err", err.Error()).Error("failed to start HTTP server")
 			os.Exit(1)
 		}
 	}()
+	if err := srv.Start(); err != nil {
+		logger.Error("failed to start main otelfleet server")
+	}
 	logger.Info("otelfleet started")
 	<-interrupt
 	logger.Info("shutting down otelfleet")
-	srv.Stop(ctx)
+	if err := srv.Stop(ctx); err != nil {
+		logger.With("err", err).Error("failed to shutdown opamp server")
+	}
 }

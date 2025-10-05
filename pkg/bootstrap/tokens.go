@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/rsa"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -37,13 +38,18 @@ func NewToken(source ...io.Reader) *Token {
 	}
 }
 
-func (t *Token) SignDetached(key ed25519.PrivateKey) ([]byte, error) {
+func (t *Token) SignDetached(key any) ([]byte, error) {
+	_, ed25519 := key.(ed25519.PrivateKey)
+	_, rsa := key.(*rsa.PrivateKey)
+	if !rsa && !ed25519 {
+		return nil, errors.New("invalid key type, expected ed25519.PrivateKey or rsa.PrivateKey")
+	}
 	jsonData, err := json.Marshal(t)
 	if err != nil {
 		return nil, err
 	}
 
-	sig, err := jws.Sign(jsonData, jwa.EdDSA, key)
+	sig, err := jws.Sign(jsonData, jwa.RS256, key)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +61,7 @@ func (t *Token) SignDetached(key ed25519.PrivateKey) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (t *Token) VerifyDetached(sig []byte, key ed25519.PublicKey) ([]byte, error) {
+func (t *Token) VerifyDetached(sig []byte, key any) ([]byte, error) {
 	jsonData, err := json.Marshal(t)
 	if err != nil {
 		return nil, err
@@ -73,7 +79,8 @@ func (t *Token) VerifyDetached(sig []byte, key ed25519.PublicKey) ([]byte, error
 	fullToken := buf.Bytes()
 	cloned := make([]byte, len(fullToken))
 	copy(cloned, fullToken)
-	_, err = jws.Verify(cloned, jwa.EdDSA, key)
+	// _, err = jws.Verify(cloned, jwa.EdDSA, key)
+	_, err = jws.Verify(buf.Bytes(), jwa.RS256, key)
 	if err != nil {
 		return nil, err
 	}

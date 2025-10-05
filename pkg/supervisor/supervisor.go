@@ -2,6 +2,7 @@ package supervisor
 
 import (
 	"context"
+	"crypto/tls"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -16,14 +17,18 @@ type Supervisor struct {
 	logger       *slog.Logger
 	clientLogger types.Logger
 
+	tlsConfig *tls.Config
+
 	opampClient client.OpAMPClient
 }
 
 func NewSupervisor(
 	log *slog.Logger,
+	tlsConfig *tls.Config,
 ) *Supervisor {
 	return &Supervisor{
 		logger:       log,
+		tlsConfig:    tlsConfig,
 		clientLogger: logger.NewOpAMPLogger(log),
 	}
 }
@@ -39,8 +44,8 @@ func (s *Supervisor) startOpAMP() error {
 	s.opampClient = client.NewWebSocket(s.clientLogger)
 
 	settings := types.StartSettings{
-		OpAMPServerURL: "ws://127.0.0.1:4320/v1/opamp",
-		TLSConfig:      nil,
+		OpAMPServerURL: "wss://127.0.0.1:4320/v1/opamp",
+		TLSConfig:      s.tlsConfig,
 		InstanceUid:    types.InstanceUid([]byte(uuid.New().String())),
 		Callbacks: types.Callbacks{
 			OnConnect: func(ctx context.Context) {

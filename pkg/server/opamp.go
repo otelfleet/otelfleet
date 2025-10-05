@@ -9,6 +9,7 @@ import (
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/open-telemetry/opamp-go/server"
 	"github.com/open-telemetry/opamp-go/server/types"
+	"github.com/otelfleet/otelfleet/pkg/storage"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -27,6 +28,8 @@ func (s *slogWrapper) Errorf(_ context.Context, format string, args ...any) {
 type Server struct {
 	logger   *slog.Logger
 	opampSrv server.OpAMPServer
+
+	storage.KeyValue[*protobufs.AgentToServer]
 }
 
 func NewServer(logger *slog.Logger) *Server {
