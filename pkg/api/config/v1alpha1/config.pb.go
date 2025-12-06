@@ -22,6 +22,286 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type UpdateConfigRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ref           *ConfigReference       `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
+	Config        *Config                `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateConfigRequest) Reset() {
+	*x = UpdateConfigRequest{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateConfigRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateConfigRequest) ProtoMessage() {}
+
+func (x *UpdateConfigRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateConfigRequest.ProtoReflect.Descriptor instead.
+func (*UpdateConfigRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *UpdateConfigRequest) GetRef() *ConfigReference {
+	if x != nil {
+		return x.Ref
+	}
+	return nil
+}
+
+func (x *UpdateConfigRequest) GetConfig() *Config {
+	if x != nil {
+		return x.Config
+	}
+	return nil
+}
+
+type ValidateConfigRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Config        *Config                `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidateConfigRequest) Reset() {
+	*x = ValidateConfigRequest{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidateConfigRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidateConfigRequest) ProtoMessage() {}
+
+func (x *ValidateConfigRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidateConfigRequest.ProtoReflect.Descriptor instead.
+func (*ValidateConfigRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ValidateConfigRequest) GetConfig() *Config {
+	if x != nil {
+		return x.Config
+	}
+	return nil
+}
+
+type ListConfigReponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Configs       []*Config              `protobuf:"bytes,1,rep,name=configs,proto3" json:"configs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListConfigReponse) Reset() {
+	*x = ListConfigReponse{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListConfigReponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListConfigReponse) ProtoMessage() {}
+
+func (x *ListConfigReponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListConfigReponse.ProtoReflect.Descriptor instead.
+func (*ListConfigReponse) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ListConfigReponse) GetConfigs() []*Config {
+	if x != nil {
+		return x.Configs
+	}
+	return nil
+}
+
+type ConfigReference struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConfigReference) Reset() {
+	*x = ConfigReference{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfigReference) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfigReference) ProtoMessage() {}
+
+func (x *ConfigReference) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfigReference.ProtoReflect.Descriptor instead.
+func (*ConfigReference) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ConfigReference) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type Config struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Config        []byte                 `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Config) Reset() {
+	*x = Config{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Config) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Config) ProtoMessage() {}
+
+func (x *Config) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Config.ProtoReflect.Descriptor instead.
+func (*Config) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Config) GetConfig() []byte {
+	if x != nil {
+		return x.Config
+	}
+	return nil
+}
+
+type ConfigRange struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StartVersion  string                 `protobuf:"bytes,1,opt,name=startVersion,proto3" json:"startVersion,omitempty"`
+	EndVersion    string                 `protobuf:"bytes,2,opt,name=endVersion,proto3" json:"endVersion,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConfigRange) Reset() {
+	*x = ConfigRange{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfigRange) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfigRange) ProtoMessage() {}
+
+func (x *ConfigRange) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfigRange.ProtoReflect.Descriptor instead.
+func (*ConfigRange) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ConfigRange) GetStartVersion() string {
+	if x != nil {
+		return x.StartVersion
+	}
+	return ""
+}
+
+func (x *ConfigRange) GetEndVersion() string {
+	if x != nil {
+		return x.EndVersion
+	}
+	return ""
+}
+
 type Labels struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Labels        map[string]string      `protobuf:"bytes,1,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -31,7 +311,7 @@ type Labels struct {
 
 func (x *Labels) Reset() {
 	*x = Labels{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -43,7 +323,7 @@ func (x *Labels) String() string {
 func (*Labels) ProtoMessage() {}
 
 func (x *Labels) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -56,7 +336,7 @@ func (x *Labels) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Labels.ProtoReflect.Descriptor instead.
 func (*Labels) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{0}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Labels) GetLabels() map[string]string {
@@ -66,27 +346,27 @@ func (x *Labels) GetLabels() map[string]string {
 	return nil
 }
 
-type Matchers struct {
+type Matcher struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Matchers) Reset() {
-	*x = Matchers{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
+func (x *Matcher) Reset() {
+	*x = Matcher{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Matchers) String() string {
+func (x *Matcher) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Matchers) ProtoMessage() {}
+func (*Matcher) ProtoMessage() {}
 
-func (x *Matchers) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
+func (x *Matcher) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -97,29 +377,45 @@ func (x *Matchers) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Matchers.ProtoReflect.Descriptor instead.
-func (*Matchers) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{1}
+// Deprecated: Use Matcher.ProtoReflect.Descriptor instead.
+func (*Matcher) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{7}
 }
 
 var File_pkg_api_config_v1alpha1_config_proto protoreflect.FileDescriptor
 
 const file_pkg_api_config_v1alpha1_config_proto_rawDesc = "" +
 	"\n" +
-	"$pkg/api/config/v1alpha1/config.proto\x12\x0fconfig.v1alpha1\x1a\x1bgoogle/protobuf/empty.proto\"\x80\x01\n" +
+	"$pkg/api/config/v1alpha1/config.proto\x12\x0fconfig.v1alpha1\x1a\x1bgoogle/protobuf/empty.proto\"z\n" +
+	"\x13UpdateConfigRequest\x122\n" +
+	"\x03ref\x18\x01 \x01(\v2 .config.v1alpha1.ConfigReferenceR\x03ref\x12/\n" +
+	"\x06config\x18\x02 \x01(\v2\x17.config.v1alpha1.ConfigR\x06config\"H\n" +
+	"\x15ValidateConfigRequest\x12/\n" +
+	"\x06config\x18\x01 \x01(\v2\x17.config.v1alpha1.ConfigR\x06config\"F\n" +
+	"\x11ListConfigReponse\x121\n" +
+	"\aconfigs\x18\x01 \x03(\v2\x17.config.v1alpha1.ConfigR\aconfigs\"!\n" +
+	"\x0fConfigReference\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\" \n" +
+	"\x06Config\x12\x16\n" +
+	"\x06config\x18\x01 \x01(\fR\x06config\"Q\n" +
+	"\vConfigRange\x12\"\n" +
+	"\fstartVersion\x18\x01 \x01(\tR\fstartVersion\x12\x1e\n" +
+	"\n" +
+	"endVersion\x18\x02 \x01(\tR\n" +
+	"endVersion\"\x80\x01\n" +
 	"\x06Labels\x12;\n" +
 	"\x06labels\x18\x01 \x03(\v2#.config.v1alpha1.Labels.LabelsEntryR\x06labels\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\n" +
-	"\n" +
-	"\bMatchers2\xd1\x02\n" +
-	"\rConfigService\x12=\n" +
-	"\vValidConfig\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\x12>\n" +
-	"\fUpdateConfig\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\x12>\n" +
-	"\fDeleteConfig\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\x12=\n" +
-	"\vListConfigs\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\x12B\n" +
-	"\x10SetDefaultConfig\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.EmptyB8Z6github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1b\x06proto3"
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\t\n" +
+	"\aMatcher2\xdb\x03\n" +
+	"\rConfigService\x12M\n" +
+	"\vValidConfig\x12&.config.v1alpha1.ValidateConfigRequest\x1a\x16.google.protobuf.Empty\x12L\n" +
+	"\fUpdateConfig\x12$.config.v1alpha1.UpdateConfigRequest\x1a\x16.google.protobuf.Empty\x12F\n" +
+	"\tGetConfig\x12 .config.v1alpha1.ConfigReference\x1a\x17.config.v1alpha1.Config\x12H\n" +
+	"\fDeleteConfig\x12 .config.v1alpha1.ConfigReference\x1a\x16.google.protobuf.Empty\x12I\n" +
+	"\vListConfigs\x12\x16.google.protobuf.Empty\x1a\".config.v1alpha1.ListConfigReponse\x12P\n" +
+	"\x10SetDefaultConfig\x12$.config.v1alpha1.UpdateConfigRequest\x1a\x16.google.protobuf.EmptyB8Z6github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1b\x06proto3"
 
 var (
 	file_pkg_api_config_v1alpha1_config_proto_rawDescOnce sync.Once
@@ -133,30 +429,42 @@ func file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP() []byte {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescData
 }
 
-var file_pkg_api_config_v1alpha1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_pkg_api_config_v1alpha1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_pkg_api_config_v1alpha1_config_proto_goTypes = []any{
-	(*Labels)(nil),        // 0: config.v1alpha1.Labels
-	(*Matchers)(nil),      // 1: config.v1alpha1.Matchers
-	nil,                   // 2: config.v1alpha1.Labels.LabelsEntry
-	(*emptypb.Empty)(nil), // 3: google.protobuf.Empty
+	(*UpdateConfigRequest)(nil),   // 0: config.v1alpha1.UpdateConfigRequest
+	(*ValidateConfigRequest)(nil), // 1: config.v1alpha1.ValidateConfigRequest
+	(*ListConfigReponse)(nil),     // 2: config.v1alpha1.ListConfigReponse
+	(*ConfigReference)(nil),       // 3: config.v1alpha1.ConfigReference
+	(*Config)(nil),                // 4: config.v1alpha1.Config
+	(*ConfigRange)(nil),           // 5: config.v1alpha1.ConfigRange
+	(*Labels)(nil),                // 6: config.v1alpha1.Labels
+	(*Matcher)(nil),               // 7: config.v1alpha1.Matcher
+	nil,                           // 8: config.v1alpha1.Labels.LabelsEntry
+	(*emptypb.Empty)(nil),         // 9: google.protobuf.Empty
 }
 var file_pkg_api_config_v1alpha1_config_proto_depIdxs = []int32{
-	2, // 0: config.v1alpha1.Labels.labels:type_name -> config.v1alpha1.Labels.LabelsEntry
-	3, // 1: config.v1alpha1.ConfigService.ValidConfig:input_type -> google.protobuf.Empty
-	3, // 2: config.v1alpha1.ConfigService.UpdateConfig:input_type -> google.protobuf.Empty
-	3, // 3: config.v1alpha1.ConfigService.DeleteConfig:input_type -> google.protobuf.Empty
-	3, // 4: config.v1alpha1.ConfigService.ListConfigs:input_type -> google.protobuf.Empty
-	3, // 5: config.v1alpha1.ConfigService.SetDefaultConfig:input_type -> google.protobuf.Empty
-	3, // 6: config.v1alpha1.ConfigService.ValidConfig:output_type -> google.protobuf.Empty
-	3, // 7: config.v1alpha1.ConfigService.UpdateConfig:output_type -> google.protobuf.Empty
-	3, // 8: config.v1alpha1.ConfigService.DeleteConfig:output_type -> google.protobuf.Empty
-	3, // 9: config.v1alpha1.ConfigService.ListConfigs:output_type -> google.protobuf.Empty
-	3, // 10: config.v1alpha1.ConfigService.SetDefaultConfig:output_type -> google.protobuf.Empty
-	6, // [6:11] is the sub-list for method output_type
-	1, // [1:6] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	3,  // 0: config.v1alpha1.UpdateConfigRequest.ref:type_name -> config.v1alpha1.ConfigReference
+	4,  // 1: config.v1alpha1.UpdateConfigRequest.config:type_name -> config.v1alpha1.Config
+	4,  // 2: config.v1alpha1.ValidateConfigRequest.config:type_name -> config.v1alpha1.Config
+	4,  // 3: config.v1alpha1.ListConfigReponse.configs:type_name -> config.v1alpha1.Config
+	8,  // 4: config.v1alpha1.Labels.labels:type_name -> config.v1alpha1.Labels.LabelsEntry
+	1,  // 5: config.v1alpha1.ConfigService.ValidConfig:input_type -> config.v1alpha1.ValidateConfigRequest
+	0,  // 6: config.v1alpha1.ConfigService.UpdateConfig:input_type -> config.v1alpha1.UpdateConfigRequest
+	3,  // 7: config.v1alpha1.ConfigService.GetConfig:input_type -> config.v1alpha1.ConfigReference
+	3,  // 8: config.v1alpha1.ConfigService.DeleteConfig:input_type -> config.v1alpha1.ConfigReference
+	9,  // 9: config.v1alpha1.ConfigService.ListConfigs:input_type -> google.protobuf.Empty
+	0,  // 10: config.v1alpha1.ConfigService.SetDefaultConfig:input_type -> config.v1alpha1.UpdateConfigRequest
+	9,  // 11: config.v1alpha1.ConfigService.ValidConfig:output_type -> google.protobuf.Empty
+	9,  // 12: config.v1alpha1.ConfigService.UpdateConfig:output_type -> google.protobuf.Empty
+	4,  // 13: config.v1alpha1.ConfigService.GetConfig:output_type -> config.v1alpha1.Config
+	9,  // 14: config.v1alpha1.ConfigService.DeleteConfig:output_type -> google.protobuf.Empty
+	2,  // 15: config.v1alpha1.ConfigService.ListConfigs:output_type -> config.v1alpha1.ListConfigReponse
+	9,  // 16: config.v1alpha1.ConfigService.SetDefaultConfig:output_type -> google.protobuf.Empty
+	11, // [11:17] is the sub-list for method output_type
+	5,  // [5:11] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_config_v1alpha1_config_proto_init() }
@@ -170,7 +478,7 @@ func file_pkg_api_config_v1alpha1_config_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_config_v1alpha1_config_proto_rawDesc), len(file_pkg_api_config_v1alpha1_config_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

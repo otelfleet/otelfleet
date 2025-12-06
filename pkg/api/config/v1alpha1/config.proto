@@ -3,25 +3,48 @@ package config.v1alpha1;
 
 // import "google/protobuf/duration.proto";
 import "google/protobuf/empty.proto";
-// import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1";
 
 service ConfigService {
-  rpc ValidConfig(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc ValidConfig(ValidateConfigRequest) returns (google.protobuf.Empty);
+  rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
+  rpc GetConfig(ConfigReference) returns (Config);
+  rpc DeleteConfig(ConfigReference) returns (google.protobuf.Empty);
+  rpc ListConfigs(google.protobuf.Empty) returns (ListConfigReponse);
+  rpc SetDefaultConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
+}
 
-  rpc UpdateConfig(google.protobuf.Empty) returns (google.protobuf.Empty);
+message UpdateConfigRequest {
+  ConfigReference ref    = 1;
+  Config          config = 2;
+}
 
-  rpc DeleteConfig(google.protobuf.Empty) returns (google.protobuf.Empty);
-  // ListConfigs by matchers
-  rpc ListConfigs(google.protobuf.Empty) returns (google.protobuf.Empty);
-  rpc SetDefaultConfig(google.protobuf.Empty) returns (google.protobuf.Empty);
+message ValidateConfigRequest {
+  Config config = 1;
+}
+
+message ListConfigReponse {
+  repeated Config configs = 1;
+}
+
+message ConfigReference {
+  string id = 1;
+}
+
+message Config {
+  bytes config = 1;
+}
+
+message ConfigRange {
+  string startVersion = 1;
+  string endVersion   = 2;
 }
 
 message Labels {
   map<string, string> labels = 1;
 }
 
-message Matchers {
+message Matcher {
   // TODO:
 }

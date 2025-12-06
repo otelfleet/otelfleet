@@ -20,11 +20,13 @@ import (
 	"github.com/grafana/dskit/services"
 	"github.com/grafana/dskit/signals"
 	"github.com/open-telemetry/opamp-go/protobufs"
-	"github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
+	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
+	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	logutil "github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/services/bootstrap"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
+	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	"golang.org/x/net/http2"
@@ -60,7 +62,7 @@ const (
 	Bootstrap     = "bootstrap"
 	ServerService = "server"
 	OpAmp         = "op-amp"
-	// ConfigOTEL = "config-otel"
+	ConfigOTEL    = "config-otel"
 )
 
 type OtelFleet struct {
@@ -70,9 +72,10 @@ type OtelFleet struct {
 	mm   *modules.Manager
 	deps map[string][]string
 
-	store      storage.KVBroker
-	tokenStore storage.KeyValue[*v1alpha1.BootstrapToken]
-	agentStore storage.KeyValue[*protobufs.AgentToServer]
+	store       storage.KVBroker
+	tokenStore  storage.KeyValue[*bootstrapv1alpha1.BootstrapToken]
+	agentStore  storage.KeyValue[*protobufs.AgentToServer]
+	configStore storage.KeyValue[*configv1alpha1.Config]
 
 	serviceMap map[string]services.Service
 	server     *server.Server
@@ -128,9 +131,14 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("store", "agents"),
 			o.store.KeyValue("agents"),
 		)
-		o.tokenStore = storage.NewProtoKV[*v1alpha1.BootstrapToken](
+		o.tokenStore = storage.NewProtoKV[*bootstrapv1alpha1.BootstrapToken](
 			o.logger.With("store", "tokens"),
 			o.store.KeyValue("tokens"),
+		)
+
+		o.configStore = storage.NewProtoKV[*configv1alpha1.Config](
+			o.logger.With("store", "configs"),
+			o.store.KeyValue("configs"),
 		)
 		return storeSvc, nil
 	}, modules.UserInvisibleModule)
@@ -146,6 +154,16 @@ func (o *OtelFleet) setupModuleManager() error {
 		bootstrapSvc.ConfigureHTTP(o.server.HTTP)
 
 		return bootstrapSvc, nil
+	})
+
+	mm.RegisterModule(ConfigOTEL, func() (services.Service, error) {
+		cfgServer := otelconfig.NewConfigServer(
+			o.logger.With("service", ConfigOTEL),
+			o.configStore,
+		)
+		cfgServer.ConfigureHTTP(o.server.HTTP)
+
+		return cfgServer, nil
 	})
 
 	mm.RegisterModule(OpAmp, func() (services.Service, error) {
@@ -176,17 +194,15 @@ func (o *OtelFleet) setupModuleManager() error {
 		return s, nil
 	}, modules.UserInvisibleModule)
 
-	// mm.RegisterModule()
-
 	// Add dependencies
 	deps := map[string][]string{
 		All: {
 			ServerService,
 		},
 		ServerService: {Bootstrap, OpAmp},
-		OpAmp:         {Storage},
+		OpAmp:         {ConfigOTEL, Storage},
 		Bootstrap:     {Storage},
-		// ConfigOTEL: {Storage},
+		ConfigOTEL:    {Storage},
 	}
 
 	for mod, targets := range deps {
