@@ -5,7 +5,7 @@ package config.v1alpha1;
 import "google/protobuf/empty.proto";
 // import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1;v1alpha1";
+option go_package = "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1";
 
 service ConfigService {
   rpc ValidConfig(google.protobuf.Empty) returns (google.protobuf.Empty);
