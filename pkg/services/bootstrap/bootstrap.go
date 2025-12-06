@@ -1,4 +1,4 @@
-package server
+package bootstrap
 
 import (
 	"context"
@@ -8,19 +8,26 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"path"
 	"strings"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/mux"
+	"github.com/grafana/dskit/services"
 	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jws"
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1/v1alpha1connect"
 	"github.com/otelfleet/otelfleet/pkg/bootstrap"
 	"github.com/otelfleet/otelfleet/pkg/ecdh"
+	otelfleetsvc "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/storage"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -30,7 +37,12 @@ type BootstrapServer struct {
 
 	privateKey crypto.Signer
 	logger     *slog.Logger
+	services.Service
 }
+
+var _ otelfleetsvc.HTTPExtension = (*BootstrapServer)(nil)
+
+var _ v1alpha1connect.TokenServiceHandler = (*BootstrapServer)(nil)
 
 func NewBootstrapServer(
 	logger *slog.Logger,
@@ -38,25 +50,88 @@ func NewBootstrapServer(
 	tokenStore storage.KeyValue[*v1alpha1.BootstrapToken],
 	agentStore storage.KeyValue[*protobufs.AgentToServer],
 ) *BootstrapServer {
-	return &BootstrapServer{
+	b := &BootstrapServer{
 		tokenStore: tokenStore,
 		agentStore: agentStore,
 		privateKey: privateKey,
 		logger:     logger,
 	}
+
+	b.Service = services.NewBasicService(nil, b.running, nil)
+	return b
 }
 
-func (b *BootstrapServer) routePrefix() string {
-	return "api/bootstrap/v1alpha1/"
+func (b *BootstrapServer) running(ctx context.Context) error {
+	<-ctx.Done()
+	return nil
 }
 
-func (b *BootstrapServer) ConfigureHttp(r *gin.Engine) {
-	r.GET(path.Join(b.routePrefix(), "signatures"), b.Signatures)
-	r.POST(path.Join(b.routePrefix(), "bootstrap"), b.Bootstrap)
-	r.POST(path.Join(b.routePrefix(), "tokens/create"), b.CreateToken)
-	r.GET(path.Join(b.routePrefix(), "tokens/list"), b.ListTokens)
-	r.DELETE(path.Join(b.routePrefix(), "tokens/delete"), b.RevokeToken)
+func (b *BootstrapServer) ConfigureHTTP(mux *mux.Router) {
+	b.logger.Info("configuring routes")
+	v1alpha1connect.RegisterTokenServiceHandler(mux, b)
 }
+
+func (b *BootstrapServer) CreateToken(ctx context.Context, connectReq *connect.Request[v1alpha1.CreateTokenRequest]) (*connect.Response[v1alpha1.BootstrapToken], error) {
+	req := connectReq.Msg
+	if err := req.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	token := bootstrap.NewToken()
+
+	bT := token.ToBootstrapToken()
+	bT.TTL = req.TTL
+	bT.Expiry = timestamppb.New(time.Now().Add(time.Minute * 5))
+	if err := b.tokenStore.Put(ctx, bT.GetID(), bT); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return connect.NewResponse(bT), nil
+}
+
+func (b *BootstrapServer) ListTokens(ctx context.Context, _ *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.ListTokenReponse], error) {
+	if b.tokenStore == nil {
+		panic("token store is nil")
+	}
+	tokens, err := b.tokenStore.List(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	now := time.Now()
+	for _, token := range tokens {
+		b.logger.With("expire", token.Expiry.AsTime(), "now", now).Debug("token expiry check")
+		if token.Expiry.AsTime().Before(now) {
+			go b.gc(token.ID)
+		}
+	}
+
+	resp := &v1alpha1.ListTokenReponse{
+		Tokens: tokens,
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (b *BootstrapServer) DeleteToken(ctx context.Context, connectReq *connect.Request[v1alpha1.DeleteTokenRequest]) (*connect.Response[emptypb.Empty], error) {
+	req := connectReq.Msg
+	if err := req.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	b.logger.With("key", req.ID).Debug("deleting key")
+	if err := b.tokenStore.Delete(ctx, req.ID); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return connect.NewResponse(&emptypb.Empty{}), nil
+}
+
+// func (b *BootstrapServer) routePrefix() string {
+// 	return "api/bootstrap/v1alpha1/"
+// }
+
+// func (b *BootstrapServer) ConfigureHTTP(r *gin.Engine) {
+// 	r.GET(path.Join(b.routePrefix(), "signatures"), b.Signatures)
+// 	r.POST(path.Join(b.routePrefix(), "bootstrap"), b.Bootstrap)
+// 	r.POST(path.Join(b.routePrefix(), "tokens/create"), b.CreateTokens2)
+// 	r.GET(path.Join(b.routePrefix(), "tokens/list"), b.ListTokens2)
+// 	r.DELETE(path.Join(b.routePrefix(), "tokens/delete"), b.RevokeToken)
+// }
 
 func (b *BootstrapServer) verifyToken(c *gin.Context) error {
 	headers := c.Request.Header
@@ -170,63 +245,6 @@ func (b *BootstrapServer) Signatures(c *gin.Context) {
 	c.Writer.Write(data)
 }
 
-func (b *BootstrapServer) CreateToken(c *gin.Context) {
-	data, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-	createReq := &v1alpha1.CreateTokenRequest{}
-	if err := protojson.Unmarshal(data, createReq); err != nil {
-		c.JSON(http.StatusBadRequest, err.Error())
-		return
-	}
-	if err := createReq.Validate(); err != nil {
-		c.JSON(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	token := bootstrap.NewToken()
-
-	bT := token.ToBootstrapToken()
-	bT.TTL = createReq.TTL
-	bT.Expiry = timestamppb.New(time.Now().Add(time.Minute * 5))
-	if err := b.tokenStore.Put(c.Request.Context(), bT.GetID(), bT); err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"id":    token.HexID(),
-		"token": token.EncodeToHex(),
-	})
-}
-
-func (b *BootstrapServer) ListTokens(c *gin.Context) {
-	tokens, err := b.tokenStore.List(c.Request.Context())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-	now := time.Now()
-	for _, token := range tokens {
-		b.logger.With("expire", token.Expiry.AsTime(), "now", now).Debug("token expiry check")
-		if token.Expiry.AsTime().Before(now) {
-			go b.gc(token.ID)
-		}
-	}
-
-	resp := &v1alpha1.ListTokenReponse{
-		Tokens: tokens,
-	}
-	data, err := protojson.Marshal(resp)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	c.Writer.WriteHeader(http.StatusOK)
-	c.Writer.Write(data)
-}
-
 func (b *BootstrapServer) gc(key string) {
 	b.logger.With("key", key).Debug("garbage collecting token")
 
@@ -237,30 +255,4 @@ func (b *BootstrapServer) gc(key string) {
 			b.logger.With("key", key, "err", err).Error("failed to delete token")
 		}
 	}()
-}
-
-func (b *BootstrapServer) RevokeToken(c *gin.Context) {
-	data, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-	d := &v1alpha1.DeleteTokenRequest{}
-	if err := protojson.Unmarshal(data, d); err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-
-	if d.ID == "" {
-		c.JSON(http.StatusBadRequest, "invalid token ID")
-		return
-	}
-
-	b.logger.With("key", d.ID).Debug("deleting key")
-	if err := b.tokenStore.Delete(c.Request.Context(), d.ID); err != nil {
-		c.JSON(http.StatusInternalServerError, "")
-		return
-	}
-
-	c.JSON(http.StatusOK, "")
 }

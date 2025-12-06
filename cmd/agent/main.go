@@ -16,7 +16,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/ecdh"
 	"github.com/otelfleet/otelfleet/pkg/ident"
 	"github.com/otelfleet/otelfleet/pkg/keyring"
-	_ "github.com/otelfleet/otelfleet/pkg/logger"
+	_ "github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/supervisor"
 	"google.golang.org/protobuf/encoding/protojson"
 )

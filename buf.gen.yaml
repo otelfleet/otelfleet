@@ -1,0 +1,22 @@
+version: v2
+plugins:
+  # go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+  - local: protoc-gen-go
+    opt: paths=source_relative
+    out: .
+  # go install connectrpc.com/connect/cmd/protoc-gen-connect-go@latest
+  - local: protoc-gen-connect-go
+    out: .
+    opt: paths=source_relative
+  # go install github.com/grafana/connect-go-mux/cmd/protoc-gen-connect-go-mux@latest
+  - local: protoc-gen-connect-go-mux
+    out: .
+    opt: paths=source_relative
+# managed:
+#   enabled: true
+#   override:
+#     - file_option: go_package_prefix
+#       value: example/gen
+#   disable:
+#     - file_option: go_package
+#       module: buf.build/bufbuild/protovalidate

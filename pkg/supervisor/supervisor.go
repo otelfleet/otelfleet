@@ -9,7 +9,7 @@ import (
 	"github.com/open-telemetry/opamp-go/client"
 	"github.com/open-telemetry/opamp-go/client/types"
 	"github.com/open-telemetry/opamp-go/protobufs"
-	"github.com/otelfleet/otelfleet/pkg/logger"
+	"github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/util"
 )
 
@@ -29,7 +29,7 @@ func NewSupervisor(
 	return &Supervisor{
 		logger:       log,
 		tlsConfig:    tlsConfig,
-		clientLogger: logger.NewOpAMPLogger(log),
+		clientLogger: logutil.NewOpAMPLogger(log),
 	}
 }
 

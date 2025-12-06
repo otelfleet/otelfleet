@@ -1,0 +1,27 @@
+syntax = "proto3";
+package config.v1alpha1;
+
+// import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+// import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1;v1alpha1";
+
+service ConfigService {
+  rpc ValidConfig(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  rpc UpdateConfig(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  rpc DeleteConfig(google.protobuf.Empty) returns (google.protobuf.Empty);
+  // ListConfigs by matchers
+  rpc ListConfigs(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc SetDefaultConfig(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+message Labels {
+  map<string, string> labels = 1;
+}
+
+message Matchers {
+  // TODO:
+}

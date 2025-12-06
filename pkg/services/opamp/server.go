@@ -1,46 +1,49 @@
-package server
+package opamp
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/grafana/dskit/services"
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/open-telemetry/opamp-go/server"
 	"github.com/open-telemetry/opamp-go/server/types"
+	"github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
-
-type slogWrapper struct {
-	*slog.Logger
-}
-
-func (s *slogWrapper) Debugf(_ context.Context, format string, args ...any) {
-	s.Logger.Debug(fmt.Sprintf(format, args...))
-}
-
-func (s *slogWrapper) Errorf(_ context.Context, format string, args ...any) {
-	s.Logger.Error(fmt.Sprintf(format, args...))
-}
 
 type Server struct {
 	logger   *slog.Logger
 	opampSrv server.OpAMPServer
 
-	storage.KeyValue[*protobufs.AgentToServer]
+	agentStore storage.KeyValue[*protobufs.AgentToServer]
+	services.Service
 }
 
-func NewServer(logger *slog.Logger) *Server {
-	opampSvr := server.New(&slogWrapper{Logger: logger})
-	return &Server{
-		logger:   logger,
-		opampSrv: opampSvr,
+func NewServer(
+	l *slog.Logger,
+	agentStore storage.KeyValue[*protobufs.AgentToServer],
+) *Server {
+	opampSvr := server.New(logutil.NewOpAMPLogger(l))
+	s := &Server{
+		logger:     l,
+		opampSrv:   opampSvr,
+		agentStore: agentStore,
 	}
+
+	s.Service = services.NewBasicService(s.start, s.running, s.stop)
+	return s
 }
 
-func (s *Server) Start() error {
+func (s *Server) running(ctx context.Context) error {
+	<-ctx.Done()
+	return nil
+}
+
+func (s *Server) start(ctx context.Context) error {
 	addr := "127.0.0.1:4320"
 	s.logger.With("addr", addr).Info("starting opamp server")
 	settings := server.StartSettings{
@@ -68,8 +71,11 @@ func (s *Server) Start() error {
 	return nil
 }
 
-func (s *Server) Stop(ctx context.Context) error {
-	if err := s.opampSrv.Stop(ctx); err != nil {
+func (s *Server) stop(failureCase error) error {
+	// FIXME: handle failure case?
+	ctxca, ca := context.WithTimeout(context.TODO(), time.Minute)
+	defer ca()
+	if err := s.opampSrv.Stop(ctxca); err != nil {
 		return err
 	}
 	return nil
