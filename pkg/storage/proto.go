@@ -32,14 +32,14 @@ func (kv *protoKeyValue[T]) Put(ctx context.Context, key string, obj T) error {
 	return kv.underlying.Put(ctx, key, data)
 }
 func (kv *protoKeyValue[T]) Get(ctx context.Context, key string) (T, error) {
-	var tt T
+	var t T
 	raw, err := kv.underlying.Get(ctx, key)
 	if err != nil {
-		return tt, err
+		return t, err
 	}
-	t := tt.ProtoReflect().Type().Zero().Interface().(T)
+	t = NewMessage[T]()
 	if err := proto.Unmarshal(raw, t); err != nil {
-		return tt, err
+		return t, err
 	}
 	return t, nil
 }
@@ -54,10 +54,9 @@ func (kv *protoKeyValue[T]) List(ctx context.Context) ([]T, error) {
 	}
 	ret := make([]T, len(raw))
 	for idx, el := range raw {
-		var tt T
-		t := tt.ProtoReflect().Type().Zero().Interface().(T)
+		t := NewMessage[T]()
 		if err := proto.Unmarshal(el, t); err != nil {
-			kv.logger.With("type", reflect.TypeOf(tt)).With("error", err).Error("failed to unmarshal proto-type")
+			kv.logger.With("type", reflect.TypeOf(t)).With("error", err).Error("failed to unmarshal proto-type")
 			continue
 		}
 		ret[idx] = t
@@ -67,4 +66,9 @@ func (kv *protoKeyValue[T]) List(ctx context.Context) ([]T, error) {
 }
 func (kv *protoKeyValue[T]) Delete(ctx context.Context, key string) error {
 	return kv.underlying.Delete(ctx, key)
+}
+
+func NewMessage[T proto.Message]() T {
+	var t T
+	return t.ProtoReflect().New().Interface().(T)
 }
