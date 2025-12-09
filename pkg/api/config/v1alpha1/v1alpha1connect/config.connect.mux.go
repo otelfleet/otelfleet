@@ -44,6 +44,11 @@ func RegisterConfigServiceHandler(mux *mux.Router, svc ConfigServiceHandler, opt
 		svc.ListConfigs,
 		opts...,
 	))
+	mux.Handle("/config.v1alpha1.ConfigService/GetDefaultConfig", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/GetDefaultConfig",
+		svc.GetDefaultConfig,
+		opts...,
+	))
 	mux.Handle("/config.v1alpha1.ConfigService/SetDefaultConfig", connect.NewUnaryHandler(
 		"/config.v1alpha1.ConfigService/SetDefaultConfig",
 		svc.SetDefaultConfig,

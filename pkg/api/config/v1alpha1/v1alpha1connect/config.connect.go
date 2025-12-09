@@ -48,6 +48,9 @@ const (
 	// ConfigServiceListConfigsProcedure is the fully-qualified name of the ConfigService's ListConfigs
 	// RPC.
 	ConfigServiceListConfigsProcedure = "/config.v1alpha1.ConfigService/ListConfigs"
+	// ConfigServiceGetDefaultConfigProcedure is the fully-qualified name of the ConfigService's
+	// GetDefaultConfig RPC.
+	ConfigServiceGetDefaultConfigProcedure = "/config.v1alpha1.ConfigService/GetDefaultConfig"
 	// ConfigServiceSetDefaultConfigProcedure is the fully-qualified name of the ConfigService's
 	// SetDefaultConfig RPC.
 	ConfigServiceSetDefaultConfigProcedure = "/config.v1alpha1.ConfigService/SetDefaultConfig"
@@ -60,6 +63,7 @@ type ConfigServiceClient interface {
 	GetConfig(context.Context, *connect.Request[v1alpha1.ConfigReference]) (*connect.Response[v1alpha1.Config], error)
 	DeleteConfig(context.Context, *connect.Request[v1alpha1.ConfigReference]) (*connect.Response[emptypb.Empty], error)
 	ListConfigs(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.ListConfigReponse], error)
+	GetDefaultConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.Config], error)
 	SetDefaultConfig(context.Context, *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
@@ -104,6 +108,12 @@ func NewConfigServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(configServiceMethods.ByName("ListConfigs")),
 			connect.WithClientOptions(opts...),
 		),
+		getDefaultConfig: connect.NewClient[emptypb.Empty, v1alpha1.Config](
+			httpClient,
+			baseURL+ConfigServiceGetDefaultConfigProcedure,
+			connect.WithSchema(configServiceMethods.ByName("GetDefaultConfig")),
+			connect.WithClientOptions(opts...),
+		),
 		setDefaultConfig: connect.NewClient[v1alpha1.UpdateConfigRequest, emptypb.Empty](
 			httpClient,
 			baseURL+ConfigServiceSetDefaultConfigProcedure,
@@ -120,6 +130,7 @@ type configServiceClient struct {
 	getConfig        *connect.Client[v1alpha1.ConfigReference, v1alpha1.Config]
 	deleteConfig     *connect.Client[v1alpha1.ConfigReference, emptypb.Empty]
 	listConfigs      *connect.Client[emptypb.Empty, v1alpha1.ListConfigReponse]
+	getDefaultConfig *connect.Client[emptypb.Empty, v1alpha1.Config]
 	setDefaultConfig *connect.Client[v1alpha1.UpdateConfigRequest, emptypb.Empty]
 }
 
@@ -148,6 +159,11 @@ func (c *configServiceClient) ListConfigs(ctx context.Context, req *connect.Requ
 	return c.listConfigs.CallUnary(ctx, req)
 }
 
+// GetDefaultConfig calls config.v1alpha1.ConfigService.GetDefaultConfig.
+func (c *configServiceClient) GetDefaultConfig(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.Config], error) {
+	return c.getDefaultConfig.CallUnary(ctx, req)
+}
+
 // SetDefaultConfig calls config.v1alpha1.ConfigService.SetDefaultConfig.
 func (c *configServiceClient) SetDefaultConfig(ctx context.Context, req *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error) {
 	return c.setDefaultConfig.CallUnary(ctx, req)
@@ -160,6 +176,7 @@ type ConfigServiceHandler interface {
 	GetConfig(context.Context, *connect.Request[v1alpha1.ConfigReference]) (*connect.Response[v1alpha1.Config], error)
 	DeleteConfig(context.Context, *connect.Request[v1alpha1.ConfigReference]) (*connect.Response[emptypb.Empty], error)
 	ListConfigs(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.ListConfigReponse], error)
+	GetDefaultConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.Config], error)
 	SetDefaultConfig(context.Context, *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
@@ -200,6 +217,12 @@ func NewConfigServiceHandler(svc ConfigServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(configServiceMethods.ByName("ListConfigs")),
 		connect.WithHandlerOptions(opts...),
 	)
+	configServiceGetDefaultConfigHandler := connect.NewUnaryHandler(
+		ConfigServiceGetDefaultConfigProcedure,
+		svc.GetDefaultConfig,
+		connect.WithSchema(configServiceMethods.ByName("GetDefaultConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
 	configServiceSetDefaultConfigHandler := connect.NewUnaryHandler(
 		ConfigServiceSetDefaultConfigProcedure,
 		svc.SetDefaultConfig,
@@ -218,6 +241,8 @@ func NewConfigServiceHandler(svc ConfigServiceHandler, opts ...connect.HandlerOp
 			configServiceDeleteConfigHandler.ServeHTTP(w, r)
 		case ConfigServiceListConfigsProcedure:
 			configServiceListConfigsHandler.ServeHTTP(w, r)
+		case ConfigServiceGetDefaultConfigProcedure:
+			configServiceGetDefaultConfigHandler.ServeHTTP(w, r)
 		case ConfigServiceSetDefaultConfigProcedure:
 			configServiceSetDefaultConfigHandler.ServeHTTP(w, r)
 		default:
@@ -247,6 +272,10 @@ func (UnimplementedConfigServiceHandler) DeleteConfig(context.Context, *connect.
 
 func (UnimplementedConfigServiceHandler) ListConfigs(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.ListConfigReponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.ListConfigs is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) GetDefaultConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.Config], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.GetDefaultConfig is not implemented"))
 }
 
 func (UnimplementedConfigServiceHandler) SetDefaultConfig(context.Context, *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error) {

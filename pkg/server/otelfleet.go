@@ -29,6 +29,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
 	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/rs/cors"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -72,10 +73,11 @@ type OtelFleet struct {
 	mm   *modules.Manager
 	deps map[string][]string
 
-	store       storage.KVBroker
-	tokenStore  storage.KeyValue[*bootstrapv1alpha1.BootstrapToken]
-	agentStore  storage.KeyValue[*protobufs.AgentToServer]
-	configStore storage.KeyValue[*configv1alpha1.Config]
+	store              storage.KVBroker
+	tokenStore         storage.KeyValue[*bootstrapv1alpha1.BootstrapToken]
+	agentStore         storage.KeyValue[*protobufs.AgentToServer]
+	configStore        storage.KeyValue[*configv1alpha1.Config]
+	defaultConfigStore storage.KeyValue[*configv1alpha1.Config]
 
 	serviceMap map[string]services.Service
 	server     *server.Server
@@ -140,6 +142,12 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("store", "configs"),
 			o.store.KeyValue("configs"),
 		)
+
+		o.defaultConfigStore = storage.NewProtoKV[*configv1alpha1.Config](
+			o.logger.With("store", "default-configs"),
+			o.store.KeyValue("defaultconfigs"),
+		)
+
 		return storeSvc, nil
 	}, modules.UserInvisibleModule)
 
@@ -160,6 +168,7 @@ func (o *OtelFleet) setupModuleManager() error {
 		cfgServer := otelconfig.NewConfigServer(
 			o.logger.With("service", ConfigOTEL),
 			o.configStore,
+			o.defaultConfigStore,
 		)
 		cfgServer.ConfigureHTTP(o.server.HTTP)
 
@@ -188,8 +197,14 @@ func (o *OtelFleet) setupModuleManager() error {
 		defaultHTTPMiddleware := []middleware.Interface{}
 		o.server.HTTPServer.Handler = middleware.Merge(defaultHTTPMiddleware...).Wrap(o.server.HTTP)
 		s := o.newServerService(servicesToWaitFor)
-		// todo configure http2
-		o.server.HTTPServer.Handler = h2c.NewHandler(o.server.HTTPServer.Handler, &http2.Server{})
+		corsHandler := cors.New(cors.Options{
+			AllowedOrigins:   []string{"http://localhost:5173"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"*"},
+			AllowCredentials: true,
+		}).Handler(o.server.HTTPServer.Handler)
+		o.server.HTTPServer.Handler = h2c.NewHandler(corsHandler, &http2.Server{})
+
 		// o.server.HTTPServer.Handler = util.RecoveryHTTPMiddleware.Wrap(f.Server.HTTPServer.Handler)
 		return s, nil
 	}, modules.UserInvisibleModule)

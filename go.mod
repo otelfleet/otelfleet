@@ -9,6 +9,7 @@ require (
 	github.com/cockroachdb/pebble/v2 v2.0.7
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-kit/log v0.2.1
+	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/grafana/dskit v0.0.0-20251128171051-c8889cbcbd96
@@ -16,6 +17,8 @@ require (
 	github.com/lmittmann/tint v1.1.2
 	github.com/mattn/go-sqlite3 v1.14.30
 	github.com/open-telemetry/opamp-go v0.20.0
+	github.com/rs/cors v1.11.1
+	github.com/samber/lo v1.52.0
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.62.0
 	go.opentelemetry.io/proto/otlp v1.7.1

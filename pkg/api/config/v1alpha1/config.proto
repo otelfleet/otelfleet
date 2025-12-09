@@ -12,6 +12,7 @@ service ConfigService {
   rpc GetConfig(ConfigReference) returns (Config);
   rpc DeleteConfig(ConfigReference) returns (google.protobuf.Empty);
   rpc ListConfigs(google.protobuf.Empty) returns (ListConfigReponse);
+  rpc GetDefaultConfig(google.protobuf.Empty) returns (Config);
   rpc SetDefaultConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
 }
 
@@ -25,7 +26,7 @@ message ValidateConfigRequest {
 }
 
 message ListConfigReponse {
-  repeated Config configs = 1;
+  repeated ConfigReference configs = 1;
 }
 
 message ConfigReference {
