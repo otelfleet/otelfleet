@@ -63,6 +63,7 @@ func (k *prefixedKV) listPrefix() []byte {
 
 func (k *prefixedKV) ListKeys(ctx context.Context) ([]string, error) {
 	prefix := k.listPrefix()
+	pn := len(prefix)
 	upper := make([]byte, len(prefix))
 	copy(upper, prefix)
 	upper[len(prefix)-1]++
@@ -76,7 +77,8 @@ func (k *prefixedKV) ListKeys(ctx context.Context) ([]string, error) {
 	defer iter.Close()
 	keys := []string{}
 	for iter.First(); iter.Valid(); iter.Next() {
-		keys = append(keys, string(iter.Key()))
+		iKey := iter.Key()[pn:]
+		keys = append(keys, string(iKey))
 	}
 	if err := iter.Error(); err != nil {
 		return nil, err
@@ -112,5 +114,5 @@ func (k *prefixedKV) Delete(ctx context.Context, key string) error {
 	return k.db.Delete(k.key(key), &pebble.WriteOptions{})
 }
 
-var _ storage.KeyValue[any] = (*prefixedKeyValue[any])(nil)
-var _ storage.KeyValueBroker[any] = (*KeyValueBroker[any])(nil)
+var _ storage.KV = (*prefixedKV)(nil)
+var _ storage.KVBroker = (*KVBroker)(nil)
