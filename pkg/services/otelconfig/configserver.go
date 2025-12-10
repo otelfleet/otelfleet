@@ -53,7 +53,7 @@ func (c *ConfigServer) ConfigureHTTP(mux *mux.Router) {
 func (c *ConfigServer) ValidConfig(context.Context, *connect.Request[v1alpha1.ValidateConfigRequest]) (*connect.Response[emptypb.Empty], error) {
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
-func (c *ConfigServer) UpdateConfig(ctx context.Context, connectReq *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error) {
+func (c *ConfigServer) PutConfig(ctx context.Context, connectReq *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error) {
 	req := connectReq.Msg
 
 	if req.Config == nil {
@@ -118,6 +118,6 @@ func (c *ConfigServer) GetDefaultConfig(ctx context.Context, req *connect.Reques
 	return nil, status.Error(codes.Internal, err.Error())
 }
 
-func (c *ConfigServer) SetDefaultConfig(context.Context, *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error) {
+func (c *ConfigServer) SetDefaultConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error) {
 	panic("implement me")
 }

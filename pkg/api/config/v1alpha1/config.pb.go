@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type UpdateConfigRequest struct {
+type PutConfigRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Ref           *ConfigReference       `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
 	Config        *Config                `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
@@ -30,20 +30,20 @@ type UpdateConfigRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UpdateConfigRequest) Reset() {
-	*x = UpdateConfigRequest{}
+func (x *PutConfigRequest) Reset() {
+	*x = PutConfigRequest{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UpdateConfigRequest) String() string {
+func (x *PutConfigRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdateConfigRequest) ProtoMessage() {}
+func (*PutConfigRequest) ProtoMessage() {}
 
-func (x *UpdateConfigRequest) ProtoReflect() protoreflect.Message {
+func (x *PutConfigRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -55,19 +55,19 @@ func (x *UpdateConfigRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdateConfigRequest.ProtoReflect.Descriptor instead.
-func (*UpdateConfigRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use PutConfigRequest.ProtoReflect.Descriptor instead.
+func (*PutConfigRequest) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *UpdateConfigRequest) GetRef() *ConfigReference {
+func (x *PutConfigRequest) GetRef() *ConfigReference {
 	if x != nil {
 		return x.Ref
 	}
 	return nil
 }
 
-func (x *UpdateConfigRequest) GetConfig() *Config {
+func (x *PutConfigRequest) GetConfig() *Config {
 	if x != nil {
 		return x.Config
 	}
@@ -386,8 +386,8 @@ var File_pkg_api_config_v1alpha1_config_proto protoreflect.FileDescriptor
 
 const file_pkg_api_config_v1alpha1_config_proto_rawDesc = "" +
 	"\n" +
-	"$pkg/api/config/v1alpha1/config.proto\x12\x0fconfig.v1alpha1\x1a\x1bgoogle/protobuf/empty.proto\"z\n" +
-	"\x13UpdateConfigRequest\x122\n" +
+	"$pkg/api/config/v1alpha1/config.proto\x12\x0fconfig.v1alpha1\x1a\x1bgoogle/protobuf/empty.proto\"w\n" +
+	"\x10PutConfigRequest\x122\n" +
 	"\x03ref\x18\x01 \x01(\v2 .config.v1alpha1.ConfigReferenceR\x03ref\x12/\n" +
 	"\x06config\x18\x02 \x01(\v2\x17.config.v1alpha1.ConfigR\x06config\"H\n" +
 	"\x15ValidateConfigRequest\x12/\n" +
@@ -408,15 +408,15 @@ const file_pkg_api_config_v1alpha1_config_proto_rawDesc = "" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\t\n" +
-	"\aMatcher2\xa0\x04\n" +
+	"\aMatcher2\x97\x04\n" +
 	"\rConfigService\x12M\n" +
-	"\vValidConfig\x12&.config.v1alpha1.ValidateConfigRequest\x1a\x16.google.protobuf.Empty\x12L\n" +
-	"\fUpdateConfig\x12$.config.v1alpha1.UpdateConfigRequest\x1a\x16.google.protobuf.Empty\x12F\n" +
+	"\vValidConfig\x12&.config.v1alpha1.ValidateConfigRequest\x1a\x16.google.protobuf.Empty\x12F\n" +
+	"\tPutConfig\x12!.config.v1alpha1.PutConfigRequest\x1a\x16.google.protobuf.Empty\x12F\n" +
 	"\tGetConfig\x12 .config.v1alpha1.ConfigReference\x1a\x17.config.v1alpha1.Config\x12H\n" +
 	"\fDeleteConfig\x12 .config.v1alpha1.ConfigReference\x1a\x16.google.protobuf.Empty\x12I\n" +
 	"\vListConfigs\x12\x16.google.protobuf.Empty\x1a\".config.v1alpha1.ListConfigReponse\x12C\n" +
-	"\x10GetDefaultConfig\x12\x16.google.protobuf.Empty\x1a\x17.config.v1alpha1.Config\x12P\n" +
-	"\x10SetDefaultConfig\x12$.config.v1alpha1.UpdateConfigRequest\x1a\x16.google.protobuf.EmptyB8Z6github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1b\x06proto3"
+	"\x10GetDefaultConfig\x12\x16.google.protobuf.Empty\x1a\x17.config.v1alpha1.Config\x12M\n" +
+	"\x10SetDefaultConfig\x12!.config.v1alpha1.PutConfigRequest\x1a\x16.google.protobuf.EmptyB8Z6github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1b\x06proto3"
 
 var (
 	file_pkg_api_config_v1alpha1_config_proto_rawDescOnce sync.Once
@@ -432,7 +432,7 @@ func file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP() []byte {
 
 var file_pkg_api_config_v1alpha1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_pkg_api_config_v1alpha1_config_proto_goTypes = []any{
-	(*UpdateConfigRequest)(nil),   // 0: config.v1alpha1.UpdateConfigRequest
+	(*PutConfigRequest)(nil),      // 0: config.v1alpha1.PutConfigRequest
 	(*ValidateConfigRequest)(nil), // 1: config.v1alpha1.ValidateConfigRequest
 	(*ListConfigReponse)(nil),     // 2: config.v1alpha1.ListConfigReponse
 	(*ConfigReference)(nil),       // 3: config.v1alpha1.ConfigReference
@@ -444,20 +444,20 @@ var file_pkg_api_config_v1alpha1_config_proto_goTypes = []any{
 	(*emptypb.Empty)(nil),         // 9: google.protobuf.Empty
 }
 var file_pkg_api_config_v1alpha1_config_proto_depIdxs = []int32{
-	3,  // 0: config.v1alpha1.UpdateConfigRequest.ref:type_name -> config.v1alpha1.ConfigReference
-	4,  // 1: config.v1alpha1.UpdateConfigRequest.config:type_name -> config.v1alpha1.Config
+	3,  // 0: config.v1alpha1.PutConfigRequest.ref:type_name -> config.v1alpha1.ConfigReference
+	4,  // 1: config.v1alpha1.PutConfigRequest.config:type_name -> config.v1alpha1.Config
 	4,  // 2: config.v1alpha1.ValidateConfigRequest.config:type_name -> config.v1alpha1.Config
 	3,  // 3: config.v1alpha1.ListConfigReponse.configs:type_name -> config.v1alpha1.ConfigReference
 	8,  // 4: config.v1alpha1.Labels.labels:type_name -> config.v1alpha1.Labels.LabelsEntry
 	1,  // 5: config.v1alpha1.ConfigService.ValidConfig:input_type -> config.v1alpha1.ValidateConfigRequest
-	0,  // 6: config.v1alpha1.ConfigService.UpdateConfig:input_type -> config.v1alpha1.UpdateConfigRequest
+	0,  // 6: config.v1alpha1.ConfigService.PutConfig:input_type -> config.v1alpha1.PutConfigRequest
 	3,  // 7: config.v1alpha1.ConfigService.GetConfig:input_type -> config.v1alpha1.ConfigReference
 	3,  // 8: config.v1alpha1.ConfigService.DeleteConfig:input_type -> config.v1alpha1.ConfigReference
 	9,  // 9: config.v1alpha1.ConfigService.ListConfigs:input_type -> google.protobuf.Empty
 	9,  // 10: config.v1alpha1.ConfigService.GetDefaultConfig:input_type -> google.protobuf.Empty
-	0,  // 11: config.v1alpha1.ConfigService.SetDefaultConfig:input_type -> config.v1alpha1.UpdateConfigRequest
+	0,  // 11: config.v1alpha1.ConfigService.SetDefaultConfig:input_type -> config.v1alpha1.PutConfigRequest
 	9,  // 12: config.v1alpha1.ConfigService.ValidConfig:output_type -> google.protobuf.Empty
-	9,  // 13: config.v1alpha1.ConfigService.UpdateConfig:output_type -> google.protobuf.Empty
+	9,  // 13: config.v1alpha1.ConfigService.PutConfig:output_type -> google.protobuf.Empty
 	4,  // 14: config.v1alpha1.ConfigService.GetConfig:output_type -> config.v1alpha1.Config
 	9,  // 15: config.v1alpha1.ConfigService.DeleteConfig:output_type -> google.protobuf.Empty
 	2,  // 16: config.v1alpha1.ConfigService.ListConfigs:output_type -> config.v1alpha1.ListConfigReponse

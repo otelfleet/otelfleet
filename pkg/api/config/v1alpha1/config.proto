@@ -8,15 +8,15 @@ option go_package = "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1";
 
 service ConfigService {
   rpc ValidConfig(ValidateConfigRequest) returns (google.protobuf.Empty);
-  rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
+  rpc PutConfig(PutConfigRequest) returns (google.protobuf.Empty);
   rpc GetConfig(ConfigReference) returns (Config);
   rpc DeleteConfig(ConfigReference) returns (google.protobuf.Empty);
   rpc ListConfigs(google.protobuf.Empty) returns (ListConfigReponse);
   rpc GetDefaultConfig(google.protobuf.Empty) returns (Config);
-  rpc SetDefaultConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
+  rpc SetDefaultConfig(PutConfigRequest) returns (google.protobuf.Empty);
 }
 
-message UpdateConfigRequest {
+message PutConfigRequest {
   ConfigReference ref    = 1;
   Config          config = 2;
 }

@@ -37,9 +37,8 @@ const (
 	// ConfigServiceValidConfigProcedure is the fully-qualified name of the ConfigService's ValidConfig
 	// RPC.
 	ConfigServiceValidConfigProcedure = "/config.v1alpha1.ConfigService/ValidConfig"
-	// ConfigServiceUpdateConfigProcedure is the fully-qualified name of the ConfigService's
-	// UpdateConfig RPC.
-	ConfigServiceUpdateConfigProcedure = "/config.v1alpha1.ConfigService/UpdateConfig"
+	// ConfigServicePutConfigProcedure is the fully-qualified name of the ConfigService's PutConfig RPC.
+	ConfigServicePutConfigProcedure = "/config.v1alpha1.ConfigService/PutConfig"
 	// ConfigServiceGetConfigProcedure is the fully-qualified name of the ConfigService's GetConfig RPC.
 	ConfigServiceGetConfigProcedure = "/config.v1alpha1.ConfigService/GetConfig"
 	// ConfigServiceDeleteConfigProcedure is the fully-qualified name of the ConfigService's
@@ -59,12 +58,12 @@ const (
 // ConfigServiceClient is a client for the config.v1alpha1.ConfigService service.
 type ConfigServiceClient interface {
 	ValidConfig(context.Context, *connect.Request[v1alpha1.ValidateConfigRequest]) (*connect.Response[emptypb.Empty], error)
-	UpdateConfig(context.Context, *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error)
+	PutConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error)
 	GetConfig(context.Context, *connect.Request[v1alpha1.ConfigReference]) (*connect.Response[v1alpha1.Config], error)
 	DeleteConfig(context.Context, *connect.Request[v1alpha1.ConfigReference]) (*connect.Response[emptypb.Empty], error)
 	ListConfigs(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.ListConfigReponse], error)
 	GetDefaultConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.Config], error)
-	SetDefaultConfig(context.Context, *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error)
+	SetDefaultConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewConfigServiceClient constructs a client for the config.v1alpha1.ConfigService service. By
@@ -84,10 +83,10 @@ func NewConfigServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(configServiceMethods.ByName("ValidConfig")),
 			connect.WithClientOptions(opts...),
 		),
-		updateConfig: connect.NewClient[v1alpha1.UpdateConfigRequest, emptypb.Empty](
+		putConfig: connect.NewClient[v1alpha1.PutConfigRequest, emptypb.Empty](
 			httpClient,
-			baseURL+ConfigServiceUpdateConfigProcedure,
-			connect.WithSchema(configServiceMethods.ByName("UpdateConfig")),
+			baseURL+ConfigServicePutConfigProcedure,
+			connect.WithSchema(configServiceMethods.ByName("PutConfig")),
 			connect.WithClientOptions(opts...),
 		),
 		getConfig: connect.NewClient[v1alpha1.ConfigReference, v1alpha1.Config](
@@ -114,7 +113,7 @@ func NewConfigServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(configServiceMethods.ByName("GetDefaultConfig")),
 			connect.WithClientOptions(opts...),
 		),
-		setDefaultConfig: connect.NewClient[v1alpha1.UpdateConfigRequest, emptypb.Empty](
+		setDefaultConfig: connect.NewClient[v1alpha1.PutConfigRequest, emptypb.Empty](
 			httpClient,
 			baseURL+ConfigServiceSetDefaultConfigProcedure,
 			connect.WithSchema(configServiceMethods.ByName("SetDefaultConfig")),
@@ -126,12 +125,12 @@ func NewConfigServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 // configServiceClient implements ConfigServiceClient.
 type configServiceClient struct {
 	validConfig      *connect.Client[v1alpha1.ValidateConfigRequest, emptypb.Empty]
-	updateConfig     *connect.Client[v1alpha1.UpdateConfigRequest, emptypb.Empty]
+	putConfig        *connect.Client[v1alpha1.PutConfigRequest, emptypb.Empty]
 	getConfig        *connect.Client[v1alpha1.ConfigReference, v1alpha1.Config]
 	deleteConfig     *connect.Client[v1alpha1.ConfigReference, emptypb.Empty]
 	listConfigs      *connect.Client[emptypb.Empty, v1alpha1.ListConfigReponse]
 	getDefaultConfig *connect.Client[emptypb.Empty, v1alpha1.Config]
-	setDefaultConfig *connect.Client[v1alpha1.UpdateConfigRequest, emptypb.Empty]
+	setDefaultConfig *connect.Client[v1alpha1.PutConfigRequest, emptypb.Empty]
 }
 
 // ValidConfig calls config.v1alpha1.ConfigService.ValidConfig.
@@ -139,9 +138,9 @@ func (c *configServiceClient) ValidConfig(ctx context.Context, req *connect.Requ
 	return c.validConfig.CallUnary(ctx, req)
 }
 
-// UpdateConfig calls config.v1alpha1.ConfigService.UpdateConfig.
-func (c *configServiceClient) UpdateConfig(ctx context.Context, req *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error) {
-	return c.updateConfig.CallUnary(ctx, req)
+// PutConfig calls config.v1alpha1.ConfigService.PutConfig.
+func (c *configServiceClient) PutConfig(ctx context.Context, req *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.putConfig.CallUnary(ctx, req)
 }
 
 // GetConfig calls config.v1alpha1.ConfigService.GetConfig.
@@ -165,19 +164,19 @@ func (c *configServiceClient) GetDefaultConfig(ctx context.Context, req *connect
 }
 
 // SetDefaultConfig calls config.v1alpha1.ConfigService.SetDefaultConfig.
-func (c *configServiceClient) SetDefaultConfig(ctx context.Context, req *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error) {
+func (c *configServiceClient) SetDefaultConfig(ctx context.Context, req *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error) {
 	return c.setDefaultConfig.CallUnary(ctx, req)
 }
 
 // ConfigServiceHandler is an implementation of the config.v1alpha1.ConfigService service.
 type ConfigServiceHandler interface {
 	ValidConfig(context.Context, *connect.Request[v1alpha1.ValidateConfigRequest]) (*connect.Response[emptypb.Empty], error)
-	UpdateConfig(context.Context, *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error)
+	PutConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error)
 	GetConfig(context.Context, *connect.Request[v1alpha1.ConfigReference]) (*connect.Response[v1alpha1.Config], error)
 	DeleteConfig(context.Context, *connect.Request[v1alpha1.ConfigReference]) (*connect.Response[emptypb.Empty], error)
 	ListConfigs(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.ListConfigReponse], error)
 	GetDefaultConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.Config], error)
-	SetDefaultConfig(context.Context, *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error)
+	SetDefaultConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewConfigServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -193,10 +192,10 @@ func NewConfigServiceHandler(svc ConfigServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(configServiceMethods.ByName("ValidConfig")),
 		connect.WithHandlerOptions(opts...),
 	)
-	configServiceUpdateConfigHandler := connect.NewUnaryHandler(
-		ConfigServiceUpdateConfigProcedure,
-		svc.UpdateConfig,
-		connect.WithSchema(configServiceMethods.ByName("UpdateConfig")),
+	configServicePutConfigHandler := connect.NewUnaryHandler(
+		ConfigServicePutConfigProcedure,
+		svc.PutConfig,
+		connect.WithSchema(configServiceMethods.ByName("PutConfig")),
 		connect.WithHandlerOptions(opts...),
 	)
 	configServiceGetConfigHandler := connect.NewUnaryHandler(
@@ -233,8 +232,8 @@ func NewConfigServiceHandler(svc ConfigServiceHandler, opts ...connect.HandlerOp
 		switch r.URL.Path {
 		case ConfigServiceValidConfigProcedure:
 			configServiceValidConfigHandler.ServeHTTP(w, r)
-		case ConfigServiceUpdateConfigProcedure:
-			configServiceUpdateConfigHandler.ServeHTTP(w, r)
+		case ConfigServicePutConfigProcedure:
+			configServicePutConfigHandler.ServeHTTP(w, r)
 		case ConfigServiceGetConfigProcedure:
 			configServiceGetConfigHandler.ServeHTTP(w, r)
 		case ConfigServiceDeleteConfigProcedure:
@@ -258,8 +257,8 @@ func (UnimplementedConfigServiceHandler) ValidConfig(context.Context, *connect.R
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.ValidConfig is not implemented"))
 }
 
-func (UnimplementedConfigServiceHandler) UpdateConfig(context.Context, *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.UpdateConfig is not implemented"))
+func (UnimplementedConfigServiceHandler) PutConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.PutConfig is not implemented"))
 }
 
 func (UnimplementedConfigServiceHandler) GetConfig(context.Context, *connect.Request[v1alpha1.ConfigReference]) (*connect.Response[v1alpha1.Config], error) {
@@ -278,6 +277,6 @@ func (UnimplementedConfigServiceHandler) GetDefaultConfig(context.Context, *conn
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.GetDefaultConfig is not implemented"))
 }
 
-func (UnimplementedConfigServiceHandler) SetDefaultConfig(context.Context, *connect.Request[v1alpha1.UpdateConfigRequest]) (*connect.Response[emptypb.Empty], error) {
+func (UnimplementedConfigServiceHandler) SetDefaultConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.SetDefaultConfig is not implemented"))
 }

@@ -24,9 +24,9 @@ func RegisterConfigServiceHandler(mux *mux.Router, svc ConfigServiceHandler, opt
 		svc.ValidConfig,
 		opts...,
 	))
-	mux.Handle("/config.v1alpha1.ConfigService/UpdateConfig", connect.NewUnaryHandler(
-		"/config.v1alpha1.ConfigService/UpdateConfig",
-		svc.UpdateConfig,
+	mux.Handle("/config.v1alpha1.ConfigService/PutConfig", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/PutConfig",
+		svc.PutConfig,
 		opts...,
 	))
 	mux.Handle("/config.v1alpha1.ConfigService/GetConfig", connect.NewUnaryHandler(
