@@ -2,9 +2,11 @@ package pebble
 
 import (
 	"context"
+	"errors"
 
 	"github.com/cockroachdb/pebble/v2"
 	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 )
 
 type KVBroker struct {
@@ -47,10 +49,13 @@ func (k *prefixedKV) Put(_ context.Context, key string, value []byte) error {
 
 func (k *prefixedKV) Get(_ context.Context, key string) ([]byte, error) {
 	data, closer, err := k.db.Get(k.key(key))
-	defer closer.Close()
 	if err != nil {
+		if errors.Is(err, pebble.ErrNotFound) {
+			return nil, grpcutil.ErrorNotFound(err)
+		}
 		return nil, err
 	}
+	defer closer.Close()
 	return data, nil
 }
 
