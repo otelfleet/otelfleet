@@ -24,6 +24,110 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type BootstrapAuthRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=clientId,proto3" json:"clientId,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	ClientPubKey  []byte                 `protobuf:"bytes,3,opt,name=clientPubKey,proto3" json:"clientPubKey,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BootstrapAuthRequest) Reset() {
+	*x = BootstrapAuthRequest{}
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BootstrapAuthRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BootstrapAuthRequest) ProtoMessage() {}
+
+func (x *BootstrapAuthRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BootstrapAuthRequest.ProtoReflect.Descriptor instead.
+func (*BootstrapAuthRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *BootstrapAuthRequest) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *BootstrapAuthRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *BootstrapAuthRequest) GetClientPubKey() []byte {
+	if x != nil {
+		return x.ClientPubKey
+	}
+	return nil
+}
+
+type BootstrapAuthResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerPubKey  []byte                 `protobuf:"bytes,1,opt,name=serverPubKey,proto3" json:"serverPubKey,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BootstrapAuthResponse) Reset() {
+	*x = BootstrapAuthResponse{}
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BootstrapAuthResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BootstrapAuthResponse) ProtoMessage() {}
+
+func (x *BootstrapAuthResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BootstrapAuthResponse.ProtoReflect.Descriptor instead.
+func (*BootstrapAuthResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *BootstrapAuthResponse) GetServerPubKey() []byte {
+	if x != nil {
+		return x.ServerPubKey
+	}
+	return nil
+}
+
 type BootstrapToken struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ID            string                 `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
@@ -36,7 +140,7 @@ type BootstrapToken struct {
 
 func (x *BootstrapToken) Reset() {
 	*x = BootstrapToken{}
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[0]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -48,7 +152,7 @@ func (x *BootstrapToken) String() string {
 func (*BootstrapToken) ProtoMessage() {}
 
 func (x *BootstrapToken) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[0]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -61,7 +165,7 @@ func (x *BootstrapToken) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BootstrapToken.ProtoReflect.Descriptor instead.
 func (*BootstrapToken) Descriptor() ([]byte, []int) {
-	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{0}
+	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *BootstrapToken) GetID() string {
@@ -101,7 +205,7 @@ type ListTokenReponse struct {
 
 func (x *ListTokenReponse) Reset() {
 	*x = ListTokenReponse{}
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[1]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -113,7 +217,7 @@ func (x *ListTokenReponse) String() string {
 func (*ListTokenReponse) ProtoMessage() {}
 
 func (x *ListTokenReponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[1]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -126,7 +230,7 @@ func (x *ListTokenReponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTokenReponse.ProtoReflect.Descriptor instead.
 func (*ListTokenReponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{1}
+	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ListTokenReponse) GetTokens() []*BootstrapToken {
@@ -145,7 +249,7 @@ type CreateTokenRequest struct {
 
 func (x *CreateTokenRequest) Reset() {
 	*x = CreateTokenRequest{}
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[2]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -157,7 +261,7 @@ func (x *CreateTokenRequest) String() string {
 func (*CreateTokenRequest) ProtoMessage() {}
 
 func (x *CreateTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[2]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -170,7 +274,7 @@ func (x *CreateTokenRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTokenRequest.ProtoReflect.Descriptor instead.
 func (*CreateTokenRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{2}
+	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateTokenRequest) GetTTL() *durationpb.Duration {
@@ -189,7 +293,7 @@ type DeleteTokenRequest struct {
 
 func (x *DeleteTokenRequest) Reset() {
 	*x = DeleteTokenRequest{}
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[3]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -201,7 +305,7 @@ func (x *DeleteTokenRequest) String() string {
 func (*DeleteTokenRequest) ProtoMessage() {}
 
 func (x *DeleteTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[3]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -214,7 +318,7 @@ func (x *DeleteTokenRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTokenRequest.ProtoReflect.Descriptor instead.
 func (*DeleteTokenRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{3}
+	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *DeleteTokenRequest) GetID() string {
@@ -233,7 +337,7 @@ type SignatureResponse struct {
 
 func (x *SignatureResponse) Reset() {
 	*x = SignatureResponse{}
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[4]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -245,7 +349,7 @@ func (x *SignatureResponse) String() string {
 func (*SignatureResponse) ProtoMessage() {}
 
 func (x *SignatureResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[4]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -258,7 +362,7 @@ func (x *SignatureResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignatureResponse.ProtoReflect.Descriptor instead.
 func (*SignatureResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{4}
+	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *SignatureResponse) GetSignatures() map[string][]byte {
@@ -279,7 +383,7 @@ type BootstrapRequest struct {
 
 func (x *BootstrapRequest) Reset() {
 	*x = BootstrapRequest{}
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[5]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -291,7 +395,7 @@ func (x *BootstrapRequest) String() string {
 func (*BootstrapRequest) ProtoMessage() {}
 
 func (x *BootstrapRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[5]
+	mi := &file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -304,7 +408,7 @@ func (x *BootstrapRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BootstrapRequest.ProtoReflect.Descriptor instead.
 func (*BootstrapRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{5}
+	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *BootstrapRequest) GetID() string {
@@ -332,7 +436,13 @@ var File_pkg_api_bootstrap_v1alpha1_bootstrap_proto protoreflect.FileDescriptor
 
 const file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDesc = "" +
 	"\n" +
-	"*pkg/api/bootstrap/v1alpha1/bootstrap.proto\x12\x12bootstrap.v1alpha1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa9\x01\n" +
+	"*pkg/api/bootstrap/v1alpha1/bootstrap.proto\x12\x12bootstrap.v1alpha1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"j\n" +
+	"\x14BootstrapAuthRequest\x12\x1a\n" +
+	"\bclientId\x18\x01 \x01(\tR\bclientId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\"\n" +
+	"\fclientPubKey\x18\x03 \x01(\fR\fclientPubKey\";\n" +
+	"\x15BootstrapAuthResponse\x12\"\n" +
+	"\fserverPubKey\x18\x01 \x01(\fR\fserverPubKey\"\xa9\x01\n" +
 	"\x0eBootstrapToken\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\tR\x02ID\x12\x16\n" +
 	"\x06Secret\x18\x02 \x01(\tR\x06Secret\x12+\n" +
@@ -355,12 +465,16 @@ const file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDesc = "" +
 	"\x10BootstrapRequest\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\tR\x02ID\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\"\n" +
-	"\fclientPubKey\x18\x03 \x01(\fR\fclientPubKey2\x84\x02\n" +
+	"\fclientPubKey\x18\x03 \x01(\fR\fclientPubKey2\xd1\x02\n" +
 	"\fTokenService\x12Y\n" +
 	"\vCreateToken\x12&.bootstrap.v1alpha1.CreateTokenRequest\x1a\".bootstrap.v1alpha1.BootstrapToken\x12J\n" +
 	"\n" +
 	"ListTokens\x12\x16.google.protobuf.Empty\x1a$.bootstrap.v1alpha1.ListTokenReponse\x12M\n" +
-	"\vDeleteToken\x12&.bootstrap.v1alpha1.DeleteTokenRequest\x1a\x16.google.protobuf.EmptyBDZBgithub.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1;v1alpha1b\x06proto3"
+	"\vDeleteToken\x12&.bootstrap.v1alpha1.DeleteTokenRequest\x1a\x16.google.protobuf.Empty\x12K\n" +
+	"\n" +
+	"Signatures\x12\x16.google.protobuf.Empty\x1a%.bootstrap.v1alpha1.SignatureResponse2t\n" +
+	"\x10BootstrapService\x12`\n" +
+	"\tBootstrap\x12(.bootstrap.v1alpha1.BootstrapAuthRequest\x1a).bootstrap.v1alpha1.BootstrapAuthResponseBDZBgithub.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1;v1alpha1b\x06proto3"
 
 var (
 	file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescOnce sync.Once
@@ -374,36 +488,42 @@ func file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP() []byte {
 	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescData
 }
 
-var file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_goTypes = []any{
-	(*BootstrapToken)(nil),        // 0: bootstrap.v1alpha1.BootstrapToken
-	(*ListTokenReponse)(nil),      // 1: bootstrap.v1alpha1.ListTokenReponse
-	(*CreateTokenRequest)(nil),    // 2: bootstrap.v1alpha1.CreateTokenRequest
-	(*DeleteTokenRequest)(nil),    // 3: bootstrap.v1alpha1.DeleteTokenRequest
-	(*SignatureResponse)(nil),     // 4: bootstrap.v1alpha1.SignatureResponse
-	(*BootstrapRequest)(nil),      // 5: bootstrap.v1alpha1.BootstrapRequest
-	nil,                           // 6: bootstrap.v1alpha1.SignatureResponse.SignaturesEntry
-	(*durationpb.Duration)(nil),   // 7: google.protobuf.Duration
-	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),         // 9: google.protobuf.Empty
+	(*BootstrapAuthRequest)(nil),  // 0: bootstrap.v1alpha1.BootstrapAuthRequest
+	(*BootstrapAuthResponse)(nil), // 1: bootstrap.v1alpha1.BootstrapAuthResponse
+	(*BootstrapToken)(nil),        // 2: bootstrap.v1alpha1.BootstrapToken
+	(*ListTokenReponse)(nil),      // 3: bootstrap.v1alpha1.ListTokenReponse
+	(*CreateTokenRequest)(nil),    // 4: bootstrap.v1alpha1.CreateTokenRequest
+	(*DeleteTokenRequest)(nil),    // 5: bootstrap.v1alpha1.DeleteTokenRequest
+	(*SignatureResponse)(nil),     // 6: bootstrap.v1alpha1.SignatureResponse
+	(*BootstrapRequest)(nil),      // 7: bootstrap.v1alpha1.BootstrapRequest
+	nil,                           // 8: bootstrap.v1alpha1.SignatureResponse.SignaturesEntry
+	(*durationpb.Duration)(nil),   // 9: google.protobuf.Duration
+	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),         // 11: google.protobuf.Empty
 }
 var file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_depIdxs = []int32{
-	7, // 0: bootstrap.v1alpha1.BootstrapToken.TTL:type_name -> google.protobuf.Duration
-	8, // 1: bootstrap.v1alpha1.BootstrapToken.Expiry:type_name -> google.protobuf.Timestamp
-	0, // 2: bootstrap.v1alpha1.ListTokenReponse.tokens:type_name -> bootstrap.v1alpha1.BootstrapToken
-	7, // 3: bootstrap.v1alpha1.CreateTokenRequest.TTL:type_name -> google.protobuf.Duration
-	6, // 4: bootstrap.v1alpha1.SignatureResponse.signatures:type_name -> bootstrap.v1alpha1.SignatureResponse.SignaturesEntry
-	2, // 5: bootstrap.v1alpha1.TokenService.CreateToken:input_type -> bootstrap.v1alpha1.CreateTokenRequest
-	9, // 6: bootstrap.v1alpha1.TokenService.ListTokens:input_type -> google.protobuf.Empty
-	3, // 7: bootstrap.v1alpha1.TokenService.DeleteToken:input_type -> bootstrap.v1alpha1.DeleteTokenRequest
-	0, // 8: bootstrap.v1alpha1.TokenService.CreateToken:output_type -> bootstrap.v1alpha1.BootstrapToken
-	1, // 9: bootstrap.v1alpha1.TokenService.ListTokens:output_type -> bootstrap.v1alpha1.ListTokenReponse
-	9, // 10: bootstrap.v1alpha1.TokenService.DeleteToken:output_type -> google.protobuf.Empty
-	8, // [8:11] is the sub-list for method output_type
-	5, // [5:8] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	9,  // 0: bootstrap.v1alpha1.BootstrapToken.TTL:type_name -> google.protobuf.Duration
+	10, // 1: bootstrap.v1alpha1.BootstrapToken.Expiry:type_name -> google.protobuf.Timestamp
+	2,  // 2: bootstrap.v1alpha1.ListTokenReponse.tokens:type_name -> bootstrap.v1alpha1.BootstrapToken
+	9,  // 3: bootstrap.v1alpha1.CreateTokenRequest.TTL:type_name -> google.protobuf.Duration
+	8,  // 4: bootstrap.v1alpha1.SignatureResponse.signatures:type_name -> bootstrap.v1alpha1.SignatureResponse.SignaturesEntry
+	4,  // 5: bootstrap.v1alpha1.TokenService.CreateToken:input_type -> bootstrap.v1alpha1.CreateTokenRequest
+	11, // 6: bootstrap.v1alpha1.TokenService.ListTokens:input_type -> google.protobuf.Empty
+	5,  // 7: bootstrap.v1alpha1.TokenService.DeleteToken:input_type -> bootstrap.v1alpha1.DeleteTokenRequest
+	11, // 8: bootstrap.v1alpha1.TokenService.Signatures:input_type -> google.protobuf.Empty
+	0,  // 9: bootstrap.v1alpha1.BootstrapService.Bootstrap:input_type -> bootstrap.v1alpha1.BootstrapAuthRequest
+	2,  // 10: bootstrap.v1alpha1.TokenService.CreateToken:output_type -> bootstrap.v1alpha1.BootstrapToken
+	3,  // 11: bootstrap.v1alpha1.TokenService.ListTokens:output_type -> bootstrap.v1alpha1.ListTokenReponse
+	11, // 12: bootstrap.v1alpha1.TokenService.DeleteToken:output_type -> google.protobuf.Empty
+	6,  // 13: bootstrap.v1alpha1.TokenService.Signatures:output_type -> bootstrap.v1alpha1.SignatureResponse
+	1,  // 14: bootstrap.v1alpha1.BootstrapService.Bootstrap:output_type -> bootstrap.v1alpha1.BootstrapAuthResponse
+	10, // [10:15] is the sub-list for method output_type
+	5,  // [5:10] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_init() }
@@ -411,16 +531,16 @@ func file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_init() {
 	if File_pkg_api_bootstrap_v1alpha1_bootstrap_proto != nil {
 		return
 	}
-	file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[0].OneofWrappers = []any{}
+	file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[2].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDesc), len(file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   2,
 		},
 		GoTypes:           file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_goTypes,
 		DependencyIndexes: file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_depIdxs,

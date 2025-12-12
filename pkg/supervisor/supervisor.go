@@ -20,16 +20,19 @@ type Supervisor struct {
 	tlsConfig *tls.Config
 
 	opampClient client.OpAMPClient
+	opAmpAddr   string
 }
 
 func NewSupervisor(
 	log *slog.Logger,
 	tlsConfig *tls.Config,
+	opAmpAddr string,
 ) *Supervisor {
 	return &Supervisor{
 		logger:       log,
 		tlsConfig:    tlsConfig,
 		clientLogger: logutil.NewOpAMPLogger(log),
+		opAmpAddr:    opAmpAddr,
 	}
 }
 
@@ -44,7 +47,7 @@ func (s *Supervisor) startOpAMP() error {
 	s.opampClient = client.NewWebSocket(s.clientLogger)
 
 	settings := types.StartSettings{
-		OpAMPServerURL: "wss://127.0.0.1:4320/v1/opamp",
+		OpAMPServerURL: s.opAmpAddr,
 		TLSConfig:      s.tlsConfig,
 		InstanceUid:    types.InstanceUid([]byte(uuid.New().String())),
 		Callbacks: types.Callbacks{

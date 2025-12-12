@@ -55,6 +55,7 @@ func (s *Server) start(ctx context.Context) error {
 					return types.ConnectionResponse{
 						Accept: true,
 						ConnectionCallbacks: types.ConnectionCallbacks{
+							OnConnected:       s.onConnected,
 							OnMessage:         s.onMessage,
 							OnConnectionClose: s.onDisconnect,
 						},
@@ -79,6 +80,10 @@ func (s *Server) stop(failureCase error) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Server) onConnected(ctx context.Context, conn types.Connection) {
+	s.logger.With("addr", conn.Connection().LocalAddr().String()).Info("agent connected")
 }
 
 func (s *Server) onMessage(ctx context.Context, conn types.Connection, message *protobufs.AgentToServer) *protobufs.ServerToAgent {

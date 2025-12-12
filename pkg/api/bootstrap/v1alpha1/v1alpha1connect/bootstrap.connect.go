@@ -24,6 +24,8 @@ const _ = connect.IsAtLeastVersion1_13_0
 const (
 	// TokenServiceName is the fully-qualified name of the TokenService service.
 	TokenServiceName = "bootstrap.v1alpha1.TokenService"
+	// BootstrapServiceName is the fully-qualified name of the BootstrapService service.
+	BootstrapServiceName = "bootstrap.v1alpha1.BootstrapService"
 )
 
 // These constants are the fully-qualified names of the RPCs defined in this package. They're
@@ -42,6 +44,11 @@ const (
 	// TokenServiceDeleteTokenProcedure is the fully-qualified name of the TokenService's DeleteToken
 	// RPC.
 	TokenServiceDeleteTokenProcedure = "/bootstrap.v1alpha1.TokenService/DeleteToken"
+	// TokenServiceSignaturesProcedure is the fully-qualified name of the TokenService's Signatures RPC.
+	TokenServiceSignaturesProcedure = "/bootstrap.v1alpha1.TokenService/Signatures"
+	// BootstrapServiceBootstrapProcedure is the fully-qualified name of the BootstrapService's
+	// Bootstrap RPC.
+	BootstrapServiceBootstrapProcedure = "/bootstrap.v1alpha1.BootstrapService/Bootstrap"
 )
 
 // TokenServiceClient is a client for the bootstrap.v1alpha1.TokenService service.
@@ -49,6 +56,7 @@ type TokenServiceClient interface {
 	CreateToken(context.Context, *connect.Request[v1alpha1.CreateTokenRequest]) (*connect.Response[v1alpha1.BootstrapToken], error)
 	ListTokens(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.ListTokenReponse], error)
 	DeleteToken(context.Context, *connect.Request[v1alpha1.DeleteTokenRequest]) (*connect.Response[emptypb.Empty], error)
+	Signatures(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.SignatureResponse], error)
 }
 
 // NewTokenServiceClient constructs a client for the bootstrap.v1alpha1.TokenService service. By
@@ -80,6 +88,12 @@ func NewTokenServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(tokenServiceMethods.ByName("DeleteToken")),
 			connect.WithClientOptions(opts...),
 		),
+		signatures: connect.NewClient[emptypb.Empty, v1alpha1.SignatureResponse](
+			httpClient,
+			baseURL+TokenServiceSignaturesProcedure,
+			connect.WithSchema(tokenServiceMethods.ByName("Signatures")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -88,6 +102,7 @@ type tokenServiceClient struct {
 	createToken *connect.Client[v1alpha1.CreateTokenRequest, v1alpha1.BootstrapToken]
 	listTokens  *connect.Client[emptypb.Empty, v1alpha1.ListTokenReponse]
 	deleteToken *connect.Client[v1alpha1.DeleteTokenRequest, emptypb.Empty]
+	signatures  *connect.Client[emptypb.Empty, v1alpha1.SignatureResponse]
 }
 
 // CreateToken calls bootstrap.v1alpha1.TokenService.CreateToken.
@@ -105,11 +120,17 @@ func (c *tokenServiceClient) DeleteToken(ctx context.Context, req *connect.Reque
 	return c.deleteToken.CallUnary(ctx, req)
 }
 
+// Signatures calls bootstrap.v1alpha1.TokenService.Signatures.
+func (c *tokenServiceClient) Signatures(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.SignatureResponse], error) {
+	return c.signatures.CallUnary(ctx, req)
+}
+
 // TokenServiceHandler is an implementation of the bootstrap.v1alpha1.TokenService service.
 type TokenServiceHandler interface {
 	CreateToken(context.Context, *connect.Request[v1alpha1.CreateTokenRequest]) (*connect.Response[v1alpha1.BootstrapToken], error)
 	ListTokens(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.ListTokenReponse], error)
 	DeleteToken(context.Context, *connect.Request[v1alpha1.DeleteTokenRequest]) (*connect.Response[emptypb.Empty], error)
+	Signatures(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.SignatureResponse], error)
 }
 
 // NewTokenServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -137,6 +158,12 @@ func NewTokenServiceHandler(svc TokenServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(tokenServiceMethods.ByName("DeleteToken")),
 		connect.WithHandlerOptions(opts...),
 	)
+	tokenServiceSignaturesHandler := connect.NewUnaryHandler(
+		TokenServiceSignaturesProcedure,
+		svc.Signatures,
+		connect.WithSchema(tokenServiceMethods.ByName("Signatures")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/bootstrap.v1alpha1.TokenService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case TokenServiceCreateTokenProcedure:
@@ -145,6 +172,8 @@ func NewTokenServiceHandler(svc TokenServiceHandler, opts ...connect.HandlerOpti
 			tokenServiceListTokensHandler.ServeHTTP(w, r)
 		case TokenServiceDeleteTokenProcedure:
 			tokenServiceDeleteTokenHandler.ServeHTTP(w, r)
+		case TokenServiceSignaturesProcedure:
+			tokenServiceSignaturesHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -164,4 +193,78 @@ func (UnimplementedTokenServiceHandler) ListTokens(context.Context, *connect.Req
 
 func (UnimplementedTokenServiceHandler) DeleteToken(context.Context, *connect.Request[v1alpha1.DeleteTokenRequest]) (*connect.Response[emptypb.Empty], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bootstrap.v1alpha1.TokenService.DeleteToken is not implemented"))
+}
+
+func (UnimplementedTokenServiceHandler) Signatures(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.SignatureResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bootstrap.v1alpha1.TokenService.Signatures is not implemented"))
+}
+
+// BootstrapServiceClient is a client for the bootstrap.v1alpha1.BootstrapService service.
+type BootstrapServiceClient interface {
+	Bootstrap(context.Context, *connect.Request[v1alpha1.BootstrapAuthRequest]) (*connect.Response[v1alpha1.BootstrapAuthResponse], error)
+}
+
+// NewBootstrapServiceClient constructs a client for the bootstrap.v1alpha1.BootstrapService
+// service. By default, it uses the Connect protocol with the binary Protobuf Codec, asks for
+// gzipped responses, and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply
+// the connect.WithGRPC() or connect.WithGRPCWeb() options.
+//
+// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
+// http://api.acme.com or https://acme.com/grpc).
+func NewBootstrapServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) BootstrapServiceClient {
+	baseURL = strings.TrimRight(baseURL, "/")
+	bootstrapServiceMethods := v1alpha1.File_pkg_api_bootstrap_v1alpha1_bootstrap_proto.Services().ByName("BootstrapService").Methods()
+	return &bootstrapServiceClient{
+		bootstrap: connect.NewClient[v1alpha1.BootstrapAuthRequest, v1alpha1.BootstrapAuthResponse](
+			httpClient,
+			baseURL+BootstrapServiceBootstrapProcedure,
+			connect.WithSchema(bootstrapServiceMethods.ByName("Bootstrap")),
+			connect.WithClientOptions(opts...),
+		),
+	}
+}
+
+// bootstrapServiceClient implements BootstrapServiceClient.
+type bootstrapServiceClient struct {
+	bootstrap *connect.Client[v1alpha1.BootstrapAuthRequest, v1alpha1.BootstrapAuthResponse]
+}
+
+// Bootstrap calls bootstrap.v1alpha1.BootstrapService.Bootstrap.
+func (c *bootstrapServiceClient) Bootstrap(ctx context.Context, req *connect.Request[v1alpha1.BootstrapAuthRequest]) (*connect.Response[v1alpha1.BootstrapAuthResponse], error) {
+	return c.bootstrap.CallUnary(ctx, req)
+}
+
+// BootstrapServiceHandler is an implementation of the bootstrap.v1alpha1.BootstrapService service.
+type BootstrapServiceHandler interface {
+	Bootstrap(context.Context, *connect.Request[v1alpha1.BootstrapAuthRequest]) (*connect.Response[v1alpha1.BootstrapAuthResponse], error)
+}
+
+// NewBootstrapServiceHandler builds an HTTP handler from the service implementation. It returns the
+// path on which to mount the handler and the handler itself.
+//
+// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
+// and JSON codecs. They also support gzip compression.
+func NewBootstrapServiceHandler(svc BootstrapServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	bootstrapServiceMethods := v1alpha1.File_pkg_api_bootstrap_v1alpha1_bootstrap_proto.Services().ByName("BootstrapService").Methods()
+	bootstrapServiceBootstrapHandler := connect.NewUnaryHandler(
+		BootstrapServiceBootstrapProcedure,
+		svc.Bootstrap,
+		connect.WithSchema(bootstrapServiceMethods.ByName("Bootstrap")),
+		connect.WithHandlerOptions(opts...),
+	)
+	return "/bootstrap.v1alpha1.BootstrapService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case BootstrapServiceBootstrapProcedure:
+			bootstrapServiceBootstrapHandler.ServeHTTP(w, r)
+		default:
+			http.NotFound(w, r)
+		}
+	})
+}
+
+// UnimplementedBootstrapServiceHandler returns CodeUnimplemented from all methods.
+type UnimplementedBootstrapServiceHandler struct{}
+
+func (UnimplementedBootstrapServiceHandler) Bootstrap(context.Context, *connect.Request[v1alpha1.BootstrapAuthRequest]) (*connect.Response[v1alpha1.BootstrapAuthResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bootstrap.v1alpha1.BootstrapService.Bootstrap is not implemented"))
 }

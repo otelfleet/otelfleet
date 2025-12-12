@@ -11,6 +11,21 @@ service TokenService {
   rpc CreateToken(CreateTokenRequest) returns (BootstrapToken);
   rpc ListTokens(google.protobuf.Empty) returns (ListTokenReponse);
   rpc DeleteToken(DeleteTokenRequest) returns (google.protobuf.Empty);
+  rpc Signatures(google.protobuf.Empty) returns (SignatureResponse);
+}
+
+service BootstrapService {
+  rpc Bootstrap(BootstrapAuthRequest) returns (BootstrapAuthResponse);
+}
+
+message BootstrapAuthRequest {
+  string clientId     = 1;
+  string name         = 2;
+  bytes  clientPubKey = 3;
+}
+
+message BootstrapAuthResponse {
+  bytes serverPubKey = 1;
 }
 
 message BootstrapToken {

@@ -5,14 +5,14 @@ import (
 	"crypto"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
+	cryptoecdh "crypto/ecdh"
+
 	"connectrpc.com/connect"
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
 	"github.com/lestrrat-go/jwx/jwa"
@@ -24,12 +24,18 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/ecdh"
 	otelfleetsvc "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+// for secure vs insecure implementations
+type Bootstrapper interface {
+	VerifyToken(context.Context, http.Header) error
+	DeriveSharedSecret(*v1alpha1.BootstrapAuthRequest) (sharedSecret []byte, keypair ecdh.EphemeralKeyPair, err error)
+}
 
 type BootstrapServer struct {
 	tokenStore storage.KeyValue[*v1alpha1.BootstrapToken]
@@ -38,11 +44,14 @@ type BootstrapServer struct {
 	privateKey crypto.Signer
 	logger     *slog.Logger
 	services.Service
+
+	bootstrapper Bootstrapper
 }
 
 var _ otelfleetsvc.HTTPExtension = (*BootstrapServer)(nil)
 
 var _ v1alpha1connect.TokenServiceHandler = (*BootstrapServer)(nil)
+var _ v1alpha1connect.BootstrapServiceHandler = (*BootstrapServer)(nil)
 
 func NewBootstrapServer(
 	logger *slog.Logger,
@@ -51,10 +60,11 @@ func NewBootstrapServer(
 	agentStore storage.KeyValue[*protobufs.AgentToServer],
 ) *BootstrapServer {
 	b := &BootstrapServer{
-		tokenStore: tokenStore,
-		agentStore: agentStore,
-		privateKey: privateKey,
-		logger:     logger,
+		tokenStore:   tokenStore,
+		agentStore:   agentStore,
+		privateKey:   privateKey,
+		logger:       logger,
+		bootstrapper: NewBootstrapper(logger, tokenStore, privateKey),
 	}
 
 	b.Service = services.NewBasicService(nil, b.running, nil)
@@ -69,6 +79,7 @@ func (b *BootstrapServer) running(ctx context.Context) error {
 func (b *BootstrapServer) ConfigureHTTP(mux *mux.Router) {
 	b.logger.Info("configuring routes")
 	v1alpha1connect.RegisterTokenServiceHandler(mux, b)
+	v1alpha1connect.RegisterBootstrapServiceHandler(mux, b)
 }
 
 func (b *BootstrapServer) CreateToken(ctx context.Context, connectReq *connect.Request[v1alpha1.CreateTokenRequest]) (*connect.Response[v1alpha1.BootstrapToken], error) {
@@ -121,20 +132,36 @@ func (b *BootstrapServer) DeleteToken(ctx context.Context, connectReq *connect.R
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
-// func (b *BootstrapServer) routePrefix() string {
-// 	return "api/bootstrap/v1alpha1/"
-// }
+func (b *BootstrapServer) Signatures(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.SignatureResponse], error) {
+	signatures := map[string][]byte{}
+	tokenList, err := b.tokenStore.List(ctx)
+	if err != nil {
+		b.logger.With("err", err).Error("failed to list tokens")
+		return nil, grpcutil.ErrorInternal(err)
+	}
+	for _, tok := range tokenList {
+		rawToken, err := bootstrap.FromBootstrapToken(tok)
+		if err != nil {
+			b.logger.With("err", err).Error("failed to convert bootstrap token")
+			return nil, grpcutil.ErrorInternal(err)
+		}
+		sig, err := rawToken.SignDetached(b.privateKey)
+		if err != nil {
+			b.logger.With("err", err).Error("failed to sign token")
+			return nil, grpcutil.ErrorInternal(err)
+		}
+		signatures[rawToken.HexID()] = sig
+	}
+	if len(signatures) == 0 {
+		return nil, grpcutil.ErrorNotFound(err)
+	}
+	resp := &v1alpha1.SignatureResponse{
+		Signatures: signatures,
+	}
+	return connect.NewResponse(resp), err
+}
 
-// func (b *BootstrapServer) ConfigureHTTP(r *gin.Engine) {
-// 	r.GET(path.Join(b.routePrefix(), "signatures"), b.Signatures)
-// 	r.POST(path.Join(b.routePrefix(), "bootstrap"), b.Bootstrap)
-// 	r.POST(path.Join(b.routePrefix(), "tokens/create"), b.CreateTokens2)
-// 	r.GET(path.Join(b.routePrefix(), "tokens/list"), b.ListTokens2)
-// 	r.DELETE(path.Join(b.routePrefix(), "tokens/delete"), b.RevokeToken)
-// }
-
-func (b *BootstrapServer) verifyToken(c *gin.Context) error {
-	headers := c.Request.Header
+func (b *BootstrapServer) verifyToken(ctx context.Context, headers http.Header) error {
 	auth := strings.TrimSpace(headers.Get("Authorization"))
 	if auth == "" {
 		b.logger.Error("no request header set")
@@ -151,25 +178,17 @@ func (b *BootstrapServer) verifyToken(c *gin.Context) error {
 	}
 
 	// check token exists, maybe handle this a little different based on the error
-	_, err = b.tokenStore.Get(c.Request.Context(), token.ToBootstrapToken().GetID())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+	_, err = b.tokenStore.Get(ctx, token.ToBootstrapToken().GetID())
+	if grpcutil.IsErrorNotFound(err) {
 		return err
+	} else if err != nil {
+		return grpcutil.ErrorInternal(err)
 	}
 	return nil
 }
 
-func (b *BootstrapServer) deriveSharedSecret(c *gin.Context) ([]byte, ecdh.EphemeralKeyPair, error) {
+func (b *BootstrapServer) deriveSharedSecret(bootstrapReq *v1alpha1.BootstrapAuthRequest) ([]byte, ecdh.EphemeralKeyPair, error) {
 	kp := ecdh.EphemeralKeyPair{}
-	inData, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		return nil, kp, err
-	}
-
-	bootstrapReq := &v1alpha1.BootstrapRequest{}
-	if err := protojson.Unmarshal(inData, bootstrapReq); err != nil {
-		return nil, kp, err
-	}
 	ekp := ecdh.NewEphemeralKeyPair()
 	clientPubKey, err := ecdh.ClientPubKey(bootstrapReq)
 	if err != nil {
@@ -182,67 +201,25 @@ func (b *BootstrapServer) deriveSharedSecret(c *gin.Context) ([]byte, ecdh.Ephem
 	return sharedSecret, ekp, nil
 }
 
-func (b *BootstrapServer) Bootstrap(c *gin.Context) {
-	if err := b.verifyToken(c); err != nil {
-		c.JSON(http.StatusUnauthorized, err.Error())
-		return
+func (b *BootstrapServer) Bootstrap(ctx context.Context, req *connect.Request[v1alpha1.BootstrapAuthRequest]) (*connect.Response[v1alpha1.BootstrapAuthResponse], error) {
+	callInfo, ok := connect.CallInfoForHandlerContext(ctx)
+	if !ok {
+		return nil, grpcutil.ErrorInvalid(fmt.Errorf("can't access headers: no CallInfo for handler context"))
+	}
+	if err := b.bootstrapper.VerifyToken(ctx, callInfo.RequestHeader()); err != nil {
+		return nil, err
 	}
 
-	sharedSecret, ekp, err := b.deriveSharedSecret(c)
+	sharedSecret, ekp, err := b.bootstrapper.DeriveSharedSecret(req.Msg)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, err.Error())
-		return
+		return nil, grpcutil.ErrorInvalid(err)
 	}
-	slog.With("shared-secret", sharedSecret).Info("got shared secret")
-	c.JSON(http.StatusOK, map[string]any{
-		"serverPubKey": ekp.PublicKey.Bytes(),
-	})
-
-}
-
-func (b *BootstrapServer) Signatures(c *gin.Context) {
-	// headers := c.Request.Header
-	// check headers?
-	signatures := map[string][]byte{}
-	tokenList, err := b.tokenStore.List(c.Request.Context())
-	if err != nil {
-		b.logger.With("err", err).Error("failed to list tokens")
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	for _, tok := range tokenList {
-		rawToken, err := bootstrap.FromBootstrapToken(tok)
-		if err != nil {
-			b.logger.With("err", err).Error("failed to convert bootstrap token")
-			c.JSON(http.StatusInternalServerError, err.Error())
-			return
-		}
-		sig, err := rawToken.SignDetached(b.privateKey)
-		if err != nil {
-			b.logger.With("err", err).Error("failed to sign token")
-			c.JSON(http.StatusInternalServerError, err.Error())
-			return
-		}
-		signatures[rawToken.HexID()] = sig
-	}
-	if len(signatures) == 0 {
-		c.JSON(http.StatusGone, "no signatures")
-		return
-	}
-
-	resp := &v1alpha1.SignatureResponse{
-		Signatures: signatures,
-	}
-
-	data, err := protojson.Marshal(resp)
-	if err != nil {
-		b.logger.With("err", err).Error("failed to marshal")
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-	c.Writer.WriteHeader(http.StatusOK)
-	c.Writer.Write(data)
+	b.logger.With("shared-secret", sharedSecret).Info("got shared secret")
+	return connect.NewResponse(
+		&v1alpha1.BootstrapAuthResponse{
+			ServerPubKey: ekp.PublicKey.Bytes(),
+		},
+	), nil
 }
 
 func (b *BootstrapServer) gc(key string) {
@@ -255,4 +232,87 @@ func (b *BootstrapServer) gc(key string) {
 			b.logger.With("key", key, "err", err).Error("failed to delete token")
 		}
 	}()
+}
+
+type noopBootstrapper struct {
+	logger *slog.Logger
+}
+
+func NewNoopBootstrapper(logger *slog.Logger) *noopBootstrapper {
+	return &noopBootstrapper{
+		logger: logger.With("bootstrapper", "no-op"),
+	}
+}
+
+var _ Bootstrapper = (*noopBootstrapper)(nil)
+
+func (n *noopBootstrapper) VerifyToken(context.Context, http.Header) error {
+	n.logger.Debug("verified token")
+	return nil
+}
+func (n *noopBootstrapper) DeriveSharedSecret(*v1alpha1.BootstrapAuthRequest) (sharedSecret []byte, keyapir ecdh.EphemeralKeyPair, err error) {
+	n.logger.Debug("derived shared secret")
+	return []byte{}, ecdh.EphemeralKeyPair{
+		PublicKey:  &cryptoecdh.PublicKey{},
+		PrivateKey: &cryptoecdh.PrivateKey{},
+	}, nil
+}
+
+type secureBootstrapper struct {
+	logger     *slog.Logger
+	tokenStore storage.KeyValue[*v1alpha1.BootstrapToken]
+	privateKey crypto.Signer
+}
+
+var _ Bootstrapper = (*secureBootstrapper)(nil)
+
+func NewSecureBootstrapper(
+	logger *slog.Logger,
+	tokenStore storage.KeyValue[*v1alpha1.BootstrapToken],
+	privateKey crypto.Signer,
+) *secureBootstrapper {
+	return &secureBootstrapper{
+		logger:     logger.With("bootstrapper", "secure"),
+		tokenStore: tokenStore,
+		privateKey: privateKey,
+	}
+}
+
+func (s *secureBootstrapper) VerifyToken(ctx context.Context, headers http.Header) error {
+	auth := strings.TrimSpace(headers.Get("Authorization"))
+	if auth == "" {
+		return fmt.Errorf("no request header set")
+	}
+	bearerToken := strings.TrimSpace(strings.TrimPrefix(auth, "Bearer"))
+	payload, err := jws.Verify([]byte(bearerToken), jwa.RS256, s.privateKey.Public())
+	if err != nil {
+		return err
+	}
+	token := &bootstrap.Token{}
+	if err := json.Unmarshal(payload, token); err != nil {
+		return err
+	}
+
+	// check token exists, maybe handle this a little different based on the error
+	_, err = s.tokenStore.Get(ctx, token.ToBootstrapToken().GetID())
+	if grpcutil.IsErrorNotFound(err) {
+		return err
+	} else if err != nil {
+		return grpcutil.ErrorInternal(err)
+	}
+	return nil
+}
+
+func (s *secureBootstrapper) DeriveSharedSecret(bootstrapReq *v1alpha1.BootstrapAuthRequest) ([]byte, ecdh.EphemeralKeyPair, error) {
+	kp := ecdh.EphemeralKeyPair{}
+	ekp := ecdh.NewEphemeralKeyPair()
+	clientPubKey, err := ecdh.ClientPubKey(bootstrapReq)
+	if err != nil {
+		return nil, kp, err
+	}
+	sharedSecret, err := ecdh.DeriveSharedSecret(ekp, clientPubKey)
+	if err != nil {
+		return nil, kp, err
+	}
+	return sharedSecret, ekp, nil
 }

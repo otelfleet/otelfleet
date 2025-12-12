@@ -34,4 +34,19 @@ func RegisterTokenServiceHandler(mux *mux.Router, svc TokenServiceHandler, opts 
 		svc.DeleteToken,
 		opts...,
 	))
+	mux.Handle("/bootstrap.v1alpha1.TokenService/Signatures", connect.NewUnaryHandler(
+		"/bootstrap.v1alpha1.TokenService/Signatures",
+		svc.Signatures,
+		opts...,
+	))
+}
+
+// RegisterBootstrapServiceHandler register an HTTP handler to a mux.Router from the service
+// implementation.
+func RegisterBootstrapServiceHandler(mux *mux.Router, svc BootstrapServiceHandler, opts ...connect.HandlerOption) {
+	mux.Handle("/bootstrap.v1alpha1.BootstrapService/Bootstrap", connect.NewUnaryHandler(
+		"/bootstrap.v1alpha1.BootstrapService/Bootstrap",
+		svc.Bootstrap,
+		opts...,
+	))
 }
