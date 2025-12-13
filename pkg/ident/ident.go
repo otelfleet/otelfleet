@@ -2,8 +2,9 @@ package ident
 
 import (
 	"encoding/hex"
+	"fmt"
 	"hash"
-	"maps"
+	"log/slog"
 	"net"
 	"sort"
 	"strings"
@@ -27,9 +28,8 @@ type Identity interface {
 }
 
 type macID struct {
-	rawMac   []string
-	name     string
-	metadata map[string]string
+	rawMac []string
+	name   string
 
 	hasher hash.Hash
 }
@@ -37,6 +37,7 @@ type macID struct {
 var _ Identity = (*macID)(nil)
 
 func (m *macID) uuid() string {
+	m.hasher.Reset()
 	m.hasher.Write([]byte(m.name))
 	m.hasher.Write([]byte(strings.Join(m.rawMac, "")))
 	// could extend this to treat some metadata as unique
@@ -45,15 +46,13 @@ func (m *macID) uuid() string {
 
 func (m *macID) UniqueIdentifier() ID {
 	return ID{
-		UUID:     m.uuid(),
-		Metatada: m.metadata,
+		UUID: m.uuid(),
 	}
 }
 
 func IdFromMac(
 	hasher hash.Hash,
 	name string,
-	extraMetadata map[string]string,
 ) (Identity, error) {
 	interfaces, err := net.Interfaces()
 	if err != nil {
@@ -66,17 +65,11 @@ func IdFromMac(
 		macs = append(macs, intf.HardwareAddr.String())
 	}
 	sort.Strings(macs)
+	slog.With("macs", len(macs)).Debug(fmt.Sprintf("got mac addresses : %s", strings.Join(macs, ",")))
 
-	maps.Insert(
-		extraMetadata,
-		maps.All(map[string]string{
-			MetadataIDType: IDTypeMac,
-		}),
-	)
 	return &macID{
-		rawMac:   macs,
-		name:     name,
-		metadata: extraMetadata,
-		hasher:   hasher,
+		rawMac: macs,
+		name:   name,
+		hasher: hasher,
 	}, nil
 }

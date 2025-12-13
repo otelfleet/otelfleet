@@ -161,46 +161,6 @@ func (b *BootstrapServer) Signatures(ctx context.Context, req *connect.Request[e
 	return connect.NewResponse(resp), err
 }
 
-func (b *BootstrapServer) verifyToken(ctx context.Context, headers http.Header) error {
-	auth := strings.TrimSpace(headers.Get("Authorization"))
-	if auth == "" {
-		b.logger.Error("no request header set")
-		return fmt.Errorf("no request header set")
-	}
-	bearerToken := strings.TrimSpace(strings.TrimPrefix(auth, "Bearer"))
-	payload, err := jws.Verify([]byte(bearerToken), jwa.RS256, b.privateKey.Public())
-	if err != nil {
-		return err
-	}
-	token := &bootstrap.Token{}
-	if err := json.Unmarshal(payload, token); err != nil {
-		return err
-	}
-
-	// check token exists, maybe handle this a little different based on the error
-	_, err = b.tokenStore.Get(ctx, token.ToBootstrapToken().GetID())
-	if grpcutil.IsErrorNotFound(err) {
-		return err
-	} else if err != nil {
-		return grpcutil.ErrorInternal(err)
-	}
-	return nil
-}
-
-func (b *BootstrapServer) deriveSharedSecret(bootstrapReq *v1alpha1.BootstrapAuthRequest) ([]byte, ecdh.EphemeralKeyPair, error) {
-	kp := ecdh.EphemeralKeyPair{}
-	ekp := ecdh.NewEphemeralKeyPair()
-	clientPubKey, err := ecdh.ClientPubKey(bootstrapReq)
-	if err != nil {
-		return nil, kp, err
-	}
-	sharedSecret, err := ecdh.DeriveSharedSecret(ekp, clientPubKey)
-	if err != nil {
-		return nil, kp, err
-	}
-	return sharedSecret, ekp, nil
-}
-
 func (b *BootstrapServer) Bootstrap(ctx context.Context, req *connect.Request[v1alpha1.BootstrapAuthRequest]) (*connect.Response[v1alpha1.BootstrapAuthResponse], error) {
 	callInfo, ok := connect.CallInfoForHandlerContext(ctx)
 	if !ok {

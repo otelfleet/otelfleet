@@ -9,6 +9,7 @@ import (
 	"github.com/open-telemetry/opamp-go/client"
 	"github.com/open-telemetry/opamp-go/client/types"
 	"github.com/open-telemetry/opamp-go/protobufs"
+	"github.com/otelfleet/otelfleet/pkg/ident"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/util"
 )
@@ -21,18 +22,22 @@ type Supervisor struct {
 
 	opampClient client.OpAMPClient
 	opAmpAddr   string
+
+	agentId ident.Identity
 }
 
 func NewSupervisor(
 	log *slog.Logger,
 	tlsConfig *tls.Config,
 	opAmpAddr string,
+	agentId ident.Identity,
 ) *Supervisor {
 	return &Supervisor{
 		logger:       log,
 		tlsConfig:    tlsConfig,
 		clientLogger: logutil.NewOpAMPLogger(log),
 		opAmpAddr:    opAmpAddr,
+		agentId:      agentId,
 	}
 }
 
@@ -103,9 +108,11 @@ func (s *Supervisor) createEffectiveConfigMsg() *protobufs.EffectiveConfig {
 }
 
 func (s *Supervisor) createAgentDescription() *protobufs.AgentDescription {
+	s.logger.With("agentID", s.agentId.UniqueIdentifier().UUID).Info("sending agent description")
 	return &protobufs.AgentDescription{
 		IdentifyingAttributes: []*protobufs.KeyValue{
-			util.KeyVal("agent.id", "example"),
+			// TODO : semconv for other identifying attributes
+			util.KeyVal(AttributeOtelfleetAgentId, s.agentId.UniqueIdentifier().UUID),
 		},
 	}
 }

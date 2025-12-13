@@ -63,7 +63,7 @@ func main() {
 	// binary bloat.
 	// Perhaps the API to construct agents can live here, but agent builds and capabilities
 	// are registered in an out-of-scope repo?
-	id, err := ident.IdFromMac(sha256.New(), agentName, map[string]string{})
+	agentID, err := ident.IdFromMac(sha256.New(), agentName)
 	if err != nil {
 		logger.With("err", err).Error("failed to get agent identity")
 		os.Exit(1)
@@ -73,7 +73,7 @@ func main() {
 	tlsConf, err := bootstrapper.Bootstrap(
 		ctx,
 		&v1alpha1.BootstrapAuthRequest{
-			ClientId: id.UniqueIdentifier().UUID,
+			ClientId: agentID.UniqueIdentifier().UUID,
 			Name:     agentName,
 		},
 	)
@@ -86,8 +86,9 @@ func main() {
 		slog.Default().With("component", "supervisor"),
 		tlsConf,
 		opAmpAddr,
+		agentID,
 	)
-	logger.Info("otelfleet agent starting...")
+	logger.With("agentID", agentID.UniqueIdentifier().UUID).Info("otelfleet agent starting...")
 	if err := supervisor.Start(); err != nil {
 		logger.With("err", err.Error()).Error("failed to start supervisor")
 		os.Exit(1)
