@@ -28,9 +28,9 @@ func NewStorageService(
 	logger *slog.Logger,
 	storagePath string,
 ) (*StorageService, error) {
-	kvDb, err := pebble.Open(
+	kvDb, err := otelpebble.Open(
 		storagePath,
-		&pebble.Options{},
+		nil,
 	)
 	if err != nil {
 		logger.Error("failed to start KV store")

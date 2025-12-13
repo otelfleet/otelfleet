@@ -40,4 +40,11 @@ func TestProtoStorage(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, cmp.Diff(ret, tok, protocmp.Transform()))
 
+	keys, err := protoKv.ListKeys(t.Context())
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []string{"b1"}, keys)
+
+	vals, err := protoKv.List(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(vals))
 }
