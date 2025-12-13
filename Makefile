@@ -13,3 +13,5 @@ build-dev:
 	go build -tags insecure -o ./bin/otelfleet ./cmd/server/main.go
 	go build -tags insecure -o ./bin/agent ./cmd/agent/
 
+clean:
+	rm -rf ./otelfleet.kv/
