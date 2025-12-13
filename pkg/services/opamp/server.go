@@ -10,8 +10,10 @@ import (
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/open-telemetry/opamp-go/server"
 	"github.com/open-telemetry/opamp-go/server/types"
+	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/supervisor"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -21,17 +23,23 @@ type Server struct {
 
 	agentStore storage.KeyValue[*protobufs.AgentToServer]
 	services.Service
+
+	addrToId map[string]string
+	tracker  AgentTracker
 }
 
 func NewServer(
 	l *slog.Logger,
 	agentStore storage.KeyValue[*protobufs.AgentToServer],
+	tracker AgentTracker,
 ) *Server {
 	opampSvr := server.New(logutil.NewOpAMPLogger(l))
 	s := &Server{
 		logger:     l,
 		opampSrv:   opampSvr,
 		agentStore: agentStore,
+		addrToId:   map[string]string{},
+		tracker:    tracker,
 	}
 
 	s.Service = services.NewBasicService(s.start, s.running, s.stop)
@@ -74,7 +82,7 @@ func (s *Server) start(ctx context.Context) error {
 
 func (s *Server) stop(failureCase error) error {
 	// FIXME: handle failure case?
-	ctxca, ca := context.WithTimeout(context.TODO(), time.Minute)
+	ctxca, ca := context.WithTimeout(context.TODO(), time.Second)
 	defer ca()
 	if err := s.opampSrv.Stop(ctxca); err != nil {
 		return err
@@ -88,6 +96,22 @@ func (s *Server) onConnected(ctx context.Context, conn types.Connection) {
 
 func (s *Server) onMessage(ctx context.Context, conn types.Connection, message *protobufs.AgentToServer) *protobufs.ServerToAgent {
 	s.logger.Info("received message from agent", "message", message)
+	if message.AgentDescription != nil {
+		agentAddr := conn.Connection().RemoteAddr().String()
+		keyvalues := message.AgentDescription.IdentifyingAttributes
+		for _, entry := range keyvalues {
+			if entry.Key == supervisor.AttributeOtelfleetAgentId {
+				agentID := entry.Value.GetStringValue()
+				s.logger.With("agentID", agentID, "remote-addr", conn.Connection().RemoteAddr().String()).
+					Info("associating agent remote-addr to persistent ID")
+				s.addrToId[agentAddr] = agentID
+				s.tracker.Put(agentID, &v1alpha1.AgentStatus{
+					State: v1alpha1.AgentState_AgentStateConnected,
+				})
+				break
+			}
+		}
+	}
 	return &protobufs.ServerToAgent{}
 }
 
@@ -96,4 +120,12 @@ func (s *Server) onDisconnect(conn types.Connection) {
 	localAddr := conn.Connection().LocalAddr().String()
 	logger := s.logger.With("remote_addr", remoteAddr, "local_addr", localAddr)
 	logger.Info("agent disconnected")
+	agentID, ok := s.addrToId[remoteAddr]
+	if !ok {
+		logger.Error("agent not tracked in addr to persistent ID map")
+		return
+	}
+	s.tracker.Put(agentID, &v1alpha1.AgentStatus{
+		State: v1alpha1.AgentState_AgentStateDisconnected,
+	})
 }

@@ -20,10 +20,12 @@ import (
 	"github.com/grafana/dskit/services"
 	"github.com/grafana/dskit/signals"
 	"github.com/open-telemetry/opamp-go/protobufs"
+	agentsv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	logutil "github.com/otelfleet/otelfleet/pkg/logutil"
+	"github.com/otelfleet/otelfleet/pkg/services/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/bootstrap"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
@@ -62,8 +64,9 @@ const (
 	Storage       = "storage"
 	Bootstrap     = "bootstrap"
 	ServerService = "server"
-	OpAmp         = "op-amp"
+	OpAmp         = "opamp"
 	ConfigOTEL    = "config-otel"
+	AgentManager  = "agent-manager"
 )
 
 type OtelFleet struct {
@@ -75,9 +78,12 @@ type OtelFleet struct {
 
 	store              storage.KVBroker
 	tokenStore         storage.KeyValue[*bootstrapv1alpha1.BootstrapToken]
-	agentStore         storage.KeyValue[*protobufs.AgentToServer]
+	agentStore         storage.KeyValue[*agentsv1alpha1.AgentDescription]
+	opampAgentStore    storage.KeyValue[*protobufs.AgentToServer]
 	configStore        storage.KeyValue[*configv1alpha1.Config]
 	defaultConfigStore storage.KeyValue[*configv1alpha1.Config]
+
+	agentTracker opamp.AgentTracker
 
 	serviceMap map[string]services.Service
 	server     *server.Server
@@ -87,8 +93,9 @@ type OtelFleet struct {
 func New(cfg config.Config) (*OtelFleet, error) {
 	l := slog.Default()
 	f := &OtelFleet{
-		logger: l,
-		cfg:    cfg,
+		logger:       l,
+		cfg:          cfg,
+		agentTracker: opamp.NewAgentTracker(),
 	}
 
 	conf := server.Config{
@@ -129,10 +136,16 @@ func (o *OtelFleet) setupModuleManager() error {
 			return nil, err
 		}
 		o.store = storeSvc
-		o.agentStore = storage.NewProtoKV[*protobufs.AgentToServer](
+		o.opampAgentStore = storage.NewProtoKV[*protobufs.AgentToServer](
+			o.logger.With("store", "opamp-agent"),
+			o.store.KeyValue("opamp-agents"),
+		)
+
+		o.agentStore = storage.NewProtoKV[*agentsv1alpha1.AgentDescription](
 			o.logger.With("store", "agents"),
 			o.store.KeyValue("agents"),
 		)
+
 		o.tokenStore = storage.NewProtoKV[*bootstrapv1alpha1.BootstrapToken](
 			o.logger.With("store", "tokens"),
 			o.store.KeyValue("tokens"),
@@ -154,9 +167,9 @@ func (o *OtelFleet) setupModuleManager() error {
 	mm.RegisterModule(Bootstrap, func() (services.Service, error) {
 		bootstrapSvc := bootstrap.NewBootstrapServer(
 			o.logger.With("service", Bootstrap),
-			// TODO :
 			nil,
 			o.tokenStore,
+			o.opampAgentStore,
 			o.agentStore,
 		)
 		bootstrapSvc.ConfigureHTTP(o.server.HTTP)
@@ -178,8 +191,19 @@ func (o *OtelFleet) setupModuleManager() error {
 	mm.RegisterModule(OpAmp, func() (services.Service, error) {
 		srv := opamp.NewServer(
 			o.logger.With("service", OpAmp),
-			o.agentStore,
+			o.opampAgentStore,
+			o.agentTracker,
 		)
+		return srv, nil
+	})
+
+	mm.RegisterModule(AgentManager, func() (services.Service, error) {
+		srv := agent.NewAgentServer(
+			o.logger.With("service", AgentManager),
+			o.agentStore,
+			o.agentTracker,
+		)
+		srv.ConfigureHTTP(o.server.HTTP)
 		return srv, nil
 	})
 
@@ -214,7 +238,8 @@ func (o *OtelFleet) setupModuleManager() error {
 		All: {
 			ServerService,
 		},
-		ServerService: {Bootstrap, OpAmp},
+		ServerService: {Bootstrap, OpAmp, AgentManager},
+		AgentManager:  {OpAmp},
 		OpAmp:         {ConfigOTEL, Storage},
 		Bootstrap:     {Storage},
 		ConfigOTEL:    {Storage},
