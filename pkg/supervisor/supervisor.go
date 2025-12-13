@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"log/slog"
 
-	"github.com/google/uuid"
 	"github.com/open-telemetry/opamp-go/client"
 	"github.com/open-telemetry/opamp-go/client/types"
 	"github.com/open-telemetry/opamp-go/protobufs"
@@ -50,11 +49,10 @@ func (s *Supervisor) Start() error {
 
 func (s *Supervisor) startOpAMP() error {
 	s.opampClient = client.NewWebSocket(s.clientLogger)
-
 	settings := types.StartSettings{
 		OpAMPServerURL: s.opAmpAddr,
 		TLSConfig:      s.tlsConfig,
-		InstanceUid:    types.InstanceUid([]byte(uuid.New().String())),
+		InstanceUid:    types.InstanceUid([]byte(util.NewUUID())),
 		Callbacks: types.Callbacks{
 			OnConnect: func(ctx context.Context) {
 				s.logger.Info("connected to OpAMP server")
