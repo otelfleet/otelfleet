@@ -112,7 +112,7 @@ func (c *ConfigServer) GetDefaultConfig(ctx context.Context, req *connect.Reques
 	st, ok := status.FromError(err)
 	if ok && st.Code() == codes.NotFound {
 		return connect.NewResponse(&v1alpha1.Config{
-			Config: []byte(defaultOtelConfig),
+			Config: []byte(DefaultOtelConfig),
 		}), nil
 	}
 	return nil, status.Error(codes.Internal, err.Error())

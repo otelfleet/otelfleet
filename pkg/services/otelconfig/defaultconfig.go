@@ -1,6 +1,6 @@
 package otelconfig
 
-const defaultOtelConfig = `receivers:
+const DefaultOtelConfig = `receivers:
   otlp:
     protocols:
       grpc:

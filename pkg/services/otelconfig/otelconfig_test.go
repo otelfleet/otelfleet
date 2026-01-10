@@ -10,5 +10,5 @@ import (
 
 func TestDefaultConfig(t *testing.T) {
 	var b bytes.Buffer
-	require.NoError(t, yaml.Unmarshal([]byte(defaultOtelConfig), b))
+	require.NoError(t, yaml.Unmarshal([]byte(DefaultOtelConfig), b))
 }
