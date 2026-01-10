@@ -16,6 +16,7 @@ require (
 	github.com/lestrrat-go/jwx v1.2.31
 	github.com/lmittmann/tint v1.1.2
 	github.com/mattn/go-sqlite3 v1.14.30
+	github.com/natefinch/atomic v1.0.1
 	github.com/open-telemetry/opamp-go v0.20.0
 	github.com/rs/cors v1.11.1
 	github.com/samber/lo v1.52.0

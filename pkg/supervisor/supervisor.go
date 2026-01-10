@@ -23,20 +23,29 @@ type Supervisor struct {
 	opAmpAddr   string
 
 	agentId ident.Identity
+
+	// for direct in-process management
+	procManager *ProcManager
 }
 
 func NewSupervisor(
-	log *slog.Logger,
+	logger *slog.Logger,
 	tlsConfig *tls.Config,
 	opAmpAddr string,
 	agentId ident.Identity,
 ) *Supervisor {
 	return &Supervisor{
-		logger:       log,
+		logger:       logger,
 		tlsConfig:    tlsConfig,
-		clientLogger: logutil.NewOpAMPLogger(log),
+		clientLogger: logutil.NewOpAMPLogger(logger),
 		opAmpAddr:    opAmpAddr,
 		agentId:      agentId,
+		procManager: NewProcManager(
+			logger.With("process", "otelcol"),
+			//FIXME:
+			"/home/alex/.asdf/shims/otelcol",
+			"/var/lib/otelfleet/",
+		),
 	}
 }
 
@@ -53,6 +62,8 @@ func (s *Supervisor) startOpAMP() error {
 		OpAMPServerURL: s.opAmpAddr,
 		TLSConfig:      s.tlsConfig,
 		InstanceUid:    types.InstanceUid([]byte(util.NewUUID())),
+		Capabilities: protobufs.AgentCapabilities_AgentCapabilities_AcceptsRemoteConfig |
+			protobufs.AgentCapabilities_AgentCapabilities_ReportsRemoteConfig,
 		Callbacks: types.Callbacks{
 			OnConnect: func(ctx context.Context) {
 				s.logger.Info("connected to OpAMP server")
@@ -83,7 +94,49 @@ func (s *Supervisor) startOpAMP() error {
 }
 
 func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
-	s.logger.Info("received message")
+	l := s.logger
+	if incomingCfg := msg.RemoteConfig; incomingCfg != nil {
+		l = l.With("type", "remote-config")
+		if err := s.procManager.Update(ctx, incomingCfg); err != nil {
+			if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
+				Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_FAILED,
+				LastRemoteConfigHash: s.procManager.curHash,
+				ErrorMessage:         err.Error(),
+			}); err != nil {
+				s.logger.With("err", err).With("status", "failed").Error("failed to report remote config status to upstream server")
+
+				panic("unhandled error")
+			}
+		} else {
+			if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
+				Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
+				LastRemoteConfigHash: incomingCfg.GetConfigHash(),
+			}); err != nil {
+				s.logger.With("err", err).With("status", "succeeded").Error("failed to report remote config status to upstream server")
+				panic("unhandled error")
+			}
+		}
+	}
+	l.Debug("received message")
+}
+
+func (s *Supervisor) sendStatus(ctx context.Context) {
+	// TODO
+	// msg := &protobufs.AgentToServer{
+	// 	InstanceUid:        nil,
+	// 	AgentDescription:   nil,
+	// 	Capabilities:       0,
+	// 	Health:             &protobufs.ComponentHealth{},
+	// 	EffectiveConfig:    &protobufs.EffectiveConfig{},
+	// 	RemoteConfigStatus: &protobufs.RemoteConfigStatus{},
+	// 	PackageStatuses:    &protobufs.PackageStatuses{},
+	// }
+}
+
+// onServerStatusAck needs to handle success / failure of processing of agent status
+// upstream.
+func (s *Supervisor) onServerStatusAck(ctx context.Context) {
+
 }
 
 func (s *Supervisor) Shutdown() error {
