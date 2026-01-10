@@ -12,6 +12,11 @@ plugins:
   - local: protoc-gen-connect-go-mux
     out: .
     opt: paths=source_relative
+  #npm install --global @bufbuild/buf @bufbuild/protoc-gen-es
+  - local: protoc-gen-es
+    out: ui/src/gen/api
+    include_imports : true
+    opt: target=ts
 # managed:
 #   enabled: true
 #   override:
