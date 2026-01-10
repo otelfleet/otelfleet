@@ -23,6 +23,7 @@ type Token struct {
 	Secret []byte `json:"secret"`
 }
 
+// TODO : attaching a uuidV7 as an ID might be a good idea here
 func NewToken(source ...io.Reader) *Token {
 	entropy := rand.Reader
 	if len(source) > 0 {
