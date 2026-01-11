@@ -1,7 +1,8 @@
-import { useState, type FC } from 'react'
+import { useState, useCallback, type FC } from 'react'
 import { Link, Outlet } from '@tanstack/react-router'
 import ColorSchemeContext, { useColorScheme } from '../contexts/ColorSchemeContext';
 import { Notifications } from '@mantine/notifications';
+import { elevationShadows } from '../theme/elevation';
 
 
 import {
@@ -62,14 +63,38 @@ const theme = createTheme({
         ],
     },
     shadows: {
-        md: '1px 1px 3px rgba(0, 0, 0, .25)',
-        xl: '5px 5px 3px rgba(0, 0, 0, .25)',
+        xs: '0 1px 2px rgba(0, 0, 0, 0.05)',
+        sm: elevationShadows.surface,
+        md: elevationShadows.raised,
+        lg: elevationShadows.overlay,
+        xl: '0 20px 40px rgba(0, 0, 0, 0.2), 0 8px 16px rgba(0, 0, 0, 0.1)',
     },
 
     headings: {
         fontFamily: 'Roboto, sans-serif',
         sizes: {
             h1: { fontSize: '36px' },
+        },
+    },
+
+    components: {
+        AppShell: {
+            styles: {
+                main: { backgroundColor: 'var(--elevation-base-bg)' },
+                header: {
+                    backgroundColor: 'var(--elevation-surface-bg)',
+                    borderBottom: '1px solid var(--mantine-color-default-border)',
+                },
+                navbar: {
+                    backgroundColor: 'var(--elevation-surface-bg)',
+                    borderRight: '1px solid var(--mantine-color-default-border)',
+                },
+            },
+        },
+        Paper: {
+            styles: {
+                root: { backgroundColor: 'var(--elevation-surface-bg)' },
+            },
         },
     },
 });
@@ -101,13 +126,13 @@ const Base: FC = () => {
         defaultValue: 'auto',
     });
 
-    const toggleColorScheme = () => {
+    const toggleColorScheme = useCallback(() => {
         setColorScheme((current) => {
             if (current === 'auto') return 'dark';
             if (current === 'dark') return 'light';
             return 'dark';
         });
-    };
+    }, [setColorScheme]);
 
     return (
         <ColorSchemeContext.Provider value={{ colorScheme, setColorScheme, toggleColorScheme }}>
@@ -155,7 +180,7 @@ const Base: FC = () => {
                             onClick={() => setActive(active === 'tokens' ? null : 'tokens')}
                         >
                             <Link to="/tokens" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All tokens" onClick={() => console.log('tokens/all')} />
+                                <NavLink label="All tokens" />
                             </Link>
                         </NavLink>
 
@@ -167,7 +192,7 @@ const Base: FC = () => {
                             onClick={() => setActive(active === 'configs' ? null : 'configs')}
                         >
                             <Link to="/configs" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All configs" onClick={() => console.log('configs/all')} />
+                                <NavLink label="All configs" />
                             </Link>
                         </NavLink>
 
@@ -179,9 +204,8 @@ const Base: FC = () => {
                             onClick={() => setActive(active === 'agents' ? null : 'agents')}
                         >
                             <Link to="/agents" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All agents" onClick={() => console.log('agents/all')} />
+                                <NavLink label="All agents" />
                             </Link>
-                    
                         </NavLink>
                     </Stack>
                 </AppShell.Navbar>

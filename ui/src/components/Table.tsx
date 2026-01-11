@@ -9,20 +9,11 @@ import {
   Text,
   Box,
 } from '@mantine/core';
-// import { IconMenu2 } from '@mantine/icons';
 import { useState, useMemo } from 'react';
-import {Menu as MenuIcon} from 'react-feather'
-type Person = {
-  firstName: string;
-  lastName: string;
-  age: number;
-  visits: number;
-  status: string;
-  progress: number;
-};
+import { Menu as MenuIcon } from 'react-feather';
 
 export type ColumnConfig<T> = {
-  key: keyof T;
+  key: keyof T | string;
   label: string;
   visible?: boolean;
   render?: (value: any, row: T) => React.ReactNode;
@@ -32,13 +23,20 @@ interface DynamicTableProps<T> {
   data: T[];
   columns: ColumnConfig<T>[];
   title?: string;
+  rowKey?: keyof T | ((row: T, index: number) => string | number);
 }
 
-export const Table = <T,>({
+export const Table = <T extends object>({
   data,
   columns,
   title,
+  rowKey,
 }: DynamicTableProps<T>): React.ReactElement => {
+  const getRowKey = (row: T, index: number): string | number => {
+    if (!rowKey) return index;
+    if (typeof rowKey === 'function') return rowKey(row, index);
+    return String(row[rowKey]);
+  };
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
     new Set(
       columns
@@ -59,12 +57,12 @@ export const Table = <T,>({
   };
 
   return (
-    <Paper withBorder radius="md">
+    <Paper shadow="sm" radius="md">
       <Group
         px="sm"
         py="xs"
         justify="space-between"
-        style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}
+        style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
       >
         <Menu shadow="md" width={200}>
           <Menu.Target>
@@ -106,14 +104,17 @@ export const Table = <T,>({
         </thead>
         <tbody>
           {data.map((row, idx) => (
-            <tr key={idx}>
-              {activeColumns.map((col) => (
-                <td key={String(col.key)}>
-                  {col.render
-                    ? col.render(row[col.key], row)
-                    : String(row[col.key])}
-                </td>
-              ))}
+            <tr key={getRowKey(row, idx)}>
+              {activeColumns.map((col) => {
+                const value = col.key in row ? row[col.key as keyof T] : undefined;
+                return (
+                  <td key={String(col.key)}>
+                    {col.render
+                      ? col.render(value, row)
+                      : String(value ?? '')}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>
@@ -121,44 +122,3 @@ export const Table = <T,>({
     </Paper>
   );
 };
-
-// Example usage
-const defaultData: Person[] = [
-  {
-    firstName: 'tanner',
-    lastName: 'linsley',
-    age: 24,
-    visits: 100,
-    status: 'In Relationship',
-    progress: 50,
-  },
-  {
-    firstName: 'tandy',
-    lastName: 'miller',
-    age: 40,
-    visits: 40,
-    status: 'Single',
-    progress: 80,
-  },
-  {
-    firstName: 'joe',
-    lastName: 'dirte',
-    age: 45,
-    visits: 20,
-    status: 'Complicated',
-    progress: 10,
-  },
-];
-
-const personColumns: ColumnConfig<Person>[] = [
-  { key: 'firstName', label: 'First Name', visible: true },
-  { key: 'lastName', label: 'Last Name', visible: true },
-  { key: 'age', label: 'Age', visible: true },
-  { key: 'visits', label: 'Visits', visible: true },
-  { key: 'status', label: 'Status', visible: true },
-  { key: 'progress', label: 'Progress (%)', visible: false },
-];
-
-export const TableExample = () => (
-  <Table<Person> title="Persons" data={defaultData} columns={personColumns} />
-);

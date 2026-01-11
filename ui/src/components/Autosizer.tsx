@@ -1,76 +1,86 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, type ReactNode, type CSSProperties } from "react";
 
-type RenderProps = { width: number; height: number };
+interface RenderProps {
+    width: number;
+    height: number;
+}
 
-export function AutoSizer({
-    children,
-    className,
-    style,
-    headerSelector = ".mantine-AppShell-header, .mantine-AppShellHeader-root, header",
-}: {
-    children: (size: RenderProps) => React.ReactNode;
+interface AutoSizerProps {
+    children: (size: RenderProps) => ReactNode;
     className?: string;
-    style?: React.CSSProperties;
-    headerSelector?: string;
-}) {
-    const ref = useRef<HTMLDivElement | null>(null);
+    style?: CSSProperties;
+}
+
+/**
+ * A container component that measures its available space and passes
+ * width/height to children via render props.
+ *
+ * The component fills its parent container and reports the measured dimensions.
+ * Uses ResizeObserver for efficient resize detection.
+ *
+ * @example
+ * ```tsx
+ * <AutoSizer>
+ *   {({ width, height }) => (
+ *     <MonacoEditor width={width} height={height} />
+ *   )}
+ * </AutoSizer>
+ * ```
+ */
+export function AutoSizer({ children, className, style }: AutoSizerProps) {
+    const containerRef = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState<RenderProps>({ width: 0, height: 0 });
 
     const measure = useCallback(() => {
-        const el = ref.current;
+        const el = containerRef.current;
         if (!el) return;
+
+        // Use getBoundingClientRect for more reliable measurements
         const rect = el.getBoundingClientRect();
-        const width = rect.width || (el.parentElement?.clientWidth ?? window.innerWidth);
+        const width = Math.floor(rect.width);
+        const height = Math.floor(rect.height);
 
-        // default available height from element top to viewport bottom
-        const viewportHeight = window.innerHeight;
+        if (width <= 0 || height <= 0) return;
 
-        // find header element (if present) and subtract its height when it's above the element
-        let headerHeight = 0;
-        try {
-            const headerEl = document.querySelector(headerSelector);
-            if (headerEl instanceof Element) {
-                const hRect = headerEl.getBoundingClientRect();
-                if (hRect.top <= rect.top + 1) { // header is above (or overlapping) the element
-                    headerHeight = hRect.height;
-                }
+        setSize((prev) => {
+            if (prev.width === width && prev.height === height) {
+                return prev;
             }
-        } catch {
-            headerHeight = 0;
-        }
-
-        const availableHeight = Math.max(0, viewportHeight - rect.top - headerHeight);
-        setSize({ width: Math.floor(width), height: Math.floor(availableHeight) });
-    }, [headerSelector]);
+            return { width, height };
+        });
+    }, []);
 
     useEffect(() => {
-        measure();
+        // Delay initial measurement to allow layout to compute
+        const rafId = requestAnimationFrame(() => {
+            measure();
+        });
 
-        let ro: ResizeObserver | undefined;
-        if (typeof ResizeObserver !== "undefined" && ref.current) {
-            ro = new ResizeObserver(measure);
-            ro.observe(ref.current);
-            if (ref.current.parentElement) ro.observe(ref.current.parentElement);
-        }
+        const el = containerRef.current;
+        if (!el) return;
 
-        window.addEventListener("resize", measure);
-        window.addEventListener("orientationchange", measure);
-        window.addEventListener("scroll", measure, true);
-
-        const interval = setInterval(measure, 500);
+        const resizeObserver = new ResizeObserver(measure);
+        resizeObserver.observe(el);
 
         return () => {
-            if (ro) ro.disconnect();
-            window.removeEventListener("resize", measure);
-            window.removeEventListener("orientationchange", measure);
-            window.removeEventListener("scroll", measure, true);
-            clearInterval(interval);
+            cancelAnimationFrame(rafId);
+            resizeObserver.disconnect();
         };
     }, [measure]);
 
     return (
-        <div ref={ref} className={className} style={{ width: "100%", ...style }}>
-            {children(size)}
+        <div
+            ref={containerRef}
+            className={className}
+            style={{
+                flex: 1,
+                minWidth: 0,
+                minHeight: 0,
+                overflow: "hidden",
+                ...style,
+            }}
+        >
+            {size.width > 0 && size.height > 0 ? children(size) : null}
         </div>
     );
 }

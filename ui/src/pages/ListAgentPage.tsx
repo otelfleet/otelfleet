@@ -1,16 +1,13 @@
 import { AgentService, AgentState as AgentStateEnum, } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import type { AgentDescription, AgentDescriptionAndStatus, AgentStatus, AgentState } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import { useClient } from '../api';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { notifyGRPCError } from '../api/notifications';
-import { Group, Button } from '@mantine/core'
 import { Badge } from '@mantine/core';
-
 import {
     Table,
     type ColumnConfig
 } from '../components/Table'
-import { notifications } from '@mantine/notifications';
 
 function StatusBadge({ state }: { state: AgentState }) {
 
@@ -31,24 +28,14 @@ function StatusBadge({ state }: { state: AgentState }) {
 }
 
 const agentColumns: ColumnConfig<AgentDescriptionAndStatus>[] = [
-// TODO : this is bugged because we re-use the same key. key needs to handle nested pairs
-    // {
-    //     key: 'agent', label: 'ID', visible: true, render: (value: AgentDescription, _: AgentDescriptionAndStatus) => {
-    //         return <div>
-    //             {value.id}
-    //         </div>
-    //     }
-    // },
     {
-        key: 'agent', label: 'Name', visible: true, render: (value: AgentDescription, _: AgentDescriptionAndStatus) => {
-            return <div>
-                {value.friendlyName}
-            </div>
+        key: 'agent', label: 'Name', visible: true, render: (value: AgentDescription) => {
+            return <div>{value.friendlyName}</div>
         }
     },
     {
-        key: 'status', label: 'Status', visible: true, render: (value: AgentStatus, _: AgentDescriptionAndStatus) => {
-            return StatusBadge(value)
+        key: 'status', label: 'Status', visible: true, render: (value: AgentStatus) => {
+            return <StatusBadge state={value.state} />
         }
     },
 ]
@@ -60,32 +47,27 @@ export const AgentPage = () => {
 
     const [agentsState, setAgentsState] = useState<AgentDescriptionAndStatus[]>([])
 
-    const handleListAgents = async () => {
+    const handleListAgents = useCallback(async () => {
         try {
-            console.log("starting list agents request")
             const response = await client.listAgents({
                 withStatus: true,
             });
-            console.log("finished list agents request")
             setAgentsState(response.agents)
-            notifications.show({
-                title : "yo",
-                message: "got your agents big dawg"
-            })
         } catch (error) {
             notifyGRPCError("Failed to list agents", error)
         }
-    }
+    }, [client])
 
     useEffect(() => {
         handleListAgents();
-    }, [])
+    }, [handleListAgents])
 
     return (
-        <>
-            <Group style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
-            </Group>
-            <Table<AgentDescriptionAndStatus> title="OpenTelemetry Collector agents" data={agentsState} columns={agentColumns} />
-        </>
+        <Table<AgentDescriptionAndStatus>
+            title="OpenTelemetry Collector agents"
+            data={agentsState}
+            columns={agentColumns}
+            rowKey={(row) => row.agent?.id ?? ''}
+        />
     )
 }

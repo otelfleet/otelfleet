@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type { Node } from "reactflow"
-import ReactFlow, { ReactFlowProvider, Background, Panel, useReactFlow, useNodesState, useEdgesState, useStore } from "reactflow";
-import YAML, { Parser } from "yaml";
-import type { OTELConfig, OTELService, OTELPipelines, OTELPipeline } from "./types";
+import ReactFlow, { ReactFlowProvider, useReactFlow, useNodesState, useEdgesState } from "reactflow";
+import YAML from "yaml";
+import type { OTELConfig } from "./types";
 import { useClientNodes, useEdgeCreator } from "./layout";
 
 const EmptyStateNodeData: Node[] = [
@@ -30,19 +30,15 @@ function FlowInner({
     const jsonData = useMemo(() => {
         try {
             return YAML.parse(value, { logLevel: "error", schema: "failsafe" }) as OTELConfig;
-        } catch (error: unknown) {
-            console.log(error)
+        } catch {
+            return undefined;
         }
     }, [value]) as OTELConfig;
 
     const initNodes = useClientNodes(jsonData);
     const initEdges = useEdgeCreator(initNodes ?? []);
-    // const { nodes: layoutedNodes, edges: layoutedEdges } = useLayout(initNodes ?? [], initEdges);
     const [nodes, setNodes] = useNodesState(initNodes !== undefined ? initNodes : []);
     const [edges, setEdges] = useEdgesState(initEdges);
-    // useEffect(() => {
-    // 	reactFlowInstance.fitView();
-    // }, [reactFlowWidth, reactFlowInstance]);
 
     useEffect(() => {
         if (jsonData) {
