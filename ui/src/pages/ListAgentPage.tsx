@@ -1,16 +1,16 @@
-import { AgentService, AgentState as AgentStateEnum, } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import type { AgentDescription, AgentDescriptionAndStatus, AgentStatus, AgentState } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+import { AgentService, AgentState as AgentStateEnum, RemoteConfigStatuses } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+import type { AgentDescriptionAndStatus, AgentState, ComponentHealth, RemoteConfigStatus } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import { useClient } from '../api';
 import { useEffect, useState, useCallback } from 'react';
 import { notifyGRPCError } from '../api/notifications';
-import { Badge } from '@mantine/core';
+import { Badge, Tooltip, Text, Button } from '@mantine/core';
+import { Link } from '@tanstack/react-router';
 import {
     Table,
     type ColumnConfig
 } from '../components/Table'
 
 function StatusBadge({ state }: { state: AgentState }) {
-
     const enumStr = AgentStateEnum[state].replace(/AgentState$/i, "");
     const trimmed = typeof enumStr === 'string' && enumStr.toLowerCase().startsWith("agentstate")
         ? enumStr.slice("AgentState".length)
@@ -21,21 +21,96 @@ function StatusBadge({ state }: { state: AgentState }) {
         2: 'red'
     }[state] ?? 'gray';
 
-
     return <Badge color={color} variant="filled" radius="sm">
         {trimmed}
     </Badge>
 }
 
+function HealthBadge({ health }: { health?: ComponentHealth }) {
+    if (!health) {
+        return <Badge color="gray" variant="filled" radius="sm">Unknown</Badge>
+    }
+    const color = health.healthy ? 'green' : 'red';
+    const label = health.healthy ? 'Healthy' : 'Unhealthy';
+
+    return (
+        <Tooltip label={health.lastError || health.status || 'No details'} disabled={!health.lastError && !health.status}>
+            <Badge color={color} variant="filled" radius="sm">
+                {label}
+            </Badge>
+        </Tooltip>
+    );
+}
+
+function ConfigStatusBadge({ configStatus }: { configStatus?: RemoteConfigStatus }) {
+    if (!configStatus) {
+        return <Badge color="gray" variant="filled" radius="sm">Unset</Badge>
+    }
+
+    const statusMap: Record<number, { color: string; label: string }> = {
+        [RemoteConfigStatuses.UNSET]: { color: 'gray', label: 'Unset' },
+        [RemoteConfigStatuses.APPLIED]: { color: 'green', label: 'Applied' },
+        [RemoteConfigStatuses.APPLYING]: { color: 'blue', label: 'Applying' },
+        [RemoteConfigStatuses.FAILED]: { color: 'red', label: 'Failed' },
+    };
+
+    const { color, label } = statusMap[configStatus.status] ?? { color: 'gray', label: 'Unknown' };
+
+    return (
+        <Tooltip label={configStatus.errorMessage} disabled={!configStatus.errorMessage}>
+            <Badge color={color} variant="filled" radius="sm">
+                {label}
+            </Badge>
+        </Tooltip>
+    );
+}
+
 const agentColumns: ColumnConfig<AgentDescriptionAndStatus>[] = [
     {
-        key: 'agent', label: 'Name', visible: true, render: (value: AgentDescription) => {
-            return <div>{value.friendlyName}</div>
+        key: 'name',
+        label: 'Name',
+        visible: true,
+        render: (_: unknown, row: AgentDescriptionAndStatus) => {
+            return <Text fw={500}>{row.agent?.friendlyName || 'Unknown'}</Text>
         }
     },
     {
-        key: 'status', label: 'Status', visible: true, render: (value: AgentStatus) => {
-            return <StatusBadge state={value.state} />
+        key: 'connection',
+        label: 'Connection',
+        visible: true,
+        render: (_: unknown, row: AgentDescriptionAndStatus) => {
+            return <StatusBadge state={row.status?.state ?? 0} />
+        }
+    },
+    {
+        key: 'health',
+        label: 'Health',
+        visible: true,
+        render: (_: unknown, row: AgentDescriptionAndStatus) => {
+            return <HealthBadge health={row.status?.health} />
+        }
+    },
+    {
+        key: 'config',
+        label: 'Config',
+        visible: true,
+        render: (_: unknown, row: AgentDescriptionAndStatus) => {
+            return <ConfigStatusBadge configStatus={row.status?.remoteConfigStatus} />
+        }
+    },
+    {
+        key: 'actions',
+        label: '',
+        visible: true,
+        render: (_: unknown, row: AgentDescriptionAndStatus) => {
+            if (!row.agent?.id) return null;
+            return (
+                <Link to="/agents/$agentId" params={{ agentId: row.agent.id }}>
+                    <Button size="xs" variant="light">
+                        Details
+                    </Button>
+                </Link>
+            );
         }
     },
 ]
