@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { OTELConfig, OTELService, OTELPipelines, OTELPipeline  } from "./types";
+import type { OTELConfig, OTELPipeline } from "./types";
 import {type Node, type XYPosition, type Edge, MarkerType} from "reactflow"
 const childNodesHeight = 80;
 

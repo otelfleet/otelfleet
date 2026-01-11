@@ -2,27 +2,22 @@ import {
     Table,
     type ColumnConfig
 } from '../components/Table'
-import { Box } from '@mui/material';
-import type {   Timestamp } from "@bufbuild/protobuf/wkt";
-import {Button} from '@mantine/core';
+import type { Timestamp } from "@bufbuild/protobuf/wkt";
+import { Box, Button } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { ConnectError } from "@connectrpc/connect";
-import { Code } from "@connectrpc/connect";
-
-
 import { useClient } from '../api';
 import { TokenService } from '../gen/api/pkg/api/bootstrap/v1alpha1/bootstrap_pb';
-import {useState, useEffect} from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { BootstrapToken } from '../gen/api/pkg/api/bootstrap/v1alpha1/bootstrap_pb'
-import { CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
+import { CheckCircledIcon } from '@radix-ui/react-icons';
 import { notifyGRPCError } from '../api/notifications';
 
 const tokenColumns: ColumnConfig<BootstrapToken>[] = [
       { key: 'ID', label: 'ID', visible: true },
       { key: 'Secret', label: 'token', visible: true },
-      { key : 'Expiry', 
-        label : "Expires at", 
-        render: (value: Timestamp, row: BootstrapToken) => {
+      { key : 'Expiry',
+        label : "Expires at",
+        render: (value: Timestamp) => {
           return <div>
             {timestampToLocale(value)}
           </div>
@@ -53,11 +48,6 @@ function timestampToDate(ts?: Timestamp | null): Date | null {
   return new Date(ms);
 }
 
-function timestampToStringISO(ts?: Timestamp | null): string {
-  const d = timestampToDate(ts);
-  return d ? d.toISOString() : "";
-}
-
 function timestampToLocale(ts?: Timestamp | null): string {
   const d = timestampToDate(ts);
   return d ? d.toLocaleString() : "";
@@ -68,48 +58,44 @@ export const TokenPage = () => {
 
   const [configState, setState] = useState<BootstrapToken[]>([])
 
-  const handleListConfigs = async () => {
+  const handleListTokens = useCallback(async () => {
     try {
       const response = await client.listTokens({})
       setState(response.tokens)
     } catch (error) {
       notifyGRPCError("Failed to list tokens", error)
     }
-  }
-   const handleCreateToken = async () => {
+  }, [client])
+
+  const handleCreateToken = useCallback(async () => {
     try {
       await client.createToken({
         TTL: {
-            seconds: BigInt(600),
+          seconds: BigInt(600),
         },
       })
       notifications.show({
         title: "Token successfully created",
         message: 'Bootstrap token successfully created',
-        icon: <CheckCircledIcon/>,
+        icon: <CheckCircledIcon />,
       })
-      
-      // Refresh the list after creating
-      handleListConfigs()
+      handleListTokens()
     } catch (error) {
       notifyGRPCError("Create token error", error)
     }
-  }
+  }, [client, handleListTokens])
 
-    useEffect(() => {
-        handleListConfigs()
-    }, [])
-     return (
-        <Box>
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                <Button 
-                    variant="contained" 
-                    onClick={handleCreateToken}
-                >
-                    Create Token
-                </Button>
-            </Box>
-            <Table<BootstrapToken> title="Tokens" data={configState} columns={tokenColumns} />
-        </Box>
-    )
+  useEffect(() => {
+    handleListTokens()
+  }, [handleListTokens])
+  return (
+    <Box>
+      <Box style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button onClick={handleCreateToken}>
+          Create Token
+        </Button>
+      </Box>
+      <Table<BootstrapToken> title="Tokens" data={configState} columns={tokenColumns} rowKey="ID" />
+    </Box>
+  )
 }

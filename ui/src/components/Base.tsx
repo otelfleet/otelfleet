@@ -1,4 +1,4 @@
-import { useState, type FC } from 'react'
+import { useState, useCallback, type FC } from 'react'
 import { Link, Outlet } from '@tanstack/react-router'
 import ColorSchemeContext, { useColorScheme } from '../contexts/ColorSchemeContext';
 import { Notifications } from '@mantine/notifications';
@@ -101,13 +101,13 @@ const Base: FC = () => {
         defaultValue: 'auto',
     });
 
-    const toggleColorScheme = () => {
+    const toggleColorScheme = useCallback(() => {
         setColorScheme((current) => {
             if (current === 'auto') return 'dark';
             if (current === 'dark') return 'light';
             return 'dark';
         });
-    };
+    }, [setColorScheme]);
 
     return (
         <ColorSchemeContext.Provider value={{ colorScheme, setColorScheme, toggleColorScheme }}>
@@ -155,7 +155,7 @@ const Base: FC = () => {
                             onClick={() => setActive(active === 'tokens' ? null : 'tokens')}
                         >
                             <Link to="/tokens" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All tokens" onClick={() => console.log('tokens/all')} />
+                                <NavLink label="All tokens" />
                             </Link>
                         </NavLink>
 
@@ -167,7 +167,7 @@ const Base: FC = () => {
                             onClick={() => setActive(active === 'configs' ? null : 'configs')}
                         >
                             <Link to="/configs" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All configs" onClick={() => console.log('configs/all')} />
+                                <NavLink label="All configs" />
                             </Link>
                         </NavLink>
 
@@ -179,9 +179,8 @@ const Base: FC = () => {
                             onClick={() => setActive(active === 'agents' ? null : 'agents')}
                         >
                             <Link to="/agents" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All agents" onClick={() => console.log('agents/all')} />
+                                <NavLink label="All agents" />
                             </Link>
-                    
                         </NavLink>
                     </Stack>
                 </AppShell.Navbar>

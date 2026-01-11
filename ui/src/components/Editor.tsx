@@ -1,8 +1,3 @@
-
-// SPDX-FileCopyrightText: 2023 Dash0 Inc.
-// SPDX-License-Identifier: Apache-2.0
-
-
 import { useState } from "react";
 import MonacoEditor, { type OnChange, type OnMount } from "@monaco-editor/react";
 import { Box, Button, Group, TextInput } from '@mantine/core';
@@ -14,9 +9,6 @@ import { notifyGRPCError } from "../api/notifications";
 import { useNavigate } from '@tanstack/react-router';
 import { useMonacoTheme } from "../hooks/useMonacoTheme";
 
-
-// ...existing code...
-
 export function Editor(
     props: { defaultConfig?: string | null, containerWidth?: number, containerHeight?: number, style?: React.CSSProperties }) {
     const { defaultConfig } = props;
@@ -26,7 +18,6 @@ export function Editor(
     const [configData, setConfig] = useState(actualConfig)
     const handleEditorChange: OnChange = (value) => {
         if (value !== undefined) {
-            console.log(value)
             setConfig(value);
         }
     }
@@ -63,7 +54,6 @@ export function Editor(
         >
             <form
                 onSubmit={form.onSubmit((values) => {
-                    console.log("putting config")
                     try {
                         const bytes = new TextEncoder().encode(configData);
                         otelConfigClient.putConfig({
