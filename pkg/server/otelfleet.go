@@ -85,6 +85,7 @@ type OtelFleet struct {
 	agentHealthStore       storage.KeyValue[*protobufs.ComponentHealth]
 	agentEffectiveConfig   storage.KeyValue[*protobufs.EffectiveConfig]
 	agentRemoteConfigStore storage.KeyValue[*protobufs.RemoteConfigStatus]
+	opampAgentDescription  storage.KeyValue[*protobufs.AgentDescription]
 
 	agentTracker opamp.AgentTracker
 
@@ -177,6 +178,11 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.store.KeyValue("agent-remote-config-status"),
 		)
 
+		o.opampAgentDescription = storage.NewProtoKV[*protobufs.AgentDescription](
+			o.logger.With("store", "opamp-agent-description"),
+			o.store.KeyValue("opamp-agent-description"),
+		)
+
 		return storeSvc, nil
 	}, modules.UserInvisibleModule)
 
@@ -212,6 +218,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.agentHealthStore,
 			o.agentEffectiveConfig,
 			o.agentRemoteConfigStore,
+			o.opampAgentDescription,
 		)
 		return srv, nil
 	})
@@ -224,6 +231,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.agentHealthStore,
 			o.agentEffectiveConfig,
 			o.agentRemoteConfigStore,
+			o.opampAgentDescription,
 		)
 		srv.ConfigureHTTP(o.server.HTTP)
 		return srv, nil

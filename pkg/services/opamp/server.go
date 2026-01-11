@@ -29,9 +29,10 @@ type Server struct {
 	addrToId map[string]string
 	tracker  AgentTracker
 
-	healthStore       storage.KeyValue[*protobufs.ComponentHealth]
-	configStore       storage.KeyValue[*protobufs.EffectiveConfig]
-	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus]
+	healthStore           storage.KeyValue[*protobufs.ComponentHealth]
+	configStore           storage.KeyValue[*protobufs.EffectiveConfig]
+	remoteStatusStore     storage.KeyValue[*protobufs.RemoteConfigStatus]
+	opampAgentDescription storage.KeyValue[*protobufs.AgentDescription]
 }
 
 var _ services_int.OpAmpServerHandler = (*Server)(nil)
@@ -43,17 +44,19 @@ func NewServer(
 	healthStore storage.KeyValue[*protobufs.ComponentHealth],
 	configStore storage.KeyValue[*protobufs.EffectiveConfig],
 	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus],
+	opampAgentDescriptionStore storage.KeyValue[*protobufs.AgentDescription],
 ) *Server {
 	opampSvr := server.New(logutil.NewOpAMPLogger(l))
 	s := &Server{
-		logger:            l,
-		opampSrv:          opampSvr,
-		agentStore:        agentStore,
-		addrToId:          map[string]string{},
-		tracker:           tracker,
-		healthStore:       healthStore,
-		configStore:       configStore,
-		remoteStatusStore: remoteStatusStore,
+		logger:                l,
+		opampSrv:              opampSvr,
+		agentStore:            agentStore,
+		addrToId:              map[string]string{},
+		tracker:               tracker,
+		healthStore:           healthStore,
+		configStore:           configStore,
+		remoteStatusStore:     remoteStatusStore,
+		opampAgentDescription: opampAgentDescriptionStore,
 	}
 
 	s.Service = services.NewBasicService(s.start, s.running, s.stop)
@@ -136,33 +139,41 @@ func (s *Server) OnReadMessageError(conn types.Connection, mt int, msgByte []byt
 }
 
 func (s *Server) OnMessage(ctx context.Context, conn types.Connection, message *protobufs.AgentToServer) *protobufs.ServerToAgent {
-	s.logger.Info("received message from agent", "message", message)
-
 	instanceUID := string(message.InstanceUid)
+	logger := s.logger.With("agent-id", instanceUID)
+	logger.Debug("received message from agent")
 	agentAddr := conn.Connection().RemoteAddr().String()
 
 	needsFullState := s.tracker.UpdateFromMessage(instanceUID, message)
 
+	if message.AgentDescription != nil {
+		logger.Info("persisting agent description")
+		if err := s.opampAgentDescription.Put(ctx, instanceUID, message.AgentDescription); err != nil {
+			logger.With("err", err).Error("failed to persist opamp agent-description")
+		}
+		logger.Info("handling downstream implication of agent")
+		s.handleAgentDescription(agentAddr, message.AgentDescription)
+	}
+
 	if message.Health != nil {
+		logger.Info("persisting agent health")
 		if err := s.healthStore.Put(ctx, instanceUID, message.Health); err != nil {
-			s.logger.Error("failed to persist health", "instanceUID", instanceUID, "err", err)
+			logger.Error("failed to persist health", "instanceUID", instanceUID, "err", err)
 		}
 	}
 
 	if message.EffectiveConfig != nil {
+		logger.Info("persisting effective config")
 		if err := s.configStore.Put(ctx, instanceUID, message.EffectiveConfig); err != nil {
-			s.logger.Error("failed to persist effective config", "instanceUID", instanceUID, "err", err)
+			logger.Error("failed to persist effective config", "instanceUID", instanceUID, "err", err)
 		}
 	}
 
 	if message.RemoteConfigStatus != nil {
+		logger.Info("persisting remote config status")
 		if err := s.remoteStatusStore.Put(ctx, instanceUID, message.RemoteConfigStatus); err != nil {
-			s.logger.Error("failed to persist remote config status", "instanceUID", instanceUID, "err", err)
+			logger.Error("failed to persist remote config status", "instanceUID", instanceUID, "err", err)
 		}
-	}
-
-	if message.AgentDescription != nil {
-		s.handleAgentDescription(agentAddr, message.AgentDescription)
 	}
 
 	resp := &protobufs.ServerToAgent{

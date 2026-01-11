@@ -32,8 +32,9 @@ func setupTestServer(t *testing.T) (*agent.AgentServer, storage.KeyValue[*v1alph
 	healthStore := storage.NewProtoKV[*protobufs.ComponentHealth](logger, broker.KeyValue("agent-health"))
 	configStore := storage.NewProtoKV[*protobufs.EffectiveConfig](logger, broker.KeyValue("agent-effective-config"))
 	statusStore := storage.NewProtoKV[*protobufs.RemoteConfigStatus](logger, broker.KeyValue("agent-remote-config-status"))
+	opampDesc := storage.NewProtoKV[*protobufs.AgentDescription](logger, broker.KeyValue("opamp-agent-description"))
 
-	srv := agent.NewAgentServer(logger, agentStore, tracker, healthStore, configStore, statusStore)
+	srv := agent.NewAgentServer(logger, agentStore, tracker, healthStore, configStore, statusStore, opampDesc)
 
 	return srv, agentStore, tracker, healthStore, configStore, statusStore
 }

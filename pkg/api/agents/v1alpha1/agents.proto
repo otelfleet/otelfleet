@@ -48,6 +48,45 @@ message AgentStatus {
 message AgentDescription {
   string id            = 1;
   string friendly_name = 2;
+
+  // Attributes that identify the Agent (e.g., service.name, service.version, service.instance.id).
+  // These attributes uniquely identify the agent and should be used for its own telemetry.
+  repeated KeyValue identifying_attributes = 3;
+
+  // Attributes that do not necessarily identify the Agent but help describe where it runs
+  // (e.g., os.type, os.version, host.*, cloud.*).
+  repeated KeyValue non_identifying_attributes = 4;
+
+  repeated string capabilities = 5;
+}
+
+// KeyValue represents a key-value pair with support for various value types.
+message KeyValue {
+  string   key   = 1;
+  AnyValue value = 2;
+}
+
+// AnyValue represents a value that can be one of several types.
+message AnyValue {
+  oneof value {
+    string       string_value = 1;
+    bool         bool_value   = 2;
+    int64        int_value    = 3;
+    double       double_value = 4;
+    bytes        bytes_value  = 5;
+    ArrayValue   array_value  = 6;
+    KeyValueList kvlist_value = 7;
+  }
+}
+
+// ArrayValue holds an array of AnyValue.
+message ArrayValue {
+  repeated AnyValue values = 1;
+}
+
+// KeyValueList holds a list of KeyValue pairs.
+message KeyValueList {
+  repeated KeyValue values = 1;
 }
 
 enum AgentState {
