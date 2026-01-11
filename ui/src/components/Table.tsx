@@ -13,7 +13,7 @@ import { useState, useMemo } from 'react';
 import { Menu as MenuIcon } from 'react-feather';
 
 export type ColumnConfig<T> = {
-  key: keyof T;
+  key: keyof T | string;
   label: string;
   visible?: boolean;
   render?: (value: any, row: T) => React.ReactNode;
@@ -26,7 +26,7 @@ interface DynamicTableProps<T> {
   rowKey?: keyof T | ((row: T, index: number) => string | number);
 }
 
-export const Table = <T,>({
+export const Table = <T extends object>({
   data,
   columns,
   title,
@@ -105,13 +105,16 @@ export const Table = <T,>({
         <tbody>
           {data.map((row, idx) => (
             <tr key={getRowKey(row, idx)}>
-              {activeColumns.map((col) => (
-                <td key={String(col.key)}>
-                  {col.render
-                    ? col.render(row[col.key], row)
-                    : String(row[col.key])}
-                </td>
-              ))}
+              {activeColumns.map((col) => {
+                const value = col.key in row ? row[col.key as keyof T] : undefined;
+                return (
+                  <td key={String(col.key)}>
+                    {col.render
+                      ? col.render(value, row)
+                      : String(value ?? '')}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

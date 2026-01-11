@@ -8,14 +8,23 @@ import { notifications } from "@mantine/notifications";
 import { notifyGRPCError } from "../api/notifications";
 import { useNavigate } from '@tanstack/react-router';
 import { useMonacoTheme } from "../hooks/useMonacoTheme";
+import { CheckCircledIcon } from '@radix-ui/react-icons';
 
-export function Editor(
-    props: { defaultConfig?: string | null, containerWidth?: number, containerHeight?: number, style?: React.CSSProperties }) {
-    const { defaultConfig } = props;
+interface EditorProps {
+    defaultConfig?: string | null;
+    configId?: string;
+    containerWidth?: number;
+    containerHeight?: number;
+    style?: React.CSSProperties;
+}
+
+export function Editor({ defaultConfig, configId }: EditorProps) {
+    const isEditMode = Boolean(configId);
 
     const monacoTheme = useMonacoTheme();
     const actualConfig = defaultConfig ? defaultConfig : ""
     const [configData, setConfig] = useState(actualConfig)
+
     const handleEditorChange: OnChange = (value) => {
         if (value !== undefined) {
             setConfig(value);
@@ -23,18 +32,16 @@ export function Editor(
     }
 
     const handleEditorMount: OnMount = (editor) => {
-        // Force layout recalculation to fix dimension issues
         requestAnimationFrame(() => {
             editor.layout();
         });
     }
 
     const form = useForm({
-        mode: 'uncontrolled',
+        mode: 'controlled',
         initialValues: {
-            configName: '',
+            configName: configId ?? '',
         },
-
         validate: {
             configName: (value) => (/[a-zA-Z0-9]/.test(value) ? null : 'Invalid config name'),
         },
@@ -42,6 +49,32 @@ export function Editor(
 
     const otelConfigClient = useClient(ConfigService)
     const navigate = useNavigate();
+
+    const handleSubmit = async (values: { configName: string }) => {
+        try {
+            const bytes = new TextEncoder().encode(configData);
+            await otelConfigClient.putConfig({
+                ref: {
+                    id: values.configName,
+                },
+                config: {
+                    config: bytes,
+                },
+            })
+            notifications.show({
+                title: isEditMode ? "Config updated" : "Config created",
+                message: isEditMode
+                    ? `Updated config: ${values.configName}`
+                    : `Created config: ${values.configName}`,
+                icon: <CheckCircledIcon />,
+            })
+            navigate({
+                to: '/configs',
+            });
+        } catch (error) {
+            notifyGRPCError(isEditMode ? "Failed to update config" : "Failed to create config", error)
+        }
+    }
 
     return (
         <Box
@@ -52,39 +85,18 @@ export function Editor(
                 gap: 16,
             }}
         >
-            <form
-                onSubmit={form.onSubmit((values) => {
-                    try {
-                        const bytes = new TextEncoder().encode(configData);
-                        otelConfigClient.putConfig({
-                            ref: {
-                                id: values.configName,
-                            },
-                            config: {
-                                config: bytes,
-                            },
-                        })
-                        notifications.show({
-                            title: "Created OpenTelemetry config",
-                            message: "created config : `" + values.configName + "`",
-                        })
-                        navigate({
-                            to: '/configs',
-                        });
-                    } catch (error) {
-                        notifyGRPCError("Failed to create config", error)
-                    }
-                })}
-            >
+            <form onSubmit={form.onSubmit(handleSubmit)}>
                 <Group align="flex-end" gap="md">
                     <TextInput
                         withAsterisk
                         label="Config name"
                         placeholder="config"
-                        key={form.key('configName')}
+                        disabled={isEditMode}
                         {...form.getInputProps('configName')}
                     />
-                    <Button type="submit">Save config</Button>
+                    <Button type="submit">
+                        {isEditMode ? 'Update config' : 'Save config'}
+                    </Button>
                 </Group>
             </form>
             <Box style={{ flex: 1, minHeight: 0 }}>
