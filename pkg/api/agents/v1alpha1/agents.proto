@@ -1,22 +1,19 @@
 syntax = "proto3";
 package config.v1alpha1;
 
-// import "google/protobuf/duration.proto";
-// import "google/protobuf/empty.proto";
-
 option go_package = "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1";
 
 service AgentService {
-  rpc ListAgents(ListAgentsRequest) returns (ListAgentsReponse);
+  rpc ListAgents(ListAgentsRequest) returns (ListAgentsResponse);
   rpc GetAgent(GetAgentRequest) returns (GetAgentResponse);
-  rpc Status(GetAgentStatusRequest) returns (AgentStatus);
+  rpc Status(GetAgentStatusRequest) returns (GetAgentStatusResponse);
 }
 
 message ListAgentsRequest {
-  bool withStatus = 1;
+  bool with_status = 1;
 }
 
-message ListAgentsReponse {
+message ListAgentsResponse {
   repeated AgentDescriptionAndStatus agents = 1;
 }
 
@@ -25,23 +22,76 @@ message AgentDescriptionAndStatus {
   AgentStatus      status = 2;
 }
 
-message GetAgentRequest {}
+message GetAgentRequest {
+  string agent_id = 1;
+}
 
-message GetAgentResponse {}
+message GetAgentResponse {
+  AgentDescription agent = 1;
+}
 
-message GetAgentStatusRequest {}
+message GetAgentStatusRequest {
+  string agent_id = 1;
+}
 
-message AgentDescription {
-  string id           = 1;
-  string friendlyName = 2;
+message GetAgentStatusResponse {
+  AgentStatus status = 1;
 }
 
 message AgentStatus {
-  AgentState state = 1;
+  AgentState         state                = 1;
+  ComponentHealth    health               = 2;
+  EffectiveConfig    effective_config     = 3;
+  RemoteConfigStatus remote_config_status = 4;
+}
+
+message AgentDescription {
+  string id            = 1;
+  string friendly_name = 2;
 }
 
 enum AgentState {
-  AgentStateUnknown      = 0;
-  AgentStateConnected    = 1;
-  AgentStateDisconnected = 2;
+  AGENT_STATE_UNKNOWN      = 0;
+  AGENT_STATE_CONNECTED    = 1;
+  AGENT_STATE_DISCONNECTED = 2;
+}
+
+// ComponentHealth represents the health status of an agent and its components.
+message ComponentHealth {
+  bool   healthy               = 1;
+  uint64 start_time_unix_nano  = 2;
+  string last_error            = 3;
+  string status                = 4;
+  uint64 status_time_unix_nano = 5;
+  map<string, ComponentHealth> component_health_map = 6;
+}
+
+// EffectiveConfig represents the current effective configuration of an agent.
+message EffectiveConfig {
+  AgentConfigMap config_map = 1;
+}
+
+// AgentConfigMap holds a map of config file names to their content.
+message AgentConfigMap {
+  map<string, AgentConfigFile> config_map = 1;
+}
+
+// AgentConfigFile represents a single configuration file.
+message AgentConfigFile {
+  bytes  body         = 1;
+  string content_type = 2;
+}
+
+// RemoteConfigStatus represents the status of a remote configuration on an agent.
+message RemoteConfigStatus {
+  bytes                last_remote_config_hash = 1;
+  RemoteConfigStatuses status                  = 2;
+  string               error_message           = 3;
+}
+
+enum RemoteConfigStatuses {
+  REMOTE_CONFIG_STATUSES_UNSET    = 0;
+  REMOTE_CONFIG_STATUSES_APPLIED  = 1;
+  REMOTE_CONFIG_STATUSES_APPLYING = 2;
+  REMOTE_CONFIG_STATUSES_FAILED   = 3;
 }

@@ -28,6 +28,10 @@ type Server struct {
 
 	addrToId map[string]string
 	tracker  AgentTracker
+
+	healthStore       storage.KeyValue[*protobufs.ComponentHealth]
+	configStore       storage.KeyValue[*protobufs.EffectiveConfig]
+	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus]
 }
 
 var _ services_int.OpAmpServerHandler = (*Server)(nil)
@@ -36,14 +40,20 @@ func NewServer(
 	l *slog.Logger,
 	agentStore storage.KeyValue[*protobufs.AgentToServer],
 	tracker AgentTracker,
+	healthStore storage.KeyValue[*protobufs.ComponentHealth],
+	configStore storage.KeyValue[*protobufs.EffectiveConfig],
+	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus],
 ) *Server {
 	opampSvr := server.New(logutil.NewOpAMPLogger(l))
 	s := &Server{
-		logger:     l,
-		opampSrv:   opampSvr,
-		agentStore: agentStore,
-		addrToId:   map[string]string{},
-		tracker:    tracker,
+		logger:            l,
+		opampSrv:          opampSvr,
+		agentStore:        agentStore,
+		addrToId:          map[string]string{},
+		tracker:           tracker,
+		healthStore:       healthStore,
+		configStore:       configStore,
+		remoteStatusStore: remoteStatusStore,
 	}
 
 	s.Service = services.NewBasicService(s.start, s.running, s.stop)
@@ -85,13 +95,9 @@ func (s *Server) start(ctx context.Context) error {
 }
 
 func (s *Server) stop(failureCase error) error {
-	// FIXME: handle failure case?
 	ctxca, ca := context.WithTimeout(context.TODO(), time.Second)
 	defer ca()
-	if err := s.opampSrv.Stop(ctxca); err != nil {
-		return err
-	}
-	return nil
+	return s.opampSrv.Stop(ctxca)
 }
 
 func (s *Server) OnConnected(ctx context.Context, conn types.Connection) {
@@ -105,7 +111,7 @@ func (s *Server) OnConnected(ctx context.Context, conn types.Connection) {
 
 func (s *Server) sendConfig(ctx context.Context, conn types.Connection) error {
 	s.logger.Log(ctx, logutil.LevelTrace, "sending config to agent")
-	if err := conn.Send(ctx, &protobufs.ServerToAgent{
+	return conn.Send(ctx, &protobufs.ServerToAgent{
 		RemoteConfig: &protobufs.AgentRemoteConfig{
 			Config: &protobufs.AgentConfigMap{
 				ConfigMap: map[string]*protobufs.AgentConfigFile{
@@ -118,13 +124,9 @@ func (s *Server) sendConfig(ctx context.Context, conn types.Connection) error {
 			// TODO
 			ConfigHash: []byte("a"),
 		},
-	}); err != nil {
-		return err
-	}
-	return nil
+	})
 }
 
-// onMessageReadFailurefunc is called when an error occurs while reading or deserializing a message.
 func (s *Server) OnReadMessageError(conn types.Connection, mt int, msgByte []byte, err error) {
 	s.logger.
 		With("remote-addr", conn.Connection().RemoteAddr().String()).
@@ -135,11 +137,44 @@ func (s *Server) OnReadMessageError(conn types.Connection, mt int, msgByte []byt
 
 func (s *Server) OnMessage(ctx context.Context, conn types.Connection, message *protobufs.AgentToServer) *protobufs.ServerToAgent {
 	s.logger.Info("received message from agent", "message", message)
+
+	instanceUID := string(message.InstanceUid)
+	agentAddr := conn.Connection().RemoteAddr().String()
+
+	needsFullState := s.tracker.UpdateFromMessage(instanceUID, message)
+
+	if message.Health != nil {
+		if err := s.healthStore.Put(ctx, instanceUID, message.Health); err != nil {
+			s.logger.Error("failed to persist health", "instanceUID", instanceUID, "err", err)
+		}
+	}
+
+	if message.EffectiveConfig != nil {
+		if err := s.configStore.Put(ctx, instanceUID, message.EffectiveConfig); err != nil {
+			s.logger.Error("failed to persist effective config", "instanceUID", instanceUID, "err", err)
+		}
+	}
+
+	if message.RemoteConfigStatus != nil {
+		if err := s.remoteStatusStore.Put(ctx, instanceUID, message.RemoteConfigStatus); err != nil {
+			s.logger.Error("failed to persist remote config status", "instanceUID", instanceUID, "err", err)
+		}
+	}
+
 	if message.AgentDescription != nil {
-		agentAddr := conn.Connection().RemoteAddr().String()
 		s.handleAgentDescription(agentAddr, message.AgentDescription)
 	}
-	return &protobufs.ServerToAgent{}
+
+	resp := &protobufs.ServerToAgent{
+		InstanceUid: message.InstanceUid,
+	}
+
+	if needsFullState {
+		resp.Flags = uint64(protobufs.ServerToAgentFlags_ServerToAgentFlags_ReportFullState)
+		s.logger.Info("requesting full state report due to sequence gap", "instanceUID", instanceUID)
+	}
+
+	return resp
 }
 
 func (s *Server) handleAgentDescription(agentAddr string, desc *protobufs.AgentDescription) {
@@ -150,8 +185,8 @@ func (s *Server) handleAgentDescription(agentAddr string, desc *protobufs.AgentD
 			s.logger.With("agentID", agentID, "remote-addr", agentAddr).
 				Info("associating agent remote-addr to persistent ID")
 			s.addrToId[agentAddr] = agentID
-			s.tracker.Put(agentID, &v1alpha1.AgentStatus{
-				State: v1alpha1.AgentState_AgentStateConnected,
+			s.tracker.PutStatus(agentID, &v1alpha1.AgentStatus{
+				State: v1alpha1.AgentState_AGENT_STATE_CONNECTED,
 			})
 			return
 		}
@@ -168,7 +203,7 @@ func (s *Server) OnConnectionClose(conn types.Connection) {
 		logger.Error("agent not tracked in addr to persistent ID map")
 		return
 	}
-	s.tracker.Put(agentID, &v1alpha1.AgentStatus{
-		State: v1alpha1.AgentState_AgentStateDisconnected,
+	s.tracker.PutStatus(agentID, &v1alpha1.AgentStatus{
+		State: v1alpha1.AgentState_AGENT_STATE_DISCONNECTED,
 	})
 }

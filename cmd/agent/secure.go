@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/json"
@@ -40,8 +41,13 @@ type secureBootstrapper struct {
 	tClient bootstrapv1alpha1.TokenServiceClient
 }
 
-func (sb *secureBootstrapper) Bootstrap(agentName string, token string) (*tls.Config, error) {
-	_, err := bootstrapAgent(sb.logger, agentName, token)
+func (sb *secureBootstrapper) VerifyToken(token string) error {
+	// TODO: implement token verification
+	return nil
+}
+
+func (sb *secureBootstrapper) Bootstrap(ctx context.Context, req *v1alpha1.BootstrapAuthRequest) (*tls.Config, error) {
+	_, err := bootstrapAgent(sb.logger, req.Name, "")
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +100,7 @@ func bootstrapAgent(logger *slog.Logger, agentName string, bootstrapToken string
 		panic(err)
 	}
 	// get keyring
-	id, err := ident.IdFromMac(sha256.New(), agentName, map[string]string{})
+	id, err := ident.IdFromMac(sha256.New(), agentName)
 	if err != nil {
 		return nil, err
 	}
