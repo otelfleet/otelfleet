@@ -12,6 +12,29 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Elevation System CSS Variables - Dark mode defaults */
+  /* In dark mode: base is darkest, surfaces get progressively lighter */
+  --elevation-base-bg: #1d1e30;
+  --elevation-surface-bg: #2b2c3d;
+  --elevation-raised-bg: #34354a;
+  --elevation-overlay-bg: #4d4f66;
+}
+
+/* Light mode elevation backgrounds - applied to multiple selectors for portal support */
+[data-mantine-color-scheme="light"] {
+  --elevation-base-bg: #f1f3f5;
+  --elevation-surface-bg: #ffffff;
+  --elevation-raised-bg: #ffffff;
+  --elevation-overlay-bg: #ffffff;
+}
+
+/* Override for dark mode on elements with the attribute */
+[data-mantine-color-scheme="dark"] {
+  --elevation-base-bg: #1d1e30;
+  --elevation-surface-bg: #2b2c3d;
+  --elevation-raised-bg: #34354a;
+  --elevation-overlay-bg: #4d4f66;
 }
 
 html {

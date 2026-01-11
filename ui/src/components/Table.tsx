@@ -57,12 +57,12 @@ export const Table = <T extends object>({
   };
 
   return (
-    <Paper withBorder radius="md">
+    <Paper shadow="sm" radius="md">
       <Group
         px="sm"
         py="xs"
         justify="space-between"
-        style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}
+        style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
       >
         <Menu shadow="md" width={200}>
           <Menu.Target>

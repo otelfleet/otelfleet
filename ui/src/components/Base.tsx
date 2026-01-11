@@ -2,6 +2,7 @@ import { useState, useCallback, type FC } from 'react'
 import { Link, Outlet } from '@tanstack/react-router'
 import ColorSchemeContext, { useColorScheme } from '../contexts/ColorSchemeContext';
 import { Notifications } from '@mantine/notifications';
+import { elevationShadows } from '../theme/elevation';
 
 
 import {
@@ -62,14 +63,38 @@ const theme = createTheme({
         ],
     },
     shadows: {
-        md: '1px 1px 3px rgba(0, 0, 0, .25)',
-        xl: '5px 5px 3px rgba(0, 0, 0, .25)',
+        xs: '0 1px 2px rgba(0, 0, 0, 0.05)',
+        sm: elevationShadows.surface,
+        md: elevationShadows.raised,
+        lg: elevationShadows.overlay,
+        xl: '0 20px 40px rgba(0, 0, 0, 0.2), 0 8px 16px rgba(0, 0, 0, 0.1)',
     },
 
     headings: {
         fontFamily: 'Roboto, sans-serif',
         sizes: {
             h1: { fontSize: '36px' },
+        },
+    },
+
+    components: {
+        AppShell: {
+            styles: {
+                main: { backgroundColor: 'var(--elevation-base-bg)' },
+                header: {
+                    backgroundColor: 'var(--elevation-surface-bg)',
+                    borderBottom: '1px solid var(--mantine-color-default-border)',
+                },
+                navbar: {
+                    backgroundColor: 'var(--elevation-surface-bg)',
+                    borderRight: '1px solid var(--mantine-color-default-border)',
+                },
+            },
+        },
+        Paper: {
+            styles: {
+                root: { backgroundColor: 'var(--elevation-surface-bg)' },
+            },
         },
     },
 });

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import MonacoEditor, { type OnChange, type OnMount } from "@monaco-editor/react";
-import { Box, Button, Group, TextInput } from '@mantine/core';
+import { Box, Button, Group, TextInput, Paper } from '@mantine/core';
 import { useForm } from '@mantine/form'
 import { useClient } from "../api";
 import { ConfigService } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
@@ -99,7 +99,7 @@ export function Editor({ defaultConfig, configId }: EditorProps) {
                     </Button>
                 </Group>
             </form>
-            <Box style={{ flex: 1, minHeight: 0 }}>
+            <Paper shadow="sm" radius="md" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                 <MonacoEditor
                     defaultValue={actualConfig}
                     value={configData}
@@ -119,7 +119,7 @@ export function Editor({ defaultConfig, configId }: EditorProps) {
                     onMount={handleEditorMount}
                     onChange={handleEditorChange}
                 />
-            </Box>
+            </Paper>
         </Box>
     );
 }
