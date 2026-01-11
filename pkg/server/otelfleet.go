@@ -76,12 +76,15 @@ type OtelFleet struct {
 	mm   *modules.Manager
 	deps map[string][]string
 
-	store              storage.KVBroker
-	tokenStore         storage.KeyValue[*bootstrapv1alpha1.BootstrapToken]
-	agentStore         storage.KeyValue[*agentsv1alpha1.AgentDescription]
-	opampAgentStore    storage.KeyValue[*protobufs.AgentToServer]
-	configStore        storage.KeyValue[*configv1alpha1.Config]
-	defaultConfigStore storage.KeyValue[*configv1alpha1.Config]
+	store                  storage.KVBroker
+	tokenStore             storage.KeyValue[*bootstrapv1alpha1.BootstrapToken]
+	agentStore             storage.KeyValue[*agentsv1alpha1.AgentDescription]
+	opampAgentStore        storage.KeyValue[*protobufs.AgentToServer]
+	configStore            storage.KeyValue[*configv1alpha1.Config]
+	defaultConfigStore     storage.KeyValue[*configv1alpha1.Config]
+	agentHealthStore       storage.KeyValue[*protobufs.ComponentHealth]
+	agentEffectiveConfig   storage.KeyValue[*protobufs.EffectiveConfig]
+	agentRemoteConfigStore storage.KeyValue[*protobufs.RemoteConfigStatus]
 
 	agentTracker opamp.AgentTracker
 
@@ -161,6 +164,19 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.store.KeyValue("defaultconfigs"),
 		)
 
+		o.agentHealthStore = storage.NewProtoKV[*protobufs.ComponentHealth](
+			o.logger.With("store", "agent-health"),
+			o.store.KeyValue("agent-health"),
+		)
+		o.agentEffectiveConfig = storage.NewProtoKV[*protobufs.EffectiveConfig](
+			o.logger.With("store", "agent-effective-config"),
+			o.store.KeyValue("agent-effective-config"),
+		)
+		o.agentRemoteConfigStore = storage.NewProtoKV[*protobufs.RemoteConfigStatus](
+			o.logger.With("store", "agent-remote-config-status"),
+			o.store.KeyValue("agent-remote-config-status"),
+		)
+
 		return storeSvc, nil
 	}, modules.UserInvisibleModule)
 
@@ -193,6 +209,9 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("service", OpAmp),
 			o.opampAgentStore,
 			o.agentTracker,
+			o.agentHealthStore,
+			o.agentEffectiveConfig,
+			o.agentRemoteConfigStore,
 		)
 		return srv, nil
 	})
@@ -202,6 +221,9 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("service", AgentManager),
 			o.agentStore,
 			o.agentTracker,
+			o.agentHealthStore,
+			o.agentEffectiveConfig,
+			o.agentRemoteConfigStore,
 		)
 		srv.ConfigureHTTP(o.server.HTTP)
 		return srv, nil

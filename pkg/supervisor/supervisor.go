@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"log/slog"
+	"time"
 
 	"github.com/open-telemetry/opamp-go/client"
 	"github.com/open-telemetry/opamp-go/client/types"
@@ -22,7 +23,8 @@ type Supervisor struct {
 	opampClient client.OpAMPClient
 	opAmpAddr   string
 
-	agentId ident.Identity
+	agentId   ident.Identity
+	startTime time.Time
 
 	// for direct in-process management
 	procManager *ProcManager
@@ -40,6 +42,7 @@ func NewSupervisor(
 		clientLogger: logutil.NewOpAMPLogger(logger),
 		opAmpAddr:    opAmpAddr,
 		agentId:      agentId,
+		startTime:    time.Now(),
 		procManager: NewProcManager(
 			logger.With("process", "otelcol"),
 			//FIXME:
@@ -62,11 +65,12 @@ func (s *Supervisor) startOpAMP() error {
 		OpAMPServerURL: s.opAmpAddr,
 		TLSConfig:      s.tlsConfig,
 		InstanceUid:    types.InstanceUid([]byte(util.NewUUID())),
-		Capabilities: protobufs.AgentCapabilities_AgentCapabilities_AcceptsRemoteConfig |
-			protobufs.AgentCapabilities_AgentCapabilities_ReportsRemoteConfig,
+		Capabilities:   protobufs.AgentCapabilities(GetCapabilities()),
 		Callbacks: types.Callbacks{
 			OnConnect: func(ctx context.Context) {
 				s.logger.Info("connected to OpAMP server")
+				// Report initial health on connect
+				s.reportHealth()
 			},
 			OnConnectFailed: func(ctx context.Context, err error) {
 				s.logger.With("err", err).Error("failed to connect to the server")
@@ -81,9 +85,15 @@ func (s *Supervisor) startOpAMP() error {
 		},
 	}
 
+	// Use enhanced agent description
 	err := s.opampClient.SetAgentDescription(s.createAgentDescription())
 	if err != nil {
 		return err
+	}
+
+	// Set initial health status
+	if err := s.opampClient.SetHealth(s.buildHealth()); err != nil {
+		s.logger.With("err", err).Warn("failed to set initial health")
 	}
 
 	if err := s.opampClient.Start(context.TODO(), settings); err != nil {
@@ -105,16 +115,16 @@ func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 			}); err != nil {
 				s.logger.With("err", err).With("status", "failed").Error("failed to report remote config status to upstream server")
 
-				panic("unhandled error")
+				// panic("unhandled error")
 			}
-		} else {
-			if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
-				Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
-				LastRemoteConfigHash: incomingCfg.GetConfigHash(),
-			}); err != nil {
-				s.logger.With("err", err).With("status", "succeeded").Error("failed to report remote config status to upstream server")
-				panic("unhandled error")
-			}
+			return
+		}
+		if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
+			Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
+			LastRemoteConfigHash: incomingCfg.GetConfigHash(),
+		}); err != nil {
+			s.logger.With("err", err).With("status", "succeeded").Error("failed to report remote config status to upstream server")
+			// panic("unhandled error")
 		}
 	}
 	l.Debug("received message")
@@ -159,11 +169,25 @@ func (s *Supervisor) createEffectiveConfigMsg() *protobufs.EffectiveConfig {
 }
 
 func (s *Supervisor) createAgentDescription() *protobufs.AgentDescription {
-	s.logger.With("agentID", s.agentId.UniqueIdentifier().UUID).Info("sending agent description")
-	return &protobufs.AgentDescription{
-		IdentifyingAttributes: []*protobufs.KeyValue{
-			// TODO : semconv for other identifying attributes
-			util.KeyVal(AttributeOtelfleetAgentId, s.agentId.UniqueIdentifier().UUID),
-		},
+	agentID := s.agentId.UniqueIdentifier().UUID
+	s.logger.With("agentID", agentID).Info("sending agent description")
+	// TODO : this will need to include the identifying resource attributes from the otel collector
+	// the idea being that we can then lookup the metrics,logs,traces from this particular collector
+	// instance from the gateway in their respective storage backends.
+	return BuildAgentDescription(agentID)
+}
+
+// buildHealth creates the current health status for the supervisor.
+func (s *Supervisor) buildHealth() *protobufs.ComponentHealth {
+	// TODO : this will need to check proc manager status
+	// Also check if the deployment collector's packages include healthcheckextensionv2
+	// and if it is loaded - so it can call that endpoint.
+	return BuildComponentHealth(true, "running", s.startTime)
+}
+
+// reportHealth sends the current health status to the server.
+func (s *Supervisor) reportHealth() {
+	if err := s.opampClient.SetHealth(s.buildHealth()); err != nil {
+		s.logger.With("err", err).Warn("failed to report health")
 	}
 }

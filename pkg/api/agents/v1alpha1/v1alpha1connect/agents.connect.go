@@ -43,9 +43,9 @@ const (
 
 // AgentServiceClient is a client for the config.v1alpha1.AgentService service.
 type AgentServiceClient interface {
-	ListAgents(context.Context, *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsReponse], error)
+	ListAgents(context.Context, *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsResponse], error)
 	GetAgent(context.Context, *connect.Request[v1alpha1.GetAgentRequest]) (*connect.Response[v1alpha1.GetAgentResponse], error)
-	Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.AgentStatus], error)
+	Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.GetAgentStatusResponse], error)
 }
 
 // NewAgentServiceClient constructs a client for the config.v1alpha1.AgentService service. By
@@ -59,7 +59,7 @@ func NewAgentServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 	baseURL = strings.TrimRight(baseURL, "/")
 	agentServiceMethods := v1alpha1.File_pkg_api_agents_v1alpha1_agents_proto.Services().ByName("AgentService").Methods()
 	return &agentServiceClient{
-		listAgents: connect.NewClient[v1alpha1.ListAgentsRequest, v1alpha1.ListAgentsReponse](
+		listAgents: connect.NewClient[v1alpha1.ListAgentsRequest, v1alpha1.ListAgentsResponse](
 			httpClient,
 			baseURL+AgentServiceListAgentsProcedure,
 			connect.WithSchema(agentServiceMethods.ByName("ListAgents")),
@@ -71,7 +71,7 @@ func NewAgentServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(agentServiceMethods.ByName("GetAgent")),
 			connect.WithClientOptions(opts...),
 		),
-		status: connect.NewClient[v1alpha1.GetAgentStatusRequest, v1alpha1.AgentStatus](
+		status: connect.NewClient[v1alpha1.GetAgentStatusRequest, v1alpha1.GetAgentStatusResponse](
 			httpClient,
 			baseURL+AgentServiceStatusProcedure,
 			connect.WithSchema(agentServiceMethods.ByName("Status")),
@@ -82,13 +82,13 @@ func NewAgentServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 
 // agentServiceClient implements AgentServiceClient.
 type agentServiceClient struct {
-	listAgents *connect.Client[v1alpha1.ListAgentsRequest, v1alpha1.ListAgentsReponse]
+	listAgents *connect.Client[v1alpha1.ListAgentsRequest, v1alpha1.ListAgentsResponse]
 	getAgent   *connect.Client[v1alpha1.GetAgentRequest, v1alpha1.GetAgentResponse]
-	status     *connect.Client[v1alpha1.GetAgentStatusRequest, v1alpha1.AgentStatus]
+	status     *connect.Client[v1alpha1.GetAgentStatusRequest, v1alpha1.GetAgentStatusResponse]
 }
 
 // ListAgents calls config.v1alpha1.AgentService.ListAgents.
-func (c *agentServiceClient) ListAgents(ctx context.Context, req *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsReponse], error) {
+func (c *agentServiceClient) ListAgents(ctx context.Context, req *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsResponse], error) {
 	return c.listAgents.CallUnary(ctx, req)
 }
 
@@ -98,15 +98,15 @@ func (c *agentServiceClient) GetAgent(ctx context.Context, req *connect.Request[
 }
 
 // Status calls config.v1alpha1.AgentService.Status.
-func (c *agentServiceClient) Status(ctx context.Context, req *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.AgentStatus], error) {
+func (c *agentServiceClient) Status(ctx context.Context, req *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.GetAgentStatusResponse], error) {
 	return c.status.CallUnary(ctx, req)
 }
 
 // AgentServiceHandler is an implementation of the config.v1alpha1.AgentService service.
 type AgentServiceHandler interface {
-	ListAgents(context.Context, *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsReponse], error)
+	ListAgents(context.Context, *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsResponse], error)
 	GetAgent(context.Context, *connect.Request[v1alpha1.GetAgentRequest]) (*connect.Response[v1alpha1.GetAgentResponse], error)
-	Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.AgentStatus], error)
+	Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.GetAgentStatusResponse], error)
 }
 
 // NewAgentServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -151,7 +151,7 @@ func NewAgentServiceHandler(svc AgentServiceHandler, opts ...connect.HandlerOpti
 // UnimplementedAgentServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedAgentServiceHandler struct{}
 
-func (UnimplementedAgentServiceHandler) ListAgents(context.Context, *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsReponse], error) {
+func (UnimplementedAgentServiceHandler) ListAgents(context.Context, *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.AgentService.ListAgents is not implemented"))
 }
 
@@ -159,6 +159,6 @@ func (UnimplementedAgentServiceHandler) GetAgent(context.Context, *connect.Reque
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.AgentService.GetAgent is not implemented"))
 }
 
-func (UnimplementedAgentServiceHandler) Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.AgentStatus], error) {
+func (UnimplementedAgentServiceHandler) Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.GetAgentStatusResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.AgentService.Status is not implemented"))
 }
