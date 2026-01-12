@@ -29,9 +29,10 @@ type Server struct {
 	addrToId map[string]string
 	tracker  AgentTracker
 
-	healthStore       storage.KeyValue[*protobufs.ComponentHealth]
-	configStore       storage.KeyValue[*protobufs.EffectiveConfig]
-	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus]
+	healthStore           storage.KeyValue[*protobufs.ComponentHealth]
+	configStore           storage.KeyValue[*protobufs.EffectiveConfig]
+	remoteStatusStore     storage.KeyValue[*protobufs.RemoteConfigStatus]
+	opampAgentDescription storage.KeyValue[*protobufs.AgentDescription]
 }
 
 var _ services_int.OpAmpServerHandler = (*Server)(nil)
@@ -43,17 +44,19 @@ func NewServer(
 	healthStore storage.KeyValue[*protobufs.ComponentHealth],
 	configStore storage.KeyValue[*protobufs.EffectiveConfig],
 	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus],
+	opampAgentDescriptionStore storage.KeyValue[*protobufs.AgentDescription],
 ) *Server {
 	opampSvr := server.New(logutil.NewOpAMPLogger(l))
 	s := &Server{
-		logger:            l,
-		opampSrv:          opampSvr,
-		agentStore:        agentStore,
-		addrToId:          map[string]string{},
-		tracker:           tracker,
-		healthStore:       healthStore,
-		configStore:       configStore,
-		remoteStatusStore: remoteStatusStore,
+		logger:                l,
+		opampSrv:              opampSvr,
+		agentStore:            agentStore,
+		addrToId:              map[string]string{},
+		tracker:               tracker,
+		healthStore:           healthStore,
+		configStore:           configStore,
+		remoteStatusStore:     remoteStatusStore,
+		opampAgentDescription: opampAgentDescriptionStore,
 	}
 
 	s.Service = services.NewBasicService(s.start, s.running, s.stop)
@@ -136,33 +139,51 @@ func (s *Server) OnReadMessageError(conn types.Connection, mt int, msgByte []byt
 }
 
 func (s *Server) OnMessage(ctx context.Context, conn types.Connection, message *protobufs.AgentToServer) *protobufs.ServerToAgent {
-	s.logger.Info("received message from agent", "message", message)
-
 	instanceUID := string(message.InstanceUid)
 	agentAddr := conn.Connection().RemoteAddr().String()
 
-	needsFullState := s.tracker.UpdateFromMessage(instanceUID, message)
+	// Resolve the persistent agentID: extract from description or use cached mapping
+	// FIXME: AgentDescription may not always be set
+	agentID := s.resolveAgentID(agentAddr, message.AgentDescription)
+	logger := s.logger.With("agent-id", agentID, "instance-uid", instanceUID)
+	logger.Debug("received message from agent")
 
-	if message.Health != nil {
-		if err := s.healthStore.Put(ctx, instanceUID, message.Health); err != nil {
-			s.logger.Error("failed to persist health", "instanceUID", instanceUID, "err", err)
-		}
+	// Update tracker with agentID so capabilities can be looked up by persistent ID
+	var needsFullState bool
+	if agentID != "" {
+		needsFullState = s.tracker.UpdateFromMessage(agentID, message)
 	}
 
-	if message.EffectiveConfig != nil {
-		if err := s.configStore.Put(ctx, instanceUID, message.EffectiveConfig); err != nil {
-			s.logger.Error("failed to persist effective config", "instanceUID", instanceUID, "err", err)
+	if agentID == "" {
+		logger.Warn("cannot persist agent data: no agent ID available")
+	} else {
+		if message.AgentDescription != nil {
+			logger.Info("persisting agent description")
+			if err := s.opampAgentDescription.Put(ctx, agentID, message.AgentDescription); err != nil {
+				logger.With("err", err).Error("failed to persist opamp agent-description")
+			}
 		}
-	}
 
-	if message.RemoteConfigStatus != nil {
-		if err := s.remoteStatusStore.Put(ctx, instanceUID, message.RemoteConfigStatus); err != nil {
-			s.logger.Error("failed to persist remote config status", "instanceUID", instanceUID, "err", err)
+		if message.Health != nil {
+			logger.Info("persisting agent health")
+			if err := s.healthStore.Put(ctx, agentID, message.Health); err != nil {
+				logger.With("err", err).Error("failed to persist health")
+			}
 		}
-	}
 
-	if message.AgentDescription != nil {
-		s.handleAgentDescription(agentAddr, message.AgentDescription)
+		if message.EffectiveConfig != nil {
+			logger.Info("persisting effective config")
+			if err := s.configStore.Put(ctx, agentID, message.EffectiveConfig); err != nil {
+				logger.With("err", err).Error("failed to persist effective config")
+			}
+		}
+
+		if message.RemoteConfigStatus != nil {
+			logger.Info("persisting remote config status")
+			if err := s.remoteStatusStore.Put(ctx, agentID, message.RemoteConfigStatus); err != nil {
+				logger.With("err", err).Error("failed to persist remote config status")
+			}
+		}
 	}
 
 	resp := &protobufs.ServerToAgent{
@@ -171,27 +192,37 @@ func (s *Server) OnMessage(ctx context.Context, conn types.Connection, message *
 
 	if needsFullState {
 		resp.Flags = uint64(protobufs.ServerToAgentFlags_ServerToAgentFlags_ReportFullState)
-		s.logger.Info("requesting full state report due to sequence gap", "instanceUID", instanceUID)
+		logger.Info("requesting full state report due to sequence gap")
 	}
 
 	return resp
 }
 
-func (s *Server) handleAgentDescription(agentAddr string, desc *protobufs.AgentDescription) {
-	keyvalues := desc.IdentifyingAttributes
-	for _, entry := range keyvalues {
-		if entry.Key == supervisor.AttributeOtelfleetAgentId {
-			agentID := entry.Value.GetStringValue()
-			s.logger.With("agentID", agentID, "remote-addr", agentAddr).
-				Info("associating agent remote-addr to persistent ID")
+// resolveAgentID returns the persistent agent ID, either by extracting it from the
+// agent description or by looking it up from the address mapping.
+func (s *Server) resolveAgentID(agentAddr string, desc *protobufs.AgentDescription) string {
+	// Try to extract from description first
+	if desc != nil {
+		if agentID := extractAgentID(desc); agentID != "" {
 			s.addrToId[agentAddr] = agentID
 			s.tracker.PutStatus(agentID, &v1alpha1.AgentStatus{
 				State: v1alpha1.AgentState_AGENT_STATE_CONNECTED,
 			})
-			return
+			return agentID
 		}
 	}
-	s.logger.Warn("received agent description but performed no actions")
+	// Fall back to cached mapping
+	return s.addrToId[agentAddr]
+}
+
+// extractAgentID extracts the persistent otelfleet agent ID from the agent description.
+func extractAgentID(desc *protobufs.AgentDescription) string {
+	for _, entry := range desc.IdentifyingAttributes {
+		if entry.Key == supervisor.AttributeOtelfleetAgentId {
+			return entry.Value.GetStringValue()
+		}
+	}
+	return ""
 }
 
 func (s *Server) OnConnectionClose(conn types.Connection) {

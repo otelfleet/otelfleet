@@ -10,7 +10,7 @@ import (
 
 // BuildAgentDescription creates a complete AgentDescription with identifying
 // and non-identifying attributes following semantic conventions.
-func BuildAgentDescription(agentID string) *protobufs.AgentDescription {
+func (s *Supervisor) buildAgentDescription(agentID string) *protobufs.AgentDescription {
 	return &protobufs.AgentDescription{
 		IdentifyingAttributes: []*protobufs.KeyValue{
 			util.KeyVal(AttributeOtelfleetAgentId, agentID),
@@ -27,39 +27,20 @@ func BuildAgentDescription(agentID string) *protobufs.AgentDescription {
 }
 
 // BuildComponentHealth creates a ComponentHealth message with basic health info.
-func BuildComponentHealth(healthy bool, status string, startTime time.Time) *protobufs.ComponentHealth {
+func (s *Supervisor) buildComponentHealth(healthy bool, status, lastError string, startTime time.Time) *protobufs.ComponentHealth {
 	return &protobufs.ComponentHealth{
-		Healthy:            healthy,
-		Status:             status,
+		Healthy: healthy,
+		Status:  status,
+		ComponentHealthMap: map[string]*protobufs.ComponentHealth{
+			"example": {
+				Healthy:           true,
+				StartTimeUnixNano: uint64(s.startTime.UnixNano()),
+				Status:            "some details here",
+			},
+		},
 		StartTimeUnixNano:  uint64(startTime.UnixNano()),
 		StatusTimeUnixNano: uint64(time.Now().UnixNano()),
-	}
-}
-
-// BuildComponentHealthWithError creates a ComponentHealth with error information.
-func BuildComponentHealthWithError(healthy bool, status, lastError string, startTime time.Time) *protobufs.ComponentHealth {
-	return &protobufs.ComponentHealth{
-		Healthy:            healthy,
-		Status:             status,
 		LastError:          lastError,
-		StartTimeUnixNano:  uint64(startTime.UnixNano()),
-		StatusTimeUnixNano: uint64(time.Now().UnixNano()),
-	}
-}
-
-// BuildComponentHealthWithComponents creates a ComponentHealth with nested component health.
-func BuildComponentHealthWithComponents(
-	healthy bool,
-	status string,
-	startTime time.Time,
-	components map[string]*protobufs.ComponentHealth,
-) *protobufs.ComponentHealth {
-	return &protobufs.ComponentHealth{
-		Healthy:            healthy,
-		Status:             status,
-		StartTimeUnixNano:  uint64(startTime.UnixNano()),
-		StatusTimeUnixNano: uint64(time.Now().UnixNano()),
-		ComponentHealthMap: components,
 	}
 }
 

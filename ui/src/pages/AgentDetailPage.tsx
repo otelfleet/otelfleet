@@ -10,6 +10,8 @@ import type {
     AgentDescription,
     AgentStatus,
     ComponentHealth,
+    KeyValue,
+    AnyValue,
 } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import {
     Tabs,
@@ -27,7 +29,6 @@ import {
 } from '@mantine/core';
 import { AlertCircle } from 'react-feather';
 import MonacoEditor from '@monaco-editor/react';
-import { AutoSizer } from '../components/Autosizer';
 
 interface AgentDetailPageProps {
     agentId: string;
@@ -84,11 +85,16 @@ export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
             <Tabs defaultValue="health" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Tabs.List>
                     <Tabs.Tab value="health">Health</Tabs.Tab>
+                    <Tabs.Tab value="details">Details</Tabs.Tab>
                     <Tabs.Tab value="config">Effective Config</Tabs.Tab>
                 </Tabs.List>
 
                 <Tabs.Panel value="health" pt="md" style={{ flex: 1 }}>
                     <HealthTab health={status?.health} />
+                </Tabs.Panel>
+
+                <Tabs.Panel value="details" pt="md" style={{ flex: 1 }}>
+                    <DetailsTab agent={agent} />
                 </Tabs.Panel>
 
                 <Tabs.Panel value="config" pt="md" style={{ flex: 1, minHeight: 400 }}>
@@ -193,6 +199,116 @@ function HealthOverview({ health }: { health: ComponentHealth }) {
                     </Stack>
                 )}
             </Group>
+        </Paper>
+    );
+}
+
+function DetailsTab({ agent }: { agent: AgentDescription | null }) {
+    if (!agent) {
+        return (
+            <Alert color="gray" title="No Agent Data">
+                No agent information available.
+            </Alert>
+        );
+    }
+
+    return (
+        <Stack gap="md">
+            <AttributesTable
+                title="Identifying Attributes"
+                description="Attributes that uniquely identify the agent (e.g., service.name, service.instance.id)"
+                attributes={agent.identifyingAttributes}
+            />
+            <AttributesTable
+                title="Non-Identifying Attributes"
+                description="Attributes that describe the agent's environment (e.g., os.type, host.arch)"
+                attributes={agent.nonIdentifyingAttributes}
+            />
+            <CapabilitiesCard capabilities={agent.capabilities} />
+        </Stack>
+    );
+}
+
+function formatAnyValue(value: AnyValue | undefined): string {
+    if (!value || value.value.case === undefined) {
+        return 'N/A';
+    }
+
+    switch (value.value.case) {
+        case 'stringValue':
+            return value.value.value;
+        case 'boolValue':
+            return value.value.value ? 'true' : 'false';
+        case 'intValue':
+            return value.value.value.toString();
+        case 'doubleValue':
+            return value.value.value.toString();
+        case 'bytesValue':
+            return `<bytes: ${value.value.value.length} bytes>`;
+        case 'arrayValue':
+            return `[${value.value.value.values.map(v => formatAnyValue(v)).join(', ')}]`;
+        case 'kvlistValue':
+            return `{${value.value.value.values.map(kv => `${kv.key}: ${formatAnyValue(kv.value)}`).join(', ')}}`;
+        default:
+            return 'N/A';
+    }
+}
+
+function AttributesTable({ title, description, attributes }: {
+    title: string;
+    description: string;
+    attributes: KeyValue[];
+}) {
+    return (
+        <Paper p="md" withBorder>
+            <Title order={4} mb="xs">{title}</Title>
+            <Text size="sm" c="dimmed" mb="md">{description}</Text>
+            {attributes.length === 0 ? (
+                <Text size="sm" c="dimmed">No attributes available</Text>
+            ) : (
+                <Table striped highlightOnHover>
+                    <Table.Thead>
+                        <Table.Tr>
+                            <Table.Th>Key</Table.Th>
+                            <Table.Th>Value</Table.Th>
+                        </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                        {attributes.map((attr) => (
+                            <Table.Tr key={attr.key}>
+                                <Table.Td>
+                                    <Text size="sm" fw={500}>{attr.key}</Text>
+                                </Table.Td>
+                                <Table.Td>
+                                    <Text size="sm" style={{ fontFamily: 'monospace' }}>
+                                        {formatAnyValue(attr.value)}
+                                    </Text>
+                                </Table.Td>
+                            </Table.Tr>
+                        ))}
+                    </Table.Tbody>
+                </Table>
+            )}
+        </Paper>
+    );
+}
+
+function CapabilitiesCard({ capabilities }: { capabilities: string[] }) {
+    return (
+        <Paper p="md" withBorder>
+            <Title order={4} mb="xs">Capabilities</Title>
+            <Text size="sm" c="dimmed" mb="md">Features and capabilities supported by this agent</Text>
+            {capabilities.length === 0 ? (
+                <Text size="sm" c="dimmed">No capabilities reported</Text>
+            ) : (
+                <Group gap="sm">
+                    {capabilities.map((capability) => (
+                        <Badge key={capability} variant="light" color="blue" size="lg">
+                            {capability}
+                        </Badge>
+                    ))}
+                </Group>
+            )}
         </Paper>
     );
 }
@@ -325,28 +441,23 @@ function EffectiveConfigTab({ status }: { status: AgentStatus | null }) {
                 <Title order={4}>Effective Configuration</Title>
                 <Text size="sm" c="dimmed">{configName}</Text>
             </Group>
-            <Box style={{ flex: 1, minHeight: 300 }}>
-                <AutoSizer>
-                    {({ width, height }) => (
-                        <MonacoEditor
-                            value={configContent}
-                            width={width}
-                            height={height}
-                            language={language}
-                            theme="vs-dark"
-                            options={{
-                                readOnly: true,
-                                minimap: { enabled: false },
-                                scrollbar: { verticalScrollbarSize: 8, horizontal: 'hidden' },
-                                padding: { top: 10 },
-                                fontSize: 13,
-                                lineNumbers: 'on',
-                                folding: true,
-                                wordWrap: 'on',
-                            }}
-                        />
-                    )}
-                </AutoSizer>
+            <Box style={{ flex: 1 }}>
+                <MonacoEditor
+                    value={configContent}
+                    height={400}
+                    language={language}
+                    theme="vs-dark"
+                    options={{
+                        readOnly: true,
+                        minimap: { enabled: false },
+                        scrollbar: { verticalScrollbarSize: 8, horizontal: 'hidden' },
+                        padding: { top: 10 },
+                        fontSize: 13,
+                        lineNumbers: 'on',
+                        folding: true,
+                        wordWrap: 'on',
+                    }}
+                />
             </Box>
         </Paper>
     );

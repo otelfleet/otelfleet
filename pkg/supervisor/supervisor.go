@@ -28,6 +28,7 @@ type Supervisor struct {
 
 	// for direct in-process management
 	procManager *ProcManager
+	appliedHash string
 }
 
 func NewSupervisor(
@@ -36,20 +37,22 @@ func NewSupervisor(
 	opAmpAddr string,
 	agentId ident.Identity,
 ) *Supervisor {
-	return &Supervisor{
+	s := &Supervisor{
 		logger:       logger,
 		tlsConfig:    tlsConfig,
 		clientLogger: logutil.NewOpAMPLogger(logger),
 		opAmpAddr:    opAmpAddr,
 		agentId:      agentId,
 		startTime:    time.Now(),
-		procManager: NewProcManager(
-			logger.With("process", "otelcol"),
-			//FIXME:
-			"/home/alex/.asdf/shims/otelcol",
-			"/var/lib/otelfleet/",
-		),
 	}
+	s.procManager = NewProcManager(
+		logger.With("process", "otelcol"),
+		//FIXME:
+		"/home/alex/.asdf/shims/otelcol",
+		"/var/lib/otelfleet/",
+		s.reportHealth,
+	)
+	return s
 }
 
 func (s *Supervisor) Start() error {
@@ -69,8 +72,7 @@ func (s *Supervisor) startOpAMP() error {
 		Callbacks: types.Callbacks{
 			OnConnect: func(ctx context.Context) {
 				s.logger.Info("connected to OpAMP server")
-				// Report initial health on connect
-				s.reportHealth()
+				s.reportHealth(true, "connected", "")
 			},
 			OnConnectFailed: func(ctx context.Context, err error) {
 				s.logger.With("err", err).Error("failed to connect to the server")
@@ -92,7 +94,11 @@ func (s *Supervisor) startOpAMP() error {
 	}
 
 	// Set initial health status
-	if err := s.opampClient.SetHealth(s.buildHealth()); err != nil {
+	if err := s.opampClient.SetHealth(s.buildHealth(
+		true,
+		"initialized",
+		"",
+	)); err != nil {
 		s.logger.With("err", err).Warn("failed to set initial health")
 	}
 
@@ -107,15 +113,17 @@ func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 	l := s.logger
 	if incomingCfg := msg.RemoteConfig; incomingCfg != nil {
 		l = l.With("type", "remote-config")
+		l.Info("updatading effective configuration")
 		if err := s.procManager.Update(ctx, incomingCfg); err != nil {
+
+			// TODO : only send failed apply when the write to disk fails in proc manager
+
 			if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
 				Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_FAILED,
 				LastRemoteConfigHash: s.procManager.curHash,
 				ErrorMessage:         err.Error(),
 			}); err != nil {
-				s.logger.With("err", err).With("status", "failed").Error("failed to report remote config status to upstream server")
-
-				// panic("unhandled error")
+				l.With("err", err).With("status", "failed").Error("failed to report remote config status to upstream server")
 			}
 			return
 		}
@@ -123,30 +131,10 @@ func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 			Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
 			LastRemoteConfigHash: incomingCfg.GetConfigHash(),
 		}); err != nil {
-			s.logger.With("err", err).With("status", "succeeded").Error("failed to report remote config status to upstream server")
-			// panic("unhandled error")
+			l.With("err", err).With("status", "succeeded").Error("failed to report remote config status to upstream server")
 		}
 	}
 	l.Debug("received message")
-}
-
-func (s *Supervisor) sendStatus(ctx context.Context) {
-	// TODO
-	// msg := &protobufs.AgentToServer{
-	// 	InstanceUid:        nil,
-	// 	AgentDescription:   nil,
-	// 	Capabilities:       0,
-	// 	Health:             &protobufs.ComponentHealth{},
-	// 	EffectiveConfig:    &protobufs.EffectiveConfig{},
-	// 	RemoteConfigStatus: &protobufs.RemoteConfigStatus{},
-	// 	PackageStatuses:    &protobufs.PackageStatuses{},
-	// }
-}
-
-// onServerStatusAck needs to handle success / failure of processing of agent status
-// upstream.
-func (s *Supervisor) onServerStatusAck(ctx context.Context) {
-
 }
 
 func (s *Supervisor) Shutdown() error {
@@ -154,17 +142,12 @@ func (s *Supervisor) Shutdown() error {
 }
 
 func (s *Supervisor) createEffectiveConfigMsg() *protobufs.EffectiveConfig {
+	contents, err := s.procManager.getConfigMap()
+	if err != nil {
+		return defaultEffectiveConfig
+	}
 	return &protobufs.EffectiveConfig{
-		ConfigMap: &protobufs.AgentConfigMap{
-			ConfigMap: map[string]*protobufs.AgentConfigFile{
-				"default": {
-					Body: []byte(
-						"key : val",
-					),
-					ContentType: "text/yaml",
-				},
-			},
-		},
+		ConfigMap: contents,
 	}
 }
 
@@ -174,20 +157,39 @@ func (s *Supervisor) createAgentDescription() *protobufs.AgentDescription {
 	// TODO : this will need to include the identifying resource attributes from the otel collector
 	// the idea being that we can then lookup the metrics,logs,traces from this particular collector
 	// instance from the gateway in their respective storage backends.
-	return BuildAgentDescription(agentID)
+	return s.buildAgentDescription(agentID)
 }
 
 // buildHealth creates the current health status for the supervisor.
-func (s *Supervisor) buildHealth() *protobufs.ComponentHealth {
+func (s *Supervisor) buildHealth(
+	healthy bool,
+	status,
+	lastErrorMessage string,
+) *protobufs.ComponentHealth {
 	// TODO : this will need to check proc manager status
 	// Also check if the deployment collector's packages include healthcheckextensionv2
 	// and if it is loaded - so it can call that endpoint.
-	return BuildComponentHealth(true, "running", s.startTime)
+	return s.buildComponentHealth(healthy, status, lastErrorMessage, s.startTime)
 }
 
 // reportHealth sends the current health status to the server.
-func (s *Supervisor) reportHealth() {
-	if err := s.opampClient.SetHealth(s.buildHealth()); err != nil {
+func (s *Supervisor) reportHealth(
+	healthy bool,
+	status string,
+	lastErrorMessage string,
+) {
+	if err := s.opampClient.SetHealth(s.buildHealth(healthy, status, lastErrorMessage)); err != nil {
 		s.logger.With("err", err).Warn("failed to report health")
 	}
+}
+
+var defaultEffectiveConfig = &protobufs.EffectiveConfig{
+	ConfigMap: &protobufs.AgentConfigMap{
+		ConfigMap: map[string]*protobufs.AgentConfigFile{
+			"default": {
+				Body:        []byte("none"),
+				ContentType: "text/yaml",
+			},
+		},
+	},
 }

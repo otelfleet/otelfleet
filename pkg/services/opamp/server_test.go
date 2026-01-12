@@ -31,6 +31,7 @@ func TestServer(t *testing.T) {
 		storage.NewProtoKV[*protobufs.ComponentHealth](logger, broker.KeyValue("agent-health")),
 		storage.NewProtoKV[*protobufs.EffectiveConfig](logger, broker.KeyValue("agent-effective-config")),
 		storage.NewProtoKV[*protobufs.RemoteConfigStatus](logger, broker.KeyValue("agent-remote-config-status")),
+		storage.NewProtoKV[*protobufs.AgentDescription](logger, broker.KeyValue("opamp-agent-description")),
 	)
 	settings := testutil.SetupOpampServerImpl(t, srvImpl)
 	opampSrv := server.New(logutil.NewOpAMPLogger(slog.Default().With("service", "server")))

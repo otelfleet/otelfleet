@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"log/slog"
+	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/gorilla/mux"
@@ -20,9 +21,10 @@ type AgentServer struct {
 	agentStore   storage.KeyValue[*v1alpha1.AgentDescription]
 	agentTracker opamp.AgentTracker
 
-	healthStore       storage.KeyValue[*protobufs.ComponentHealth]
-	configStore       storage.KeyValue[*protobufs.EffectiveConfig]
-	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus]
+	healthStore                storage.KeyValue[*protobufs.ComponentHealth]
+	configStore                storage.KeyValue[*protobufs.EffectiveConfig]
+	remoteStatusStore          storage.KeyValue[*protobufs.RemoteConfigStatus]
+	opampAgentDescriptionStore storage.KeyValue[*protobufs.AgentDescription]
 
 	services.Service
 }
@@ -36,14 +38,16 @@ func NewAgentServer(
 	healthStore storage.KeyValue[*protobufs.ComponentHealth],
 	configStore storage.KeyValue[*protobufs.EffectiveConfig],
 	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus],
+	opampAgentDescriptionStore storage.KeyValue[*protobufs.AgentDescription],
 ) *AgentServer {
 	a := &AgentServer{
-		logger:            logger,
-		agentStore:        agentStore,
-		agentTracker:      agentTracker,
-		healthStore:       healthStore,
-		configStore:       configStore,
-		remoteStatusStore: remoteStatusStore,
+		logger:                     logger,
+		agentStore:                 agentStore,
+		agentTracker:               agentTracker,
+		healthStore:                healthStore,
+		configStore:                configStore,
+		remoteStatusStore:          remoteStatusStore,
+		opampAgentDescriptionStore: opampAgentDescriptionStore,
 	}
 	a.Service = services.NewBasicService(nil, a.running, nil)
 	return a
@@ -67,24 +71,23 @@ func (a *AgentServer) ListAgents(
 		return nil, err
 	}
 	a.logger.With("numAgents", len(agents)).Debug("found agents")
-	descAndStatus := lo.Map(agents, func(a *v1alpha1.AgentDescription, _ int) *v1alpha1.AgentDescriptionAndStatus {
+	descAndStatus := lo.Map(agents, func(agent *v1alpha1.AgentDescription, _ int) *v1alpha1.AgentDescriptionAndStatus {
 		return &v1alpha1.AgentDescriptionAndStatus{
-			Agent: a,
+			Agent: agent,
 		}
 	})
 	if req.Msg.GetWithStatus() {
 		for idx, entry := range descAndStatus {
+			agentID := entry.Agent.GetId()
+			desc, err := a.opampAgentDescriptionStore.Get(ctx, agentID)
+			if err != nil {
+				a.logger.With("err", err).Error("failed to get opamp remote agent description")
+			}
 			newEntry := &v1alpha1.AgentDescriptionAndStatus{
 				Agent: entry.Agent,
 			}
-			agentID := entry.Agent.GetId()
-			st, ok := a.agentTracker.GetStatus(agentID)
-
-			if ok {
-				newEntry.Status = st
-			} else {
-				newEntry.Status = a.status(ctx, agentID)
-			}
+			enrichAgentDescription(newEntry.Agent, desc, a.agentTracker.GetCapabilities(agentID))
+			newEntry.Status = a.status(ctx, agentID)
 			descAndStatus[idx] = newEntry
 		}
 	}
@@ -99,6 +102,13 @@ func (a *AgentServer) GetAgent(ctx context.Context, req *connect.Request[v1alpha
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
+
+	remoteDesc, err := a.opampAgentDescriptionStore.Get(ctx, agentID)
+	if err != nil {
+		a.logger.With("err", err).Error("failed to get opamp remote agent description")
+	}
+	enrichAgentDescription(agent, remoteDesc, a.agentTracker.GetCapabilities(agentID))
+
 	return connect.NewResponse(&v1alpha1.GetAgentResponse{Agent: agent}), nil
 }
 
@@ -182,5 +192,88 @@ func convertRemoteConfigStatus(s *protobufs.RemoteConfigStatus) *v1alpha1.Remote
 		LastRemoteConfigHash: s.LastRemoteConfigHash,
 		Status:               v1alpha1.RemoteConfigStatuses(s.Status),
 		ErrorMessage:         s.ErrorMessage,
+	}
+}
+
+// enrichAgentDescription populates the agent description with live data from the tracker.
+func enrichAgentDescription(agent *v1alpha1.AgentDescription, desc *protobufs.AgentDescription, capabilities uint64) {
+	if desc == nil {
+		return
+	}
+
+	// Set capabilities from the tracked state by checking each bit in the bitmask
+	var ret []string
+	for value, name := range protobufs.AgentCapabilities_name {
+		if value != 0 && capabilities&uint64(value) != 0 {
+			ret = append(ret, strings.TrimPrefix(name, "AgentCapabilities_"))
+		}
+	}
+	agent.Capabilities = ret
+	agent.IdentifyingAttributes = convertKeyValues(desc.GetIdentifyingAttributes())
+	agent.NonIdentifyingAttributes = convertKeyValues(desc.GetNonIdentifyingAttributes())
+}
+
+// convertKeyValues converts OpAMP KeyValue slice to v1alpha1 KeyValue slice.
+func convertKeyValues(kvs []*protobufs.KeyValue) []*v1alpha1.KeyValue {
+	if kvs == nil {
+		return nil
+	}
+	result := make([]*v1alpha1.KeyValue, len(kvs))
+	for i, kv := range kvs {
+		result[i] = &v1alpha1.KeyValue{
+			Key:   kv.Key,
+			Value: convertAnyValue(kv.Value),
+		}
+	}
+	return result
+}
+
+// convertAnyValue converts an OpAMP AnyValue to v1alpha1 AnyValue.
+func convertAnyValue(v *protobufs.AnyValue) *v1alpha1.AnyValue {
+	if v == nil {
+		return nil
+	}
+
+	switch val := v.Value.(type) {
+	case *protobufs.AnyValue_StringValue:
+		return &v1alpha1.AnyValue{Value: &v1alpha1.AnyValue_StringValue{StringValue: val.StringValue}}
+	case *protobufs.AnyValue_BoolValue:
+		return &v1alpha1.AnyValue{Value: &v1alpha1.AnyValue_BoolValue{BoolValue: val.BoolValue}}
+	case *protobufs.AnyValue_IntValue:
+		return &v1alpha1.AnyValue{Value: &v1alpha1.AnyValue_IntValue{IntValue: val.IntValue}}
+	case *protobufs.AnyValue_DoubleValue:
+		return &v1alpha1.AnyValue{Value: &v1alpha1.AnyValue_DoubleValue{DoubleValue: val.DoubleValue}}
+	case *protobufs.AnyValue_BytesValue:
+		return &v1alpha1.AnyValue{Value: &v1alpha1.AnyValue_BytesValue{BytesValue: val.BytesValue}}
+	case *protobufs.AnyValue_ArrayValue:
+		return &v1alpha1.AnyValue{Value: &v1alpha1.AnyValue_ArrayValue{ArrayValue: convertArrayValue(val.ArrayValue)}}
+	case *protobufs.AnyValue_KvlistValue:
+		return &v1alpha1.AnyValue{Value: &v1alpha1.AnyValue_KvlistValue{KvlistValue: convertKeyValueList(val.KvlistValue)}}
+	default:
+		return nil
+	}
+}
+
+// convertArrayValue converts an OpAMP ArrayValue to v1alpha1 ArrayValue.
+func convertArrayValue(arr *protobufs.ArrayValue) *v1alpha1.ArrayValue {
+	if arr == nil {
+		return nil
+	}
+	result := &v1alpha1.ArrayValue{
+		Values: make([]*v1alpha1.AnyValue, len(arr.Values)),
+	}
+	for i, v := range arr.Values {
+		result.Values[i] = convertAnyValue(v)
+	}
+	return result
+}
+
+// convertKeyValueList converts an OpAMP KeyValueList to v1alpha1 KeyValueList.
+func convertKeyValueList(kvl *protobufs.KeyValueList) *v1alpha1.KeyValueList {
+	if kvl == nil {
+		return nil
+	}
+	return &v1alpha1.KeyValueList{
+		Values: convertKeyValues(kvl.Values),
 	}
 }

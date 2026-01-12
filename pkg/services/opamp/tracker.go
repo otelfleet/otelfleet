@@ -11,12 +11,17 @@ import (
 // AgentTracker tracks agent state and status.
 type AgentTracker interface {
 	// proto
+
 	GetStatus(id string) (*v1alpha1.AgentStatus, bool)
 	PutStatus(id string, status *v1alpha1.AgentStatus)
 
 	// downstream message aggregation
+
 	GetFullState(id string) (*AgentFullState, bool)
 	PutFullState(id string, state *AgentFullState)
+
+	//FIXME: hack
+	GetCapabilities(id string) uint64
 
 	// TODO : add as agent cleanup hook
 	Delete(id string)
@@ -39,6 +44,16 @@ func NewAgentTracker() AgentTracker {
 		agents:     make(map[string]*v1alpha1.AgentStatus),
 		fullStates: make(map[string]*AgentFullState),
 	}
+}
+
+func (t *inMemAgentTracker) GetCapabilities(id string) uint64 {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	got, ok := t.fullStates[id]
+	if !ok {
+		return 0
+	}
+	return got.Capabilities
 }
 
 func (t *inMemAgentTracker) GetStatus(id string) (*v1alpha1.AgentStatus, bool) {

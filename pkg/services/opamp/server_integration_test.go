@@ -35,6 +35,7 @@ func setupTestServer(t *testing.T) (*opamp.Server, storage.KeyValue[*protobufs.C
 	healthStore := storage.NewProtoKV[*protobufs.ComponentHealth](logger, broker.KeyValue("agent-health"))
 	configStore := storage.NewProtoKV[*protobufs.EffectiveConfig](logger, broker.KeyValue("agent-effective-config"))
 	statusStore := storage.NewProtoKV[*protobufs.RemoteConfigStatus](logger, broker.KeyValue("agent-remote-config-status"))
+	opampDesc := storage.NewProtoKV[*protobufs.AgentDescription](logger, broker.KeyValue("opamp-agent-description"))
 
 	server := opamp.NewServer(
 		logger,
@@ -43,6 +44,7 @@ func setupTestServer(t *testing.T) (*opamp.Server, storage.KeyValue[*protobufs.C
 		healthStore,
 		configStore,
 		statusStore,
+		opampDesc,
 	)
 
 	return server, healthStore, configStore, statusStore
