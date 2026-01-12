@@ -29,7 +29,6 @@ import {
 } from '@mantine/core';
 import { AlertCircle } from 'react-feather';
 import MonacoEditor from '@monaco-editor/react';
-import { AutoSizer } from '../components/Autosizer';
 
 interface AgentDetailPageProps {
     agentId: string;
@@ -442,28 +441,23 @@ function EffectiveConfigTab({ status }: { status: AgentStatus | null }) {
                 <Title order={4}>Effective Configuration</Title>
                 <Text size="sm" c="dimmed">{configName}</Text>
             </Group>
-            <Box style={{ flex: 1, minHeight: 300 }}>
-                <AutoSizer>
-                    {({ width, height }) => (
-                        <MonacoEditor
-                            value={configContent}
-                            width={width}
-                            height={height}
-                            language={language}
-                            theme="vs-dark"
-                            options={{
-                                readOnly: true,
-                                minimap: { enabled: false },
-                                scrollbar: { verticalScrollbarSize: 8, horizontal: 'hidden' },
-                                padding: { top: 10 },
-                                fontSize: 13,
-                                lineNumbers: 'on',
-                                folding: true,
-                                wordWrap: 'on',
-                            }}
-                        />
-                    )}
-                </AutoSizer>
+            <Box style={{ flex: 1 }}>
+                <MonacoEditor
+                    value={configContent}
+                    height={400}
+                    language={language}
+                    theme="vs-dark"
+                    options={{
+                        readOnly: true,
+                        minimap: { enabled: false },
+                        scrollbar: { verticalScrollbarSize: 8, horizontal: 'hidden' },
+                        padding: { top: 10 },
+                        fontSize: 13,
+                        lineNumbers: 'on',
+                        folding: true,
+                        wordWrap: 'on',
+                    }}
+                />
             </Box>
         </Paper>
     );

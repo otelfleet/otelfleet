@@ -27,7 +27,7 @@ func (s *Supervisor) buildAgentDescription(agentID string) *protobufs.AgentDescr
 }
 
 // BuildComponentHealth creates a ComponentHealth message with basic health info.
-func (s *Supervisor) buildComponentHealth(healthy bool, status string, startTime time.Time) *protobufs.ComponentHealth {
+func (s *Supervisor) buildComponentHealth(healthy bool, status, lastError string, startTime time.Time) *protobufs.ComponentHealth {
 	return &protobufs.ComponentHealth{
 		Healthy: healthy,
 		Status:  status,
@@ -40,6 +40,7 @@ func (s *Supervisor) buildComponentHealth(healthy bool, status string, startTime
 		},
 		StartTimeUnixNano:  uint64(startTime.UnixNano()),
 		StatusTimeUnixNano: uint64(time.Now().UnixNano()),
+		LastError:          lastError,
 	}
 }
 

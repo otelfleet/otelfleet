@@ -30,18 +30,26 @@ type ProcManager struct {
 	cmd       *exec.Cmd
 	cmdExited chan struct{}
 	curHash   []byte
+
+	reportHealthFn func(
+		healthy bool,
+		status string,
+		lastErrorMessage string,
+	)
 }
 
 func NewProcManager(
 	logger *slog.Logger,
 	binaryPath,
 	configPath string,
+	reportFn func(bool, string, string),
 ) *ProcManager {
 	return &ProcManager{
-		runMu:      &sync.Mutex{},
-		logger:     logger,
-		BinaryPath: binaryPath,
-		ConfigDir:  configPath,
+		runMu:          &sync.Mutex{},
+		logger:         logger,
+		BinaryPath:     binaryPath,
+		ConfigDir:      configPath,
+		reportHealthFn: reportFn,
 	}
 }
 
@@ -111,6 +119,10 @@ func (p *ProcManager) runLocked(ctx context.Context, incoming *protobufs.AgentRe
 		defer close(exited)
 		err := cmd.Wait()
 		p.logger.With("exit-status", err).Info("command exited")
+		if err != nil {
+			p.logger.Info("reporting failure to opamp server")
+			p.reportHealthFn(false, fmt.Sprintf("collector exited : %s", err), "TODO : last error message")
+		}
 	}()
 
 	// is there a ready check for otelcol collector we can
@@ -139,14 +151,13 @@ func (p *ProcManager) handleLogs(ctx context.Context, rc io.ReadCloser) {
 		}
 		ln = strings.TrimRight(ln, "\r\n")
 		bo.Reset()
-		// TODO : parse and reformat log
-
-		lvl := p.slogLevelFromOtelcol(ln)
 
 		if ln == "" {
 			continue
 		}
-		l.Log(ctx, lvl, ln)
+
+		// lvl, msg, attrs := p.parseOtelcolLog(ln)
+		// l.LogAttrs(ctx, lvl, msg, attrs...)
 	}
 }
 
@@ -172,11 +183,6 @@ func (p *ProcManager) Shutdown() error {
 	return nil
 }
 
-func (p *ProcManager) slogLevelFromOtelcol(_ string) slog.Level {
-	// TODO: implement me
-	return slog.LevelInfo
-}
-
 func (p *ProcManager) releaseLocked() {
 	if p.cmd != nil && p.cmd.Process != nil {
 		p.logger.Info("releasing collector process")
@@ -188,8 +194,56 @@ func (p *ProcManager) releaseLocked() {
 
 func (p *ProcManager) writeConfigLocked(name string, config *protobufs.AgentConfigFile) error {
 	fileName := path.Join(p.ConfigDir, name)
+	p.logger.With("file", fileName).Info("writing config file")
 	if err := atomic.WriteFile(fileName, bytes.NewReader(config.GetBody())); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (p *ProcManager) getConfigMap() (*protobufs.AgentConfigMap, error) {
+	entries, err := os.ReadDir(p.ConfigDir)
+	if err != nil {
+		return nil, fmt.Errorf("reading config directory: %w", err)
+	}
+
+	configMap := make(map[string]*protobufs.AgentConfigFile)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		// Skip the hash file
+		if name == "config.hash" {
+			continue
+		}
+
+		filePath := path.Join(p.ConfigDir, name)
+		body, err := os.ReadFile(filePath)
+		if err != nil {
+			return nil, fmt.Errorf("reading config file %s: %w", name, err)
+		}
+
+		contentType := guessContentType(name)
+		configMap[name] = &protobufs.AgentConfigFile{
+			Body:        body,
+			ContentType: contentType,
+		}
+	}
+
+	return &protobufs.AgentConfigMap{ConfigMap: configMap}, nil
+}
+
+func guessContentType(filename string) string {
+	ext := strings.ToLower(path.Ext(filename))
+	switch ext {
+	case ".yaml", ".yml":
+		return "application/x-yaml"
+	case ".json":
+		return "application/json"
+	case ".toml":
+		return "application/toml"
+	default:
+		return "text/plain"
+	}
 }
