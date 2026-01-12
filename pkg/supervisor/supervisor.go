@@ -28,6 +28,7 @@ type Supervisor struct {
 
 	// for direct in-process management
 	procManager *ProcManager
+	appliedHash string
 }
 
 func NewSupervisor(
@@ -154,6 +155,7 @@ func (s *Supervisor) Shutdown() error {
 }
 
 func (s *Supervisor) createEffectiveConfigMsg() *protobufs.EffectiveConfig {
+	s.procManager.
 	return &protobufs.EffectiveConfig{
 		ConfigMap: &protobufs.AgentConfigMap{
 			ConfigMap: map[string]*protobufs.AgentConfigFile{
@@ -174,7 +176,7 @@ func (s *Supervisor) createAgentDescription() *protobufs.AgentDescription {
 	// TODO : this will need to include the identifying resource attributes from the otel collector
 	// the idea being that we can then lookup the metrics,logs,traces from this particular collector
 	// instance from the gateway in their respective storage backends.
-	return BuildAgentDescription(agentID)
+	return s.buildAgentDescription(agentID)
 }
 
 // buildHealth creates the current health status for the supervisor.
@@ -182,7 +184,7 @@ func (s *Supervisor) buildHealth() *protobufs.ComponentHealth {
 	// TODO : this will need to check proc manager status
 	// Also check if the deployment collector's packages include healthcheckextensionv2
 	// and if it is loaded - so it can call that endpoint.
-	return BuildComponentHealth(true, "running", s.startTime)
+	return s.buildComponentHealth(true, "running", s.startTime)
 }
 
 // reportHealth sends the current health status to the server.
