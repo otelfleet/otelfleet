@@ -87,13 +87,7 @@ func (a *AgentServer) ListAgents(
 				Agent: entry.Agent,
 			}
 			enrichAgentDescription(newEntry.Agent, desc, a.agentTracker.GetCapabilities(agentID))
-			st, ok := a.agentTracker.GetStatus(agentID)
-
-			if ok {
-				newEntry.Status = st
-			} else {
-				newEntry.Status = a.status(ctx, agentID)
-			}
+			newEntry.Status = a.status(ctx, agentID)
 			descAndStatus[idx] = newEntry
 		}
 	}
