@@ -15,6 +15,7 @@ import { Route as ConfigsRouteImport } from './routes/configs'
 import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TokensTokenIdRouteImport } from './routes/tokens.$tokenId'
 import { Route as AgentsAgentIdRouteImport } from './routes/agents.$agentId'
 
 const TokensRoute = TokensRouteImport.update({
@@ -47,6 +48,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TokensTokenIdRoute = TokensTokenIdRouteImport.update({
+  id: '/$tokenId',
+  path: '/$tokenId',
+  getParentRoute: () => TokensRoute,
+} as any)
 const AgentsAgentIdRoute = AgentsAgentIdRouteImport.update({
   id: '/$agentId',
   path: '/$agentId',
@@ -59,8 +65,9 @@ export interface FileRoutesByFullPath {
   '/agents': typeof AgentsRouteWithChildren
   '/configs': typeof ConfigsRoute
   '/editor': typeof EditorRoute
-  '/tokens': typeof TokensRoute
+  '/tokens': typeof TokensRouteWithChildren
   '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/tokens/$tokenId': typeof TokensTokenIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -68,8 +75,9 @@ export interface FileRoutesByTo {
   '/agents': typeof AgentsRouteWithChildren
   '/configs': typeof ConfigsRoute
   '/editor': typeof EditorRoute
-  '/tokens': typeof TokensRoute
+  '/tokens': typeof TokensRouteWithChildren
   '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/tokens/$tokenId': typeof TokensTokenIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,8 +86,9 @@ export interface FileRoutesById {
   '/agents': typeof AgentsRouteWithChildren
   '/configs': typeof ConfigsRoute
   '/editor': typeof EditorRoute
-  '/tokens': typeof TokensRoute
+  '/tokens': typeof TokensRouteWithChildren
   '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/tokens/$tokenId': typeof TokensTokenIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/editor'
     | '/tokens'
     | '/agents/$agentId'
+    | '/tokens/$tokenId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/editor'
     | '/tokens'
     | '/agents/$agentId'
+    | '/tokens/$tokenId'
   id:
     | '__root__'
     | '/'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/editor'
     | '/tokens'
     | '/agents/$agentId'
+    | '/tokens/$tokenId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -117,7 +129,7 @@ export interface RootRouteChildren {
   AgentsRoute: typeof AgentsRouteWithChildren
   ConfigsRoute: typeof ConfigsRoute
   EditorRoute: typeof EditorRoute
-  TokensRoute: typeof TokensRoute
+  TokensRoute: typeof TokensRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -164,6 +176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tokens/$tokenId': {
+      id: '/tokens/$tokenId'
+      path: '/$tokenId'
+      fullPath: '/tokens/$tokenId'
+      preLoaderRoute: typeof TokensTokenIdRouteImport
+      parentRoute: typeof TokensRoute
+    }
     '/agents/$agentId': {
       id: '/agents/$agentId'
       path: '/$agentId'
@@ -185,13 +204,24 @@ const AgentsRouteChildren: AgentsRouteChildren = {
 const AgentsRouteWithChildren =
   AgentsRoute._addFileChildren(AgentsRouteChildren)
 
+interface TokensRouteChildren {
+  TokensTokenIdRoute: typeof TokensTokenIdRoute
+}
+
+const TokensRouteChildren: TokensRouteChildren = {
+  TokensTokenIdRoute: TokensTokenIdRoute,
+}
+
+const TokensRouteWithChildren =
+  TokensRoute._addFileChildren(TokensRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AgentsRoute: AgentsRouteWithChildren,
   ConfigsRoute: ConfigsRoute,
   EditorRoute: EditorRoute,
-  TokensRoute: TokensRoute,
+  TokensRoute: TokensRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
