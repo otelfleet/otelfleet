@@ -29,10 +29,12 @@ message BootstrapAuthResponse {
 }
 
 message BootstrapToken {
-  string                             ID     = 1;
-  string                             Secret = 2;
-  google.protobuf.Duration           TTL    = 3;
-  optional google.protobuf.Timestamp Expiry = 4;
+  string                             ID              = 1;
+  string                             Secret          = 2;
+  google.protobuf.Duration           TTL             = 3;
+  optional google.protobuf.Timestamp Expiry          = 4;
+  optional string                    configReference = 5;
+  map<string, string>                labels          = 6;
 }
 
 message ListTokenReponse {

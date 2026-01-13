@@ -106,6 +106,8 @@ func (b *BootstrapServer) CreateToken(ctx context.Context, connectReq *connect.R
 	bT := token.ToBootstrapToken()
 	bT.TTL = req.TTL
 	bT.Expiry = timestamppb.New(time.Now().Add(time.Minute * 5))
+	bT.ConfigReference = req.ConfigReference
+	bT.Labels = req.Labels
 
 	if ref := req.GetConfigReference(); ref != "" {
 		config, err := b.configStore.Get(ctx, ref)

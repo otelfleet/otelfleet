@@ -34,11 +34,9 @@ function HealthBadge({ health }: { health?: ComponentHealth }) {
     const label = health.healthy ? 'Healthy' : 'Unhealthy';
 
     return (
-        <Tooltip label={health.lastError || health.status || 'No details'} disabled={!health.lastError && !health.status}>
-            <Badge color={color} variant="filled" radius="sm">
-                {label}
-            </Badge>
-        </Tooltip>
+        <Badge color={color} variant="filled" radius="sm">
+            {label}
+        </Badge>
     );
 }
 
@@ -143,6 +141,15 @@ export const AgentPage = () => {
             data={agentsState}
             columns={agentColumns}
             rowKey={(row) => row.agent?.id ?? ''}
+            expandedContent={(row) => {
+                const error = row.status?.health?.lastError;
+                if (!error) return null;
+                return (
+                    <Text size="sm" c="red">
+                        {error}
+                    </Text>
+                );
+            }}
         />
     )
 }
