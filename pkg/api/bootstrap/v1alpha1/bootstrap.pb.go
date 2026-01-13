@@ -241,10 +241,12 @@ func (x *ListTokenReponse) GetTokens() []*BootstrapToken {
 }
 
 type CreateTokenRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TTL           *durationpb.Duration   `protobuf:"bytes,1,opt,name=TTL,proto3" json:"TTL,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	TTL             *durationpb.Duration   `protobuf:"bytes,1,opt,name=TTL,proto3" json:"TTL,omitempty"`
+	ConfigReference *string                `protobuf:"bytes,2,opt,name=configReference,proto3,oneof" json:"configReference,omitempty"`
+	Labels          map[string]string      `protobuf:"bytes,3,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *CreateTokenRequest) Reset() {
@@ -280,6 +282,20 @@ func (*CreateTokenRequest) Descriptor() ([]byte, []int) {
 func (x *CreateTokenRequest) GetTTL() *durationpb.Duration {
 	if x != nil {
 		return x.TTL
+	}
+	return nil
+}
+
+func (x *CreateTokenRequest) GetConfigReference() string {
+	if x != nil && x.ConfigReference != nil {
+		return *x.ConfigReference
+	}
+	return ""
+}
+
+func (x *CreateTokenRequest) GetLabels() map[string]string {
+	if x != nil {
+		return x.Labels
 	}
 	return nil
 }
@@ -450,9 +466,15 @@ const file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDesc = "" +
 	"\x06Expiry\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampH\x00R\x06Expiry\x88\x01\x01B\t\n" +
 	"\a_Expiry\"N\n" +
 	"\x10ListTokenReponse\x12:\n" +
-	"\x06tokens\x18\x01 \x03(\v2\".bootstrap.v1alpha1.BootstrapTokenR\x06tokens\"A\n" +
+	"\x06tokens\x18\x01 \x03(\v2\".bootstrap.v1alpha1.BootstrapTokenR\x06tokens\"\x8b\x02\n" +
 	"\x12CreateTokenRequest\x12+\n" +
-	"\x03TTL\x18\x01 \x01(\v2\x19.google.protobuf.DurationR\x03TTL\"$\n" +
+	"\x03TTL\x18\x01 \x01(\v2\x19.google.protobuf.DurationR\x03TTL\x12-\n" +
+	"\x0fconfigReference\x18\x02 \x01(\tH\x00R\x0fconfigReference\x88\x01\x01\x12J\n" +
+	"\x06labels\x18\x03 \x03(\v22.bootstrap.v1alpha1.CreateTokenRequest.LabelsEntryR\x06labels\x1a9\n" +
+	"\vLabelsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x12\n" +
+	"\x10_configReference\"$\n" +
 	"\x12DeleteTokenRequest\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\tR\x02ID\"\xa9\x01\n" +
 	"\x11SignatureResponse\x12U\n" +
@@ -488,7 +510,7 @@ func file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescGZIP() []byte {
 	return file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDescData
 }
 
-var file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_goTypes = []any{
 	(*BootstrapAuthRequest)(nil),  // 0: bootstrap.v1alpha1.BootstrapAuthRequest
 	(*BootstrapAuthResponse)(nil), // 1: bootstrap.v1alpha1.BootstrapAuthResponse
@@ -498,32 +520,34 @@ var file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_goTypes = []any{
 	(*DeleteTokenRequest)(nil),    // 5: bootstrap.v1alpha1.DeleteTokenRequest
 	(*SignatureResponse)(nil),     // 6: bootstrap.v1alpha1.SignatureResponse
 	(*BootstrapRequest)(nil),      // 7: bootstrap.v1alpha1.BootstrapRequest
-	nil,                           // 8: bootstrap.v1alpha1.SignatureResponse.SignaturesEntry
-	(*durationpb.Duration)(nil),   // 9: google.protobuf.Duration
-	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),         // 11: google.protobuf.Empty
+	nil,                           // 8: bootstrap.v1alpha1.CreateTokenRequest.LabelsEntry
+	nil,                           // 9: bootstrap.v1alpha1.SignatureResponse.SignaturesEntry
+	(*durationpb.Duration)(nil),   // 10: google.protobuf.Duration
+	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),         // 12: google.protobuf.Empty
 }
 var file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_depIdxs = []int32{
-	9,  // 0: bootstrap.v1alpha1.BootstrapToken.TTL:type_name -> google.protobuf.Duration
-	10, // 1: bootstrap.v1alpha1.BootstrapToken.Expiry:type_name -> google.protobuf.Timestamp
+	10, // 0: bootstrap.v1alpha1.BootstrapToken.TTL:type_name -> google.protobuf.Duration
+	11, // 1: bootstrap.v1alpha1.BootstrapToken.Expiry:type_name -> google.protobuf.Timestamp
 	2,  // 2: bootstrap.v1alpha1.ListTokenReponse.tokens:type_name -> bootstrap.v1alpha1.BootstrapToken
-	9,  // 3: bootstrap.v1alpha1.CreateTokenRequest.TTL:type_name -> google.protobuf.Duration
-	8,  // 4: bootstrap.v1alpha1.SignatureResponse.signatures:type_name -> bootstrap.v1alpha1.SignatureResponse.SignaturesEntry
-	4,  // 5: bootstrap.v1alpha1.TokenService.CreateToken:input_type -> bootstrap.v1alpha1.CreateTokenRequest
-	11, // 6: bootstrap.v1alpha1.TokenService.ListTokens:input_type -> google.protobuf.Empty
-	5,  // 7: bootstrap.v1alpha1.TokenService.DeleteToken:input_type -> bootstrap.v1alpha1.DeleteTokenRequest
-	11, // 8: bootstrap.v1alpha1.TokenService.Signatures:input_type -> google.protobuf.Empty
-	0,  // 9: bootstrap.v1alpha1.BootstrapService.Bootstrap:input_type -> bootstrap.v1alpha1.BootstrapAuthRequest
-	2,  // 10: bootstrap.v1alpha1.TokenService.CreateToken:output_type -> bootstrap.v1alpha1.BootstrapToken
-	3,  // 11: bootstrap.v1alpha1.TokenService.ListTokens:output_type -> bootstrap.v1alpha1.ListTokenReponse
-	11, // 12: bootstrap.v1alpha1.TokenService.DeleteToken:output_type -> google.protobuf.Empty
-	6,  // 13: bootstrap.v1alpha1.TokenService.Signatures:output_type -> bootstrap.v1alpha1.SignatureResponse
-	1,  // 14: bootstrap.v1alpha1.BootstrapService.Bootstrap:output_type -> bootstrap.v1alpha1.BootstrapAuthResponse
-	10, // [10:15] is the sub-list for method output_type
-	5,  // [5:10] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	10, // 3: bootstrap.v1alpha1.CreateTokenRequest.TTL:type_name -> google.protobuf.Duration
+	8,  // 4: bootstrap.v1alpha1.CreateTokenRequest.labels:type_name -> bootstrap.v1alpha1.CreateTokenRequest.LabelsEntry
+	9,  // 5: bootstrap.v1alpha1.SignatureResponse.signatures:type_name -> bootstrap.v1alpha1.SignatureResponse.SignaturesEntry
+	4,  // 6: bootstrap.v1alpha1.TokenService.CreateToken:input_type -> bootstrap.v1alpha1.CreateTokenRequest
+	12, // 7: bootstrap.v1alpha1.TokenService.ListTokens:input_type -> google.protobuf.Empty
+	5,  // 8: bootstrap.v1alpha1.TokenService.DeleteToken:input_type -> bootstrap.v1alpha1.DeleteTokenRequest
+	12, // 9: bootstrap.v1alpha1.TokenService.Signatures:input_type -> google.protobuf.Empty
+	0,  // 10: bootstrap.v1alpha1.BootstrapService.Bootstrap:input_type -> bootstrap.v1alpha1.BootstrapAuthRequest
+	2,  // 11: bootstrap.v1alpha1.TokenService.CreateToken:output_type -> bootstrap.v1alpha1.BootstrapToken
+	3,  // 12: bootstrap.v1alpha1.TokenService.ListTokens:output_type -> bootstrap.v1alpha1.ListTokenReponse
+	12, // 13: bootstrap.v1alpha1.TokenService.DeleteToken:output_type -> google.protobuf.Empty
+	6,  // 14: bootstrap.v1alpha1.TokenService.Signatures:output_type -> bootstrap.v1alpha1.SignatureResponse
+	1,  // 15: bootstrap.v1alpha1.BootstrapService.Bootstrap:output_type -> bootstrap.v1alpha1.BootstrapAuthResponse
+	11, // [11:16] is the sub-list for method output_type
+	6,  // [6:11] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_init() }
@@ -532,13 +556,14 @@ func file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_init() {
 		return
 	}
 	file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[2].OneofWrappers = []any{}
+	file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_msgTypes[4].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDesc), len(file_pkg_api_bootstrap_v1alpha1_bootstrap_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

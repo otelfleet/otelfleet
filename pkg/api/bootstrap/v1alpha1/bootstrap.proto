@@ -40,7 +40,9 @@ message ListTokenReponse {
 }
 
 message CreateTokenRequest {
-  google.protobuf.Duration TTL = 1;
+  google.protobuf.Duration TTL             = 1;
+  optional string          configReference = 2;
+  map<string, string>      labels          = 3;
 }
 
 message DeleteTokenRequest {

@@ -21,6 +21,7 @@ import (
 	v1alpha1agents "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	v1alpha1bootstrap "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	bootstrapconnect "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1/v1alpha1connect"
+	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/bootstrap"
 	"github.com/otelfleet/otelfleet/pkg/ecdh"
 	otelfleetsvc "github.com/otelfleet/otelfleet/pkg/services"
@@ -47,7 +48,9 @@ type BootstrapServer struct {
 	logger     *slog.Logger
 	services.Service
 
-	bootstrapper Bootstrapper
+	bootstrapper         Bootstrapper
+	configStore          storage.KeyValue[*configv1alpha1.Config]
+	bootstrapConfigStore storage.KeyValue[*configv1alpha1.Config]
 }
 
 var _ otelfleetsvc.HTTPExtension = (*BootstrapServer)(nil)
@@ -61,14 +64,18 @@ func NewBootstrapServer(
 	tokenStore storage.KeyValue[*v1alpha1bootstrap.BootstrapToken],
 	opampAgentStore storage.KeyValue[*protobufs.AgentToServer],
 	agentStore storage.KeyValue[*v1alpha1agents.AgentDescription],
+	configStore storage.KeyValue[*configv1alpha1.Config],
+	bootstrapConfigStore storage.KeyValue[*configv1alpha1.Config],
 ) *BootstrapServer {
 	b := &BootstrapServer{
-		tokenStore:      tokenStore,
-		opampAgentStore: opampAgentStore,
-		privateKey:      privateKey,
-		logger:          logger,
-		bootstrapper:    NewBootstrapper(logger, tokenStore, privateKey),
-		agentStore:      agentStore,
+		tokenStore:           tokenStore,
+		opampAgentStore:      opampAgentStore,
+		privateKey:           privateKey,
+		logger:               logger,
+		bootstrapper:         NewBootstrapper(logger, tokenStore, privateKey),
+		agentStore:           agentStore,
+		configStore:          configStore,
+		bootstrapConfigStore: bootstrapConfigStore,
 	}
 
 	b.Service = services.NewBasicService(nil, b.running, nil)
@@ -96,9 +103,21 @@ func (b *BootstrapServer) CreateToken(ctx context.Context, connectReq *connect.R
 	bT := token.ToBootstrapToken()
 	bT.TTL = req.TTL
 	bT.Expiry = timestamppb.New(time.Now().Add(time.Minute * 5))
+
+	if ref := req.GetConfigReference(); ref != "" {
+		config, err := b.configStore.Get(ctx, ref)
+		if err != nil {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get associated config for ref %s : %s", ref, err))
+		}
+		if err := b.bootstrapConfigStore.Put(ctx, bT.GetID(), config); err != nil {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to persist bootstrap config : %s", err))
+		}
+	}
+
 	if err := b.tokenStore.Put(ctx, bT.GetID(), bT); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
 	return connect.NewResponse(bT), nil
 }
 
