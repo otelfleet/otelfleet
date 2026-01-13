@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { useClient } from '../api';
 import { notifyGRPCError } from '../api/notifications';
 import { TokenService } from '../gen/api/pkg/api/bootstrap/v1alpha1/bootstrap_pb';
-import { ConfigService } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
 import type { BootstrapToken } from '../gen/api/pkg/api/bootstrap/v1alpha1/bootstrap_pb';
 import type { Timestamp, Duration } from '@bufbuild/protobuf/wkt';
 import {
@@ -61,7 +60,6 @@ function durationToString(duration?: Duration | null): string {
 
 export function TokenDetailPage({ tokenId }: TokenDetailPageProps) {
     const tokenClient = useClient(TokenService);
-    const configClient = useClient(ConfigService);
     const [token, setToken] = useState<BootstrapToken | null>(null);
     const [configContent, setConfigContent] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -80,18 +78,17 @@ export function TokenDetailPage({ tokenId }: TokenDetailPageProps) {
             }
             setToken(foundToken);
 
-            // If there's a config reference, fetch the config
-            if (foundToken.configReference) {
-                try {
-                    const configResponse = await configClient.getConfig({ id: foundToken.configReference });
-                    if (configResponse.config) {
-                        const decoded = new TextDecoder().decode(configResponse.config);
-                        setConfigContent(decoded);
-                    }
-                } catch (configErr) {
-                    // Config might not exist anymore, that's okay
-                    setConfigContent(null);
+            // Fetch the config using the token ID
+            try {
+                console.log("[DEBUG] : tokenId ", tokenId)
+                const configResponse = await tokenClient.getBootstrapConfig({ tokenID: tokenId });
+                if (configResponse.config?.config) {
+                    const decoded = new TextDecoder().decode(configResponse.config.config);
+                    setConfigContent(decoded);
                 }
+            } catch (configErr) {
+                // Config might not exist, that's okay
+                setConfigContent(null);
             }
         } catch (err) {
             notifyGRPCError('Failed to fetch token details', err);
@@ -99,7 +96,7 @@ export function TokenDetailPage({ tokenId }: TokenDetailPageProps) {
         } finally {
             setLoading(false);
         }
-    }, [tokenId, tokenClient, configClient]);
+    }, [tokenId, tokenClient]);
 
     useEffect(() => {
         fetchTokenData();

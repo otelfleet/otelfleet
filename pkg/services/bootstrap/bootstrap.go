@@ -114,6 +114,7 @@ func (b *BootstrapServer) CreateToken(ctx context.Context, connectReq *connect.R
 		if err != nil {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get associated config for ref %s : %s", ref, err))
 		}
+		b.logger.With("token", bT.GetID()).Debug("persisting bootstrap config")
 		if err := b.bootstrapConfigStore.Put(ctx, bT.GetID(), config); err != nil {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to persist bootstrap config : %s", err))
 		}
@@ -124,6 +125,22 @@ func (b *BootstrapServer) CreateToken(ctx context.Context, connectReq *connect.R
 	}
 
 	return connect.NewResponse(bT), nil
+}
+
+func (b *BootstrapServer) GetBootstrapConfig(ctx context.Context, connectReq *connect.Request[v1alpha1bootstrap.GetConfigRequest]) (*connect.Response[v1alpha1bootstrap.GetConfigResponse], error) {
+	req := connectReq.Msg
+	b.logger.With("token", req.TokenID).Debug("fetching bootstrap config")
+	config, err := b.bootstrapConfigStore.Get(ctx, req.GetTokenID())
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(
+		&v1alpha1bootstrap.GetConfigResponse{
+			Config: config,
+		},
+	), nil
+
 }
 
 func (b *BootstrapServer) ListTokens(ctx context.Context, _ *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1bootstrap.ListTokenReponse], error) {
