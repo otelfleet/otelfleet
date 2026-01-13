@@ -212,6 +212,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.agentStore,
 			o.configStore,
 			o.bootstrapConfigStore,
+			o.assignmentConfigStore,
 		)
 		bootstrapSvc.ConfigureHTTP(o.server.HTTP)
 
