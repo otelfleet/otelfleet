@@ -115,9 +115,7 @@ func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 		l = l.With("type", "remote-config")
 		l.Info("updatading effective configuration")
 		if err := s.procManager.Update(ctx, incomingCfg); err != nil {
-
 			// TODO : only send failed apply when the write to disk fails in proc manager
-
 			if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
 				Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_FAILED,
 				LastRemoteConfigHash: s.procManager.curHash,
@@ -144,6 +142,7 @@ func (s *Supervisor) Shutdown() error {
 func (s *Supervisor) createEffectiveConfigMsg() *protobufs.EffectiveConfig {
 	contents, err := s.procManager.getConfigMap()
 	if err != nil {
+		s.logger.With("err", err).Error("failed to get effective config from proc manager")
 		return defaultEffectiveConfig
 	}
 	return &protobufs.EffectiveConfig{

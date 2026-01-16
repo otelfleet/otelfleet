@@ -45,6 +45,7 @@ func setupTestServer(t *testing.T) (*opamp.Server, storage.KeyValue[*protobufs.C
 		configStore,
 		statusStore,
 		opampDesc,
+		nil,
 	)
 
 	return server, healthStore, configStore, statusStore

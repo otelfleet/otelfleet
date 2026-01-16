@@ -102,24 +102,24 @@ func (b *BootstrapServer) CreateToken(ctx context.Context, connectReq *connect.R
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 	token := bootstrap.NewToken()
-
 	bT := token.ToBootstrapToken()
 	bT.TTL = req.TTL
 	bT.Expiry = timestamppb.New(time.Now().Add(time.Minute * 5))
 	bT.ConfigReference = req.ConfigReference
 	bT.Labels = req.Labels
+	logger := b.logger.With("token", bT.GetID()).With("config-ref", bT.GetConfigReference())
 
 	if ref := req.GetConfigReference(); ref != "" {
+		logger.Info("checking bootstrap token config reference")
 		config, err := b.configStore.Get(ctx, ref)
 		if err != nil {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get associated config for ref %s : %s", ref, err))
 		}
-		b.logger.With("token", bT.GetID()).Debug("persisting bootstrap config")
-		if err := b.bootstrapConfigStore.Put(ctx, bT.GetID(), config); err != nil {
+		logger.Info("persisting bootstrap config")
+		if err := b.bootstrapConfigStore.Put(ctx, token.EncodeToHex(), config); err != nil {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to persist bootstrap config : %s", err))
 		}
 	}
-
 	if err := b.tokenStore.Put(ctx, bT.GetID(), bT); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -140,7 +140,6 @@ func (b *BootstrapServer) GetBootstrapConfig(ctx context.Context, connectReq *co
 			Config: config,
 		},
 	), nil
-
 }
 
 func (b *BootstrapServer) ListTokens(ctx context.Context, _ *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1bootstrap.ListTokenReponse], error) {
@@ -247,7 +246,7 @@ func (b *BootstrapServer) updateAgentDetails(
 	name string,
 	token string,
 ) error {
-	l := b.logger.With("agentID", agentID).With("friendly-name", name)
+	l := b.logger.With("agentID", agentID).With("friendly-name", name).With("token", token)
 	l.Info("bootstrap successful, persisting agent details")
 	_, err := b.agentStore.Get(ctx, agentID)
 	if grpcutil.IsErrorNotFound(err) {

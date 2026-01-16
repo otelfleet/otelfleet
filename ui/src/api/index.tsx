@@ -5,7 +5,7 @@ import { createClient, type Client } from "@connectrpc/connect";
 
 // This transport is going to be used throughout the app
 const transport = createConnectTransport({
-  baseUrl: "http://localhost:8081",
+  baseUrl: "http://localhost:16587",
 });
 
 /**

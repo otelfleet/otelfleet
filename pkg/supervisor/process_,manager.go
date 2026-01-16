@@ -157,7 +157,7 @@ func (p *ProcManager) handleLogs(ctx context.Context, rc io.ReadCloser) {
 		}
 
 		// lvl, msg, attrs := p.parseOtelcolLog(ln)
-		// l.LogAttrs(ctx, lvl, msg, attrs...)
+		l.Error(ln)
 	}
 }
 

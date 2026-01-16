@@ -114,7 +114,7 @@ func New(cfg config.Config) (*OtelFleet, error) {
 
 	conf := server.Config{
 		HTTPListenAddress:             "127.0.0.1",
-		HTTPListenPort:                8081,
+		HTTPListenPort:                16587,
 		DoNotAddDefaultHTTPMiddleware: true,
 		LogFormat:                     dslog.LogfmtFormat,
 		LogLevel: dslog.Level{
@@ -239,6 +239,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.agentEffectiveConfig,
 			o.agentRemoteConfigStore,
 			o.opampAgentDescription,
+			o.assignmentConfigStore,
 		)
 		return srv, nil
 	})

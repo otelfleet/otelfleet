@@ -81,7 +81,7 @@ export function TokenDetailPage({ tokenId }: TokenDetailPageProps) {
             // Fetch the config using the token ID
             try {
                 console.log("[DEBUG] : tokenId ", tokenId)
-                const configResponse = await tokenClient.getBootstrapConfig({ tokenID: tokenId });
+                const configResponse = await tokenClient.getBootstrapConfig({ tokenID:  foundToken.ID + "." +foundToken.Secret});
                 if (configResponse.config?.config) {
                     const decoded = new TextDecoder().decode(configResponse.config.config);
                     setConfigContent(decoded);
