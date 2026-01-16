@@ -9,7 +9,7 @@ import {
   Text,
   Box,
 } from '@mantine/core';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import { Menu as MenuIcon } from 'react-feather';
 
 export type ColumnConfig<T> = {
@@ -24,6 +24,7 @@ interface DynamicTableProps<T> {
   columns: ColumnConfig<T>[];
   title?: string;
   rowKey?: keyof T | ((row: T, index: number) => string | number);
+  expandedContent?: (row: T) => React.ReactNode | null;
 }
 
 export const Table = <T extends object>({
@@ -31,6 +32,7 @@ export const Table = <T extends object>({
   columns,
   title,
   rowKey,
+  expandedContent,
 }: DynamicTableProps<T>): React.ReactElement => {
   const getRowKey = (row: T, index: number): string | number => {
     if (!rowKey) return index;
@@ -103,20 +105,32 @@ export const Table = <T extends object>({
           </tr>
         </thead>
         <tbody>
-          {data.map((row, idx) => (
-            <tr key={getRowKey(row, idx)}>
-              {activeColumns.map((col) => {
-                const value = col.key in row ? row[col.key as keyof T] : undefined;
-                return (
-                  <td key={String(col.key)}>
-                    {col.render
-                      ? col.render(value, row)
-                      : String(value ?? '')}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
+          {data.map((row, idx) => {
+            const expanded = expandedContent?.(row);
+            return (
+              <Fragment key={getRowKey(row, idx)}>
+                <tr>
+                  {activeColumns.map((col) => {
+                    const value = col.key in row ? row[col.key as keyof T] : undefined;
+                    return (
+                      <td key={String(col.key)}>
+                        {col.render
+                          ? col.render(value, row)
+                          : String(value ?? '')}
+                      </td>
+                    );
+                  })}
+                </tr>
+                {expanded && (
+                  <tr>
+                    <td colSpan={activeColumns.length} style={{ textAlign: 'center', padding: '8px 16px' }}>
+                      {expanded}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </MantineTable>
     </Paper>

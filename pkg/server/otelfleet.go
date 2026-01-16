@@ -76,16 +76,26 @@ type OtelFleet struct {
 	mm   *modules.Manager
 	deps map[string][]string
 
-	store                  storage.KVBroker
-	tokenStore             storage.KeyValue[*bootstrapv1alpha1.BootstrapToken]
-	agentStore             storage.KeyValue[*agentsv1alpha1.AgentDescription]
-	opampAgentStore        storage.KeyValue[*protobufs.AgentToServer]
-	configStore            storage.KeyValue[*configv1alpha1.Config]
-	defaultConfigStore     storage.KeyValue[*configv1alpha1.Config]
+	store           storage.KVBroker
+	tokenStore      storage.KeyValue[*bootstrapv1alpha1.BootstrapToken]
+	agentStore      storage.KeyValue[*agentsv1alpha1.AgentDescription]
+	opampAgentStore storage.KeyValue[*protobufs.AgentToServer]
+
 	agentHealthStore       storage.KeyValue[*protobufs.ComponentHealth]
 	agentEffectiveConfig   storage.KeyValue[*protobufs.EffectiveConfig]
 	agentRemoteConfigStore storage.KeyValue[*protobufs.RemoteConfigStatus]
 	opampAgentDescription  storage.KeyValue[*protobufs.AgentDescription]
+
+	// store for raw configs
+	configStore storage.KeyValue[*configv1alpha1.Config]
+	// store for default configs
+	defaultConfigStore storage.KeyValue[*configv1alpha1.Config]
+	// store for bootstrap configs
+	// tokenID -> config
+	bootstrapConfigStore storage.KeyValue[*configv1alpha1.Config]
+	// store for associating configs to agents
+	// otelfleet agentID -> config
+	assignmentConfigStore storage.KeyValue[*configv1alpha1.Config]
 
 	agentTracker opamp.AgentTracker
 
@@ -104,7 +114,7 @@ func New(cfg config.Config) (*OtelFleet, error) {
 
 	conf := server.Config{
 		HTTPListenAddress:             "127.0.0.1",
-		HTTPListenPort:                8081,
+		HTTPListenPort:                16587,
 		DoNotAddDefaultHTTPMiddleware: true,
 		LogFormat:                     dslog.LogfmtFormat,
 		LogLevel: dslog.Level{
@@ -182,7 +192,14 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("store", "opamp-agent-description"),
 			o.store.KeyValue("opamp-agent-description"),
 		)
-
+		o.bootstrapConfigStore = storage.NewProtoKV[*configv1alpha1.Config](
+			o.logger.With("store", "bootstrap-configs"),
+			o.store.KeyValue("bootstrapconfigs"),
+		)
+		o.assignmentConfigStore = storage.NewProtoKV[*configv1alpha1.Config](
+			o.logger.With("store", "assignmentconfigs"),
+			o.store.KeyValue("assignmentconfigs"),
+		)
 		return storeSvc, nil
 	}, modules.UserInvisibleModule)
 
@@ -193,6 +210,9 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.tokenStore,
 			o.opampAgentStore,
 			o.agentStore,
+			o.configStore,
+			o.bootstrapConfigStore,
+			o.assignmentConfigStore,
 		)
 		bootstrapSvc.ConfigureHTTP(o.server.HTTP)
 
@@ -219,6 +239,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.agentEffectiveConfig,
 			o.agentRemoteConfigStore,
 			o.opampAgentDescription,
+			o.assignmentConfigStore,
 		)
 		return srv, nil
 	})

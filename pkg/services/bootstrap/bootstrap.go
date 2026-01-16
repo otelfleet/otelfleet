@@ -21,6 +21,7 @@ import (
 	v1alpha1agents "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	v1alpha1bootstrap "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	bootstrapconnect "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1/v1alpha1connect"
+	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/bootstrap"
 	"github.com/otelfleet/otelfleet/pkg/ecdh"
 	otelfleetsvc "github.com/otelfleet/otelfleet/pkg/services"
@@ -34,7 +35,7 @@ import (
 
 // for secure vs insecure implementations
 type Bootstrapper interface {
-	VerifyToken(context.Context, http.Header) error
+	VerifyToken(context.Context, http.Header) (token string, err error)
 	DeriveSharedSecret(*v1alpha1bootstrap.BootstrapAuthRequest) (sharedSecret []byte, keypair ecdh.EphemeralKeyPair, err error)
 }
 
@@ -47,7 +48,10 @@ type BootstrapServer struct {
 	logger     *slog.Logger
 	services.Service
 
-	bootstrapper Bootstrapper
+	bootstrapper         Bootstrapper
+	configStore          storage.KeyValue[*configv1alpha1.Config]
+	bootstrapConfigStore storage.KeyValue[*configv1alpha1.Config]
+	assignedConfigStore  storage.KeyValue[*configv1alpha1.Config]
 }
 
 var _ otelfleetsvc.HTTPExtension = (*BootstrapServer)(nil)
@@ -61,14 +65,20 @@ func NewBootstrapServer(
 	tokenStore storage.KeyValue[*v1alpha1bootstrap.BootstrapToken],
 	opampAgentStore storage.KeyValue[*protobufs.AgentToServer],
 	agentStore storage.KeyValue[*v1alpha1agents.AgentDescription],
+	configStore storage.KeyValue[*configv1alpha1.Config],
+	bootstrapConfigStore storage.KeyValue[*configv1alpha1.Config],
+	assignedConfigStore storage.KeyValue[*configv1alpha1.Config],
 ) *BootstrapServer {
 	b := &BootstrapServer{
-		tokenStore:      tokenStore,
-		opampAgentStore: opampAgentStore,
-		privateKey:      privateKey,
-		logger:          logger,
-		bootstrapper:    NewBootstrapper(logger, tokenStore, privateKey),
-		agentStore:      agentStore,
+		tokenStore:           tokenStore,
+		opampAgentStore:      opampAgentStore,
+		privateKey:           privateKey,
+		logger:               logger,
+		bootstrapper:         NewBootstrapper(logger, tokenStore, privateKey),
+		agentStore:           agentStore,
+		configStore:          configStore,
+		bootstrapConfigStore: bootstrapConfigStore,
+		assignedConfigStore:  assignedConfigStore,
 	}
 
 	b.Service = services.NewBasicService(nil, b.running, nil)
@@ -92,14 +102,44 @@ func (b *BootstrapServer) CreateToken(ctx context.Context, connectReq *connect.R
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 	token := bootstrap.NewToken()
-
 	bT := token.ToBootstrapToken()
 	bT.TTL = req.TTL
 	bT.Expiry = timestamppb.New(time.Now().Add(time.Minute * 5))
+	bT.ConfigReference = req.ConfigReference
+	bT.Labels = req.Labels
+	logger := b.logger.With("token", bT.GetID()).With("config-ref", bT.GetConfigReference())
+
+	if ref := req.GetConfigReference(); ref != "" {
+		logger.Info("checking bootstrap token config reference")
+		config, err := b.configStore.Get(ctx, ref)
+		if err != nil {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get associated config for ref %s : %s", ref, err))
+		}
+		logger.Info("persisting bootstrap config")
+		if err := b.bootstrapConfigStore.Put(ctx, token.EncodeToHex(), config); err != nil {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to persist bootstrap config : %s", err))
+		}
+	}
 	if err := b.tokenStore.Put(ctx, bT.GetID(), bT); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
 	return connect.NewResponse(bT), nil
+}
+
+func (b *BootstrapServer) GetBootstrapConfig(ctx context.Context, connectReq *connect.Request[v1alpha1bootstrap.GetConfigRequest]) (*connect.Response[v1alpha1bootstrap.GetConfigResponse], error) {
+	req := connectReq.Msg
+	b.logger.With("token", req.TokenID).Debug("fetching bootstrap config")
+	config, err := b.bootstrapConfigStore.Get(ctx, req.GetTokenID())
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(
+		&v1alpha1bootstrap.GetConfigResponse{
+			Config: config,
+		},
+	), nil
 }
 
 func (b *BootstrapServer) ListTokens(ctx context.Context, _ *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1bootstrap.ListTokenReponse], error) {
@@ -178,7 +218,8 @@ func (b *BootstrapServer) Bootstrap(ctx context.Context, req *connect.Request[v1
 	if !ok {
 		return nil, grpcutil.ErrorInvalid(fmt.Errorf("can't access headers: no CallInfo for handler context"))
 	}
-	if err := b.bootstrapper.VerifyToken(ctx, callInfo.RequestHeader()); err != nil {
+	token, err := b.bootstrapper.VerifyToken(ctx, callInfo.RequestHeader())
+	if err != nil {
 		return nil, err
 	}
 
@@ -187,7 +228,7 @@ func (b *BootstrapServer) Bootstrap(ctx context.Context, req *connect.Request[v1
 		return nil, grpcutil.ErrorInvalid(err)
 	}
 
-	if err := b.updateAgentDetails(ctx, req.Msg.GetClientId(), req.Msg.GetName()); err != nil {
+	if err := b.updateAgentDetails(ctx, req.Msg.GetClientId(), req.Msg.GetName(), token); err != nil {
 		return nil, err
 	}
 
@@ -199,17 +240,38 @@ func (b *BootstrapServer) Bootstrap(ctx context.Context, req *connect.Request[v1
 	), nil
 }
 
-func (b *BootstrapServer) updateAgentDetails(ctx context.Context, id string, name string) error {
-	b.logger.With("agentID", id).With("friendly-name", name).Info("bootstrap successful, persisting agent details")
-	_, err := b.agentStore.Get(ctx, id)
+func (b *BootstrapServer) updateAgentDetails(
+	ctx context.Context,
+	agentID string,
+	name string,
+	token string,
+) error {
+	l := b.logger.With("agentID", agentID).With("friendly-name", name).With("token", token)
+	l.Info("bootstrap successful, persisting agent details")
+	_, err := b.agentStore.Get(ctx, agentID)
 	if grpcutil.IsErrorNotFound(err) {
-		return b.agentStore.Put(ctx, id, &v1alpha1agents.AgentDescription{
-			Id:           id,
+		l.Info("persisting agent details")
+		if err := b.agentStore.Put(ctx, agentID, &v1alpha1agents.AgentDescription{
+			Id:           agentID,
 			FriendlyName: name,
-		})
-	}
-	if err != nil {
+		}); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return grpcutil.ErrorInternal(err)
+	}
+	incomingConfig, err := b.bootstrapConfigStore.Get(ctx, token)
+	if err == nil {
+		l.Info("agent has an assigned config")
+		_, configErr := b.assignedConfigStore.Get(ctx, agentID)
+		if grpcutil.IsErrorNotFound(configErr) {
+			l.Info("no config has been assigned to an agent yet, associating bootstrap config with agent")
+			if err := b.assignedConfigStore.Put(ctx, agentID, incomingConfig); err != nil {
+				return err
+			}
+		} else if configErr != nil {
+			return configErr
+		}
 	}
 	// note: in the future there may be things we want to update here like capabilities / scope
 	return nil
@@ -239,10 +301,12 @@ func NewNoopBootstrapper(logger *slog.Logger) *noopBootstrapper {
 
 var _ Bootstrapper = (*noopBootstrapper)(nil)
 
-func (n *noopBootstrapper) VerifyToken(context.Context, http.Header) error {
-	n.logger.Debug("verified token")
-	return nil
+func (n *noopBootstrapper) VerifyToken(_ context.Context, headers http.Header) (string, error) {
+	token := strings.TrimSpace(headers.Get("Authorization"))
+	n.logger.With("token", token).Debug("verified token")
+	return token, nil
 }
+
 func (n *noopBootstrapper) DeriveSharedSecret(*v1alpha1bootstrap.BootstrapAuthRequest) (sharedSecret []byte, keyapir ecdh.EphemeralKeyPair, err error) {
 	n.logger.Debug("derived shared secret")
 	return []byte{}, ecdh.EphemeralKeyPair{
@@ -271,29 +335,30 @@ func NewSecureBootstrapper(
 	}
 }
 
-func (s *secureBootstrapper) VerifyToken(ctx context.Context, headers http.Header) error {
+func (s *secureBootstrapper) VerifyToken(ctx context.Context, headers http.Header) (string, error) {
 	auth := strings.TrimSpace(headers.Get("Authorization"))
 	if auth == "" {
-		return fmt.Errorf("no request header set")
+		return "", fmt.Errorf("no request header set")
 	}
 	bearerToken := strings.TrimSpace(strings.TrimPrefix(auth, "Bearer"))
 	payload, err := jws.Verify([]byte(bearerToken), jwa.RS256, s.privateKey.Public())
 	if err != nil {
-		return err
+		return "", err
 	}
 	token := &bootstrap.Token{}
 	if err := json.Unmarshal(payload, token); err != nil {
-		return err
+		return "", err
 	}
 
 	// check token exists, maybe handle this a little different based on the error
-	_, err = s.tokenStore.Get(ctx, token.ToBootstrapToken().GetID())
+	id := token.ToBootstrapToken().GetID()
+	_, err = s.tokenStore.Get(ctx, id)
 	if grpcutil.IsErrorNotFound(err) {
-		return err
+		return "", err
 	} else if err != nil {
-		return grpcutil.ErrorInternal(err)
+		return "", grpcutil.ErrorInternal(err)
 	}
-	return nil
+	return id, nil
 }
 
 func (s *secureBootstrapper) DeriveSharedSecret(bootstrapReq *v1alpha1bootstrap.BootstrapAuthRequest) ([]byte, ecdh.EphemeralKeyPair, error) {

@@ -1,7 +1,9 @@
 package opamp
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -11,11 +13,14 @@ import (
 	"github.com/open-telemetry/opamp-go/server"
 	"github.com/open-telemetry/opamp-go/server/types"
 	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
+	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
 	services_int "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	"github.com/otelfleet/otelfleet/pkg/supervisor"
+	"github.com/otelfleet/otelfleet/pkg/util"
+	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -31,6 +36,7 @@ type Server struct {
 
 	healthStore           storage.KeyValue[*protobufs.ComponentHealth]
 	configStore           storage.KeyValue[*protobufs.EffectiveConfig]
+	assignedConfigStore   storage.KeyValue[*configv1alpha1.Config]
 	remoteStatusStore     storage.KeyValue[*protobufs.RemoteConfigStatus]
 	opampAgentDescription storage.KeyValue[*protobufs.AgentDescription]
 }
@@ -45,6 +51,7 @@ func NewServer(
 	configStore storage.KeyValue[*protobufs.EffectiveConfig],
 	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus],
 	opampAgentDescriptionStore storage.KeyValue[*protobufs.AgentDescription],
+	assignedConfigStore storage.KeyValue[*configv1alpha1.Config],
 ) *Server {
 	opampSvr := server.New(logutil.NewOpAMPLogger(l))
 	s := &Server{
@@ -57,6 +64,7 @@ func NewServer(
 		configStore:           configStore,
 		remoteStatusStore:     remoteStatusStore,
 		opampAgentDescription: opampAgentDescriptionStore,
+		assignedConfigStore:   assignedConfigStore,
 	}
 
 	s.Service = services.NewBasicService(s.start, s.running, s.stop)
@@ -105,27 +113,51 @@ func (s *Server) stop(failureCase error) error {
 
 func (s *Server) OnConnected(ctx context.Context, conn types.Connection) {
 	s.logger.With("addr", conn.Connection().LocalAddr().String()).Info("agent connected")
-
-	if err := s.sendConfig(ctx, conn); err != nil {
-		s.logger.With("err", err).Error("failed to send remote config")
-		panic("unhandled error")
-	}
 }
 
-func (s *Server) sendConfig(ctx context.Context, conn types.Connection) error {
-	s.logger.Log(ctx, logutil.LevelTrace, "sending config to agent")
-	return conn.Send(ctx, &protobufs.ServerToAgent{
-		RemoteConfig: &protobufs.AgentRemoteConfig{
-			Config: &protobufs.AgentConfigMap{
-				ConfigMap: map[string]*protobufs.AgentConfigFile{
-					"config.yaml": {
-						ContentType: "text/yaml",
-						Body:        []byte(otelconfig.DefaultOtelConfig),
-					},
+func (s *Server) calculateHash(agentToConfigMap *protobufs.AgentConfigMap) []byte {
+	return util.HashAgentConfigMap(agentToConfigMap)
+}
+
+func (s *Server) constructConfig(ctx context.Context, agentID string) (*protobufs.AgentConfigMap, error) {
+	logger := logutil.FromContext(ctx)
+	assignedConfig, err := s.assignedConfigStore.Get(ctx, agentID)
+	if grpcutil.IsErrorNotFound(err) {
+		logger.Info("no assigned config, falling back to default config")
+		return &protobufs.AgentConfigMap{
+			ConfigMap: map[string]*protobufs.AgentConfigFile{
+				"config.yaml": {
+					ContentType: "text/yaml",
+					Body:        []byte(otelconfig.DefaultOtelConfig),
 				},
 			},
-			// TODO
-			ConfigHash: []byte("a"),
+		}, nil
+	} else if err != nil {
+		return nil, err
+	}
+	logger.Info("agent has an assigned config")
+	return &protobufs.AgentConfigMap{
+		ConfigMap: map[string]*protobufs.AgentConfigFile{
+			"config.yaml": {
+				ContentType: "text/yaml",
+				Body:        assignedConfig.GetConfig(),
+			},
+		},
+	}, nil
+}
+
+func (s *Server) sendConfig(ctx context.Context, conn types.Connection, agentID string) error {
+	s.logger.Log(ctx, logutil.LevelTrace, "sending config to agent")
+	configMap, err := s.constructConfig(ctx, agentID)
+	if err != nil {
+		return fmt.Errorf("failed to construct config : %w", err)
+	}
+	hash := s.calculateHash(configMap)
+
+	return conn.Send(ctx, &protobufs.ServerToAgent{
+		RemoteConfig: &protobufs.AgentRemoteConfig{
+			Config:     configMap,
+			ConfigHash: hash,
 		},
 	})
 }
@@ -148,54 +180,86 @@ func (s *Server) OnMessage(ctx context.Context, conn types.Connection, message *
 	logger := s.logger.With("agent-id", agentID, "instance-uid", instanceUID)
 	logger.Debug("received message from agent")
 
+	ctx = logutil.WithContext(ctx, logger)
+
 	// Update tracker with agentID so capabilities can be looked up by persistent ID
 	var needsFullState bool
 	if agentID != "" {
 		needsFullState = s.tracker.UpdateFromMessage(agentID, message)
 	}
 
-	if agentID == "" {
-		logger.Warn("cannot persist agent data: no agent ID available")
-	} else {
-		if message.AgentDescription != nil {
-			logger.Info("persisting agent description")
-			if err := s.opampAgentDescription.Put(ctx, agentID, message.AgentDescription); err != nil {
-				logger.With("err", err).Error("failed to persist opamp agent-description")
-			}
-		}
-
-		if message.Health != nil {
-			logger.Info("persisting agent health")
-			if err := s.healthStore.Put(ctx, agentID, message.Health); err != nil {
-				logger.With("err", err).Error("failed to persist health")
-			}
-		}
-
-		if message.EffectiveConfig != nil {
-			logger.Info("persisting effective config")
-			if err := s.configStore.Put(ctx, agentID, message.EffectiveConfig); err != nil {
-				logger.With("err", err).Error("failed to persist effective config")
-			}
-		}
-
-		if message.RemoteConfigStatus != nil {
-			logger.Info("persisting remote config status")
-			if err := s.remoteStatusStore.Put(ctx, agentID, message.RemoteConfigStatus); err != nil {
-				logger.With("err", err).Error("failed to persist remote config status")
-			}
-		}
-	}
-
 	resp := &protobufs.ServerToAgent{
 		InstanceUid: message.InstanceUid,
 	}
+	if agentID == "" {
+		logger.Error("cannot persist agent data: no agent ID available")
+		return resp
+	}
+	if message.RemoteConfigStatus != nil {
+		if err := s.handleRemoteConfigStatus(ctx, conn, agentID, message.RemoteConfigStatus); err != nil {
+			logger.With("err", err).Error("failed to handle remote config status message")
+		}
+	}
 
+	if message.AgentDescription != nil {
+		logger.Info("persisting agent description")
+		if err := s.opampAgentDescription.Put(ctx, agentID, message.AgentDescription); err != nil {
+			logger.With("err", err).Error("failed to persist opamp agent-description")
+		}
+	}
+	if message.Health != nil {
+		logger.Info("persisting agent health")
+		if err := s.healthStore.Put(ctx, agentID, message.Health); err != nil {
+			logger.With("err", err).Error("failed to persist health")
+		}
+	}
+
+	if message.EffectiveConfig != nil {
+		logger.Info("persisting effective config")
+		if err := s.configStore.Put(ctx, agentID, message.EffectiveConfig); err != nil {
+			logger.With("err", err).Error("failed to persist effective config")
+		}
+	}
 	if needsFullState {
 		resp.Flags = uint64(protobufs.ServerToAgentFlags_ServerToAgentFlags_ReportFullState)
 		logger.Info("requesting full state report due to sequence gap")
 	}
-
 	return resp
+}
+
+func (s *Server) handleRemoteConfigStatus(
+	ctx context.Context,
+	conn types.Connection,
+	agentID string,
+	remoteConfigStatus *protobufs.RemoteConfigStatus,
+) error {
+	logger := logutil.FromContext(ctx)
+	var curHash []byte
+	storedStatus, err := s.remoteStatusStore.Get(ctx, agentID)
+	if grpcutil.IsErrorNotFound(err) {
+		logger.Info("no remote config status reported yet")
+		curHash = []byte{}
+	} else if err != nil {
+		return err
+	} else {
+		curHash = storedStatus.GetLastRemoteConfigHash()
+	}
+	incomingHash := remoteConfigStatus.GetLastRemoteConfigHash()
+
+	if !(len(curHash) == 0 || bytes.Equal(curHash, incomingHash)) {
+		logger.Info("agent remote config up-to-date")
+		return nil
+	}
+
+	logger.Info("need to send remote config to agent")
+
+	if err := s.sendConfig(ctx, conn, agentID); err != nil {
+		return fmt.Errorf("failed to send config to remote : %w", err)
+	}
+	if err := s.remoteStatusStore.Put(ctx, agentID, remoteConfigStatus); err != nil {
+		return fmt.Errorf("failed to persist remote config status : %w", err)
+	}
+	return nil
 }
 
 // resolveAgentID returns the persistent agent ID, either by extracting it from the
