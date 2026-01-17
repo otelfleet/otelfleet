@@ -106,8 +106,8 @@ type OtelFleet struct {
 	deploymentStore storage.KeyValue[*configv1alpha1.DeploymentStatus]
 	// store for per-agent deployment status
 	agentDeploymentStore storage.KeyValue[*configv1alpha1.AgentDeploymentStatus]
-
-	agentTracker         opamp.AgentTracker
+	// store for persisted connection state (replaces in-memory agentTracker)
+	connectionStateStore storage.KeyValue[*agentsv1alpha1.AgentConnectionState]
 	opampServer          *opamp.Server
 	configServer         *otelconfig.ConfigServer
 	deploymentController *deployment.Controller
@@ -120,9 +120,8 @@ type OtelFleet struct {
 func New(cfg config.Config) (*OtelFleet, error) {
 	l := slog.Default()
 	f := &OtelFleet{
-		logger:       l,
-		cfg:          cfg,
-		agentTracker: opamp.NewAgentTracker(),
+		logger: l,
+		cfg:    cfg,
 	}
 
 	conf := server.Config{
@@ -225,6 +224,10 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("store", "agent-deployments"),
 			o.store.KeyValue("agent-deployments"),
 		)
+		o.connectionStateStore = storage.NewProtoKV[*agentsv1alpha1.AgentConnectionState](
+			o.logger.With("store", "agent-connection-state"),
+			o.store.KeyValue("agent-connection-state"),
+		)
 		return storeSvc, nil
 	}, modules.UserInvisibleModule)
 
@@ -265,7 +268,7 @@ func (o *OtelFleet) setupModuleManager() error {
 		srv := opamp.NewServer(
 			o.logger.With("service", OpAmp),
 			o.opampAgentStore,
-			o.agentTracker,
+			o.connectionStateStore,
 			o.agentHealthStore,
 			o.agentEffectiveConfig,
 			o.agentRemoteConfigStore,
@@ -284,7 +287,8 @@ func (o *OtelFleet) setupModuleManager() error {
 		srv := agent.NewAgentServer(
 			o.logger.With("service", AgentManager),
 			o.agentStore,
-			o.agentTracker,
+			o.connectionStateStore,
+			o.configAssignmentStore,
 			o.agentHealthStore,
 			o.agentEffectiveConfig,
 			o.agentRemoteConfigStore,

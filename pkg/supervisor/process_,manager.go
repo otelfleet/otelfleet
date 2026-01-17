@@ -32,6 +32,10 @@ type ProcManager struct {
 	cmdExited chan struct{}
 	curHash   []byte
 
+	// TODO : this is a hacky implementation
+	// we want all health drivers to be able to report their health - Need to
+	// figure out a mechanism / type contract on he AgentDriver interface that makes sense.
+	// probably something like HealthUpdatesC(ctx context.Context) <-chan HealthUpdates
 	reportHealthFn func(
 		healthy bool,
 		status string,
@@ -120,6 +124,8 @@ func (p *ProcManager) runLocked(ctx context.Context, incoming *protobufs.AgentRe
 		return fmt.Errorf("error starting collector")
 	}
 	exited := make(chan struct{})
+	// TODO : this report health fn likely has potential synchronization issues
+	p.reportHealthFn(true, "running", "")
 	go func() {
 		defer close(exited)
 		err := cmd.Wait()

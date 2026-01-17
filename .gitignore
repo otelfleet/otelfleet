@@ -34,5 +34,8 @@ go.work.sum
 # Bin
 
 bin/
+*.log
 
 otelfleet.kv
+.issues
+.plans

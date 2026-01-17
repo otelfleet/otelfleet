@@ -11,15 +11,18 @@ import (
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1/v1alpha1connect"
-	"github.com/otelfleet/otelfleet/pkg/services/opamp"
+	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/util/configsync"
 	"github.com/samber/lo"
 )
 
 type AgentServer struct {
-	logger       *slog.Logger
-	agentStore   storage.KeyValue[*v1alpha1.AgentDescription]
-	agentTracker opamp.AgentTracker
+	logger     *slog.Logger
+	agentStore storage.KeyValue[*v1alpha1.AgentDescription]
+
+	connectionStateStore  storage.KeyValue[*v1alpha1.AgentConnectionState]
+	configAssignmentStore storage.KeyValue[*configv1alpha1.ConfigAssignment]
 
 	healthStore                storage.KeyValue[*protobufs.ComponentHealth]
 	configStore                storage.KeyValue[*protobufs.EffectiveConfig]
@@ -34,7 +37,8 @@ var _ v1alpha1connect.AgentServiceHandler = (*AgentServer)(nil)
 func NewAgentServer(
 	logger *slog.Logger,
 	agentStore storage.KeyValue[*v1alpha1.AgentDescription],
-	agentTracker opamp.AgentTracker,
+	connectionStateStore storage.KeyValue[*v1alpha1.AgentConnectionState],
+	configAssignmentStore storage.KeyValue[*configv1alpha1.ConfigAssignment],
 	healthStore storage.KeyValue[*protobufs.ComponentHealth],
 	configStore storage.KeyValue[*protobufs.EffectiveConfig],
 	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus],
@@ -43,7 +47,8 @@ func NewAgentServer(
 	a := &AgentServer{
 		logger:                     logger,
 		agentStore:                 agentStore,
-		agentTracker:               agentTracker,
+		connectionStateStore:       connectionStateStore,
+		configAssignmentStore:      configAssignmentStore,
 		healthStore:                healthStore,
 		configStore:                configStore,
 		remoteStatusStore:          remoteStatusStore,
@@ -86,7 +91,9 @@ func (a *AgentServer) ListAgents(
 			newEntry := &v1alpha1.AgentDescriptionAndStatus{
 				Agent: entry.Agent,
 			}
-			enrichAgentDescription(newEntry.Agent, desc, a.agentTracker.GetCapabilities(agentID))
+			// Get capabilities from connection state store
+			capabilities := a.getCapabilities(ctx, agentID)
+			enrichAgentDescription(newEntry.Agent, desc, capabilities)
 			newEntry.Status = a.status(ctx, agentID)
 			descAndStatus[idx] = newEntry
 		}
@@ -96,6 +103,7 @@ func (a *AgentServer) ListAgents(
 	}
 	return connect.NewResponse(resp), nil
 }
+
 func (a *AgentServer) GetAgent(ctx context.Context, req *connect.Request[v1alpha1.GetAgentRequest]) (*connect.Response[v1alpha1.GetAgentResponse], error) {
 	agentID := req.Msg.GetAgentId()
 	agent, err := a.agentStore.Get(ctx, agentID)
@@ -107,7 +115,9 @@ func (a *AgentServer) GetAgent(ctx context.Context, req *connect.Request[v1alpha
 	if err != nil {
 		a.logger.With("err", err).Error("failed to get opamp remote agent description")
 	}
-	enrichAgentDescription(agent, remoteDesc, a.agentTracker.GetCapabilities(agentID))
+	// Get capabilities from connection state store
+	capabilities := a.getCapabilities(ctx, agentID)
+	enrichAgentDescription(agent, remoteDesc, capabilities)
 
 	return connect.NewResponse(&v1alpha1.GetAgentResponse{Agent: agent}), nil
 }
@@ -127,8 +137,12 @@ func (a *AgentServer) status(ctx context.Context, agentID string) *v1alpha1.Agen
 		State: v1alpha1.AgentState_AGENT_STATE_UNKNOWN,
 	}
 
-	if st, ok := a.agentTracker.GetStatus(agentID); ok {
-		resp.State = st.State
+	// Get connection state from persistent store
+	if connState, err := a.connectionStateStore.Get(ctx, agentID); err == nil {
+		resp.State = connState.State
+		resp.LastSeen = connState.LastSeen
+		resp.ConnectedAt = connState.ConnectedAt
+		resp.DisconnectedAt = connState.DisconnectedAt
 	}
 
 	if health, err := a.healthStore.Get(ctx, agentID); err == nil {
@@ -142,7 +156,30 @@ func (a *AgentServer) status(ctx context.Context, agentID string) *v1alpha1.Agen
 	if status, err := a.remoteStatusStore.Get(ctx, agentID); err == nil {
 		resp.RemoteConfigStatus = convertRemoteConfigStatus(status)
 	}
+
+	// Compute config sync status using shared logic
+	resp.ConfigSyncStatus, resp.ConfigSyncReason = a.computeConfigSyncStatus(ctx, agentID)
+
 	return resp
+}
+
+// computeConfigSyncStatus computes the config sync status for an agent.
+func (a *AgentServer) computeConfigSyncStatus(ctx context.Context, agentID string) (v1alpha1.ConfigSyncStatus, string) {
+	assignment, err := a.configAssignmentStore.Get(ctx, agentID)
+	if err != nil {
+		// No assignment = unknown sync status
+		return v1alpha1.ConfigSyncStatus_CONFIG_SYNC_STATUS_UNKNOWN, ""
+	}
+
+	return configsync.ComputeConfigSyncStatus(ctx, agentID, assignment.GetConfigHash(), a.remoteStatusStore)
+}
+
+// getCapabilities returns the capabilities for an agent from the connection state store.
+func (a *AgentServer) getCapabilities(ctx context.Context, agentID string) uint64 {
+	if state, err := a.connectionStateStore.Get(ctx, agentID); err == nil {
+		return state.Capabilities
+	}
+	return 0
 }
 
 func convertHealth(h *protobufs.ComponentHealth) *v1alpha1.ComponentHealth {

@@ -4,7 +4,7 @@ import { notifyGRPCError } from '../api/notifications';
 import {
     AgentService,
     AgentState as AgentStateEnum,
-    RemoteConfigStatuses,
+    ConfigSyncStatus as ConfigSyncStatusEnum,
 } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import type {
     AgentDescription,
@@ -248,14 +248,15 @@ function AgentHeader({ agent, status }: { agent: AgentDescription | null; status
 
     const stateLabel = AgentStateEnum[status?.state ?? 0]?.replace(/^AGENT_STATE_/, '') ?? 'UNKNOWN';
 
-    const configStatusMap: Record<number, { color: string; label: string }> = {
-        [RemoteConfigStatuses.UNSET]: { color: 'gray', label: 'Unset' },
-        [RemoteConfigStatuses.APPLIED]: { color: 'green', label: 'Applied' },
-        [RemoteConfigStatuses.APPLYING]: { color: 'blue', label: 'Applying' },
-        [RemoteConfigStatuses.FAILED]: { color: 'red', label: 'Failed' },
+    const configSyncStatusMap: Record<number, { color: string; label: string }> = {
+        [ConfigSyncStatusEnum.UNKNOWN]: { color: 'gray', label: 'Unknown' },
+        [ConfigSyncStatusEnum.IN_SYNC]: { color: 'green', label: 'In Sync' },
+        [ConfigSyncStatusEnum.OUT_OF_SYNC]: { color: 'yellow', label: 'Out of Sync' },
+        [ConfigSyncStatusEnum.APPLYING]: { color: 'blue', label: 'Applying' },
+        [ConfigSyncStatusEnum.ERROR]: { color: 'red', label: 'Error' },
     };
 
-    const configStatus = configStatusMap[status?.remoteConfigStatus?.status ?? 0] ?? { color: 'gray', label: 'Unknown' };
+    const configStatus = configSyncStatusMap[status?.configSyncStatus ?? 0] ?? { color: 'gray', label: 'Unknown' };
 
     return (
         <Paper p="md" withBorder>
@@ -272,7 +273,7 @@ function AgentHeader({ agent, status }: { agent: AgentDescription | null; status
                         {status?.health?.healthy ? 'Healthy' : 'Unhealthy'}
                     </Badge>
                     <Badge color={configStatus.color} variant="filled" size="lg">
-                        Config: {configStatus.label}
+                        Config Sync: {configStatus.label}
                     </Badge>
                 </Group>
             </Group>

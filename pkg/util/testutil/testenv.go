@@ -50,6 +50,8 @@ type TestEnv struct {
 	OpampAgentDescriptionStore storage.KeyValue[*protobufs.AgentDescription]
 	DeploymentStore            storage.KeyValue[*configv1alpha1.DeploymentStatus]
 	AgentDeploymentStore       storage.KeyValue[*configv1alpha1.AgentDeploymentStatus]
+	// ConnectionStateStore replaces the in-memory AgentTracker
+	ConnectionStateStore storage.KeyValue[*agentsv1alpha1.AgentConnectionState]
 
 	// Services
 	BootstrapServer      *bootstrap.BootstrapServer
@@ -57,7 +59,6 @@ type TestEnv struct {
 	OpampServer          *opamp.Server
 	AgentServer          *agent.AgentServer
 	DeploymentController *deployment.Controller
-	AgentTracker         opamp.AgentTracker
 
 	// HTTP
 	HTTPServer    *httptest.Server
@@ -141,12 +142,10 @@ func (e *TestEnv) initStores(logger *slog.Logger, broker storage.KVBroker) {
 	e.OpampAgentDescriptionStore = storage.NewProtoKV[*protobufs.AgentDescription](logger, broker.KeyValue("opamp-agent-description"))
 	e.DeploymentStore = storage.NewProtoKV[*configv1alpha1.DeploymentStatus](logger, broker.KeyValue("deployments"))
 	e.AgentDeploymentStore = storage.NewProtoKV[*configv1alpha1.AgentDeploymentStatus](logger, broker.KeyValue("agent-deployments"))
+	e.ConnectionStateStore = storage.NewProtoKV[*agentsv1alpha1.AgentConnectionState](logger, broker.KeyValue("connection-state"))
 }
 
 func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
-	// AgentTracker
-	e.AgentTracker = opamp.NewAgentTracker()
-
 	// BootstrapServer
 	e.BootstrapServer = bootstrap.NewBootstrapServer(
 		logger.With("service", "bootstrap"),
@@ -171,11 +170,11 @@ func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
 		e.RemoteStatusStore,
 	)
 
-	// OpampServer
+	// OpampServer - now uses ConnectionStateStore instead of AgentTracker
 	e.OpampServer = opamp.NewServer(
 		logger.With("service", "opamp"),
 		e.OpampAgentStore,
-		e.AgentTracker,
+		e.ConnectionStateStore,
 		e.HealthStore,
 		e.EffectiveConfigStore,
 		e.RemoteStatusStore,
@@ -183,11 +182,12 @@ func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
 		e.AssignedConfigStore,
 	)
 
-	// AgentServer
+	// AgentServer - now uses ConnectionStateStore instead of AgentTracker
 	e.AgentServer = agent.NewAgentServer(
 		logger.With("service", "agent"),
 		e.AgentStore,
-		e.AgentTracker,
+		e.ConnectionStateStore,
+		e.ConfigAssignmentStore,
 		e.HealthStore,
 		e.EffectiveConfigStore,
 		e.RemoteStatusStore,

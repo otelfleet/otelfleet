@@ -1,6 +1,8 @@
 syntax = "proto3";
 package config.v1alpha1;
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1";
 
 service AgentService {
@@ -43,6 +45,12 @@ message AgentStatus {
   ComponentHealth    health               = 2;
   EffectiveConfig    effective_config     = 3;
   RemoteConfigStatus remote_config_status = 4;
+  // New fields for unified status
+  google.protobuf.Timestamp last_seen = 5;
+  ConfigSyncStatus config_sync_status = 6;
+  string config_sync_reason = 7;
+  google.protobuf.Timestamp connected_at = 8;
+  google.protobuf.Timestamp disconnected_at = 9;
 }
 
 message AgentDescription {
@@ -93,6 +101,29 @@ enum AgentState {
   AGENT_STATE_UNKNOWN      = 0;
   AGENT_STATE_CONNECTED    = 1;
   AGENT_STATE_DISCONNECTED = 2;
+}
+
+// ConfigSyncStatus represents the unified config synchronization status.
+// This is server-computed based on comparing assigned config hash with agent-reported hash.
+enum ConfigSyncStatus {
+  CONFIG_SYNC_STATUS_UNKNOWN     = 0;  // No assignment or unable to determine
+  CONFIG_SYNC_STATUS_IN_SYNC     = 1;  // Assigned config hash matches reported hash and status is APPLIED
+  CONFIG_SYNC_STATUS_OUT_OF_SYNC = 2;  // Hash mismatch or no status reported
+  CONFIG_SYNC_STATUS_APPLYING    = 3;  // Agent is currently applying the config
+  CONFIG_SYNC_STATUS_ERROR       = 4;  // Agent reported failure applying config
+}
+
+// AgentConnectionState represents the persisted connection state of an agent.
+// This replaces the in-memory AgentTracker state.
+message AgentConnectionState {
+  string agent_id = 1;
+  AgentState state = 2;
+  google.protobuf.Timestamp last_seen = 3;
+  google.protobuf.Timestamp connected_at = 4;
+  google.protobuf.Timestamp disconnected_at = 5;
+  bytes instance_uid = 6;
+  uint64 capabilities = 7;
+  uint64 sequence_num = 8;
 }
 
 // ComponentHealth represents the health status of an agent and its components.

@@ -131,11 +131,11 @@ func (s *Supervisor) startOpAMP() error {
 
 func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 	l := s.logger
+	l.Debug("received message")
 	if incomingCfg := msg.RemoteConfig; incomingCfg != nil {
 		l = l.With("type", "remote-config")
-		l.Info("updating effective configuration")
+		l.Info("received effective configuration update")
 		if err := s.agentDriver.Update(ctx, incomingCfg); err != nil {
-			// TODO : only send failed apply when the write to disk fails in proc manager
 			if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
 				Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_FAILED,
 				LastRemoteConfigHash: s.agentDriver.GetCurrentHash(),
@@ -153,10 +153,12 @@ func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 			l.With("err", err).With("status", "succeeded").Error("failed to report remote config status to upstream server")
 		}
 	}
-	l.Debug("received message")
 }
 
 func (s *Supervisor) Shutdown() error {
+	if err := s.agentDriver.Shutdown(); err != nil {
+		s.logger.With("err", err).Error("failed to shutdown agent driver")
+	}
 	return s.opampClient.Stop(context.TODO())
 }
 

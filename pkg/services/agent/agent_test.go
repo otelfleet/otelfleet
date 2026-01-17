@@ -2,53 +2,29 @@ package agent_test
 
 import (
 	"context"
-	"log/slog"
 	"testing"
 
 	"connectrpc.com/connect"
-	"github.com/cockroachdb/pebble/v2"
-	"github.com/cockroachdb/pebble/v2/vfs"
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
-	"github.com/otelfleet/otelfleet/pkg/services/agent"
-	"github.com/otelfleet/otelfleet/pkg/services/opamp"
-	"github.com/otelfleet/otelfleet/pkg/storage"
-	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
+	"github.com/otelfleet/otelfleet/pkg/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func setupTestServer(t *testing.T) (*agent.AgentServer, storage.KeyValue[*v1alpha1.AgentDescription], opamp.AgentTracker, storage.KeyValue[*protobufs.ComponentHealth], storage.KeyValue[*protobufs.EffectiveConfig], storage.KeyValue[*protobufs.RemoteConfigStatus]) {
-	t.Helper()
-	db, err := pebble.Open("", &pebble.Options{FS: vfs.NewMem()})
-	require.NoError(t, err)
-	t.Cleanup(func() { db.Close() })
-
-	broker := otelpebble.NewKVBroker(db)
-	logger := slog.Default()
-
-	agentStore := storage.NewProtoKV[*v1alpha1.AgentDescription](logger, broker.KeyValue("agents"))
-	tracker := opamp.NewAgentTracker()
-	healthStore := storage.NewProtoKV[*protobufs.ComponentHealth](logger, broker.KeyValue("agent-health"))
-	configStore := storage.NewProtoKV[*protobufs.EffectiveConfig](logger, broker.KeyValue("agent-effective-config"))
-	statusStore := storage.NewProtoKV[*protobufs.RemoteConfigStatus](logger, broker.KeyValue("agent-remote-config-status"))
-	opampDesc := storage.NewProtoKV[*protobufs.AgentDescription](logger, broker.KeyValue("opamp-agent-description"))
-
-	srv := agent.NewAgentServer(logger, agentStore, tracker, healthStore, configStore, statusStore, opampDesc)
-
-	return srv, agentStore, tracker, healthStore, configStore, statusStore
-}
-
 func TestAgentServer_Status_ReturnsStoredData(t *testing.T) {
-	srv, _, tracker, healthStore, configStore, statusStore := setupTestServer(t)
-
+	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
 	agentID := "test-agent-123"
 
-	// Set up agent status in tracker
-	tracker.PutStatus(agentID, &v1alpha1.AgentStatus{
-		State: v1alpha1.AgentState_AGENT_STATE_CONNECTED,
-	})
+	// Set up agent connection state in store
+	require.NoError(t, env.ConnectionStateStore.Put(ctx, agentID, &v1alpha1.AgentConnectionState{
+		AgentId:     agentID,
+		State:       v1alpha1.AgentState_AGENT_STATE_CONNECTED,
+		ConnectedAt: timestamppb.Now(),
+		LastSeen:    timestamppb.Now(),
+	}))
 
 	// Store health data
 	health := &protobufs.ComponentHealth{
@@ -62,7 +38,7 @@ func TestAgentServer_Status_ReturnsStoredData(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, healthStore.Put(ctx, agentID, health))
+	require.NoError(t, env.HealthStore.Put(ctx, agentID, health))
 
 	// Store effective config
 	config := &protobufs.EffectiveConfig{
@@ -75,20 +51,20 @@ func TestAgentServer_Status_ReturnsStoredData(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, configStore.Put(ctx, agentID, config))
+	require.NoError(t, env.EffectiveConfigStore.Put(ctx, agentID, config))
 
 	// Store remote config status
 	remoteStatus := &protobufs.RemoteConfigStatus{
 		LastRemoteConfigHash: []byte("hash-abc"),
 		Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
 	}
-	require.NoError(t, statusStore.Put(ctx, agentID, remoteStatus))
+	require.NoError(t, env.RemoteStatusStore.Put(ctx, agentID, remoteStatus))
 
 	// Call Status RPC
 	req := connect.NewRequest(&v1alpha1.GetAgentStatusRequest{
 		AgentId: agentID,
 	})
-	resp, err := srv.Status(ctx, req)
+	resp, err := env.AgentServer.Status(ctx, req)
 	require.NoError(t, err)
 
 	// Verify response
@@ -113,17 +89,16 @@ func TestAgentServer_Status_ReturnsStoredData(t *testing.T) {
 }
 
 func TestAgentServer_Status_UnknownAgent(t *testing.T) {
-	srv, _, _, _, _, _ := setupTestServer(t)
-
+	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
 
 	req := connect.NewRequest(&v1alpha1.GetAgentStatusRequest{
 		AgentId: "non-existent-agent",
 	})
-	resp, err := srv.Status(ctx, req)
+	resp, err := env.AgentServer.Status(ctx, req)
 	require.NoError(t, err)
 
-	// Should return unknown state when agent not tracked
+	// Should return unknown state when agent not in connection state store
 	assert.Equal(t, v1alpha1.AgentState_AGENT_STATE_UNKNOWN, resp.Msg.Status.State)
 	// Other fields should be nil since no data stored
 	assert.Nil(t, resp.Msg.Status.Health)
@@ -132,26 +107,28 @@ func TestAgentServer_Status_UnknownAgent(t *testing.T) {
 }
 
 func TestAgentServer_Status_PartialData(t *testing.T) {
-	srv, _, tracker, healthStore, _, _ := setupTestServer(t)
-
+	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
 	agentID := "partial-agent"
 
-	// Only set up tracker and health
-	tracker.PutStatus(agentID, &v1alpha1.AgentStatus{
-		State: v1alpha1.AgentState_AGENT_STATE_CONNECTED,
-	})
+	// Only set up connection state and health
+	require.NoError(t, env.ConnectionStateStore.Put(ctx, agentID, &v1alpha1.AgentConnectionState{
+		AgentId:     agentID,
+		State:       v1alpha1.AgentState_AGENT_STATE_CONNECTED,
+		ConnectedAt: timestamppb.Now(),
+		LastSeen:    timestamppb.Now(),
+	}))
 
 	health := &protobufs.ComponentHealth{
 		Healthy: true,
 		Status:  "ok",
 	}
-	require.NoError(t, healthStore.Put(ctx, agentID, health))
+	require.NoError(t, env.HealthStore.Put(ctx, agentID, health))
 
 	req := connect.NewRequest(&v1alpha1.GetAgentStatusRequest{
 		AgentId: agentID,
 	})
-	resp, err := srv.Status(ctx, req)
+	resp, err := env.AgentServer.Status(ctx, req)
 	require.NoError(t, err)
 
 	assert.Equal(t, v1alpha1.AgentState_AGENT_STATE_CONNECTED, resp.Msg.Status.State)
@@ -163,8 +140,7 @@ func TestAgentServer_Status_PartialData(t *testing.T) {
 }
 
 func TestAgentServer_GetAgent_Found(t *testing.T) {
-	srv, agentStore, _, _, _, _ := setupTestServer(t)
-
+	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
 	agentID := "test-agent-get"
 
@@ -173,12 +149,12 @@ func TestAgentServer_GetAgent_Found(t *testing.T) {
 		Id:           agentID,
 		FriendlyName: "Test Agent",
 	}
-	require.NoError(t, agentStore.Put(ctx, agentID, desc))
+	require.NoError(t, env.AgentStore.Put(ctx, agentID, desc))
 
 	req := connect.NewRequest(&v1alpha1.GetAgentRequest{
 		AgentId: agentID,
 	})
-	resp, err := srv.GetAgent(ctx, req)
+	resp, err := env.AgentServer.GetAgent(ctx, req)
 	require.NoError(t, err)
 
 	assert.Equal(t, agentID, resp.Msg.Agent.Id)
@@ -186,14 +162,13 @@ func TestAgentServer_GetAgent_Found(t *testing.T) {
 }
 
 func TestAgentServer_GetAgent_NotFound(t *testing.T) {
-	srv, _, _, _, _, _ := setupTestServer(t)
-
+	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
 
 	req := connect.NewRequest(&v1alpha1.GetAgentRequest{
 		AgentId: "non-existent",
 	})
-	_, err := srv.GetAgent(ctx, req)
+	_, err := env.AgentServer.GetAgent(ctx, req)
 	require.Error(t, err)
 
 	// Should be a NotFound error

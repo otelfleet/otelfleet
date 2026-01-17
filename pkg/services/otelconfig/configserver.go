@@ -15,6 +15,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1/v1alpha1connect"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	"github.com/otelfleet/otelfleet/pkg/util"
+	"github.com/otelfleet/otelfleet/pkg/util/configsync"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
@@ -331,28 +332,19 @@ func (c *ConfigServer) ListConfigAssignments(ctx context.Context, req *connect.R
 	}), nil
 }
 
-// getRemoteConfigStatus returns the application status for an agent's config
+// getRemoteConfigStatus returns the application status for an agent's config.
+// Uses the shared configsync helper for consistent status computation.
 func (c *ConfigServer) getRemoteConfigStatus(ctx context.Context, agentID string, assignedHash []byte) (v1alpha1.ConfigApplicationStatus, string) {
-	remoteStatus, err := c.remoteStatusStore.Get(ctx, agentID)
-	if err != nil {
-		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_PENDING, ""
-	}
+	syncStatus, reason := configsync.ComputeConfigSyncStatus(ctx, agentID, assignedHash, c.remoteStatusStore)
 
-	// Check if the hash matches what we assigned
-	if !bytes.Equal(remoteStatus.GetLastRemoteConfigHash(), assignedHash) {
-		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_PENDING, ""
-	}
-
-	// Map OpAMP status to our status
-	switch remoteStatus.GetStatus() {
-	case protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED:
+	// Map ConfigSyncStatus to ConfigApplicationStatus for backward compatibility
+	switch syncStatus {
+	case agentsv1alpha1.ConfigSyncStatus_CONFIG_SYNC_STATUS_IN_SYNC:
 		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_APPLIED, ""
-	case protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLYING:
-		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_PENDING, ""
-	case protobufs.RemoteConfigStatuses_RemoteConfigStatuses_FAILED:
-		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_FAILED, remoteStatus.GetErrorMessage()
+	case agentsv1alpha1.ConfigSyncStatus_CONFIG_SYNC_STATUS_ERROR:
+		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_FAILED, reason
 	default:
-		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_PENDING, ""
+		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_PENDING, reason
 	}
 }
 

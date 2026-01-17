@@ -1,5 +1,5 @@
-import { AgentService, AgentState as AgentStateEnum, RemoteConfigStatuses } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import type { AgentDescriptionAndStatus, AgentState, ComponentHealth, RemoteConfigStatus } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+import { AgentService, AgentState as AgentStateEnum, ConfigSyncStatus as ConfigSyncStatusEnum } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+import type { AgentDescriptionAndStatus, AgentState, ComponentHealth, ConfigSyncStatus } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import { ConfigService, ConfigApplicationStatus } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
 import type { ConfigReference, ConfigAssignmentInfo } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
 import { useClient } from '../api';
@@ -45,22 +45,19 @@ function HealthBadge({ health }: { health?: ComponentHealth }) {
     );
 }
 
-function ConfigStatusBadge({ configStatus }: { configStatus?: RemoteConfigStatus }) {
-    if (!configStatus) {
-        return <Badge color="gray" variant="filled" radius="sm">Unset</Badge>
-    }
-
+function ConfigSyncStatusBadge({ status, reason }: { status?: ConfigSyncStatus; reason?: string }) {
     const statusMap: Record<number, { color: string; label: string }> = {
-        [RemoteConfigStatuses.UNSET]: { color: 'gray', label: 'Unset' },
-        [RemoteConfigStatuses.APPLIED]: { color: 'green', label: 'Applied' },
-        [RemoteConfigStatuses.APPLYING]: { color: 'blue', label: 'Applying' },
-        [RemoteConfigStatuses.FAILED]: { color: 'red', label: 'Failed' },
+        [ConfigSyncStatusEnum.UNKNOWN]: { color: 'gray', label: 'Unknown' },
+        [ConfigSyncStatusEnum.IN_SYNC]: { color: 'green', label: 'In Sync' },
+        [ConfigSyncStatusEnum.OUT_OF_SYNC]: { color: 'yellow', label: 'Out of Sync' },
+        [ConfigSyncStatusEnum.APPLYING]: { color: 'blue', label: 'Applying' },
+        [ConfigSyncStatusEnum.ERROR]: { color: 'red', label: 'Error' },
     };
 
-    const { color, label } = statusMap[configStatus.status] ?? { color: 'gray', label: 'Unknown' };
+    const { color, label } = statusMap[status ?? 0] ?? { color: 'gray', label: 'Unknown' };
 
     return (
-        <Tooltip label={configStatus.errorMessage} disabled={!configStatus.errorMessage}>
+        <Tooltip label={reason} disabled={!reason}>
             <Badge color={color} variant="filled" radius="sm">
                 {label}
             </Badge>
@@ -198,10 +195,13 @@ export const AgentPage = () => {
         },
         {
             key: 'configStatus',
-            label: 'Config Status',
+            label: 'Config Sync',
             visible: true,
             render: (_: unknown, row: AgentDescriptionAndStatus) => {
-                return <ConfigStatusBadge configStatus={row.status?.remoteConfigStatus} />
+                return <ConfigSyncStatusBadge
+                    status={row.status?.configSyncStatus}
+                    reason={row.status?.configSyncReason}
+                />
             }
         },
         {
