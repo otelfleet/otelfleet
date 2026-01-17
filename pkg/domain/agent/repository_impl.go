@@ -210,3 +210,50 @@ func (r *repository) computeConfigSync(ctx context.Context, agentID string) (Con
 	}
 	return ConvertConfigSyncStatus(v1Status), reason
 }
+
+// Delete removes an agent and all associated data from all stores.
+// This is a best-effort operation - it attempts to delete from all stores
+// even if some deletions fail. Registry is deleted last to ensure the agent
+// remains "visible" until cleanup is complete.
+func (r *repository) Delete(ctx context.Context, agentID string) error {
+	// Check if agent exists first
+	exists, err := r.Exists(ctx, agentID)
+	if err != nil {
+		return fmt.Errorf("failed to check agent existence: %w", err)
+	}
+	if !exists {
+		return ErrAgentNotFound
+	}
+
+	r.logger.With("agent_id", agentID).Info("deleting agent from all stores")
+
+	// Delete from all stores in reverse dependency order (registry last)
+	// Log failures but continue - agent may not have data in all stores
+	stores := []struct {
+		name  string
+		store interface{ Delete(context.Context, string) error }
+	}{
+		{"configAssignment", r.configAssignmentStore},
+		{"remoteStatus", r.remoteStatusStore},
+		{"effective", r.effectiveStore},
+		{"health", r.healthStore},
+		{"connection", r.connectionStore},
+		{"attributes", r.attributesStore},
+	}
+
+	for _, s := range stores {
+		if err := s.store.Delete(ctx, agentID); err != nil {
+			if !grpcutil.IsErrorNotFound(err) {
+				r.logger.With("agent_id", agentID, "store", s.name, "err", err).Warn("failed to delete from store")
+			}
+		}
+	}
+
+	// Delete registry last - this gates Exists() checks
+	if err := r.registryStore.Delete(ctx, agentID); err != nil {
+		return fmt.Errorf("failed to delete agent registry: %w", err)
+	}
+
+	r.logger.With("agent_id", agentID).Info("agent deleted successfully")
+	return nil
+}

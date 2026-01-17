@@ -1,6 +1,7 @@
 syntax = "proto3";
 package config.v1alpha1;
 
+import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1";
@@ -9,6 +10,7 @@ service AgentService {
   rpc ListAgents(ListAgentsRequest) returns (ListAgentsResponse);
   rpc GetAgent(GetAgentRequest) returns (GetAgentResponse);
   rpc Status(GetAgentStatusRequest) returns (GetAgentStatusResponse);
+  rpc DeleteAgent(DeleteAgentRequest) returns (google.protobuf.Empty);
 }
 
 message ListAgentsRequest {
@@ -47,6 +49,10 @@ message GetAgentStatusRequest {
 
 message GetAgentStatusResponse {
   AgentStatus status = 1;
+}
+
+message DeleteAgentRequest {
+  string agent_id = 1;
 }
 
 message AgentStatus {

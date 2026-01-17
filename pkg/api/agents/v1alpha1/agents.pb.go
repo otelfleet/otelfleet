@@ -9,6 +9,7 @@ package v1alpha1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -552,6 +553,50 @@ func (x *GetAgentStatusResponse) GetStatus() *AgentStatus {
 	return nil
 }
 
+type DeleteAgentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteAgentRequest) Reset() {
+	*x = DeleteAgentRequest{}
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteAgentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteAgentRequest) ProtoMessage() {}
+
+func (x *DeleteAgentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteAgentRequest.ProtoReflect.Descriptor instead.
+func (*DeleteAgentRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *DeleteAgentRequest) GetAgentId() string {
+	if x != nil {
+		return x.AgentId
+	}
+	return ""
+}
+
 type AgentStatus struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	State              AgentState             `protobuf:"varint,1,opt,name=state,proto3,enum=config.v1alpha1.AgentState" json:"state,omitempty"`
@@ -570,7 +615,7 @@ type AgentStatus struct {
 
 func (x *AgentStatus) Reset() {
 	*x = AgentStatus{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[8]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -582,7 +627,7 @@ func (x *AgentStatus) String() string {
 func (*AgentStatus) ProtoMessage() {}
 
 func (x *AgentStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[8]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -595,7 +640,7 @@ func (x *AgentStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentStatus.ProtoReflect.Descriptor instead.
 func (*AgentStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{8}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *AgentStatus) GetState() AgentState {
@@ -678,7 +723,7 @@ type AgentRegistration struct {
 
 func (x *AgentRegistration) Reset() {
 	*x = AgentRegistration{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[9]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -690,7 +735,7 @@ func (x *AgentRegistration) String() string {
 func (*AgentRegistration) ProtoMessage() {}
 
 func (x *AgentRegistration) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[9]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -703,7 +748,7 @@ func (x *AgentRegistration) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRegistration.ProtoReflect.Descriptor instead.
 func (*AgentRegistration) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{9}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *AgentRegistration) GetId() string {
@@ -760,7 +805,7 @@ type AgentDescription struct {
 
 func (x *AgentDescription) Reset() {
 	*x = AgentDescription{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[10]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -772,7 +817,7 @@ func (x *AgentDescription) String() string {
 func (*AgentDescription) ProtoMessage() {}
 
 func (x *AgentDescription) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[10]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -785,7 +830,7 @@ func (x *AgentDescription) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentDescription.ProtoReflect.Descriptor instead.
 func (*AgentDescription) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{10}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *AgentDescription) GetId() string {
@@ -834,7 +879,7 @@ type KeyValue struct {
 
 func (x *KeyValue) Reset() {
 	*x = KeyValue{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[11]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -846,7 +891,7 @@ func (x *KeyValue) String() string {
 func (*KeyValue) ProtoMessage() {}
 
 func (x *KeyValue) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[11]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -859,7 +904,7 @@ func (x *KeyValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyValue.ProtoReflect.Descriptor instead.
 func (*KeyValue) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{11}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *KeyValue) GetKey() string {
@@ -895,7 +940,7 @@ type AnyValue struct {
 
 func (x *AnyValue) Reset() {
 	*x = AnyValue{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[12]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -907,7 +952,7 @@ func (x *AnyValue) String() string {
 func (*AnyValue) ProtoMessage() {}
 
 func (x *AnyValue) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[12]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -920,7 +965,7 @@ func (x *AnyValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AnyValue.ProtoReflect.Descriptor instead.
 func (*AnyValue) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{12}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *AnyValue) GetValue() isAnyValue_Value {
@@ -1049,7 +1094,7 @@ type ArrayValue struct {
 
 func (x *ArrayValue) Reset() {
 	*x = ArrayValue{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[13]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1061,7 +1106,7 @@ func (x *ArrayValue) String() string {
 func (*ArrayValue) ProtoMessage() {}
 
 func (x *ArrayValue) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[13]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1074,7 +1119,7 @@ func (x *ArrayValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArrayValue.ProtoReflect.Descriptor instead.
 func (*ArrayValue) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{13}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ArrayValue) GetValues() []*AnyValue {
@@ -1094,7 +1139,7 @@ type KeyValueList struct {
 
 func (x *KeyValueList) Reset() {
 	*x = KeyValueList{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[14]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1106,7 +1151,7 @@ func (x *KeyValueList) String() string {
 func (*KeyValueList) ProtoMessage() {}
 
 func (x *KeyValueList) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[14]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1119,7 +1164,7 @@ func (x *KeyValueList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyValueList.ProtoReflect.Descriptor instead.
 func (*KeyValueList) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{14}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *KeyValueList) GetValues() []*KeyValue {
@@ -1147,7 +1192,7 @@ type AgentConnectionState struct {
 
 func (x *AgentConnectionState) Reset() {
 	*x = AgentConnectionState{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[15]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1159,7 +1204,7 @@ func (x *AgentConnectionState) String() string {
 func (*AgentConnectionState) ProtoMessage() {}
 
 func (x *AgentConnectionState) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[15]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1172,7 +1217,7 @@ func (x *AgentConnectionState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentConnectionState.ProtoReflect.Descriptor instead.
 func (*AgentConnectionState) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{15}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *AgentConnectionState) GetAgentId() string {
@@ -1246,7 +1291,7 @@ type ComponentHealth struct {
 
 func (x *ComponentHealth) Reset() {
 	*x = ComponentHealth{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[16]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1258,7 +1303,7 @@ func (x *ComponentHealth) String() string {
 func (*ComponentHealth) ProtoMessage() {}
 
 func (x *ComponentHealth) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[16]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1271,7 +1316,7 @@ func (x *ComponentHealth) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ComponentHealth.ProtoReflect.Descriptor instead.
 func (*ComponentHealth) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{16}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ComponentHealth) GetHealthy() bool {
@@ -1326,7 +1371,7 @@ type EffectiveConfig struct {
 
 func (x *EffectiveConfig) Reset() {
 	*x = EffectiveConfig{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[17]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1338,7 +1383,7 @@ func (x *EffectiveConfig) String() string {
 func (*EffectiveConfig) ProtoMessage() {}
 
 func (x *EffectiveConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[17]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1351,7 +1396,7 @@ func (x *EffectiveConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EffectiveConfig.ProtoReflect.Descriptor instead.
 func (*EffectiveConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{17}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *EffectiveConfig) GetConfigMap() *AgentConfigMap {
@@ -1371,7 +1416,7 @@ type AgentConfigMap struct {
 
 func (x *AgentConfigMap) Reset() {
 	*x = AgentConfigMap{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[18]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1383,7 +1428,7 @@ func (x *AgentConfigMap) String() string {
 func (*AgentConfigMap) ProtoMessage() {}
 
 func (x *AgentConfigMap) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[18]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1396,7 +1441,7 @@ func (x *AgentConfigMap) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentConfigMap.ProtoReflect.Descriptor instead.
 func (*AgentConfigMap) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{18}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *AgentConfigMap) GetConfigMap() map[string]*AgentConfigFile {
@@ -1417,7 +1462,7 @@ type AgentConfigFile struct {
 
 func (x *AgentConfigFile) Reset() {
 	*x = AgentConfigFile{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[19]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1429,7 +1474,7 @@ func (x *AgentConfigFile) String() string {
 func (*AgentConfigFile) ProtoMessage() {}
 
 func (x *AgentConfigFile) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[19]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1442,7 +1487,7 @@ func (x *AgentConfigFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentConfigFile.ProtoReflect.Descriptor instead.
 func (*AgentConfigFile) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{19}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *AgentConfigFile) GetBody() []byte {
@@ -1471,7 +1516,7 @@ type RemoteConfigStatus struct {
 
 func (x *RemoteConfigStatus) Reset() {
 	*x = RemoteConfigStatus{}
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[20]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1483,7 +1528,7 @@ func (x *RemoteConfigStatus) String() string {
 func (*RemoteConfigStatus) ProtoMessage() {}
 
 func (x *RemoteConfigStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[20]
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1496,7 +1541,7 @@ func (x *RemoteConfigStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoteConfigStatus.ProtoReflect.Descriptor instead.
 func (*RemoteConfigStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{20}
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *RemoteConfigStatus) GetLastRemoteConfigHash() []byte {
@@ -1524,7 +1569,7 @@ var File_pkg_api_agents_v1alpha1_agents_proto protoreflect.FileDescriptor
 
 const file_pkg_api_agents_v1alpha1_agents_proto_rawDesc = "" +
 	"\n" +
-	"$pkg/api/agents/v1alpha1/agents.proto\x12\x0fconfig.v1alpha1\x1a\x1fgoogle/protobuf/timestamp.proto\"4\n" +
+	"$pkg/api/agents/v1alpha1/agents.proto\x12\x0fconfig.v1alpha1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"4\n" +
 	"\x11ListAgentsRequest\x12\x1f\n" +
 	"\vwith_status\x18\x01 \x01(\bR\n" +
 	"withStatus\"X\n" +
@@ -1543,7 +1588,9 @@ const file_pkg_api_agents_v1alpha1_agents_proto_rawDesc = "" +
 	"\x15GetAgentStatusRequest\x12\x19\n" +
 	"\bagent_id\x18\x01 \x01(\tR\aagentId\"N\n" +
 	"\x16GetAgentStatusResponse\x124\n" +
-	"\x06status\x18\x01 \x01(\v2\x1c.config.v1alpha1.AgentStatusR\x06status\"\xda\x04\n" +
+	"\x06status\x18\x01 \x01(\v2\x1c.config.v1alpha1.AgentStatusR\x06status\"/\n" +
+	"\x12DeleteAgentRequest\x12\x19\n" +
+	"\bagent_id\x18\x01 \x01(\tR\aagentId\"\xda\x04\n" +
 	"\vAgentStatus\x121\n" +
 	"\x05state\x18\x01 \x01(\x0e2\x1b.config.v1alpha1.AgentStateR\x05state\x128\n" +
 	"\x06health\x18\x02 \x01(\v2 .config.v1alpha1.ComponentHealthR\x06health\x12K\n" +
@@ -1637,12 +1684,13 @@ const file_pkg_api_agents_v1alpha1_agents_proto_rawDesc = "" +
 	"\x1cREMOTE_CONFIG_STATUSES_UNSET\x10\x00\x12\"\n" +
 	"\x1eREMOTE_CONFIG_STATUSES_APPLIED\x10\x01\x12#\n" +
 	"\x1fREMOTE_CONFIG_STATUSES_APPLYING\x10\x02\x12!\n" +
-	"\x1dREMOTE_CONFIG_STATUSES_FAILED\x10\x032\x91\x02\n" +
+	"\x1dREMOTE_CONFIG_STATUSES_FAILED\x10\x032\xdd\x02\n" +
 	"\fAgentService\x12U\n" +
 	"\n" +
 	"ListAgents\x12\".config.v1alpha1.ListAgentsRequest\x1a#.config.v1alpha1.ListAgentsResponse\x12O\n" +
 	"\bGetAgent\x12 .config.v1alpha1.GetAgentRequest\x1a!.config.v1alpha1.GetAgentResponse\x12Y\n" +
-	"\x06Status\x12&.config.v1alpha1.GetAgentStatusRequest\x1a'.config.v1alpha1.GetAgentStatusResponseB8Z6github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1b\x06proto3"
+	"\x06Status\x12&.config.v1alpha1.GetAgentStatusRequest\x1a'.config.v1alpha1.GetAgentStatusResponse\x12J\n" +
+	"\vDeleteAgent\x12#.config.v1alpha1.DeleteAgentRequest\x1a\x16.google.protobuf.EmptyB8Z6github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1b\x06proto3"
 
 var (
 	file_pkg_api_agents_v1alpha1_agents_proto_rawDescOnce sync.Once
@@ -1657,7 +1705,7 @@ func file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP() []byte {
 }
 
 var file_pkg_api_agents_v1alpha1_agents_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_pkg_api_agents_v1alpha1_agents_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_pkg_api_agents_v1alpha1_agents_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_pkg_api_agents_v1alpha1_agents_proto_goTypes = []any{
 	(AgentState)(0),                   // 0: config.v1alpha1.AgentState
 	(ConfigSyncStatus)(0),             // 1: config.v1alpha1.ConfigSyncStatus
@@ -1670,66 +1718,70 @@ var file_pkg_api_agents_v1alpha1_agents_proto_goTypes = []any{
 	(*GetAgentResponse)(nil),          // 8: config.v1alpha1.GetAgentResponse
 	(*GetAgentStatusRequest)(nil),     // 9: config.v1alpha1.GetAgentStatusRequest
 	(*GetAgentStatusResponse)(nil),    // 10: config.v1alpha1.GetAgentStatusResponse
-	(*AgentStatus)(nil),               // 11: config.v1alpha1.AgentStatus
-	(*AgentRegistration)(nil),         // 12: config.v1alpha1.AgentRegistration
-	(*AgentDescription)(nil),          // 13: config.v1alpha1.AgentDescription
-	(*KeyValue)(nil),                  // 14: config.v1alpha1.KeyValue
-	(*AnyValue)(nil),                  // 15: config.v1alpha1.AnyValue
-	(*ArrayValue)(nil),                // 16: config.v1alpha1.ArrayValue
-	(*KeyValueList)(nil),              // 17: config.v1alpha1.KeyValueList
-	(*AgentConnectionState)(nil),      // 18: config.v1alpha1.AgentConnectionState
-	(*ComponentHealth)(nil),           // 19: config.v1alpha1.ComponentHealth
-	(*EffectiveConfig)(nil),           // 20: config.v1alpha1.EffectiveConfig
-	(*AgentConfigMap)(nil),            // 21: config.v1alpha1.AgentConfigMap
-	(*AgentConfigFile)(nil),           // 22: config.v1alpha1.AgentConfigFile
-	(*RemoteConfigStatus)(nil),        // 23: config.v1alpha1.RemoteConfigStatus
-	nil,                               // 24: config.v1alpha1.ComponentHealth.ComponentHealthMapEntry
-	nil,                               // 25: config.v1alpha1.AgentConfigMap.ConfigMapEntry
-	(*timestamppb.Timestamp)(nil),     // 26: google.protobuf.Timestamp
+	(*DeleteAgentRequest)(nil),        // 11: config.v1alpha1.DeleteAgentRequest
+	(*AgentStatus)(nil),               // 12: config.v1alpha1.AgentStatus
+	(*AgentRegistration)(nil),         // 13: config.v1alpha1.AgentRegistration
+	(*AgentDescription)(nil),          // 14: config.v1alpha1.AgentDescription
+	(*KeyValue)(nil),                  // 15: config.v1alpha1.KeyValue
+	(*AnyValue)(nil),                  // 16: config.v1alpha1.AnyValue
+	(*ArrayValue)(nil),                // 17: config.v1alpha1.ArrayValue
+	(*KeyValueList)(nil),              // 18: config.v1alpha1.KeyValueList
+	(*AgentConnectionState)(nil),      // 19: config.v1alpha1.AgentConnectionState
+	(*ComponentHealth)(nil),           // 20: config.v1alpha1.ComponentHealth
+	(*EffectiveConfig)(nil),           // 21: config.v1alpha1.EffectiveConfig
+	(*AgentConfigMap)(nil),            // 22: config.v1alpha1.AgentConfigMap
+	(*AgentConfigFile)(nil),           // 23: config.v1alpha1.AgentConfigFile
+	(*RemoteConfigStatus)(nil),        // 24: config.v1alpha1.RemoteConfigStatus
+	nil,                               // 25: config.v1alpha1.ComponentHealth.ComponentHealthMapEntry
+	nil,                               // 26: config.v1alpha1.AgentConfigMap.ConfigMapEntry
+	(*timestamppb.Timestamp)(nil),     // 27: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),             // 28: google.protobuf.Empty
 }
 var file_pkg_api_agents_v1alpha1_agents_proto_depIdxs = []int32{
 	6,  // 0: config.v1alpha1.ListAgentsResponse.agents:type_name -> config.v1alpha1.AgentDescriptionAndStatus
-	12, // 1: config.v1alpha1.AgentView.registration:type_name -> config.v1alpha1.AgentRegistration
-	11, // 2: config.v1alpha1.AgentView.status:type_name -> config.v1alpha1.AgentStatus
-	13, // 3: config.v1alpha1.AgentDescriptionAndStatus.agent:type_name -> config.v1alpha1.AgentDescription
-	11, // 4: config.v1alpha1.AgentDescriptionAndStatus.status:type_name -> config.v1alpha1.AgentStatus
-	13, // 5: config.v1alpha1.GetAgentResponse.agent:type_name -> config.v1alpha1.AgentDescription
-	11, // 6: config.v1alpha1.GetAgentStatusResponse.status:type_name -> config.v1alpha1.AgentStatus
+	13, // 1: config.v1alpha1.AgentView.registration:type_name -> config.v1alpha1.AgentRegistration
+	12, // 2: config.v1alpha1.AgentView.status:type_name -> config.v1alpha1.AgentStatus
+	14, // 3: config.v1alpha1.AgentDescriptionAndStatus.agent:type_name -> config.v1alpha1.AgentDescription
+	12, // 4: config.v1alpha1.AgentDescriptionAndStatus.status:type_name -> config.v1alpha1.AgentStatus
+	14, // 5: config.v1alpha1.GetAgentResponse.agent:type_name -> config.v1alpha1.AgentDescription
+	12, // 6: config.v1alpha1.GetAgentStatusResponse.status:type_name -> config.v1alpha1.AgentStatus
 	0,  // 7: config.v1alpha1.AgentStatus.state:type_name -> config.v1alpha1.AgentState
-	19, // 8: config.v1alpha1.AgentStatus.health:type_name -> config.v1alpha1.ComponentHealth
-	20, // 9: config.v1alpha1.AgentStatus.effective_config:type_name -> config.v1alpha1.EffectiveConfig
-	23, // 10: config.v1alpha1.AgentStatus.remote_config_status:type_name -> config.v1alpha1.RemoteConfigStatus
-	26, // 11: config.v1alpha1.AgentStatus.last_seen:type_name -> google.protobuf.Timestamp
+	20, // 8: config.v1alpha1.AgentStatus.health:type_name -> config.v1alpha1.ComponentHealth
+	21, // 9: config.v1alpha1.AgentStatus.effective_config:type_name -> config.v1alpha1.EffectiveConfig
+	24, // 10: config.v1alpha1.AgentStatus.remote_config_status:type_name -> config.v1alpha1.RemoteConfigStatus
+	27, // 11: config.v1alpha1.AgentStatus.last_seen:type_name -> google.protobuf.Timestamp
 	1,  // 12: config.v1alpha1.AgentStatus.config_sync_status:type_name -> config.v1alpha1.ConfigSyncStatus
-	26, // 13: config.v1alpha1.AgentStatus.connected_at:type_name -> google.protobuf.Timestamp
-	26, // 14: config.v1alpha1.AgentStatus.disconnected_at:type_name -> google.protobuf.Timestamp
-	14, // 15: config.v1alpha1.AgentRegistration.identifying_attributes:type_name -> config.v1alpha1.KeyValue
-	14, // 16: config.v1alpha1.AgentRegistration.non_identifying_attributes:type_name -> config.v1alpha1.KeyValue
-	14, // 17: config.v1alpha1.AgentDescription.identifying_attributes:type_name -> config.v1alpha1.KeyValue
-	14, // 18: config.v1alpha1.AgentDescription.non_identifying_attributes:type_name -> config.v1alpha1.KeyValue
-	15, // 19: config.v1alpha1.KeyValue.value:type_name -> config.v1alpha1.AnyValue
-	16, // 20: config.v1alpha1.AnyValue.array_value:type_name -> config.v1alpha1.ArrayValue
-	17, // 21: config.v1alpha1.AnyValue.kvlist_value:type_name -> config.v1alpha1.KeyValueList
-	15, // 22: config.v1alpha1.ArrayValue.values:type_name -> config.v1alpha1.AnyValue
-	14, // 23: config.v1alpha1.KeyValueList.values:type_name -> config.v1alpha1.KeyValue
+	27, // 13: config.v1alpha1.AgentStatus.connected_at:type_name -> google.protobuf.Timestamp
+	27, // 14: config.v1alpha1.AgentStatus.disconnected_at:type_name -> google.protobuf.Timestamp
+	15, // 15: config.v1alpha1.AgentRegistration.identifying_attributes:type_name -> config.v1alpha1.KeyValue
+	15, // 16: config.v1alpha1.AgentRegistration.non_identifying_attributes:type_name -> config.v1alpha1.KeyValue
+	15, // 17: config.v1alpha1.AgentDescription.identifying_attributes:type_name -> config.v1alpha1.KeyValue
+	15, // 18: config.v1alpha1.AgentDescription.non_identifying_attributes:type_name -> config.v1alpha1.KeyValue
+	16, // 19: config.v1alpha1.KeyValue.value:type_name -> config.v1alpha1.AnyValue
+	17, // 20: config.v1alpha1.AnyValue.array_value:type_name -> config.v1alpha1.ArrayValue
+	18, // 21: config.v1alpha1.AnyValue.kvlist_value:type_name -> config.v1alpha1.KeyValueList
+	16, // 22: config.v1alpha1.ArrayValue.values:type_name -> config.v1alpha1.AnyValue
+	15, // 23: config.v1alpha1.KeyValueList.values:type_name -> config.v1alpha1.KeyValue
 	0,  // 24: config.v1alpha1.AgentConnectionState.state:type_name -> config.v1alpha1.AgentState
-	26, // 25: config.v1alpha1.AgentConnectionState.last_seen:type_name -> google.protobuf.Timestamp
-	26, // 26: config.v1alpha1.AgentConnectionState.connected_at:type_name -> google.protobuf.Timestamp
-	26, // 27: config.v1alpha1.AgentConnectionState.disconnected_at:type_name -> google.protobuf.Timestamp
-	24, // 28: config.v1alpha1.ComponentHealth.component_health_map:type_name -> config.v1alpha1.ComponentHealth.ComponentHealthMapEntry
-	21, // 29: config.v1alpha1.EffectiveConfig.config_map:type_name -> config.v1alpha1.AgentConfigMap
-	25, // 30: config.v1alpha1.AgentConfigMap.config_map:type_name -> config.v1alpha1.AgentConfigMap.ConfigMapEntry
+	27, // 25: config.v1alpha1.AgentConnectionState.last_seen:type_name -> google.protobuf.Timestamp
+	27, // 26: config.v1alpha1.AgentConnectionState.connected_at:type_name -> google.protobuf.Timestamp
+	27, // 27: config.v1alpha1.AgentConnectionState.disconnected_at:type_name -> google.protobuf.Timestamp
+	25, // 28: config.v1alpha1.ComponentHealth.component_health_map:type_name -> config.v1alpha1.ComponentHealth.ComponentHealthMapEntry
+	22, // 29: config.v1alpha1.EffectiveConfig.config_map:type_name -> config.v1alpha1.AgentConfigMap
+	26, // 30: config.v1alpha1.AgentConfigMap.config_map:type_name -> config.v1alpha1.AgentConfigMap.ConfigMapEntry
 	2,  // 31: config.v1alpha1.RemoteConfigStatus.status:type_name -> config.v1alpha1.RemoteConfigStatuses
-	19, // 32: config.v1alpha1.ComponentHealth.ComponentHealthMapEntry.value:type_name -> config.v1alpha1.ComponentHealth
-	22, // 33: config.v1alpha1.AgentConfigMap.ConfigMapEntry.value:type_name -> config.v1alpha1.AgentConfigFile
+	20, // 32: config.v1alpha1.ComponentHealth.ComponentHealthMapEntry.value:type_name -> config.v1alpha1.ComponentHealth
+	23, // 33: config.v1alpha1.AgentConfigMap.ConfigMapEntry.value:type_name -> config.v1alpha1.AgentConfigFile
 	3,  // 34: config.v1alpha1.AgentService.ListAgents:input_type -> config.v1alpha1.ListAgentsRequest
 	7,  // 35: config.v1alpha1.AgentService.GetAgent:input_type -> config.v1alpha1.GetAgentRequest
 	9,  // 36: config.v1alpha1.AgentService.Status:input_type -> config.v1alpha1.GetAgentStatusRequest
-	4,  // 37: config.v1alpha1.AgentService.ListAgents:output_type -> config.v1alpha1.ListAgentsResponse
-	8,  // 38: config.v1alpha1.AgentService.GetAgent:output_type -> config.v1alpha1.GetAgentResponse
-	10, // 39: config.v1alpha1.AgentService.Status:output_type -> config.v1alpha1.GetAgentStatusResponse
-	37, // [37:40] is the sub-list for method output_type
-	34, // [34:37] is the sub-list for method input_type
+	11, // 37: config.v1alpha1.AgentService.DeleteAgent:input_type -> config.v1alpha1.DeleteAgentRequest
+	4,  // 38: config.v1alpha1.AgentService.ListAgents:output_type -> config.v1alpha1.ListAgentsResponse
+	8,  // 39: config.v1alpha1.AgentService.GetAgent:output_type -> config.v1alpha1.GetAgentResponse
+	10, // 40: config.v1alpha1.AgentService.Status:output_type -> config.v1alpha1.GetAgentStatusResponse
+	28, // 41: config.v1alpha1.AgentService.DeleteAgent:output_type -> google.protobuf.Empty
+	38, // [38:42] is the sub-list for method output_type
+	34, // [34:38] is the sub-list for method input_type
 	34, // [34:34] is the sub-list for extension type_name
 	34, // [34:34] is the sub-list for extension extendee
 	0,  // [0:34] is the sub-list for field type_name
@@ -1740,7 +1792,7 @@ func file_pkg_api_agents_v1alpha1_agents_proto_init() {
 	if File_pkg_api_agents_v1alpha1_agents_proto != nil {
 		return
 	}
-	file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[12].OneofWrappers = []any{
+	file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[13].OneofWrappers = []any{
 		(*AnyValue_StringValue)(nil),
 		(*AnyValue_BoolValue)(nil),
 		(*AnyValue_IntValue)(nil),
@@ -1755,7 +1807,7 @@ func file_pkg_api_agents_v1alpha1_agents_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_agents_v1alpha1_agents_proto_rawDesc), len(file_pkg_api_agents_v1alpha1_agents_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   23,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

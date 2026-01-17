@@ -33,4 +33,8 @@ type Repository interface {
 
 	// GetConnectionState retrieves only connection state (for OpAMP server optimization)
 	GetConnectionState(ctx context.Context, agentID string) (*ConnectionState, error)
+
+	// Delete removes an agent and all associated data from all stores.
+	// Returns ErrAgentNotFound if the agent does not exist.
+	Delete(ctx context.Context, agentID string) error
 }
