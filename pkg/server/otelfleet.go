@@ -24,6 +24,7 @@ import (
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
+	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	logutil "github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/services/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/bootstrap"
@@ -61,7 +62,7 @@ type logger struct {
 
 // The various modules that make up OtelFleet
 const (
-	All           = "all"
+	All              = "all"
 	Storage          = "storage"
 	Bootstrap        = "bootstrap"
 	ServerService    = "server"
@@ -108,6 +109,10 @@ type OtelFleet struct {
 	agentDeploymentStore storage.KeyValue[*configv1alpha1.AgentDeploymentStatus]
 	// store for persisted connection state (replaces in-memory agentTracker)
 	connectionStateStore storage.KeyValue[*agentsv1alpha1.AgentConnectionState]
+
+	// Agent repository - unified access to agent data
+	agentRepo agentdomain.Repository
+
 	opampServer          *opamp.Server
 	configServer         *otelconfig.ConfigServer
 	deploymentController *deployment.Controller
@@ -228,16 +233,28 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("store", "agent-connection-state"),
 			o.store.KeyValue("agent-connection-state"),
 		)
+
+		// Create the agent repository with all the underlying stores
+		o.agentRepo = agentdomain.NewRepository(
+			o.logger.With("component", "agent-repository"),
+			o.agentStore,
+			o.opampAgentDescription,
+			o.connectionStateStore,
+			o.agentHealthStore,
+			o.agentEffectiveConfig,
+			o.agentRemoteConfigStore,
+			o.configAssignmentStore,
+		)
+
 		return storeSvc, nil
 	}, modules.UserInvisibleModule)
 
 	mm.RegisterModule(Bootstrap, func() (services.Service, error) {
 		bootstrapSvc := bootstrap.NewBootstrapServer(
 			o.logger.With("service", Bootstrap),
-			nil,
+			nil, // TODO: privateKey for secure bootstrap
 			o.tokenStore,
-			o.opampAgentStore,
-			o.agentStore,
+			o.agentRepo,
 			o.configStore,
 			o.bootstrapConfigStore,
 			o.assignmentConfigStore,
@@ -254,7 +271,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.defaultConfigStore,
 			o.assignmentConfigStore,
 			o.configAssignmentStore,
-			o.agentStore,
+			o.agentRepo,
 			o.agentEffectiveConfig,
 			o.agentRemoteConfigStore,
 		)
@@ -267,12 +284,7 @@ func (o *OtelFleet) setupModuleManager() error {
 	mm.RegisterModule(OpAmp, func() (services.Service, error) {
 		srv := opamp.NewServer(
 			o.logger.With("service", OpAmp),
-			o.opampAgentStore,
-			o.connectionStateStore,
-			o.agentHealthStore,
-			o.agentEffectiveConfig,
-			o.agentRemoteConfigStore,
-			o.opampAgentDescription,
+			o.agentRepo,
 			o.assignmentConfigStore,
 		)
 		o.opampServer = srv
@@ -286,13 +298,7 @@ func (o *OtelFleet) setupModuleManager() error {
 	mm.RegisterModule(AgentManager, func() (services.Service, error) {
 		srv := agent.NewAgentServer(
 			o.logger.With("service", AgentManager),
-			o.agentStore,
-			o.connectionStateStore,
-			o.configAssignmentStore,
-			o.agentHealthStore,
-			o.agentEffectiveConfig,
-			o.agentRemoteConfigStore,
-			o.opampAgentDescription,
+			o.agentRepo,
 		)
 		srv.ConfigureHTTP(o.server.HTTP)
 		return srv, nil
@@ -304,7 +310,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.deploymentStore,
 			o.agentDeploymentStore,
 			o.configStore,
-			o.agentStore,
+			o.agentRepo,
 		)
 		o.deploymentController = ctrl
 		// Wire up the config assigner so the deployment controller can assign configs

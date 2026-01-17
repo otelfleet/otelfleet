@@ -54,6 +54,7 @@ func main() {
 	}
 
 	// FIXME: backoff retry
+	// TODO : bootstrap response should include the labels of the token.
 	result, err := client.BootstrapAgent(ctx, agentID, agentName, bootstrapToken)
 	if err != nil {
 		logger.With("err", err).Error("failed to bootstrap agent")
@@ -65,6 +66,7 @@ func main() {
 		result.TLSConfig,
 		opAmpAddr,
 		agentID,
+		supervisor.ExtraAttributes{},
 	)
 	logger.With("agentID", agentID.UniqueIdentifier().UUID).Info("otelfleet agent starting...")
 	if err := supervisor.Start(); err != nil {

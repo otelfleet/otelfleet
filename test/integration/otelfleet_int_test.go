@@ -443,10 +443,19 @@ func TestConfigAssignment_AssignByLabels(t *testing.T) {
 	}))
 	require.NoError(t, err)
 
-	// Create agents with different labels
-	env.NewAgentWithLabels("prod-us-agent", map[string]string{"env": "prod", "region": "us-east"})
-	env.NewAgentWithLabels("prod-eu-agent", map[string]string{"env": "prod", "region": "eu-west"})
-	env.NewAgentWithLabels("staging-agent", map[string]string{"env": "staging", "region": "us-east"})
+	// Create agents with different labels and start them so they connect via OpAMP
+	// and send their attributes (including labels) to the server
+	prodUSAgent := env.NewAgentWithLabels("prod-us-agent", map[string]string{"env": "prod", "region": "us-east"})
+	prodEUAgent := env.NewAgentWithLabels("prod-eu-agent", map[string]string{"env": "prod", "region": "eu-west"})
+	stagingAgent := env.NewAgentWithLabels("staging-agent", map[string]string{"env": "staging", "region": "us-east"})
+
+	// Start agents to trigger OpAMP connection which sends AgentDescription with labels
+	require.NoError(t, prodUSAgent.Start())
+	require.NoError(t, prodEUAgent.Start())
+	require.NoError(t, stagingAgent.Start())
+
+	// Allow time for agents to connect and send their descriptions
+	time.Sleep(200 * time.Millisecond)
 
 	// Assign by labels - only prod agents in us-east
 	resp, err := env.ConfigServer.AssignConfigByLabels(ctx, connect.NewRequest(&configv1alpha1.AssignConfigByLabelsRequest{

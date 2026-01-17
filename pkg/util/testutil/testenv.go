@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -18,6 +19,7 @@ import (
 	agentsv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
+	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/bootstrap"
 	"github.com/otelfleet/otelfleet/pkg/services/deployment"
@@ -27,6 +29,10 @@ import (
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
+}
 
 // TestEnv provides a complete OtelFleet server environment for integration testing.
 // All KV stores and services are exposed for direct test access.
@@ -52,6 +58,9 @@ type TestEnv struct {
 	AgentDeploymentStore       storage.KeyValue[*configv1alpha1.AgentDeploymentStatus]
 	// ConnectionStateStore replaces the in-memory AgentTracker
 	ConnectionStateStore storage.KeyValue[*agentsv1alpha1.AgentConnectionState]
+
+	// Agent Repository - unified access to agent data
+	AgentRepo agentdomain.Repository
 
 	// Services
 	BootstrapServer      *bootstrap.BootstrapServer
@@ -143,6 +152,18 @@ func (e *TestEnv) initStores(logger *slog.Logger, broker storage.KVBroker) {
 	e.DeploymentStore = storage.NewProtoKV[*configv1alpha1.DeploymentStatus](logger, broker.KeyValue("deployments"))
 	e.AgentDeploymentStore = storage.NewProtoKV[*configv1alpha1.AgentDeploymentStatus](logger, broker.KeyValue("agent-deployments"))
 	e.ConnectionStateStore = storage.NewProtoKV[*agentsv1alpha1.AgentConnectionState](logger, broker.KeyValue("connection-state"))
+
+	// Create the agent repository with all stores
+	e.AgentRepo = agentdomain.NewRepository(
+		logger.With("component", "agent-repository"),
+		e.AgentStore,
+		e.OpampAgentDescriptionStore,
+		e.ConnectionStateStore,
+		e.HealthStore,
+		e.EffectiveConfigStore,
+		e.RemoteStatusStore,
+		e.ConfigAssignmentStore,
+	)
 }
 
 func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
@@ -151,8 +172,7 @@ func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
 		logger.With("service", "bootstrap"),
 		privateKey,
 		e.TokenStore,
-		e.OpampAgentStore,
-		e.AgentStore,
+		e.AgentRepo,
 		e.ConfigStore,
 		e.BootstrapConfigStore,
 		e.AssignedConfigStore,
@@ -165,33 +185,22 @@ func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
 		e.DefaultConfigStore,
 		e.AssignedConfigStore,
 		e.ConfigAssignmentStore,
-		e.AgentStore,
+		e.AgentRepo,
 		e.EffectiveConfigStore,
 		e.RemoteStatusStore,
 	)
 
-	// OpampServer - now uses ConnectionStateStore instead of AgentTracker
+	// OpampServer - uses repository for agent data access
 	e.OpampServer = opamp.NewServer(
 		logger.With("service", "opamp"),
-		e.OpampAgentStore,
-		e.ConnectionStateStore,
-		e.HealthStore,
-		e.EffectiveConfigStore,
-		e.RemoteStatusStore,
-		e.OpampAgentDescriptionStore,
+		e.AgentRepo,
 		e.AssignedConfigStore,
 	)
 
-	// AgentServer - now uses ConnectionStateStore instead of AgentTracker
+	// AgentServer - uses repository for agent data access
 	e.AgentServer = agent.NewAgentServer(
 		logger.With("service", "agent"),
-		e.AgentStore,
-		e.ConnectionStateStore,
-		e.ConfigAssignmentStore,
-		e.HealthStore,
-		e.EffectiveConfigStore,
-		e.RemoteStatusStore,
-		e.OpampAgentDescriptionStore,
+		e.AgentRepo,
 	)
 
 	// DeploymentController
@@ -200,7 +209,7 @@ func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
 		e.DeploymentStore,
 		e.AgentDeploymentStore,
 		e.ConfigStore,
-		e.AgentStore,
+		e.AgentRepo,
 	)
 }
 

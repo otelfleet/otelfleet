@@ -3,6 +3,7 @@ package opamp
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/open-telemetry/opamp-go/server/types"
 	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
+	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
 	services_int "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
@@ -23,55 +25,43 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/util"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Server struct {
 	logger   *slog.Logger
 	opampSrv server.OpAMPServer
 
-	agentStore storage.KeyValue[*protobufs.AgentToServer]
-	services.Service
+	// Repository for agent data access
+	agentRepo agentdomain.Repository
 
+	// Keep remoteStatusStore for direct access during config sync checks
+
+	// Connection tracking for active connections (protocol concern)
 	mu       sync.RWMutex
 	addrToId map[string]string
 	idToConn map[string]types.Connection // agentID -> connection
 
-	// connectionStateStore replaces the in-memory AgentTracker
-	connectionStateStore storage.KeyValue[*v1alpha1.AgentConnectionState]
+	// Config store for OpAMP-specific config logic
+	assignedConfigStore storage.KeyValue[*configv1alpha1.Config]
 
-	healthStore           storage.KeyValue[*protobufs.ComponentHealth]
-	configStore           storage.KeyValue[*protobufs.EffectiveConfig]
-	assignedConfigStore   storage.KeyValue[*configv1alpha1.Config]
-	remoteStatusStore     storage.KeyValue[*protobufs.RemoteConfigStatus]
-	opampAgentDescription storage.KeyValue[*protobufs.AgentDescription]
+	services.Service
 }
 
 var _ services_int.OpAmpServerHandler = (*Server)(nil)
 
 func NewServer(
 	l *slog.Logger,
-	agentStore storage.KeyValue[*protobufs.AgentToServer],
-	connectionStateStore storage.KeyValue[*v1alpha1.AgentConnectionState],
-	healthStore storage.KeyValue[*protobufs.ComponentHealth],
-	configStore storage.KeyValue[*protobufs.EffectiveConfig],
-	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus],
-	opampAgentDescriptionStore storage.KeyValue[*protobufs.AgentDescription],
+	agentRepo agentdomain.Repository,
 	assignedConfigStore storage.KeyValue[*configv1alpha1.Config],
 ) *Server {
 	opampSvr := server.New(logutil.NewOpAMPLogger(l))
 	s := &Server{
-		logger:                l,
-		opampSrv:              opampSvr,
-		agentStore:            agentStore,
-		addrToId:              map[string]string{},
-		idToConn:              map[string]types.Connection{},
-		connectionStateStore:  connectionStateStore,
-		healthStore:           healthStore,
-		configStore:           configStore,
-		remoteStatusStore:     remoteStatusStore,
-		opampAgentDescription: opampAgentDescriptionStore,
-		assignedConfigStore:   assignedConfigStore,
+		logger:              l,
+		opampSrv:            opampSvr,
+		agentRepo:           agentRepo,
+		addrToId:            map[string]string{},
+		idToConn:            map[string]types.Connection{},
+		assignedConfigStore: assignedConfigStore,
 	}
 
 	s.Service = services.NewBasicService(s.start, s.running, s.stop)
@@ -141,7 +131,7 @@ func (s *Server) constructConfig(ctx context.Context, agentID string) (*protobuf
 			},
 		}, nil
 	} else if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get assigned config: %w", err)
 	}
 	logger.Info("agent has an assigned config")
 	// Use the same helper as ConfigServer for consistent config map structure
@@ -184,12 +174,6 @@ func (s *Server) OnMessage(ctx context.Context, conn types.Connection, message *
 
 	ctx = logutil.WithContext(ctx, logger)
 
-	// Update connection state and check for sequence gaps
-	var needsFullState bool
-	if agentID != "" {
-		needsFullState = s.updateConnectionState(ctx, agentID, message)
-	}
-
 	resp := &protobufs.ServerToAgent{
 		InstanceUid: message.InstanceUid,
 	}
@@ -197,6 +181,20 @@ func (s *Server) OnMessage(ctx context.Context, conn types.Connection, message *
 		logger.Error("cannot persist agent data: no agent ID available")
 		return resp
 	}
+
+	// Verify agent is registered before processing any messages
+	registered, err := s.agentRepo.Exists(ctx, agentID)
+	if err != nil {
+		logger.With("err", err).Error("failed to check agent registration")
+		return ErrorResponse(message.InstanceUid, NewUnavailableError("failed to verify agent registration"))
+	}
+	if !registered {
+		logger.Warn("rejecting message from unregistered agent")
+		return ErrorResponse(message.InstanceUid, NewBadRequestError("agent not registered"))
+	}
+
+	// Update connection state and check for sequence gaps
+	needsFullState := s.updateConnectionState(ctx, agentID, message)
 	if message.RemoteConfigStatus != nil {
 		if err := s.handleRemoteConfigStatus(ctx, conn, agentID, message.RemoteConfigStatus); err != nil {
 			logger.With("err", err).Error("failed to handle remote config status message")
@@ -205,21 +203,24 @@ func (s *Server) OnMessage(ctx context.Context, conn types.Connection, message *
 
 	if message.AgentDescription != nil {
 		logger.Info("persisting agent description")
-		if err := s.opampAgentDescription.Put(ctx, agentID, message.AgentDescription); err != nil {
+		if err := s.agentRepo.UpdateAttributes(ctx, agentID, message.AgentDescription); err != nil {
 			logger.With("err", err).Error("failed to persist opamp agent-description")
+			return ErrorResponse(message.InstanceUid, NewUnavailableError("failed to persist agent description"))
 		}
 	}
 	if message.Health != nil {
 		logger.Info("persisting agent health")
-		if err := s.healthStore.Put(ctx, agentID, message.Health); err != nil {
+		if err := s.agentRepo.UpdateHealth(ctx, agentID, message.Health); err != nil {
 			logger.With("err", err).Error("failed to persist health")
+			return ErrorResponse(message.InstanceUid, NewUnavailableError("failed to persist agent health"))
 		}
 	}
 
 	if message.EffectiveConfig != nil {
 		logger.Info("persisting effective config")
-		if err := s.configStore.Put(ctx, agentID, message.EffectiveConfig); err != nil {
+		if err := s.agentRepo.UpdateEffectiveConfig(ctx, agentID, message.EffectiveConfig); err != nil {
 			logger.With("err", err).Error("failed to persist effective config")
+			return ErrorResponse(message.InstanceUid, NewUnavailableError("failed to persist effective config"))
 		}
 	}
 	if needsFullState {
@@ -232,50 +233,60 @@ func (s *Server) OnMessage(ctx context.Context, conn types.Connection, message *
 // updateConnectionState updates the persisted connection state for an agent.
 // Returns true if a full state report is needed (sequence gap or instance change detected).
 func (s *Server) updateConnectionState(ctx context.Context, agentID string, msg *protobufs.AgentToServer) bool {
-	state, err := s.connectionStateStore.Get(ctx, agentID)
+	// Try to get existing state from repository
+	existingState, err := s.agentRepo.GetConnectionState(ctx, agentID)
 	needsFullState := false
 
-	if grpcutil.IsErrorNotFound(err) {
+	now := time.Now()
+
+	if errors.Is(err, agentdomain.ErrAgentNotFound) {
 		// First message from this agent - create new state
-		state = &v1alpha1.AgentConnectionState{
-			AgentId:     agentID,
-			State:       v1alpha1.AgentState_AGENT_STATE_CONNECTED,
-			ConnectedAt: timestamppb.Now(),
-			InstanceUid: msg.InstanceUid,
+		newState := agentdomain.ConnectionState{
+			State:        agentdomain.StateConnected,
+			ConnectedAt:  &now,
+			LastSeen:     &now,
+			InstanceUID:  msg.InstanceUid,
+			Capabilities: agentdomain.Capabilities(msg.Capabilities),
+			SequenceNum:  msg.SequenceNum,
 		}
-		// Request full state for first connection
-		needsFullState = true
+		if err := s.agentRepo.UpdateConnectionState(ctx, agentID, newState); err != nil {
+			s.logger.With("err", err, "agent_id", agentID).Error("failed to persist connection state")
+		}
+		// Only request full state if the agent didn't start at sequence 0
+		// A new agent starting at 0 is a clean start and doesn't need full state
+		return msg.SequenceNum != 0
 	} else if err != nil {
-		s.logger.With("err", err).Error("failed to get the agent state")
+		// Actual storage error - log and request full state to be safe
+		s.logger.With("err", err, "agent_id", agentID).Error("failed to get connection state")
 		return true
-	} else {
-		// Check if this is a new instance (agent restarted)
-		if !bytes.Equal(state.InstanceUid, msg.InstanceUid) {
-			s.logger.With("agent_id", agentID).Info("agent instance changed, requesting full state")
-			state.InstanceUid = msg.InstanceUid
-			state.ConnectedAt = timestamppb.Now()
-			state.SequenceNum = 0
+	}
+
+	// Check if this is a new instance (agent restarted)
+	if !bytes.Equal(existingState.InstanceUID, msg.InstanceUid) {
+		s.logger.With("agent_id", agentID).Info("agent instance changed, requesting full state")
+		existingState.InstanceUID = msg.InstanceUid
+		existingState.ConnectedAt = &now
+		existingState.SequenceNum = 0
+		needsFullState = true
+	} else if msg.SequenceNum > 0 {
+		// Check for sequence gap (status compression support)
+		expectedSeq := existingState.SequenceNum + 1
+		if msg.SequenceNum != expectedSeq {
 			needsFullState = true
-		} else if msg.SequenceNum > 0 {
-			// Check for sequence gap (status compression support)
-			expectedSeq := state.SequenceNum + 1
-			if msg.SequenceNum != expectedSeq {
-				needsFullState = true
-			}
 		}
 	}
 
 	// Always update LastSeen on every message
-	state.LastSeen = timestamppb.Now()
-	state.State = v1alpha1.AgentState_AGENT_STATE_CONNECTED
+	existingState.LastSeen = &now
+	existingState.State = agentdomain.StateConnected
 
 	// Update capabilities if provided
 	if msg.Capabilities != 0 {
-		state.Capabilities = msg.Capabilities
+		existingState.Capabilities = agentdomain.Capabilities(msg.Capabilities)
 	}
-	state.SequenceNum = msg.SequenceNum
+	existingState.SequenceNum = msg.SequenceNum
 
-	if err := s.connectionStateStore.Put(ctx, agentID, state); err != nil {
+	if err := s.agentRepo.UpdateConnectionState(ctx, agentID, *existingState); err != nil {
 		s.logger.With("err", err, "agent_id", agentID).Error("failed to persist connection state")
 	}
 
@@ -303,7 +314,7 @@ func (s *Server) handleRemoteConfigStatus(
 	if bytes.Equal(expectedHash, incomingHash) {
 		logger.Info("agent remote config up-to-date")
 		// Persist the status
-		if err := s.remoteStatusStore.Put(ctx, agentID, remoteConfigStatus); err != nil {
+		if err := s.agentRepo.UpdateRemoteConfigStatus(ctx, agentID, remoteConfigStatus); err != nil {
 			return fmt.Errorf("failed to persist remote config status: %w", err)
 		}
 		return nil
@@ -316,7 +327,7 @@ func (s *Server) handleRemoteConfigStatus(
 	if err := s.sendConfig(ctx, conn, agentID); err != nil {
 		return fmt.Errorf("failed to send config to remote: %w", err)
 	}
-	if err := s.remoteStatusStore.Put(ctx, agentID, remoteConfigStatus); err != nil {
+	if err := s.agentRepo.UpdateRemoteConfigStatus(ctx, agentID, remoteConfigStatus); err != nil {
 		return fmt.Errorf("failed to persist remote config status: %w", err)
 	}
 	return nil
@@ -373,13 +384,22 @@ func (s *Server) OnConnectionClose(conn types.Connection) {
 
 	// Persist disconnected state
 	ctx := context.Background()
-	state, err := s.connectionStateStore.Get(ctx, agentID)
-	if err == nil {
-		state.State = v1alpha1.AgentState_AGENT_STATE_DISCONNECTED
-		state.DisconnectedAt = timestamppb.Now()
-		if err := s.connectionStateStore.Put(ctx, agentID, state); err != nil {
-			logger.With("err", err).Error("failed to persist disconnected state")
+	existingState, err := s.agentRepo.GetConnectionState(ctx, agentID)
+	if err != nil {
+		if grpcutil.IsErrorNotFound(err) {
+			// Agent never had state stored - this shouldn't happen but is not critical
+			logger.Warn("no connection state found for disconnected agent")
+		} else {
+			// Actual storage error - log at error level
+			logger.With("err", err).Error("failed to get connection state for disconnected agent")
 		}
+		return
+	}
+	now := time.Now()
+	existingState.State = agentdomain.StateDisconnected
+	existingState.DisconnectedAt = &now
+	if err := s.agentRepo.UpdateConnectionState(ctx, agentID, *existingState); err != nil {
+		logger.With("err", err).Error("failed to persist disconnected state")
 	}
 }
 
@@ -408,3 +428,12 @@ func (s *Server) NotifyConfigChange(agentID string) {
 
 // Ensure Server implements ConfigChangeNotifier
 var _ otelconfig.ConfigChangeNotifier = (*Server)(nil)
+
+// GetConnectionState is needed for tests or external access to connection state.
+func (s *Server) GetConnectionState(ctx context.Context, agentID string) (*v1alpha1.AgentConnectionState, error) {
+	state, err := s.agentRepo.GetConnectionState(ctx, agentID)
+	if err != nil {
+		return nil, err
+	}
+	return agentdomain.ConnectionStateToProto(agentID, *state), nil
+}

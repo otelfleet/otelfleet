@@ -13,6 +13,7 @@ import (
 	agentsv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1/v1alpha1connect"
+	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	"github.com/otelfleet/otelfleet/pkg/util"
 	"github.com/otelfleet/otelfleet/pkg/util/configsync"
@@ -45,7 +46,7 @@ type ConfigServer struct {
 	defaultConfigStore    storage.KeyValue[*v1alpha1.Config]
 	assignedConfigStore   storage.KeyValue[*v1alpha1.Config]
 	configAssignmentStore storage.KeyValue[*v1alpha1.ConfigAssignment]
-	agentStore            storage.KeyValue[*agentsv1alpha1.AgentDescription]
+	agentRepo             agentdomain.Repository
 	effectiveConfigStore  storage.KeyValue[*protobufs.EffectiveConfig]
 	remoteStatusStore     storage.KeyValue[*protobufs.RemoteConfigStatus]
 	logger                *slog.Logger
@@ -64,7 +65,7 @@ func NewConfigServer(
 	defaultConfigStore storage.KeyValue[*v1alpha1.Config],
 	assignedConfigStore storage.KeyValue[*v1alpha1.Config],
 	configAssignmentStore storage.KeyValue[*v1alpha1.ConfigAssignment],
-	agentStore storage.KeyValue[*agentsv1alpha1.AgentDescription],
+	agentRepo agentdomain.Repository,
 	effectiveConfigStore storage.KeyValue[*protobufs.EffectiveConfig],
 	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus],
 ) *ConfigServer {
@@ -74,7 +75,7 @@ func NewConfigServer(
 		defaultConfigStore:    defaultConfigStore,
 		assignedConfigStore:   assignedConfigStore,
 		configAssignmentStore: configAssignmentStore,
-		agentStore:            agentStore,
+		agentRepo:             agentRepo,
 		effectiveConfigStore:  effectiveConfigStore,
 		remoteStatusStore:     remoteStatusStore,
 	}
@@ -207,12 +208,12 @@ func (c *ConfigServer) AssignConfig(ctx context.Context, req *connect.Request[v1
 	}
 
 	// Validate agent exists
-	_, err = c.agentStore.Get(ctx, agentID)
+	exists, err := c.agentRepo.Exists(ctx, agentID)
 	if err != nil {
-		if grpcutil.IsErrorNotFound(err) {
-			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("agent not found: %s", agentID))
-		}
 		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if !exists {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("agent not found: %s", agentID))
 	}
 
 	// Store the config in assignedConfigStore (keyed by agentID)
@@ -315,7 +316,10 @@ func (c *ConfigServer) ListConfigAssignments(ctx context.Context, req *connect.R
 		}
 
 		// Enrich with status from remoteStatusStore
-		appStatus, errorMsg := c.getRemoteConfigStatus(ctx, assignment.GetAgentId(), assignment.GetConfigHash())
+		appStatus, errorMsg, err := c.getRemoteConfigStatus(ctx, assignment.GetAgentId(), assignment.GetConfigHash())
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get config status for agent %s: %w", assignment.GetAgentId(), err))
+		}
 
 		result = append(result, &v1alpha1.ConfigAssignmentInfo{
 			AgentId:      assignment.GetAgentId(),
@@ -334,17 +338,20 @@ func (c *ConfigServer) ListConfigAssignments(ctx context.Context, req *connect.R
 
 // getRemoteConfigStatus returns the application status for an agent's config.
 // Uses the shared configsync helper for consistent status computation.
-func (c *ConfigServer) getRemoteConfigStatus(ctx context.Context, agentID string, assignedHash []byte) (v1alpha1.ConfigApplicationStatus, string) {
-	syncStatus, reason := configsync.ComputeConfigSyncStatus(ctx, agentID, assignedHash, c.remoteStatusStore)
+func (c *ConfigServer) getRemoteConfigStatus(ctx context.Context, agentID string, assignedHash []byte) (v1alpha1.ConfigApplicationStatus, string, error) {
+	syncStatus, reason, err := configsync.ComputeConfigSyncStatus(ctx, agentID, assignedHash, c.remoteStatusStore)
+	if err != nil {
+		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_UNSPECIFIED, reason, err
+	}
 
 	// Map ConfigSyncStatus to ConfigApplicationStatus for backward compatibility
 	switch syncStatus {
 	case agentsv1alpha1.ConfigSyncStatus_CONFIG_SYNC_STATUS_IN_SYNC:
-		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_APPLIED, ""
+		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_APPLIED, "", nil
 	case agentsv1alpha1.ConfigSyncStatus_CONFIG_SYNC_STATUS_ERROR:
-		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_FAILED, reason
+		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_FAILED, reason, nil
 	default:
-		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_PENDING, reason
+		return v1alpha1.ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_PENDING, reason, nil
 	}
 }
 
@@ -367,13 +374,20 @@ func (c *ConfigServer) GetConfigStatus(ctx context.Context, req *connect.Request
 	// Use the same hash function as when storing the assignment for consistent comparison
 	var effectiveHash []byte
 	effectiveConfig, err := c.effectiveConfigStore.Get(ctx, agentID)
+	if err != nil && !grpcutil.IsErrorNotFound(err) {
+		// Storage error (not just "no config reported yet")
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get effective config: %w", err))
+	}
 	if err == nil && effectiveConfig.GetConfigMap() != nil {
 		effectiveHash = util.HashAgentConfigMap(effectiveConfig.GetConfigMap())
 	}
 
 	inSync := bytes.Equal(assignment.GetConfigHash(), effectiveHash)
 
-	appStatus, errorMsg := c.getRemoteConfigStatus(ctx, agentID, assignment.GetConfigHash())
+	appStatus, errorMsg, err := c.getRemoteConfigStatus(ctx, agentID, assignment.GetConfigHash())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get config status: %w", err))
+	}
 
 	return connect.NewResponse(&v1alpha1.GetConfigStatusResponse{
 		Assignment: &v1alpha1.ConfigAssignmentInfo{
@@ -397,8 +411,11 @@ func (c *ConfigServer) GetConfigStatus(ctx context.Context, req *connect.Request
 // assignConfigToAgent is a helper that assigns a config to an agent (used by batch operations)
 func (c *ConfigServer) assignConfigToAgent(ctx context.Context, agentID, configID string, config *v1alpha1.Config) error {
 	// Validate agent exists
-	_, err := c.agentStore.Get(ctx, agentID)
+	exists, err := c.agentRepo.Exists(ctx, agentID)
 	if err != nil {
+		return fmt.Errorf("failed to check agent existence: %w", err)
+	}
+	if !exists {
 		return fmt.Errorf("agent not found: %s", agentID)
 	}
 
@@ -479,28 +496,6 @@ func (c *ConfigServer) BatchAssignConfig(ctx context.Context, req *connect.Reque
 	}), nil
 }
 
-// matchesLabels checks if agent labels match the selector labels
-func matchesLabels(agentAttrs []*agentsv1alpha1.KeyValue, selector map[string]string) bool {
-	if len(selector) == 0 {
-		return false
-	}
-
-	// Build a map of agent attributes for easier lookup
-	agentLabels := make(map[string]string)
-	for _, attr := range agentAttrs {
-		if attr.GetValue().GetStringValue() != "" {
-			agentLabels[attr.GetKey()] = attr.GetValue().GetStringValue()
-		}
-	}
-
-	// Check if all selector labels match
-	for key, value := range selector {
-		if agentLabels[key] != value {
-			return false
-		}
-	}
-	return true
-}
 
 // AssignConfigByLabels assigns a config to agents matching the specified labels
 func (c *ConfigServer) AssignConfigByLabels(ctx context.Context, req *connect.Request[v1alpha1.AssignConfigByLabelsRequest]) (*connect.Response[v1alpha1.AssignConfigByLabelsResponse], error) {
@@ -514,18 +509,16 @@ func (c *ConfigServer) AssignConfigByLabels(ctx context.Context, req *connect.Re
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("labels must be non-empty"))
 	}
 
-	// Find agents matching labels
-	agents, err := c.agentStore.List(ctx)
+	// Find agents matching labels using repository
+	agents, err := c.agentRepo.List(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
 	var matchedAgentIDs []string
 	for _, agent := range agents {
-		// Check both identifying and non-identifying attributes
-		allAttrs := append(agent.GetIdentifyingAttributes(), agent.GetNonIdentifyingAttributes()...)
-		if matchesLabels(allAttrs, labels) {
-			matchedAgentIDs = append(matchedAgentIDs, agent.GetId())
+		if agent.MatchesLabels(labels) {
+			matchedAgentIDs = append(matchedAgentIDs, agent.ID)
 		}
 	}
 

@@ -9,12 +9,56 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/grafana/dskit/services"
-	agentsv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
+	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+const (
+	maxRetries     = 3
+	retryBaseDelay = 100 * time.Millisecond
+)
+
+// retryWithBackoff retries the given function with exponential backoff.
+// Returns the result and error from the last attempt.
+func retryWithBackoff[T any](ctx context.Context, logger *slog.Logger, operation string, fn func() (T, error)) (T, error) {
+	var result T
+	var lastErr error
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		result, lastErr = fn()
+		if lastErr == nil {
+			return result, nil
+		}
+
+		// Don't retry on NotFound - that's a legitimate "no data" response
+		if grpcutil.IsErrorNotFound(lastErr) {
+			return result, lastErr
+		}
+
+		// Don't retry if context is cancelled
+		if ctx.Err() != nil {
+			return result, ctx.Err()
+		}
+
+		// Calculate backoff with exponential increase
+		delay := retryBaseDelay * time.Duration(1<<attempt)
+
+		logger.With("operation", operation, "attempt", attempt+1, "err", lastErr).
+			Warn("storage operation failed, retrying")
+
+		select {
+		case <-ctx.Done():
+			return result, ctx.Err()
+		case <-time.After(delay):
+		}
+	}
+
+	return result, fmt.Errorf("%s failed after %d retries: %w", operation, maxRetries, lastErr)
+}
 
 // ConfigAssigner is an interface for assigning configs to agents
 type ConfigAssigner interface {
@@ -28,7 +72,7 @@ type Controller struct {
 	deploymentStore      storage.KeyValue[*configv1alpha1.DeploymentStatus]
 	agentDeploymentStore storage.KeyValue[*configv1alpha1.AgentDeploymentStatus]
 	configStore          storage.KeyValue[*configv1alpha1.Config]
-	agentStore           storage.KeyValue[*agentsv1alpha1.AgentDescription]
+	agentRepo            agentdomain.Repository
 
 	configAssigner ConfigAssigner
 
@@ -47,14 +91,14 @@ func NewController(
 	deploymentStore storage.KeyValue[*configv1alpha1.DeploymentStatus],
 	agentDeploymentStore storage.KeyValue[*configv1alpha1.AgentDeploymentStatus],
 	configStore storage.KeyValue[*configv1alpha1.Config],
-	agentStore storage.KeyValue[*agentsv1alpha1.AgentDescription],
+	agentRepo agentdomain.Repository,
 ) *Controller {
 	c := &Controller{
 		logger:               logger,
 		deploymentStore:      deploymentStore,
 		agentDeploymentStore: agentDeploymentStore,
 		configStore:          configStore,
-		agentStore:           agentStore,
+		agentRepo:            agentRepo,
 		activeDeployments:    make(map[string]context.CancelFunc),
 	}
 	c.Service = services.NewBasicService(nil, c.running, c.stopping)
@@ -150,45 +194,18 @@ func (c *Controller) StartDeployment(ctx context.Context, req *configv1alpha1.Ro
 }
 
 func (c *Controller) resolveAgentsByLabels(ctx context.Context, labels map[string]string) ([]string, error) {
-	agents, err := c.agentStore.List(ctx)
+	agents, err := c.agentRepo.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var matchedAgentIDs []string
 	for _, agent := range agents {
-		if c.matchesLabels(agent, labels) {
-			matchedAgentIDs = append(matchedAgentIDs, agent.GetId())
+		if agent.MatchesLabels(labels) {
+			matchedAgentIDs = append(matchedAgentIDs, agent.ID)
 		}
 	}
 	return matchedAgentIDs, nil
-}
-
-func (c *Controller) matchesLabels(agent *agentsv1alpha1.AgentDescription, selector map[string]string) bool {
-	if len(selector) == 0 {
-		return false
-	}
-
-	// Build a map of agent attributes
-	agentLabels := make(map[string]string)
-	for _, attr := range agent.GetIdentifyingAttributes() {
-		if attr.GetValue().GetStringValue() != "" {
-			agentLabels[attr.GetKey()] = attr.GetValue().GetStringValue()
-		}
-	}
-	for _, attr := range agent.GetNonIdentifyingAttributes() {
-		if attr.GetValue().GetStringValue() != "" {
-			agentLabels[attr.GetKey()] = attr.GetValue().GetStringValue()
-		}
-	}
-
-	// Check if all selector labels match
-	for key, value := range selector {
-		if agentLabels[key] != value {
-			return false
-		}
-	}
-	return true
 }
 
 func (c *Controller) runDeployment(ctx context.Context, deploymentID string, agentIDs []string, req *configv1alpha1.RollingDeploymentRequest) {
@@ -219,16 +236,38 @@ func (c *Controller) runDeployment(ctx context.Context, deploymentID string, age
 		default:
 		}
 
-		// Check if paused
-		status, err := c.deploymentStore.Get(ctx, deploymentID)
-		if err == nil && status.GetState() == configv1alpha1.DeploymentState_DEPLOYMENT_STATE_PAUSED {
+		// Check if paused (with retry for transient storage errors)
+		status, err := retryWithBackoff(ctx, c.logger, "check deployment paused state", func() (*configv1alpha1.DeploymentStatus, error) {
+			return c.deploymentStore.Get(ctx, deploymentID)
+		})
+		if err != nil {
+			c.logger.With("err", err, "deployment_id", deploymentID).Error("failed to check deployment state, failing deployment")
+			c.updateDeploymentState(ctx, deploymentID, configv1alpha1.DeploymentState_DEPLOYMENT_STATE_FAILED)
+			return
+		}
+		if status.GetState() == configv1alpha1.DeploymentState_DEPLOYMENT_STATE_PAUSED {
 			// Wait for resume or cancel
+			pauseCheckFailures := 0
+			const maxPauseCheckFailures = 5
 			for status.GetState() == configv1alpha1.DeploymentState_DEPLOYMENT_STATE_PAUSED {
 				select {
 				case <-ctx.Done():
 					return
 				case <-time.After(1 * time.Second):
-					status, _ = c.deploymentStore.Get(ctx, deploymentID)
+					status, err = retryWithBackoff(ctx, c.logger, "check deployment paused state", func() (*configv1alpha1.DeploymentStatus, error) {
+						return c.deploymentStore.Get(ctx, deploymentID)
+					})
+					if err != nil {
+						pauseCheckFailures++
+						c.logger.With("err", err, "deployment_id", deploymentID, "failures", pauseCheckFailures).Error("failed to check deployment state while paused")
+						if pauseCheckFailures >= maxPauseCheckFailures {
+							c.logger.With("deployment_id", deploymentID).Error("too many storage failures while paused, failing deployment")
+							c.updateDeploymentState(ctx, deploymentID, configv1alpha1.DeploymentState_DEPLOYMENT_STATE_FAILED)
+							return
+						}
+					} else {
+						pauseCheckFailures = 0 // Reset on success
+					}
 				}
 			}
 		}
@@ -279,9 +318,11 @@ func (c *Controller) runDeployment(ctx context.Context, deploymentID string, age
 }
 
 func (c *Controller) updateDeploymentState(ctx context.Context, deploymentID string, state configv1alpha1.DeploymentState) {
-	status, err := c.deploymentStore.Get(ctx, deploymentID)
+	status, err := retryWithBackoff(ctx, c.logger, "get deployment status", func() (*configv1alpha1.DeploymentStatus, error) {
+		return c.deploymentStore.Get(ctx, deploymentID)
+	})
 	if err != nil {
-		c.logger.With("err", err, "deployment_id", deploymentID).Error("failed to get deployment status")
+		c.logger.With("err", err, "deployment_id", deploymentID).Error("failed to get deployment status after retries")
 		return
 	}
 	status.State = state
@@ -290,24 +331,38 @@ func (c *Controller) updateDeploymentState(ctx context.Context, deploymentID str
 		state == configv1alpha1.DeploymentState_DEPLOYMENT_STATE_CANCELLED {
 		status.CompletedAt = timestamppb.Now()
 	}
-	if err := c.deploymentStore.Put(ctx, deploymentID, status); err != nil {
-		c.logger.With("err", err, "deployment_id", deploymentID).Error("failed to update deployment state")
+	_, err = retryWithBackoff(ctx, c.logger, "update deployment state", func() (struct{}, error) {
+		return struct{}{}, c.deploymentStore.Put(ctx, deploymentID, status)
+	})
+	if err != nil {
+		c.logger.With("err", err, "deployment_id", deploymentID).Error("failed to update deployment state after retries")
 	}
 }
 
 func (c *Controller) updateCurrentBatch(ctx context.Context, deploymentID string, batch int32) {
-	status, err := c.deploymentStore.Get(ctx, deploymentID)
+	status, err := retryWithBackoff(ctx, c.logger, "get deployment for batch update", func() (*configv1alpha1.DeploymentStatus, error) {
+		return c.deploymentStore.Get(ctx, deploymentID)
+	})
 	if err != nil {
+		c.logger.With("err", err, "deployment_id", deploymentID).Warn("failed to get deployment for batch update")
 		return
 	}
 	status.CurrentBatch = batch
-	c.deploymentStore.Put(ctx, deploymentID, status)
+	_, err = retryWithBackoff(ctx, c.logger, "update current batch", func() (struct{}, error) {
+		return struct{}{}, c.deploymentStore.Put(ctx, deploymentID, status)
+	})
+	if err != nil {
+		c.logger.With("err", err, "deployment_id", deploymentID).Warn("failed to update current batch")
+	}
 }
 
 func (c *Controller) updateAgentState(ctx context.Context, deploymentID, agentID string, state configv1alpha1.AgentDeploymentState, errorMsg string) {
 	key := fmt.Sprintf("%s/%s", deploymentID, agentID)
-	agentStatus, err := c.agentDeploymentStore.Get(ctx, key)
+	agentStatus, err := retryWithBackoff(ctx, c.logger, "get agent deployment status", func() (*configv1alpha1.AgentDeploymentStatus, error) {
+		return c.agentDeploymentStore.Get(ctx, key)
+	})
 	if err != nil {
+		// If we can't get existing status (including NotFound), create a new one
 		agentStatus = &configv1alpha1.AgentDeploymentStatus{
 			AgentId: agentID,
 		}
@@ -317,51 +372,79 @@ func (c *Controller) updateAgentState(ctx context.Context, deploymentID, agentID
 	if state == configv1alpha1.AgentDeploymentState_AGENT_DEPLOYMENT_STATE_APPLIED {
 		agentStatus.AppliedAt = timestamppb.Now()
 	}
-	c.agentDeploymentStore.Put(ctx, key, agentStatus)
+	_, err = retryWithBackoff(ctx, c.logger, "update agent deployment status", func() (struct{}, error) {
+		return struct{}{}, c.agentDeploymentStore.Put(ctx, key, agentStatus)
+	})
+	if err != nil {
+		c.logger.With("err", err, "deployment_id", deploymentID, "agent_id", agentID).Warn("failed to update agent state")
+	}
 }
 
 func (c *Controller) incrementCompletedCount(ctx context.Context, deploymentID string) {
-	status, err := c.deploymentStore.Get(ctx, deploymentID)
+	status, err := retryWithBackoff(ctx, c.logger, "get deployment for completed count", func() (*configv1alpha1.DeploymentStatus, error) {
+		return c.deploymentStore.Get(ctx, deploymentID)
+	})
 	if err != nil {
+		c.logger.With("err", err, "deployment_id", deploymentID).Warn("failed to get deployment for completed count")
 		return
 	}
 	status.CompletedAgents++
 	status.PendingAgents--
-	c.deploymentStore.Put(ctx, deploymentID, status)
+	_, err = retryWithBackoff(ctx, c.logger, "increment completed count", func() (struct{}, error) {
+		return struct{}{}, c.deploymentStore.Put(ctx, deploymentID, status)
+	})
+	if err != nil {
+		c.logger.With("err", err, "deployment_id", deploymentID).Warn("failed to increment completed count")
+	}
 }
 
 func (c *Controller) incrementFailureCount(ctx context.Context, deploymentID string) {
-	status, err := c.deploymentStore.Get(ctx, deploymentID)
+	status, err := retryWithBackoff(ctx, c.logger, "get deployment for failure count", func() (*configv1alpha1.DeploymentStatus, error) {
+		return c.deploymentStore.Get(ctx, deploymentID)
+	})
 	if err != nil {
+		c.logger.With("err", err, "deployment_id", deploymentID).Warn("failed to get deployment for failure count")
 		return
 	}
 	status.FailedAgents++
 	status.PendingAgents--
-	c.deploymentStore.Put(ctx, deploymentID, status)
+	_, err = retryWithBackoff(ctx, c.logger, "increment failure count", func() (struct{}, error) {
+		return struct{}{}, c.deploymentStore.Put(ctx, deploymentID, status)
+	})
+	if err != nil {
+		c.logger.With("err", err, "deployment_id", deploymentID).Warn("failed to increment failure count")
+	}
 }
 
 // GetStatus returns the status of a deployment
 func (c *Controller) GetStatus(ctx context.Context, deploymentID string) (*configv1alpha1.DeploymentStatus, error) {
 	status, err := c.deploymentStore.Get(ctx, deploymentID)
 	if err != nil {
-		return nil, fmt.Errorf("deployment not found: %s", deploymentID)
+		if grpcutil.IsErrorNotFound(err) {
+			return nil, fmt.Errorf("deployment not found: %s", deploymentID)
+		}
+		return nil, fmt.Errorf("failed to get deployment: %w", err)
 	}
 
 	// Fetch agent statuses
 	keys, err := c.agentDeploymentStore.ListKeys(ctx)
-	if err == nil {
-		var agentStatuses []*configv1alpha1.AgentDeploymentStatus
-		prefix := deploymentID + "/"
-		for _, key := range keys {
-			if len(key) > len(prefix) && key[:len(prefix)] == prefix {
-				agentStatus, err := c.agentDeploymentStore.Get(ctx, key)
-				if err == nil {
-					agentStatuses = append(agentStatuses, agentStatus)
-				}
+	if err != nil {
+		return nil, fmt.Errorf("failed to list agent deployment keys: %w", err)
+	}
+	var agentStatuses []*configv1alpha1.AgentDeploymentStatus
+	prefix := deploymentID + "/"
+	for _, key := range keys {
+		if len(key) > len(prefix) && key[:len(prefix)] == prefix {
+			agentStatus, err := c.agentDeploymentStore.Get(ctx, key)
+			if err != nil && !grpcutil.IsErrorNotFound(err) {
+				return nil, fmt.Errorf("failed to get agent deployment status for %s: %w", key, err)
+			}
+			if err == nil {
+				agentStatuses = append(agentStatuses, agentStatus)
 			}
 		}
-		status.AgentStatuses = agentStatuses
 	}
+	status.AgentStatuses = agentStatuses
 
 	return status, nil
 }
@@ -370,7 +453,10 @@ func (c *Controller) GetStatus(ctx context.Context, deploymentID string) (*confi
 func (c *Controller) PauseDeployment(ctx context.Context, deploymentID string) error {
 	status, err := c.deploymentStore.Get(ctx, deploymentID)
 	if err != nil {
-		return fmt.Errorf("deployment not found: %s", deploymentID)
+		if grpcutil.IsErrorNotFound(err) {
+			return fmt.Errorf("deployment not found: %s", deploymentID)
+		}
+		return fmt.Errorf("failed to get deployment: %w", err)
 	}
 
 	if status.GetState() != configv1alpha1.DeploymentState_DEPLOYMENT_STATE_IN_PROGRESS {
@@ -385,7 +471,10 @@ func (c *Controller) PauseDeployment(ctx context.Context, deploymentID string) e
 func (c *Controller) ResumeDeployment(ctx context.Context, deploymentID string) error {
 	status, err := c.deploymentStore.Get(ctx, deploymentID)
 	if err != nil {
-		return fmt.Errorf("deployment not found: %s", deploymentID)
+		if grpcutil.IsErrorNotFound(err) {
+			return fmt.Errorf("deployment not found: %s", deploymentID)
+		}
+		return fmt.Errorf("failed to get deployment: %w", err)
 	}
 
 	if status.GetState() != configv1alpha1.DeploymentState_DEPLOYMENT_STATE_PAUSED {
@@ -408,7 +497,10 @@ func (c *Controller) CancelDeployment(ctx context.Context, deploymentID string) 
 
 	status, err := c.deploymentStore.Get(ctx, deploymentID)
 	if err != nil {
-		return fmt.Errorf("deployment not found: %s", deploymentID)
+		if grpcutil.IsErrorNotFound(err) {
+			return fmt.Errorf("deployment not found: %s", deploymentID)
+		}
+		return fmt.Errorf("failed to get deployment: %w", err)
 	}
 
 	status.State = configv1alpha1.DeploymentState_DEPLOYMENT_STATE_CANCELLED

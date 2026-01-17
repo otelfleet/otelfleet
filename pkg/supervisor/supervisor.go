@@ -3,7 +3,10 @@ package supervisor
 import (
 	"context"
 	"crypto/tls"
+	"encoding/hex"
 	"log/slog"
+	"os"
+	"path"
 	"time"
 
 	"github.com/open-telemetry/opamp-go/client"
@@ -14,6 +17,13 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/util"
 )
 
+// ExtraAttributes holds additional identifying and non-identifying attributes
+// to be included in the agent description sent to the OpAMP server.
+type ExtraAttributes struct {
+	Identifying    map[string]string
+	NonIdentifying map[string]string
+}
+
 type Supervisor struct {
 	logger       *slog.Logger
 	clientLogger types.Logger
@@ -23,8 +33,9 @@ type Supervisor struct {
 	opampClient client.OpAMPClient
 	opAmpAddr   string
 
-	agentId   ident.Identity
-	startTime time.Time
+	agentId         ident.Identity
+	extraAttributes ExtraAttributes
+	startTime       time.Time
 
 	// for direct in-process management
 	agentDriver AgentDriver
@@ -36,42 +47,59 @@ func NewSupervisorWithProcManager(
 	tlsConfig *tls.Config,
 	opAmpAddr string,
 	agentId ident.Identity,
+	extraAttrs ExtraAttributes,
 ) *Supervisor {
 	s := &Supervisor{
-		logger:       logger,
-		tlsConfig:    tlsConfig,
-		clientLogger: logutil.NewOpAMPLogger(logger),
-		opAmpAddr:    opAmpAddr,
-		agentId:      agentId,
-		startTime:    time.Now(),
+		logger:          logger,
+		tlsConfig:       tlsConfig,
+		clientLogger:    logutil.NewOpAMPLogger(logger),
+		opAmpAddr:       opAmpAddr,
+		agentId:         agentId,
+		startTime:       time.Now(),
+		extraAttributes: extraAttrs,
+	}
+	basePath, err := os.UserConfigDir()
+	// FIXME: temporary hack
+	if err != nil {
+		panic(err)
+	}
+
+	configPath := path.Join(basePath, agentId.UniqueIdentifier().UUID)
+
+	if err := os.MkdirAll(configPath, 0700); err != nil {
+		panic(err)
 	}
 	s.agentDriver = NewProcManager(
 		logger.With("process", "otelcol"),
 		//FIXME:
 		"/home/alex/.asdf/shims/otelcol",
-		"/var/lib/otelfleet/",
+		configPath,
 		s.reportHealth,
 	)
 	return s
 }
 
-// NewSupervisorWithProcManager creates a new Supervisor with a custom AgentDriver.
+// NewSupervisor creates a new Supervisor with a custom AgentDriver.
 // This is primarily used for testing with mock implementations.
+// Extra attributes can be provided to include additional identifying and non-identifying
+// attributes in the agent description sent to the OpAMP server.
 func NewSupervisor(
 	logger *slog.Logger,
 	tlsConfig *tls.Config,
 	opAmpAddr string,
 	agentId ident.Identity,
 	agentDriver AgentDriver,
+	extraAttrs ExtraAttributes,
 ) *Supervisor {
 	return &Supervisor{
-		logger:       logger,
-		tlsConfig:    tlsConfig,
-		clientLogger: logutil.NewOpAMPLogger(logger),
-		opAmpAddr:    opAmpAddr,
-		agentId:      agentId,
-		startTime:    time.Now(),
-		agentDriver:  agentDriver,
+		logger:          logger,
+		tlsConfig:       tlsConfig,
+		clientLogger:    logutil.NewOpAMPLogger(logger),
+		opAmpAddr:       opAmpAddr,
+		agentId:         agentId,
+		extraAttributes: extraAttrs,
+		startTime:       time.Now(),
+		agentDriver:     agentDriver,
 	}
 }
 
@@ -98,7 +126,16 @@ func (s *Supervisor) startOpAMP() error {
 				s.logger.With("err", err).Error("failed to connect to the server")
 			},
 			OnError: func(ctx context.Context, err *protobufs.ServerErrorResponse) {
-				s.logger.With("err", err).Error("Server returned an error response")
+				s.logger.With(
+					"error_type", err.GetType().String(),
+					"error_message", err.GetErrorMessage(),
+				).Error("server returned an error response")
+				// For Unavailable errors, the opamp-go client handles retries internally.
+				// For BadRequest/Unknown errors, the agent should not retry.
+				// Report unhealthy state so operators can investigate.
+				if err.GetType() != protobufs.ServerErrorResponseType_ServerErrorResponseType_Unavailable {
+					s.reportHealth(false, "server_error", err.GetErrorMessage())
+				}
 			},
 			GetEffectiveConfig: func(ctx context.Context) (*protobufs.EffectiveConfig, error) {
 				return s.createEffectiveConfigMsg(), nil
@@ -134,7 +171,9 @@ func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 	l.Debug("received message")
 	if incomingCfg := msg.RemoteConfig; incomingCfg != nil {
 		l = l.With("type", "remote-config")
-		l.Info("received effective configuration update")
+		l.With("incoming-hash", hex.EncodeToString(msg.RemoteConfig.ConfigHash)).With(
+			"cur-hash", hex.EncodeToString(s.agentDriver.GetCurrentHash()),
+		).Info("received effective configuration update")
 		if err := s.agentDriver.Update(ctx, incomingCfg); err != nil {
 			if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
 				Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_FAILED,
@@ -145,10 +184,10 @@ func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 			}
 			return
 		}
-		l.With("cur-hash", s.agentDriver.GetCurrentHash()).Info("sending remote status update")
+		l.With("cur-hash", hex.EncodeToString(s.agentDriver.GetCurrentHash())).Info("sending remote status update")
 		if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
 			Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
-			LastRemoteConfigHash: incomingCfg.GetConfigHash(),
+			LastRemoteConfigHash: s.agentDriver.GetCurrentHash(),
 		}); err != nil {
 			l.With("err", err).With("status", "succeeded").Error("failed to report remote config status to upstream server")
 		}

@@ -10,19 +10,34 @@ import (
 
 // BuildAgentDescription creates a complete AgentDescription with identifying
 // and non-identifying attributes following semantic conventions.
+// Extra attributes from the Supervisor's configuration are appended.
 func (s *Supervisor) buildAgentDescription(agentID string) *protobufs.AgentDescription {
+	identifyingAttrs := []*protobufs.KeyValue{
+		util.KeyVal(AttributeOtelfleetAgentId, agentID),
+		util.KeyVal("service.name", "otelfleet-agent"),
+		util.KeyVal("service.instance.id", agentID),
+	}
+
+	// Append extra identifying attributes
+	for k, v := range s.extraAttributes.Identifying {
+		identifyingAttrs = append(identifyingAttrs, util.KeyVal(k, v))
+	}
+
+	nonIdentifyingAttrs := []*protobufs.KeyValue{
+		util.KeyVal("os.type", runtime.GOOS),
+		util.KeyVal("host.arch", runtime.GOARCH),
+		util.KeyVal("process.runtime.name", "go"),
+		util.KeyVal("process.runtime.version", runtime.Version()),
+	}
+
+	// Append extra non-identifying attributes
+	for k, v := range s.extraAttributes.NonIdentifying {
+		nonIdentifyingAttrs = append(nonIdentifyingAttrs, util.KeyVal(k, v))
+	}
+
 	return &protobufs.AgentDescription{
-		IdentifyingAttributes: []*protobufs.KeyValue{
-			util.KeyVal(AttributeOtelfleetAgentId, agentID),
-			util.KeyVal("service.name", "otelfleet-agent"),
-			util.KeyVal("service.instance.id", agentID),
-		},
-		NonIdentifyingAttributes: []*protobufs.KeyValue{
-			util.KeyVal("os.type", runtime.GOOS),
-			util.KeyVal("host.arch", runtime.GOARCH),
-			util.KeyVal("process.runtime.name", "go"),
-			util.KeyVal("process.runtime.version", runtime.Version()),
-		},
+		IdentifyingAttributes:    identifyingAttrs,
+		NonIdentifyingAttributes: nonIdentifyingAttrs,
 	}
 }
 

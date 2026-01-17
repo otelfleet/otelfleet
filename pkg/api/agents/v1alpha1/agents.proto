@@ -19,6 +19,15 @@ message ListAgentsResponse {
   repeated AgentDescriptionAndStatus agents = 1;
 }
 
+// AgentView combines registration and status for list/get responses.
+// This is the preferred type name for combined agent data.
+message AgentView {
+  AgentRegistration registration = 1;
+  AgentStatus       status       = 2;
+}
+
+// AgentDescriptionAndStatus is kept for backward compatibility.
+// Use AgentView for new code.
 message AgentDescriptionAndStatus {
   AgentDescription agent  = 1;
   AgentStatus      status = 2;
@@ -53,6 +62,23 @@ message AgentStatus {
   google.protobuf.Timestamp disconnected_at = 9;
 }
 
+// AgentRegistration represents the core agent identity and attributes.
+// This is the preferred type name for agent registration data.
+message AgentRegistration {
+  string id            = 1;
+  string friendly_name = 2;
+
+  // Attributes that identify the Agent (e.g., service.name, service.version, service.instance.id).
+  repeated KeyValue identifying_attributes = 3;
+
+  // Attributes that do not necessarily identify the Agent but help describe where it runs.
+  repeated KeyValue non_identifying_attributes = 4;
+
+  repeated string capabilities = 5;
+}
+
+// AgentDescription is kept for backward compatibility.
+// Use AgentRegistration for new code.
 message AgentDescription {
   string id            = 1;
   string friendly_name = 2;

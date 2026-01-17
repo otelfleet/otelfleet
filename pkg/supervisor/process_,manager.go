@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -77,10 +78,6 @@ func (p *ProcManager) Update(
 }
 
 func (p *ProcManager) runLocked(ctx context.Context, incoming *protobufs.AgentRemoteConfig) error {
-	hashPath := path.Join(p.ConfigDir, "config.hash")
-	if err := os.WriteFile(hashPath, incoming.GetConfigHash(), 0644); err != nil {
-		return err
-	}
 	// TODO : this doens't handle cleanup of dangling names
 	configMap := incoming.GetConfig().GetConfigMap()
 	for name, contents := range configMap {
@@ -88,6 +85,7 @@ func (p *ProcManager) runLocked(ctx context.Context, incoming *protobufs.AgentRe
 			return err
 		}
 	}
+	p.curHash = util.HashAgentConfigMap(incoming.GetConfig())
 	args := []string{}
 	for name := range configMap {
 		args = append(
@@ -96,6 +94,7 @@ func (p *ProcManager) runLocked(ctx context.Context, incoming *protobufs.AgentRe
 			path.Join(p.ConfigDir, name),
 		)
 	}
+	p.logger.With("hash", hex.EncodeToString(p.curHash)).Info("updated config hash")
 	if len(args) == 0 {
 		panic("0 configs not handled")
 	}
@@ -119,7 +118,6 @@ func (p *ProcManager) runLocked(ctx context.Context, incoming *protobufs.AgentRe
 		Setpgid: true,
 		// Pdeathsig: shutdownSignal,
 	}
-	p.curHash = util.HashAgentConfigMap(incoming.GetConfig())
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error starting collector")
 	}

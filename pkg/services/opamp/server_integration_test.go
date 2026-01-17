@@ -34,6 +34,10 @@ func TestServer_OnMessage_PersistsHealth(t *testing.T) {
 
 	agentID := "test-agent-health-persist"
 	instanceUID := []byte(agentID)
+
+	// Register the agent first
+	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+
 	health := &protobufs.ComponentHealth{
 		Healthy:           true,
 		StartTimeUnixNano: uint64(time.Now().UnixNano()),
@@ -70,6 +74,10 @@ func TestServer_OnMessage_PersistsEffectiveConfig(t *testing.T) {
 
 	agentID := "test-agent-config-persist"
 	instanceUID := []byte(agentID)
+
+	// Register the agent first
+	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+
 	config := &protobufs.EffectiveConfig{
 		ConfigMap: &protobufs.AgentConfigMap{
 			ConfigMap: map[string]*protobufs.AgentConfigFile{
@@ -105,6 +113,10 @@ func TestServer_OnMessage_PersistsRemoteConfigStatus(t *testing.T) {
 
 	agentID := "test-agent-status-persist"
 	instanceUID := []byte(agentID)
+
+	// Register the agent first
+	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+
 	status := &protobufs.RemoteConfigStatus{
 		LastRemoteConfigHash: []byte("config-hash-123"),
 		Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
@@ -134,6 +146,10 @@ func TestServer_OnMessage_PersistsAllFields(t *testing.T) {
 
 	agentID := "test-agent-all-fields"
 	instanceUID := []byte(agentID)
+
+	// Register the agent first
+	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+
 	health := &protobufs.ComponentHealth{
 		Healthy: true,
 		Status:  "running",
@@ -183,6 +199,9 @@ func TestServer_OnMessage_OnlyPersistsNonNilFields(t *testing.T) {
 	agentID := "test-agent-partial"
 	instanceUID := []byte(agentID)
 	ctx := context.Background()
+
+	// Register the agent first
+	require.NoError(t, env.AgentRepo.Register(ctx, agentID, agentID))
 
 	// Message with only health (and required AgentDescription)
 	msg := &protobufs.AgentToServer{

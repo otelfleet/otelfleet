@@ -35,6 +35,9 @@ func TestServer_SequenceNumTracking_Sequential(t *testing.T) {
 	conn := &seqMockConnection{instanceUID: instanceUID}
 	desc := makeSeqAgentDescription(agentID)
 
+	// Register the agent first
+	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+
 	// First message (seq 0)
 	msg1 := &protobufs.AgentToServer{
 		InstanceUid:      instanceUID,
@@ -73,6 +76,9 @@ func TestServer_SequenceNumTracking_Gap(t *testing.T) {
 	instanceUID := []byte(agentID)
 	conn := &seqMockConnection{instanceUID: instanceUID}
 	desc := makeSeqAgentDescription(agentID)
+
+	// Register the agent first
+	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
 
 	// First message (seq 0)
 	msg1 := &protobufs.AgentToServer{
@@ -113,6 +119,9 @@ func TestServer_SequenceNumTracking_NewAgent(t *testing.T) {
 	instanceUID := []byte(agentID)
 	conn := &seqMockConnection{instanceUID: instanceUID}
 
+	// Register the agent first
+	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+
 	// First message from new agent starting with seq 0
 	// Include both the otelfleet.agent.id and the service.name
 	msg := &protobufs.AgentToServer{
@@ -139,6 +148,9 @@ func TestServer_SequenceNumTracking_ResponseContainsInstanceUID(t *testing.T) {
 	instanceUID := []byte(agentID)
 	conn := &seqMockConnection{instanceUID: instanceUID}
 
+	// Register the agent first
+	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+
 	msg := &protobufs.AgentToServer{
 		InstanceUid:      instanceUID,
 		AgentDescription: makeSeqAgentDescription(agentID),
@@ -160,6 +172,10 @@ func TestServer_SequenceNumTracking_MultipleAgents(t *testing.T) {
 	conn2 := &seqMockConnection{instanceUID: agent2}
 	desc1 := makeSeqAgentDescription(agentID1)
 	desc2 := makeSeqAgentDescription(agentID2)
+
+	// Register both agents first
+	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID1, agentID1))
+	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID2, agentID2))
 
 	// Agent 1 sends seq 0, 1, 2
 	for seq := range uint64(3) {
@@ -241,4 +257,51 @@ func (m *seqMockAddr) String() string {
 		return "127.0.0.1:4320"
 	}
 	return m.addr
+}
+
+func TestServer_OnMessage_UnregisteredAgent_ReturnsError(t *testing.T) {
+	env := testutil.NewTestEnv(t)
+
+	// Do NOT register the agent
+	agentID := "unregistered-agent"
+	instanceUID := []byte(agentID)
+	conn := &seqMockConnection{instanceUID: instanceUID}
+	desc := makeSeqAgentDescription(agentID)
+
+	msg := &protobufs.AgentToServer{
+		InstanceUid:      instanceUID,
+		AgentDescription: desc,
+		SequenceNum:      0,
+	}
+
+	resp := env.OpampServer.OnMessage(context.Background(), conn, msg)
+
+	require.NotNil(t, resp)
+	require.NotNil(t, resp.ErrorResponse, "response should contain an error for unregistered agent")
+	assert.Equal(t, protobufs.ServerErrorResponseType_ServerErrorResponseType_BadRequest, resp.ErrorResponse.Type)
+	assert.Contains(t, resp.ErrorResponse.ErrorMessage, "not registered")
+}
+
+func TestServer_OnMessage_SuccessResponse_NoErrorField(t *testing.T) {
+	env := testutil.NewTestEnv(t)
+
+	agentID := "registered-agent"
+	instanceUID := []byte(agentID)
+	conn := &seqMockConnection{instanceUID: instanceUID}
+	desc := makeSeqAgentDescription(agentID)
+
+	// Register the agent first
+	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+
+	msg := &protobufs.AgentToServer{
+		InstanceUid:      instanceUID,
+		AgentDescription: desc,
+		SequenceNum:      0,
+	}
+
+	resp := env.OpampServer.OnMessage(context.Background(), conn, msg)
+
+	require.NotNil(t, resp)
+	assert.Nil(t, resp.ErrorResponse, "successful response should not contain error")
+	assert.Equal(t, instanceUID, resp.InstanceUid)
 }

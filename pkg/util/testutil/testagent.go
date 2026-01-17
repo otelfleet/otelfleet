@@ -52,7 +52,8 @@ func (e *TestEnv) NewAgent(agentID string) *TestAgent {
 }
 
 // NewAgentWithLabels creates a new test agent with the specified labels.
-// Labels are stored in the agent's identifying attributes.
+// Labels are passed to the Supervisor as extra identifying attributes, which will be
+// included in the AgentDescription sent to the server via OpAMP when the agent starts.
 // The agent is directly registered (no bootstrap). Use NewAgentWithBootstrap for bootstrap testing.
 func (e *TestEnv) NewAgentWithLabels(agentID string, labels map[string]string) *TestAgent {
 	e.t.Helper()
@@ -65,13 +66,14 @@ func (e *TestEnv) NewAgentWithLabels(agentID string, labels map[string]string) *
 	// Create test identity
 	identity := &testIdentity{id: agentID}
 
-	// Create supervisor with mock agent driver
+	// Create supervisor with mock agent driver and extra attributes for labels
 	sup := supervisor.NewSupervisor(
 		logger,
 		nil, // no TLS for tests
 		e.OpampURL,
 		identity,
 		agentDriver,
+		supervisor.ExtraAttributes{Identifying: labels},
 	)
 
 	agent := &TestAgent{
@@ -84,16 +86,8 @@ func (e *TestEnv) NewAgentWithLabels(agentID string, labels map[string]string) *
 
 	// Register agent directly in the agent store (simulates pre-registered agent)
 	ctx := context.Background()
-	var attrs []*agentsv1alpha1.KeyValue
-	for k, v := range labels {
-		attrs = append(attrs, &agentsv1alpha1.KeyValue{
-			Key:   k,
-			Value: &agentsv1alpha1.AnyValue{Value: &agentsv1alpha1.AnyValue_StringValue{StringValue: v}},
-		})
-	}
 	agentDesc := &agentsv1alpha1.AgentDescription{
-		Id:                    agentID,
-		IdentifyingAttributes: attrs,
+		Id: agentID,
 	}
 	require.NoError(e.t, e.AgentStore.Put(ctx, agentID, agentDesc))
 
@@ -142,7 +136,7 @@ func (e *TestEnv) NewAgentWithBootstrap(agentID string, name string, labels map[
 	require.NoError(e.t, err, "agent should be registered after bootstrap")
 	require.Equal(e.t, agentID, storedAgent.GetId())
 
-	// Step 4: Create mock agent driver and supervisor
+	// Step 4: Create mock agent driver and supervisor with labels as extra attributes
 	agentDriver := NewMockAgentDriver(nil)
 
 	sup := supervisor.NewSupervisor(
@@ -151,6 +145,7 @@ func (e *TestEnv) NewAgentWithBootstrap(agentID string, name string, labels map[
 		e.OpampURL,
 		identity,
 		agentDriver,
+		supervisor.ExtraAttributes{Identifying: labels},
 	)
 
 	agent := &TestAgent{

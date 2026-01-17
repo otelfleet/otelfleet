@@ -18,6 +18,9 @@ func TestAgentServer_Status_ReturnsStoredData(t *testing.T) {
 	ctx := context.Background()
 	agentID := "test-agent-123"
 
+	// Register the agent first (required by repository)
+	require.NoError(t, env.AgentRepo.Register(ctx, agentID, "Test Agent"))
+
 	// Set up agent connection state in store
 	require.NoError(t, env.ConnectionStateStore.Put(ctx, agentID, &v1alpha1.AgentConnectionState{
 		AgentId:     agentID,
@@ -91,14 +94,18 @@ func TestAgentServer_Status_ReturnsStoredData(t *testing.T) {
 func TestAgentServer_Status_UnknownAgent(t *testing.T) {
 	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
+	agentID := "non-existent-agent"
+
+	// Register the agent but don't add any status data
+	require.NoError(t, env.AgentRepo.Register(ctx, agentID, "Unknown Agent"))
 
 	req := connect.NewRequest(&v1alpha1.GetAgentStatusRequest{
-		AgentId: "non-existent-agent",
+		AgentId: agentID,
 	})
 	resp, err := env.AgentServer.Status(ctx, req)
 	require.NoError(t, err)
 
-	// Should return unknown state when agent not in connection state store
+	// Should return unknown state when agent has no connection state
 	assert.Equal(t, v1alpha1.AgentState_AGENT_STATE_UNKNOWN, resp.Msg.Status.State)
 	// Other fields should be nil since no data stored
 	assert.Nil(t, resp.Msg.Status.Health)
@@ -110,6 +117,9 @@ func TestAgentServer_Status_PartialData(t *testing.T) {
 	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
 	agentID := "partial-agent"
+
+	// Register the agent first (required by repository)
+	require.NoError(t, env.AgentRepo.Register(ctx, agentID, "Partial Agent"))
 
 	// Only set up connection state and health
 	require.NoError(t, env.ConnectionStateStore.Put(ctx, agentID, &v1alpha1.AgentConnectionState{

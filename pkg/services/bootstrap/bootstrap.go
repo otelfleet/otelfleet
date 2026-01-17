@@ -17,12 +17,11 @@ import (
 	"github.com/grafana/dskit/services"
 	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jws"
-	"github.com/open-telemetry/opamp-go/protobufs"
-	v1alpha1agents "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	v1alpha1bootstrap "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	bootstrapconnect "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1/v1alpha1connect"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/bootstrap"
+	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/ecdh"
 	otelfleetsvc "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/storage"
@@ -40,9 +39,8 @@ type Bootstrapper interface {
 }
 
 type BootstrapServer struct {
-	tokenStore      storage.KeyValue[*v1alpha1bootstrap.BootstrapToken]
-	agentStore      storage.KeyValue[*v1alpha1agents.AgentDescription]
-	opampAgentStore storage.KeyValue[*protobufs.AgentToServer]
+	tokenStore storage.KeyValue[*v1alpha1bootstrap.BootstrapToken]
+	agentRepo  agentdomain.Repository
 
 	privateKey crypto.Signer
 	logger     *slog.Logger
@@ -63,19 +61,17 @@ func NewBootstrapServer(
 	logger *slog.Logger,
 	privateKey crypto.Signer,
 	tokenStore storage.KeyValue[*v1alpha1bootstrap.BootstrapToken],
-	opampAgentStore storage.KeyValue[*protobufs.AgentToServer],
-	agentStore storage.KeyValue[*v1alpha1agents.AgentDescription],
+	agentRepo agentdomain.Repository,
 	configStore storage.KeyValue[*configv1alpha1.Config],
 	bootstrapConfigStore storage.KeyValue[*configv1alpha1.Config],
 	assignedConfigStore storage.KeyValue[*configv1alpha1.Config],
 ) *BootstrapServer {
 	b := &BootstrapServer{
 		tokenStore:           tokenStore,
-		opampAgentStore:      opampAgentStore,
 		privateKey:           privateKey,
 		logger:               logger,
 		bootstrapper:         NewBootstrapper(logger, tokenStore, privateKey),
-		agentStore:           agentStore,
+		agentRepo:            agentRepo,
 		configStore:          configStore,
 		bootstrapConfigStore: bootstrapConfigStore,
 		assignedConfigStore:  assignedConfigStore,
@@ -248,30 +244,38 @@ func (b *BootstrapServer) updateAgentDetails(
 ) error {
 	l := b.logger.With("agentID", agentID).With("friendly-name", name).With("token", token)
 	l.Info("bootstrap successful, persisting agent details")
-	_, err := b.agentStore.Get(ctx, agentID)
-	if grpcutil.IsErrorNotFound(err) {
-		l.Info("persisting agent details")
-		if err := b.agentStore.Put(ctx, agentID, &v1alpha1agents.AgentDescription{
-			Id:           agentID,
-			FriendlyName: name,
-		}); err != nil {
-			return err
-		}
-	} else if err != nil {
+
+	// Check if agent exists using repository
+	exists, err := b.agentRepo.Exists(ctx, agentID)
+	if err != nil {
 		return grpcutil.ErrorInternal(err)
 	}
-	incomingConfig, err := b.bootstrapConfigStore.Get(ctx, token)
-	if err == nil {
-		l.Info("agent has an assigned config")
-		_, configErr := b.assignedConfigStore.Get(ctx, agentID)
-		if grpcutil.IsErrorNotFound(configErr) {
-			l.Info("no config has been assigned to an agent yet, associating bootstrap config with agent")
-			if err := b.assignedConfigStore.Put(ctx, agentID, incomingConfig); err != nil {
-				return err
-			}
-		} else if configErr != nil {
-			return configErr
+
+	if !exists {
+		l.Info("persisting agent details")
+		if err := b.agentRepo.Register(ctx, agentID, name); err != nil {
+			return grpcutil.ErrorInternal(err)
 		}
+	}
+
+	incomingConfig, err := b.bootstrapConfigStore.Get(ctx, token)
+	if err != nil {
+		if grpcutil.IsErrorNotFound(err) {
+			l.Debug("no bootstrap config associated with token")
+			return nil
+		}
+		return grpcutil.ErrorInternal(fmt.Errorf("failed to get bootstrap config: %w", err))
+	}
+
+	l.Info("agent has an assigned config")
+	_, configErr := b.assignedConfigStore.Get(ctx, agentID)
+	if grpcutil.IsErrorNotFound(configErr) {
+		l.Info("no config has been assigned to an agent yet, associating bootstrap config with agent")
+		if err := b.assignedConfigStore.Put(ctx, agentID, incomingConfig); err != nil {
+			return err
+		}
+	} else if configErr != nil {
+		return grpcutil.ErrorInternal(fmt.Errorf("failed to check assigned config: %w", configErr))
 	}
 	// note: in the future there may be things we want to update here like capabilities / scope
 	return nil

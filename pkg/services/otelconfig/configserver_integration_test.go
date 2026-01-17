@@ -2,26 +2,22 @@ package otelconfig_test
 
 import (
 	"context"
-	"log/slog"
 	"sync"
 	"testing"
 
 	"connectrpc.com/connect"
-	"github.com/cockroachdb/pebble/v2"
-	"github.com/cockroachdb/pebble/v2/vfs"
 	"github.com/open-telemetry/opamp-go/protobufs"
 	agentsv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
-	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
-	"github.com/otelfleet/otelfleet/pkg/storage"
-	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
 	"github.com/otelfleet/otelfleet/pkg/util"
+	"github.com/otelfleet/otelfleet/pkg/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// mockNotifier tracks config change notifications for testing
+// mockNotifier tracks config change notifications for testing.
+// We use this instead of the real OpampServer to isolate notification testing.
 type mockNotifier struct {
 	mu            sync.Mutex
 	notifications []string
@@ -47,84 +43,60 @@ func (m *mockNotifier) reset() {
 	m.notifications = nil
 }
 
-// testEnv provides all stores needed for ConfigServer testing
+// testEnv wraps testutil.TestEnv with a mock notifier for notification testing.
 type testEnv struct {
-	server                *otelconfig.ConfigServer
-	configStore           storage.KeyValue[*v1alpha1.Config]
-	defaultConfigStore    storage.KeyValue[*v1alpha1.Config]
-	assignedConfigStore   storage.KeyValue[*v1alpha1.Config]
-	configAssignmentStore storage.KeyValue[*v1alpha1.ConfigAssignment]
-	agentStore            storage.KeyValue[*agentsv1alpha1.AgentDescription]
-	effectiveConfigStore  storage.KeyValue[*protobufs.EffectiveConfig]
-	remoteStatusStore     storage.KeyValue[*protobufs.RemoteConfigStatus]
-	notifier              *mockNotifier
+	*testutil.TestEnv
+	notifier *mockNotifier
 }
 
 func setupTestEnv(t *testing.T) *testEnv {
 	t.Helper()
 
-	db, err := pebble.Open("", &pebble.Options{
-		FS: vfs.NewMem(),
-	})
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, db.Close())
-	})
+	env := testutil.NewTestEnv(t)
+	notifier := &mockNotifier{}
 
-	broker := otelpebble.NewKVBroker(db)
-	logger := slog.Default()
+	// Replace the real notifier with our mock for isolated testing
+	env.ConfigServer.SetNotifier(notifier)
 
-	h := &testEnv{
-		configStore:           storage.NewProtoKV[*v1alpha1.Config](logger, broker.KeyValue("configs")),
-		defaultConfigStore:    storage.NewProtoKV[*v1alpha1.Config](logger, broker.KeyValue("default-configs")),
-		assignedConfigStore:   storage.NewProtoKV[*v1alpha1.Config](logger, broker.KeyValue("assigned-configs")),
-		configAssignmentStore: storage.NewProtoKV[*v1alpha1.ConfigAssignment](logger, broker.KeyValue("config-assignments")),
-		agentStore:            storage.NewProtoKV[*agentsv1alpha1.AgentDescription](logger, broker.KeyValue("agents")),
-		effectiveConfigStore:  storage.NewProtoKV[*protobufs.EffectiveConfig](logger, broker.KeyValue("effective-configs")),
-		remoteStatusStore:     storage.NewProtoKV[*protobufs.RemoteConfigStatus](logger, broker.KeyValue("remote-status")),
-		notifier:              &mockNotifier{},
+	return &testEnv{
+		TestEnv:  env,
+		notifier: notifier,
 	}
-
-	h.server = otelconfig.NewConfigServer(
-		logger,
-		h.configStore,
-		h.defaultConfigStore,
-		h.assignedConfigStore,
-		h.configAssignmentStore,
-		h.agentStore,
-		h.effectiveConfigStore,
-		h.remoteStatusStore,
-	)
-	h.server.SetNotifier(h.notifier)
-
-	return h
 }
 
-// createTestAgent creates an agent in the store
+// createTestAgent creates an agent in the store with labels stored in both
+// the registry (AgentStore) and the attributes store (OpampAgentDescriptionStore).
 func (h *testEnv) createTestAgent(ctx context.Context, t *testing.T, agentID string, labels map[string]string) {
 	t.Helper()
-	var attrs []*agentsv1alpha1.KeyValue
+
+	// Store agent registration
+	agent := &agentsv1alpha1.AgentDescription{
+		Id: agentID,
+	}
+	require.NoError(t, h.AgentStore.Put(ctx, agentID, agent))
+
+	// Store attributes in OpAMP format (this is where the repository reads attributes from)
+	var opampAttrs []*protobufs.KeyValue
 	for k, v := range labels {
-		attrs = append(attrs, &agentsv1alpha1.KeyValue{
+		opampAttrs = append(opampAttrs, &protobufs.KeyValue{
 			Key:   k,
-			Value: &agentsv1alpha1.AnyValue{Value: &agentsv1alpha1.AnyValue_StringValue{StringValue: v}},
+			Value: &protobufs.AnyValue{Value: &protobufs.AnyValue_StringValue{StringValue: v}},
 		})
 	}
-	agent := &agentsv1alpha1.AgentDescription{
-		Id:                       agentID,
-		IdentifyingAttributes:    attrs,
-		NonIdentifyingAttributes: []*agentsv1alpha1.KeyValue{},
+	opampDesc := &protobufs.AgentDescription{
+		IdentifyingAttributes:    opampAttrs,
+		NonIdentifyingAttributes: []*protobufs.KeyValue{},
 	}
-	require.NoError(t, h.agentStore.Put(ctx, agentID, agent))
+	require.NoError(t, h.OpampAgentDescriptionStore.Put(ctx, agentID, opampDesc))
 }
 
-// createTestConfig creates a config in the store
+// createTestConfig creates a config in the store.
 func (h *testEnv) createTestConfig(ctx context.Context, t *testing.T, configID string, configYAML string) *v1alpha1.Config {
 	t.Helper()
 	config := &v1alpha1.Config{
 		Config: []byte(configYAML),
 	}
-	require.NoError(t, h.configStore.Put(ctx, configID, config))
+	require.NoError(t, h.ConfigStore.Put(ctx, configID, config))
 	return config
 }
 
@@ -148,14 +120,14 @@ func TestHashConsistency_AssignedHashMatchesStatusCheck(t *testing.T) {
 	config := h.createTestConfig(ctx, t, configID, configYAML)
 
 	// Assign config
-	_, err := h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err := h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  agentID,
 		ConfigId: configID,
 	}))
 	require.NoError(t, err)
 
 	// Get the stored assignment to find the hash
-	assignment, err := h.configAssignmentStore.Get(ctx, agentID)
+	assignment, err := h.ConfigAssignmentStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	assignedHash := assignment.GetConfigHash()
 
@@ -167,14 +139,14 @@ func TestHashConsistency_AssignedHashMatchesStatusCheck(t *testing.T) {
 		"Hash computed during assignment should match expected hash computation")
 
 	// Now simulate agent reporting config applied with the same hash
-	err = h.remoteStatusStore.Put(ctx, agentID, &protobufs.RemoteConfigStatus{
+	err = h.RemoteStatusStore.Put(ctx, agentID, &protobufs.RemoteConfigStatus{
 		LastRemoteConfigHash: assignedHash,
 		Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
 	})
 	require.NoError(t, err)
 
 	// Get status - it should show APPLIED because hashes match
-	statusResp, err := h.server.GetConfigStatus(ctx, connect.NewRequest(&v1alpha1.GetConfigStatusRequest{
+	statusResp, err := h.ConfigServer.GetConfigStatus(ctx, connect.NewRequest(&v1alpha1.GetConfigStatusRequest{
 		AgentId: agentID,
 	}))
 	require.NoError(t, err)
@@ -196,21 +168,21 @@ func TestHashConsistency_MismatchedHashShowsPending(t *testing.T) {
 	h.createTestConfig(ctx, t, configID, "receivers:\n  otlp:\n")
 
 	// Assign config
-	_, err := h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err := h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  agentID,
 		ConfigId: configID,
 	}))
 	require.NoError(t, err)
 
 	// Agent reports a DIFFERENT hash (simulating old config still running)
-	err = h.remoteStatusStore.Put(ctx, agentID, &protobufs.RemoteConfigStatus{
+	err = h.RemoteStatusStore.Put(ctx, agentID, &protobufs.RemoteConfigStatus{
 		LastRemoteConfigHash: []byte("different-hash"),
 		Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
 	})
 	require.NoError(t, err)
 
 	// Get status - should show PENDING because hash doesn't match
-	statusResp, err := h.server.GetConfigStatus(ctx, connect.NewRequest(&v1alpha1.GetConfigStatusRequest{
+	statusResp, err := h.ConfigServer.GetConfigStatus(ctx, connect.NewRequest(&v1alpha1.GetConfigStatusRequest{
 		AgentId: agentID,
 	}))
 	require.NoError(t, err)
@@ -237,20 +209,20 @@ func TestStoreConsistency_BothStoresUpdatedOnAssign(t *testing.T) {
 	config := h.createTestConfig(ctx, t, configID, configYAML)
 
 	// Assign config
-	_, err := h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err := h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  agentID,
 		ConfigId: configID,
 	}))
 	require.NoError(t, err)
 
 	// Verify assignedConfigStore has the config
-	storedConfig, err := h.assignedConfigStore.Get(ctx, agentID)
+	storedConfig, err := h.AssignedConfigStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	assert.Equal(t, config.GetConfig(), storedConfig.GetConfig(),
 		"assignedConfigStore should have the config bytes")
 
 	// Verify configAssignmentStore has the metadata
-	assignment, err := h.configAssignmentStore.Get(ctx, agentID)
+	assignment, err := h.ConfigAssignmentStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	assert.Equal(t, agentID, assignment.GetAgentId())
 	assert.Equal(t, configID, assignment.GetConfigId())
@@ -272,23 +244,23 @@ func TestStoreConsistency_BothStoresUpdatedOnUnassign(t *testing.T) {
 	h.createTestConfig(ctx, t, configID, "receivers:\n  otlp:\n")
 
 	// Assign then unassign
-	_, err := h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err := h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  agentID,
 		ConfigId: configID,
 	}))
 	require.NoError(t, err)
 
-	_, err = h.server.UnassignConfig(ctx, connect.NewRequest(&v1alpha1.UnassignConfigRequest{
+	_, err = h.ConfigServer.UnassignConfig(ctx, connect.NewRequest(&v1alpha1.UnassignConfigRequest{
 		AgentId: agentID,
 	}))
 	require.NoError(t, err)
 
 	// Verify assignedConfigStore is empty
-	_, err = h.assignedConfigStore.Get(ctx, agentID)
+	_, err = h.AssignedConfigStore.Get(ctx, agentID)
 	assert.Error(t, err, "assignedConfigStore should be empty after unassign")
 
 	// Verify configAssignmentStore is empty
-	_, err = h.configAssignmentStore.Get(ctx, agentID)
+	_, err = h.ConfigAssignmentStore.Get(ctx, agentID)
 	assert.Error(t, err, "configAssignmentStore should be empty after unassign")
 }
 
@@ -309,31 +281,31 @@ func TestStoreConsistency_ReassignOverwritesPrevious(t *testing.T) {
 	config2 := h.createTestConfig(ctx, t, configID2, configYAML2)
 
 	// Assign first config
-	_, err := h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err := h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  agentID,
 		ConfigId: configID1,
 	}))
 	require.NoError(t, err)
 
 	// Get first assignment hash
-	assignment1, err := h.configAssignmentStore.Get(ctx, agentID)
+	assignment1, err := h.ConfigAssignmentStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	hash1 := assignment1.GetConfigHash()
 
 	// Assign second config
-	_, err = h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err = h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  agentID,
 		ConfigId: configID2,
 	}))
 	require.NoError(t, err)
 
 	// Verify stores have new config
-	storedConfig, err := h.assignedConfigStore.Get(ctx, agentID)
+	storedConfig, err := h.AssignedConfigStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	assert.Equal(t, config2.GetConfig(), storedConfig.GetConfig(),
 		"assignedConfigStore should have the new config")
 
-	assignment2, err := h.configAssignmentStore.Get(ctx, agentID)
+	assignment2, err := h.ConfigAssignmentStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	assert.Equal(t, configID2, assignment2.GetConfigId(),
 		"configAssignmentStore should reference new config")
@@ -358,7 +330,7 @@ func TestNotification_FiredOnAssign(t *testing.T) {
 
 	h.notifier.reset()
 
-	_, err := h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err := h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  agentID,
 		ConfigId: configID,
 	}))
@@ -380,7 +352,7 @@ func TestNotification_FiredOnUnassign(t *testing.T) {
 	h.createTestAgent(ctx, t, agentID, nil)
 	h.createTestConfig(ctx, t, configID, "receivers:\n  otlp:\n")
 
-	_, err := h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err := h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  agentID,
 		ConfigId: configID,
 	}))
@@ -388,7 +360,7 @@ func TestNotification_FiredOnUnassign(t *testing.T) {
 
 	h.notifier.reset()
 
-	_, err = h.server.UnassignConfig(ctx, connect.NewRequest(&v1alpha1.UnassignConfigRequest{
+	_, err = h.ConfigServer.UnassignConfig(ctx, connect.NewRequest(&v1alpha1.UnassignConfigRequest{
 		AgentId: agentID,
 	}))
 	require.NoError(t, err)
@@ -413,7 +385,7 @@ func TestNotification_FiredForEachAgentInBatch(t *testing.T) {
 
 	h.notifier.reset()
 
-	_, err := h.server.BatchAssignConfig(ctx, connect.NewRequest(&v1alpha1.BatchAssignConfigRequest{
+	_, err := h.ConfigServer.BatchAssignConfig(ctx, connect.NewRequest(&v1alpha1.BatchAssignConfigRequest{
 		AgentIds: agents,
 		ConfigId: configID,
 	}))
@@ -444,7 +416,7 @@ func TestInSync_TrueWhenEffectiveMatchesAssigned(t *testing.T) {
 	config := h.createTestConfig(ctx, t, configID, configYAML)
 
 	// Assign config
-	_, err := h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err := h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  agentID,
 		ConfigId: configID,
 	}))
@@ -452,21 +424,21 @@ func TestInSync_TrueWhenEffectiveMatchesAssigned(t *testing.T) {
 
 	// Simulate agent reporting the exact same config as effective
 	agentConfigMap := util.ProtoConfigToAgentConfigMap(config)
-	err = h.effectiveConfigStore.Put(ctx, agentID, &protobufs.EffectiveConfig{
+	err = h.EffectiveConfigStore.Put(ctx, agentID, &protobufs.EffectiveConfig{
 		ConfigMap: agentConfigMap,
 	})
 	require.NoError(t, err)
 
 	// Also set remote status as applied with matching hash
 	expectedHash := util.HashAgentConfigMap(agentConfigMap)
-	err = h.remoteStatusStore.Put(ctx, agentID, &protobufs.RemoteConfigStatus{
+	err = h.RemoteStatusStore.Put(ctx, agentID, &protobufs.RemoteConfigStatus{
 		LastRemoteConfigHash: expectedHash,
 		Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
 	})
 	require.NoError(t, err)
 
 	// Get status
-	statusResp, err := h.server.GetConfigStatus(ctx, connect.NewRequest(&v1alpha1.GetConfigStatusRequest{
+	statusResp, err := h.ConfigServer.GetConfigStatus(ctx, connect.NewRequest(&v1alpha1.GetConfigStatusRequest{
 		AgentId: agentID,
 	}))
 	require.NoError(t, err)
@@ -488,14 +460,14 @@ func TestInSync_FalseWhenEffectiveDiffers(t *testing.T) {
 	h.createTestConfig(ctx, t, configID, "receivers:\n  otlp:\n")
 
 	// Assign config
-	_, err := h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err := h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  agentID,
 		ConfigId: configID,
 	}))
 	require.NoError(t, err)
 
 	// Simulate agent reporting a DIFFERENT effective config
-	err = h.effectiveConfigStore.Put(ctx, agentID, &protobufs.EffectiveConfig{
+	err = h.EffectiveConfigStore.Put(ctx, agentID, &protobufs.EffectiveConfig{
 		ConfigMap: &protobufs.AgentConfigMap{
 			ConfigMap: map[string]*protobufs.AgentConfigFile{
 				"config.yaml": {
@@ -508,7 +480,7 @@ func TestInSync_FalseWhenEffectiveDiffers(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get status
-	statusResp, err := h.server.GetConfigStatus(ctx, connect.NewRequest(&v1alpha1.GetConfigStatusRequest{
+	statusResp, err := h.ConfigServer.GetConfigStatus(ctx, connect.NewRequest(&v1alpha1.GetConfigStatusRequest{
 		AgentId: agentID,
 	}))
 	require.NoError(t, err)
@@ -549,7 +521,7 @@ func TestLabelMatching_AllLabelsRequired(t *testing.T) {
 	})
 
 	// Assign by labels requiring BOTH env=prod AND region=us-east
-	resp, err := h.server.AssignConfigByLabels(ctx, connect.NewRequest(&v1alpha1.AssignConfigByLabelsRequest{
+	resp, err := h.ConfigServer.AssignConfigByLabels(ctx, connect.NewRequest(&v1alpha1.AssignConfigByLabelsRequest{
 		ConfigId: configID,
 		Labels: map[string]string{
 			"env":    "prod",
@@ -576,7 +548,7 @@ func TestLabelMatching_EmptyLabelsReturnsError(t *testing.T) {
 	h.createTestAgent(ctx, t, "agent-any", map[string]string{"env": "prod"})
 
 	// Empty labels should return error
-	_, err := h.server.AssignConfigByLabels(ctx, connect.NewRequest(&v1alpha1.AssignConfigByLabelsRequest{
+	_, err := h.ConfigServer.AssignConfigByLabels(ctx, connect.NewRequest(&v1alpha1.AssignConfigByLabelsRequest{
 		ConfigId: configID,
 		Labels:   map[string]string{},
 	}))
@@ -603,19 +575,19 @@ func TestListConfigAssignments_FilterByConfigId(t *testing.T) {
 	h.createTestAgent(ctx, t, "filter-agent-3", nil)
 
 	// Assign config1 to agents 1 and 2
-	_, _ = h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, _ = h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId: "filter-agent-1", ConfigId: config1,
 	}))
-	_, _ = h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, _ = h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId: "filter-agent-2", ConfigId: config1,
 	}))
 	// Assign config2 to agent 3
-	_, _ = h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, _ = h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId: "filter-agent-3", ConfigId: config2,
 	}))
 
 	// Filter by config1
-	resp, err := h.server.ListConfigAssignments(ctx, connect.NewRequest(&v1alpha1.ListConfigAssignmentsRequest{
+	resp, err := h.ConfigServer.ListConfigAssignments(ctx, connect.NewRequest(&v1alpha1.ListConfigAssignmentsRequest{
 		ConfigId: &config1,
 	}))
 	require.NoError(t, err)
@@ -640,15 +612,15 @@ func TestListConfigAssignments_NoFilterReturnsAll(t *testing.T) {
 	h.createTestAgent(ctx, t, "all-agent-1", nil)
 	h.createTestAgent(ctx, t, "all-agent-2", nil)
 
-	_, _ = h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, _ = h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId: "all-agent-1", ConfigId: config1,
 	}))
-	_, _ = h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, _ = h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId: "all-agent-2", ConfigId: config2,
 	}))
 
 	// No filter
-	resp, err := h.server.ListConfigAssignments(ctx, connect.NewRequest(&v1alpha1.ListConfigAssignmentsRequest{}))
+	resp, err := h.ConfigServer.ListConfigAssignments(ctx, connect.NewRequest(&v1alpha1.ListConfigAssignmentsRequest{}))
 	require.NoError(t, err)
 
 	assert.Len(t, resp.Msg.GetAssignments(), 2)
@@ -665,7 +637,7 @@ func TestErrorHandling_AssignNonexistentConfig(t *testing.T) {
 
 	h.createTestAgent(ctx, t, "error-agent-1", nil)
 
-	_, err := h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err := h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  "error-agent-1",
 		ConfigId: "nonexistent-config",
 	}))
@@ -680,7 +652,7 @@ func TestErrorHandling_AssignToNonexistentAgent(t *testing.T) {
 
 	h.createTestConfig(ctx, t, "error-config-1", "receivers:\n  otlp:\n")
 
-	_, err := h.server.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
+	_, err := h.ConfigServer.AssignConfig(ctx, connect.NewRequest(&v1alpha1.AssignConfigRequest{
 		AgentId:  "nonexistent-agent",
 		ConfigId: "error-config-1",
 	}))
@@ -695,7 +667,7 @@ func TestErrorHandling_GetConfigStatusForUnassigned(t *testing.T) {
 
 	h.createTestAgent(ctx, t, "unassigned-agent", nil)
 
-	_, err := h.server.GetConfigStatus(ctx, connect.NewRequest(&v1alpha1.GetConfigStatusRequest{
+	_, err := h.ConfigServer.GetConfigStatus(ctx, connect.NewRequest(&v1alpha1.GetConfigStatusRequest{
 		AgentId: "unassigned-agent",
 	}))
 	assert.Error(t, err)
@@ -715,14 +687,14 @@ func TestConfigCRUD_GetReturnsWhatWasPut(t *testing.T) {
 	configYAML := "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: 0.0.0.0:4317\n"
 
 	// Put config
-	_, err := h.server.PutConfig(ctx, connect.NewRequest(&v1alpha1.PutConfigRequest{
+	_, err := h.ConfigServer.PutConfig(ctx, connect.NewRequest(&v1alpha1.PutConfigRequest{
 		Ref:    &v1alpha1.ConfigReference{Id: configID},
 		Config: &v1alpha1.Config{Config: []byte(configYAML)},
 	}))
 	require.NoError(t, err)
 
 	// Get config
-	resp, err := h.server.GetConfig(ctx, connect.NewRequest(&v1alpha1.ConfigReference{
+	resp, err := h.ConfigServer.GetConfig(ctx, connect.NewRequest(&v1alpha1.ConfigReference{
 		Id: configID,
 	}))
 	require.NoError(t, err)
@@ -738,19 +710,19 @@ func TestConfigCRUD_DeletedConfigNotRetrievable(t *testing.T) {
 	configID := "delete-config"
 
 	// Put and delete
-	_, err := h.server.PutConfig(ctx, connect.NewRequest(&v1alpha1.PutConfigRequest{
+	_, err := h.ConfigServer.PutConfig(ctx, connect.NewRequest(&v1alpha1.PutConfigRequest{
 		Ref:    &v1alpha1.ConfigReference{Id: configID},
 		Config: &v1alpha1.Config{Config: []byte("temp")},
 	}))
 	require.NoError(t, err)
 
-	_, err = h.server.DeleteConfig(ctx, connect.NewRequest(&v1alpha1.ConfigReference{
+	_, err = h.ConfigServer.DeleteConfig(ctx, connect.NewRequest(&v1alpha1.ConfigReference{
 		Id: configID,
 	}))
 	require.NoError(t, err)
 
 	// Get should fail
-	_, err = h.server.GetConfig(ctx, connect.NewRequest(&v1alpha1.ConfigReference{
+	_, err = h.ConfigServer.GetConfig(ctx, connect.NewRequest(&v1alpha1.ConfigReference{
 		Id: configID,
 	}))
 	assert.Error(t, err)
@@ -764,14 +736,14 @@ func TestConfigCRUD_ListShowsAllConfigs(t *testing.T) {
 	configs := []string{"list-config-1", "list-config-2", "list-config-3"}
 
 	for _, id := range configs {
-		_, err := h.server.PutConfig(ctx, connect.NewRequest(&v1alpha1.PutConfigRequest{
+		_, err := h.ConfigServer.PutConfig(ctx, connect.NewRequest(&v1alpha1.PutConfigRequest{
 			Ref:    &v1alpha1.ConfigReference{Id: id},
 			Config: &v1alpha1.Config{Config: []byte("content")},
 		}))
 		require.NoError(t, err)
 	}
 
-	resp, err := h.server.ListConfigs(ctx, connect.NewRequest(&emptypb.Empty{}))
+	resp, err := h.ConfigServer.ListConfigs(ctx, connect.NewRequest(&emptypb.Empty{}))
 	require.NoError(t, err)
 
 	ids := make([]string, len(resp.Msg.GetConfigs()))
@@ -802,7 +774,7 @@ func TestBatchAssign_PartialFailureReportsCorrectCounts(t *testing.T) {
 	h.createTestAgent(ctx, t, "partial-agent-3", nil)
 	// partial-agent-2 intentionally NOT created
 
-	resp, err := h.server.BatchAssignConfig(ctx, connect.NewRequest(&v1alpha1.BatchAssignConfigRequest{
+	resp, err := h.ConfigServer.BatchAssignConfig(ctx, connect.NewRequest(&v1alpha1.BatchAssignConfigRequest{
 		AgentIds: []string{"partial-agent-1", "partial-agent-2", "partial-agent-3"},
 		ConfigId: configID,
 	}))
@@ -827,7 +799,7 @@ func TestBatchAssign_NotificationsOnlyForSuccessful(t *testing.T) {
 
 	h.notifier.reset()
 
-	_, err := h.server.BatchAssignConfig(ctx, connect.NewRequest(&v1alpha1.BatchAssignConfigRequest{
+	_, err := h.ConfigServer.BatchAssignConfig(ctx, connect.NewRequest(&v1alpha1.BatchAssignConfigRequest{
 		AgentIds: []string{"notify-success-1", "notify-failure"},
 		ConfigId: configID,
 	}))
