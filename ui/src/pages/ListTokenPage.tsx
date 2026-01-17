@@ -13,7 +13,7 @@ import type { ConfigReference } from '../gen/api/pkg/api/config/v1alpha1/config_
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { BootstrapToken } from '../gen/api/pkg/api/bootstrap/v1alpha1/bootstrap_pb';
 import { create } from '@bufbuild/protobuf';
-import { CheckCircledIcon, TrashIcon, PlusIcon, Cross2Icon, EyeOpenIcon } from '@radix-ui/react-icons';
+import { CheckCircledIcon, TrashIcon, PlusIcon, Cross2Icon, EyeOpenIcon, CopyIcon } from '@radix-ui/react-icons';
 import { notifyGRPCError } from '../api/notifications';
 import { useNavigate } from '@tanstack/react-router';
 
@@ -161,9 +161,46 @@ export const TokenPage = () => {
     openDeleteModal()
   }, [openDeleteModal])
 
+  const handleCopyToken = useCallback((token: string) => {
+    navigator.clipboard.writeText(token).then(() => {
+      notifications.show({
+        title: "Copied",
+        message: "Bootstrap token copied to clipboard",
+        icon: <CheckCircledIcon />,
+      })
+    }).catch(() => {
+      notifications.show({
+        title: "Copy failed",
+        message: "Failed to copy token to clipboard",
+        color: "red",
+      })
+    })
+  }, [])
+
   const tokenColumns = useMemo<ColumnConfig<BootstrapToken>[]>(() => [
-    { key: 'ID', label: 'ID', visible: true },
-    { key: 'Secret', label: 'Token', visible: true },
+    { key: 'ID', label: 'ID', visible: false },
+    {
+      key: 'Secret',
+      label: 'Bootstrap Token',
+      visible: true,
+      render: (_value: string, row: BootstrapToken) => {
+        const fullToken = `${row.ID}.${row.Secret}`
+        return (
+          <Group gap="xs" wrap="nowrap" justify="center">
+            <Text size="sm" style={{ fontFamily: 'monospace' }}>{fullToken}</Text>
+            <ActionIcon
+              color="gray"
+              variant="subtle"
+              size="sm"
+              onClick={() => handleCopyToken(fullToken)}
+              title="Copy to clipboard"
+            >
+              <CopyIcon />
+            </ActionIcon>
+          </Group>
+        )
+      }
+    },
     {
       key: 'configReference',
       label: 'Config',
@@ -228,7 +265,7 @@ export const TokenPage = () => {
         </Group>
       )
     },
-  ], [confirmDelete, navigate])
+  ], [confirmDelete, navigate, handleCopyToken])
 
   useEffect(() => {
     handleListTokens()

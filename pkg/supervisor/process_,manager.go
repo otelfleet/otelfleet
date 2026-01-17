@@ -19,6 +19,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/natefinch/atomic"
 	"github.com/open-telemetry/opamp-go/protobufs"
+	"github.com/otelfleet/otelfleet/pkg/util"
 )
 
 type ProcManager struct {
@@ -50,6 +51,7 @@ func NewProcManager(
 		BinaryPath:     binaryPath,
 		ConfigDir:      configPath,
 		reportHealthFn: reportFn,
+		curHash:        []byte{},
 	}
 }
 
@@ -111,6 +113,7 @@ func (p *ProcManager) runLocked(ctx context.Context, incoming *protobufs.AgentRe
 		Setpgid: true,
 		// Pdeathsig: shutdownSignal,
 	}
+	p.curHash = util.HashAgentConfigMap(incoming.GetConfig())
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error starting collector")
 	}

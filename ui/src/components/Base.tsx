@@ -207,6 +207,18 @@ const Base: FC = () => {
                                 <NavLink label="All agents" />
                             </Link>
                         </NavLink>
+
+                        <NavLink
+                            label="Assignments"
+                            description="Config assignments"
+                            opened={active === 'assignments'}
+                            active={active === 'assignments'}
+                            onClick={() => setActive(active === 'assignments' ? null : 'assignments')}
+                        >
+                            <Link to="/assignments" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
+                                <NavLink label="All assignments" />
+                            </Link>
+                        </NavLink>
                     </Stack>
                 </AppShell.Navbar>
                 <AppShell.Main>

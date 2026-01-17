@@ -27,6 +27,7 @@ import (
 	logutil "github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/services/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/bootstrap"
+	"github.com/otelfleet/otelfleet/pkg/services/deployment"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
@@ -61,12 +62,13 @@ type logger struct {
 // The various modules that make up OtelFleet
 const (
 	All           = "all"
-	Storage       = "storage"
-	Bootstrap     = "bootstrap"
-	ServerService = "server"
-	OpAmp         = "opamp"
-	ConfigOTEL    = "config-otel"
-	AgentManager  = "agent-manager"
+	Storage          = "storage"
+	Bootstrap        = "bootstrap"
+	ServerService    = "server"
+	OpAmp            = "opamp"
+	ConfigOTEL       = "config-otel"
+	AgentManager     = "agent-manager"
+	DeploymentModule = "deployment"
 )
 
 type OtelFleet struct {
@@ -96,8 +98,19 @@ type OtelFleet struct {
 	// store for associating configs to agents
 	// otelfleet agentID -> config
 	assignmentConfigStore storage.KeyValue[*configv1alpha1.Config]
+	// store for config assignment metadata
+	// otelfleet agentID -> ConfigAssignment
+	configAssignmentStore storage.KeyValue[*configv1alpha1.ConfigAssignment]
 
-	agentTracker opamp.AgentTracker
+	// store for deployment status
+	deploymentStore storage.KeyValue[*configv1alpha1.DeploymentStatus]
+	// store for per-agent deployment status
+	agentDeploymentStore storage.KeyValue[*configv1alpha1.AgentDeploymentStatus]
+
+	agentTracker         opamp.AgentTracker
+	opampServer          *opamp.Server
+	configServer         *otelconfig.ConfigServer
+	deploymentController *deployment.Controller
 
 	serviceMap map[string]services.Service
 	server     *server.Server
@@ -200,6 +213,18 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("store", "assignmentconfigs"),
 			o.store.KeyValue("assignmentconfigs"),
 		)
+		o.configAssignmentStore = storage.NewProtoKV[*configv1alpha1.ConfigAssignment](
+			o.logger.With("store", "config-assignments"),
+			o.store.KeyValue("config-assignments"),
+		)
+		o.deploymentStore = storage.NewProtoKV[*configv1alpha1.DeploymentStatus](
+			o.logger.With("store", "deployments"),
+			o.store.KeyValue("deployments"),
+		)
+		o.agentDeploymentStore = storage.NewProtoKV[*configv1alpha1.AgentDeploymentStatus](
+			o.logger.With("store", "agent-deployments"),
+			o.store.KeyValue("agent-deployments"),
+		)
 		return storeSvc, nil
 	}, modules.UserInvisibleModule)
 
@@ -224,8 +249,14 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("service", ConfigOTEL),
 			o.configStore,
 			o.defaultConfigStore,
+			o.assignmentConfigStore,
+			o.configAssignmentStore,
+			o.agentStore,
+			o.agentEffectiveConfig,
+			o.agentRemoteConfigStore,
 		)
 		cfgServer.ConfigureHTTP(o.server.HTTP)
+		o.configServer = cfgServer
 
 		return cfgServer, nil
 	})
@@ -241,6 +272,11 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.opampAgentDescription,
 			o.assignmentConfigStore,
 		)
+		o.opampServer = srv
+		// Wire up the config change notifier so ConfigServer can push configs to agents
+		if o.configServer != nil {
+			o.configServer.SetNotifier(srv)
+		}
 		return srv, nil
 	})
 
@@ -256,6 +292,23 @@ func (o *OtelFleet) setupModuleManager() error {
 		)
 		srv.ConfigureHTTP(o.server.HTTP)
 		return srv, nil
+	})
+
+	mm.RegisterModule(DeploymentModule, func() (services.Service, error) {
+		ctrl := deployment.NewController(
+			o.logger.With("service", DeploymentModule),
+			o.deploymentStore,
+			o.agentDeploymentStore,
+			o.configStore,
+			o.agentStore,
+		)
+		o.deploymentController = ctrl
+		// Wire up the config assigner so the deployment controller can assign configs
+		if o.configServer != nil {
+			ctrl.SetConfigAssigner(o.configServer)
+			o.configServer.SetDeploymentController(ctrl)
+		}
+		return ctrl, nil
 	})
 
 	mm.RegisterModule(ServerService, func() (services.Service, error) {
@@ -289,11 +342,12 @@ func (o *OtelFleet) setupModuleManager() error {
 		All: {
 			ServerService,
 		},
-		ServerService: {Bootstrap, OpAmp, AgentManager},
-		AgentManager:  {OpAmp},
-		OpAmp:         {ConfigOTEL, Storage},
-		Bootstrap:     {Storage},
-		ConfigOTEL:    {Storage},
+		ServerService:    {Bootstrap, OpAmp, AgentManager, DeploymentModule},
+		AgentManager:     {OpAmp},
+		OpAmp:            {ConfigOTEL, Storage},
+		Bootstrap:        {Storage},
+		ConfigOTEL:       {Storage},
+		DeploymentModule: {ConfigOTEL, Storage},
 	}
 
 	for mod, targets := range deps {

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TokensRouteImport } from './routes/tokens'
 import { Route as EditorRouteImport } from './routes/editor'
 import { Route as ConfigsRouteImport } from './routes/configs'
+import { Route as AssignmentsRouteImport } from './routes/assignments'
 import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -31,6 +32,11 @@ const EditorRoute = EditorRouteImport.update({
 const ConfigsRoute = ConfigsRouteImport.update({
   id: '/configs',
   path: '/configs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssignmentsRoute = AssignmentsRouteImport.update({
+  id: '/assignments',
+  path: '/assignments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgentsRoute = AgentsRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/agents': typeof AgentsRouteWithChildren
+  '/assignments': typeof AssignmentsRoute
   '/configs': typeof ConfigsRoute
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/agents': typeof AgentsRouteWithChildren
+  '/assignments': typeof AssignmentsRoute
   '/configs': typeof ConfigsRoute
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/agents': typeof AgentsRouteWithChildren
+  '/assignments': typeof AssignmentsRoute
   '/configs': typeof ConfigsRoute
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/agents'
+    | '/assignments'
     | '/configs'
     | '/editor'
     | '/tokens'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/agents'
+    | '/assignments'
     | '/configs'
     | '/editor'
     | '/tokens'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/agents'
+    | '/assignments'
     | '/configs'
     | '/editor'
     | '/tokens'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AgentsRoute: typeof AgentsRouteWithChildren
+  AssignmentsRoute: typeof AssignmentsRoute
   ConfigsRoute: typeof ConfigsRoute
   EditorRoute: typeof EditorRoute
   TokensRoute: typeof TokensRouteWithChildren
@@ -153,6 +166,13 @@ declare module '@tanstack/react-router' {
       path: '/configs'
       fullPath: '/configs'
       preLoaderRoute: typeof ConfigsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assignments': {
+      id: '/assignments'
+      path: '/assignments'
+      fullPath: '/assignments'
+      preLoaderRoute: typeof AssignmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/agents': {
@@ -219,6 +239,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AgentsRoute: AgentsRouteWithChildren,
+  AssignmentsRoute: AssignmentsRoute,
   ConfigsRoute: ConfigsRoute,
   EditorRoute: EditorRoute,
   TokensRoute: TokensRouteWithChildren,

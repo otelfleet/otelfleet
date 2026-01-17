@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useClient } from '../api';
 import { notifyGRPCError } from '../api/notifications';
 import {
@@ -14,6 +14,14 @@ import type {
     AnyValue,
 } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import {
+    ConfigService,
+    ConfigSource,
+} from '../gen/api/pkg/api/config/v1alpha1/config_pb';
+import type {
+    ConfigReference,
+    GetAgentConfigResponse,
+} from '../gen/api/pkg/api/config/v1alpha1/config_pb';
+import {
     Tabs,
     Paper,
     Title,
@@ -26,8 +34,14 @@ import {
     Center,
     Alert,
     Box,
+    Button,
+    Modal,
+    Select,
 } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { notifications } from '@mantine/notifications';
 import { AlertCircle } from 'react-feather';
+import { CheckCircledIcon } from '@radix-ui/react-icons';
 import MonacoEditor from '@monaco-editor/react';
 
 interface AgentDetailPageProps {
@@ -35,11 +49,85 @@ interface AgentDetailPageProps {
 }
 
 export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
-    const client = useClient(AgentService);
+    const agentClient = useClient(AgentService);
+    const configClient = useClient(ConfigService);
     const [agent, setAgent] = useState<AgentDescription | null>(null);
     const [status, setStatus] = useState<AgentStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Config assignment state
+    const [configAssignment, setConfigAssignment] = useState<GetAgentConfigResponse | null>(null);
+    const [availableConfigs, setAvailableConfigs] = useState<ConfigReference[]>([]);
+    const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
+    const [assignModalOpened, { open: openAssignModal, close: closeAssignModal }] = useDisclosure(false);
+    const [unassignModalOpened, { open: openUnassignModal, close: closeUnassignModal }] = useDisclosure(false);
+    const [assigning, setAssigning] = useState(false);
+
+    const fetchConfigAssignment = useCallback(async () => {
+        try {
+            const response = await configClient.getAgentConfig({ agentId });
+            setConfigAssignment(response);
+        } catch {
+            // Agent might not have a config assigned, which is fine
+            setConfigAssignment(null);
+        }
+    }, [agentId, configClient]);
+
+    const fetchAvailableConfigs = useCallback(async () => {
+        try {
+            const response = await configClient.listConfigs({});
+            setAvailableConfigs(response.configs);
+        } catch (err) {
+            notifyGRPCError('Failed to load configs', err);
+        }
+    }, [configClient]);
+
+    const handleAssignConfig = useCallback(async () => {
+        if (!selectedConfig) return;
+        setAssigning(true);
+        try {
+            const response = await configClient.assignConfig({ agentId, configId: selectedConfig });
+            if (response.success) {
+                notifications.show({
+                    title: 'Config assigned',
+                    message: `Successfully assigned config "${selectedConfig}" to agent`,
+                    icon: <CheckCircledIcon />,
+                });
+                fetchConfigAssignment();
+            } else {
+                notifications.show({
+                    title: 'Assignment failed',
+                    message: response.message,
+                    color: 'red',
+                });
+            }
+        } catch (err) {
+            notifyGRPCError('Failed to assign config', err);
+        } finally {
+            setAssigning(false);
+            closeAssignModal();
+            setSelectedConfig(null);
+        }
+    }, [agentId, selectedConfig, configClient, fetchConfigAssignment, closeAssignModal]);
+
+    const handleUnassignConfig = useCallback(async () => {
+        try {
+            const response = await configClient.unassignConfig({ agentId });
+            if (response.success) {
+                notifications.show({
+                    title: 'Config unassigned',
+                    message: 'Successfully removed config from agent',
+                    icon: <CheckCircledIcon />,
+                });
+                fetchConfigAssignment();
+            }
+        } catch (err) {
+            notifyGRPCError('Failed to unassign config', err);
+        } finally {
+            closeUnassignModal();
+        }
+    }, [agentId, configClient, fetchConfigAssignment, closeUnassignModal]);
 
     useEffect(() => {
         const fetchAgentData = async () => {
@@ -47,8 +135,8 @@ export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
             setError(null);
             try {
                 const [agentResponse, statusResponse] = await Promise.all([
-                    client.getAgent({ agentId }),
-                    client.status({ agentId }),
+                    agentClient.getAgent({ agentId }),
+                    agentClient.status({ agentId }),
                 ]);
                 setAgent(agentResponse.agent ?? null);
                 setStatus(statusResponse.status ?? null);
@@ -61,7 +149,14 @@ export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
         };
 
         fetchAgentData();
-    }, [agentId, client]);
+        fetchConfigAssignment();
+    }, [agentId, agentClient, fetchConfigAssignment]);
+
+    useEffect(() => {
+        if (assignModalOpened) {
+            fetchAvailableConfigs();
+        }
+    }, [assignModalOpened, fetchAvailableConfigs]);
 
     if (loading) {
         return (
@@ -80,28 +175,67 @@ export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
     }
 
     return (
-        <Stack gap="md" style={{ height: '100%' }}>
-            <AgentHeader agent={agent} status={status} />
-            <Tabs defaultValue="health" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <Tabs.List>
-                    <Tabs.Tab value="health">Health</Tabs.Tab>
-                    <Tabs.Tab value="details">Details</Tabs.Tab>
-                    <Tabs.Tab value="config">Effective Config</Tabs.Tab>
-                </Tabs.List>
+        <>
+            <Stack gap="md" style={{ height: '100%' }}>
+                <AgentHeader agent={agent} status={status} />
+                <ConfigAssignmentSection
+                    assignment={configAssignment}
+                    onAssign={openAssignModal}
+                    onUnassign={openUnassignModal}
+                />
+                <Tabs defaultValue="health" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <Tabs.List>
+                        <Tabs.Tab value="health">Health</Tabs.Tab>
+                        <Tabs.Tab value="details">Details</Tabs.Tab>
+                        <Tabs.Tab value="config">Effective Config</Tabs.Tab>
+                    </Tabs.List>
 
-                <Tabs.Panel value="health" pt="md" style={{ flex: 1 }}>
-                    <HealthTab health={status?.health} />
-                </Tabs.Panel>
+                    <Tabs.Panel value="health" pt="md" style={{ flex: 1 }}>
+                        <HealthTab health={status?.health} />
+                    </Tabs.Panel>
 
-                <Tabs.Panel value="details" pt="md" style={{ flex: 1 }}>
-                    <DetailsTab agent={agent} />
-                </Tabs.Panel>
+                    <Tabs.Panel value="details" pt="md" style={{ flex: 1 }}>
+                        <DetailsTab agent={agent} />
+                    </Tabs.Panel>
 
-                <Tabs.Panel value="config" pt="md" style={{ flex: 1, minHeight: 400 }}>
-                    <EffectiveConfigTab status={status} />
-                </Tabs.Panel>
-            </Tabs>
-        </Stack>
+                    <Tabs.Panel value="config" pt="md" style={{ flex: 1, minHeight: 400 }}>
+                        <EffectiveConfigTab status={status} />
+                    </Tabs.Panel>
+                </Tabs>
+            </Stack>
+
+            {/* Assign Config Modal */}
+            <Modal opened={assignModalOpened} onClose={closeAssignModal} title="Assign Config">
+                <Stack gap="md">
+                    <Select
+                        label="Select Config"
+                        placeholder="Choose a configuration"
+                        data={availableConfigs.map(c => ({ value: c.id, label: c.id }))}
+                        value={selectedConfig}
+                        onChange={setSelectedConfig}
+                        searchable
+                    />
+                    <Group justify="flex-end" mt="md">
+                        <Button variant="default" onClick={closeAssignModal}>Cancel</Button>
+                        <Button onClick={handleAssignConfig} loading={assigning} disabled={!selectedConfig}>
+                            Assign
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
+
+            {/* Unassign Config Modal */}
+            <Modal opened={unassignModalOpened} onClose={closeUnassignModal} title="Unassign Config">
+                <Text>Are you sure you want to remove the config assignment from this agent?</Text>
+                <Text size="sm" c="dimmed" mt="xs">
+                    The agent will fall back to the default configuration.
+                </Text>
+                <Group justify="flex-end" mt="md">
+                    <Button variant="default" onClick={closeUnassignModal}>Cancel</Button>
+                    <Button color="red" onClick={handleUnassignConfig}>Unassign</Button>
+                </Group>
+            </Modal>
+        </>
     );
 }
 
@@ -140,6 +274,75 @@ function AgentHeader({ agent, status }: { agent: AgentDescription | null; status
                     <Badge color={configStatus.color} variant="filled" size="lg">
                         Config: {configStatus.label}
                     </Badge>
+                </Group>
+            </Group>
+        </Paper>
+    );
+}
+
+function ConfigAssignmentSection({
+    assignment,
+    onAssign,
+    onUnassign,
+}: {
+    assignment: GetAgentConfigResponse | null;
+    onAssign: () => void;
+    onUnassign: () => void;
+}) {
+    const formatDate = (timestamp?: { seconds?: bigint; nanos?: number }) => {
+        if (!timestamp?.seconds) return 'N/A';
+        return new Date(Number(timestamp.seconds) * 1000).toLocaleString();
+    };
+
+    const sourceLabel = {
+        [ConfigSource.UNSPECIFIED]: 'Unknown',
+        [ConfigSource.DEFAULT]: 'Default',
+        [ConfigSource.BOOTSTRAP]: 'Bootstrap',
+        [ConfigSource.MANUAL]: 'Manual',
+    }[assignment?.source ?? ConfigSource.UNSPECIFIED];
+
+    const sourceColor = {
+        [ConfigSource.UNSPECIFIED]: 'gray',
+        [ConfigSource.DEFAULT]: 'blue',
+        [ConfigSource.BOOTSTRAP]: 'violet',
+        [ConfigSource.MANUAL]: 'green',
+    }[assignment?.source ?? ConfigSource.UNSPECIFIED];
+
+    return (
+        <Paper p="md" withBorder>
+            <Group justify="space-between" align="flex-start">
+                <Stack gap="xs">
+                    <Title order={4}>Config Assignment</Title>
+                    {assignment?.configId ? (
+                        <>
+                            <Group gap="lg">
+                                <Stack gap={2}>
+                                    <Text size="sm" c="dimmed">Config</Text>
+                                    <Text fw={500}>{assignment.configId}</Text>
+                                </Stack>
+                                <Stack gap={2}>
+                                    <Text size="sm" c="dimmed">Source</Text>
+                                    <Badge color={sourceColor} variant="light">{sourceLabel}</Badge>
+                                </Stack>
+                                <Stack gap={2}>
+                                    <Text size="sm" c="dimmed">Assigned At</Text>
+                                    <Text size="sm">{formatDate(assignment.assignedAt)}</Text>
+                                </Stack>
+                            </Group>
+                        </>
+                    ) : (
+                        <Text c="dimmed">No config assigned - using default configuration</Text>
+                    )}
+                </Stack>
+                <Group gap="xs">
+                    <Button variant="light" size="sm" onClick={onAssign}>
+                        {assignment?.configId ? 'Change Config' : 'Assign Config'}
+                    </Button>
+                    {assignment?.configId && (
+                        <Button variant="light" color="red" size="sm" onClick={onUnassign}>
+                            Unassign
+                        </Button>
+                    )}
                 </Group>
             </Group>
         </Paper>

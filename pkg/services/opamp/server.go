@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/grafana/dskit/services"
@@ -31,7 +32,9 @@ type Server struct {
 	agentStore storage.KeyValue[*protobufs.AgentToServer]
 	services.Service
 
+	mu       sync.RWMutex
 	addrToId map[string]string
+	idToConn map[string]types.Connection // agentID -> connection
 	tracker  AgentTracker
 
 	healthStore           storage.KeyValue[*protobufs.ComponentHealth]
@@ -59,6 +62,7 @@ func NewServer(
 		opampSrv:              opampSvr,
 		agentStore:            agentStore,
 		addrToId:              map[string]string{},
+		idToConn:              map[string]types.Connection{},
 		tracker:               tracker,
 		healthStore:           healthStore,
 		configStore:           configStore,
@@ -100,6 +104,7 @@ func (s *Server) start(ctx context.Context) error {
 	}
 	if err := s.opampSrv.Start(settings); err != nil {
 		s.logger.With("err", err.Error()).Error("failed to start opamp server")
+		return fmt.Errorf("failed to start opamp server: %w", err)
 	}
 
 	return nil
@@ -136,14 +141,8 @@ func (s *Server) constructConfig(ctx context.Context, agentID string) (*protobuf
 		return nil, err
 	}
 	logger.Info("agent has an assigned config")
-	return &protobufs.AgentConfigMap{
-		ConfigMap: map[string]*protobufs.AgentConfigFile{
-			"config.yaml": {
-				ContentType: "text/yaml",
-				Body:        assignedConfig.GetConfig(),
-			},
-		},
-	}, nil
+	// Use the same helper as ConfigServer for consistent config map structure
+	return util.ProtoConfigToAgentConfigMap(assignedConfig), nil
 }
 
 func (s *Server) sendConfig(ctx context.Context, conn types.Connection, agentID string) error {
@@ -176,7 +175,7 @@ func (s *Server) OnMessage(ctx context.Context, conn types.Connection, message *
 
 	// Resolve the persistent agentID: extract from description or use cached mapping
 	// FIXME: AgentDescription may not always be set
-	agentID := s.resolveAgentID(agentAddr, message.AgentDescription)
+	agentID := s.resolveAgentID(agentAddr, conn, message.AgentDescription)
 	logger := s.logger.With("agent-id", agentID, "instance-uid", instanceUID)
 	logger.Debug("received message from agent")
 
@@ -234,41 +233,50 @@ func (s *Server) handleRemoteConfigStatus(
 	remoteConfigStatus *protobufs.RemoteConfigStatus,
 ) error {
 	logger := logutil.FromContext(ctx)
-	var curHash []byte
-	storedStatus, err := s.remoteStatusStore.Get(ctx, agentID)
-	if grpcutil.IsErrorNotFound(err) {
-		logger.Info("no remote config status reported yet")
-		curHash = []byte{}
-	} else if err != nil {
-		return err
-	} else {
-		curHash = storedStatus.GetLastRemoteConfigHash()
+
+	// Get the assigned config and calculate its expected hash
+	assignedConfigMap, err := s.constructConfig(ctx, agentID)
+	if err != nil {
+		return fmt.Errorf("failed to construct assigned config: %w", err)
 	}
+	expectedHash := s.calculateHash(assignedConfigMap)
+
+	// Compare agent's reported hash against the assigned config hash
 	incomingHash := remoteConfigStatus.GetLastRemoteConfigHash()
 
-	if !(len(curHash) == 0 || bytes.Equal(curHash, incomingHash)) {
+	if bytes.Equal(expectedHash, incomingHash) {
 		logger.Info("agent remote config up-to-date")
+		// Persist the status
+		if err := s.remoteStatusStore.Put(ctx, agentID, remoteConfigStatus); err != nil {
+			return fmt.Errorf("failed to persist remote config status: %w", err)
+		}
 		return nil
 	}
 
-	logger.Info("need to send remote config to agent")
+	logger.Info("need to send remote config to agent",
+		"expected_hash", fmt.Sprintf("%x", expectedHash),
+		"agent_hash", fmt.Sprintf("%x", incomingHash))
 
 	if err := s.sendConfig(ctx, conn, agentID); err != nil {
-		return fmt.Errorf("failed to send config to remote : %w", err)
+		return fmt.Errorf("failed to send config to remote: %w", err)
 	}
 	if err := s.remoteStatusStore.Put(ctx, agentID, remoteConfigStatus); err != nil {
-		return fmt.Errorf("failed to persist remote config status : %w", err)
+		return fmt.Errorf("failed to persist remote config status: %w", err)
 	}
 	return nil
 }
 
 // resolveAgentID returns the persistent agent ID, either by extracting it from the
 // agent description or by looking it up from the address mapping.
-func (s *Server) resolveAgentID(agentAddr string, desc *protobufs.AgentDescription) string {
+// It also stores the connection for later use by NotifyConfigChange.
+func (s *Server) resolveAgentID(agentAddr string, conn types.Connection, desc *protobufs.AgentDescription) string {
 	// Try to extract from description first
 	if desc != nil {
 		if agentID := extractAgentID(desc); agentID != "" {
+			s.mu.Lock()
 			s.addrToId[agentAddr] = agentID
+			s.idToConn[agentID] = conn
+			s.mu.Unlock()
 			s.tracker.PutStatus(agentID, &v1alpha1.AgentStatus{
 				State: v1alpha1.AgentState_AGENT_STATE_CONNECTED,
 			})
@@ -276,6 +284,8 @@ func (s *Server) resolveAgentID(agentAddr string, desc *protobufs.AgentDescripti
 		}
 	}
 	// Fall back to cached mapping
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.addrToId[agentAddr]
 }
 
@@ -293,7 +303,15 @@ func (s *Server) OnConnectionClose(conn types.Connection) {
 	remoteAddr := conn.Connection().RemoteAddr().String()
 	logger := s.logger.With("remote_addr", remoteAddr)
 	logger.Info("agent disconnected")
+
+	s.mu.Lock()
 	agentID, ok := s.addrToId[remoteAddr]
+	if ok {
+		delete(s.addrToId, remoteAddr)
+		delete(s.idToConn, agentID)
+	}
+	s.mu.Unlock()
+
 	if !ok {
 		logger.Error("agent not tracked in addr to persistent ID map")
 		return
@@ -302,3 +320,29 @@ func (s *Server) OnConnectionClose(conn types.Connection) {
 		State: v1alpha1.AgentState_AGENT_STATE_DISCONNECTED,
 	})
 }
+
+// NotifyConfigChange triggers an immediate config push to the specified agent.
+// This implements the otelconfig.ConfigChangeNotifier interface.
+// If the agent is not connected, this is a no-op (the agent will receive
+// the config when it reconnects).
+func (s *Server) NotifyConfigChange(agentID string) {
+	s.mu.RLock()
+	conn, ok := s.idToConn[agentID]
+	s.mu.RUnlock()
+
+	if !ok {
+		s.logger.With("agent_id", agentID).Debug("agent not connected, config will be sent on reconnect")
+		return
+	}
+
+	// Send config immediately
+	ctx := context.Background()
+	if err := s.sendConfig(ctx, conn, agentID); err != nil {
+		s.logger.With("agent_id", agentID, "err", err).Error("failed to send config on notify")
+	} else {
+		s.logger.With("agent_id", agentID).Info("config pushed to agent")
+	}
+}
+
+// Ensure Server implements ConfigChangeNotifier
+var _ otelconfig.ConfigChangeNotifier = (*Server)(nil)

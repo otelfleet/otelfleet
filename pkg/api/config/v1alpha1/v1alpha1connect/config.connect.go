@@ -53,10 +53,50 @@ const (
 	// ConfigServiceSetDefaultConfigProcedure is the fully-qualified name of the ConfigService's
 	// SetDefaultConfig RPC.
 	ConfigServiceSetDefaultConfigProcedure = "/config.v1alpha1.ConfigService/SetDefaultConfig"
+	// ConfigServiceAssignConfigProcedure is the fully-qualified name of the ConfigService's
+	// AssignConfig RPC.
+	ConfigServiceAssignConfigProcedure = "/config.v1alpha1.ConfigService/AssignConfig"
+	// ConfigServiceGetAgentConfigProcedure is the fully-qualified name of the ConfigService's
+	// GetAgentConfig RPC.
+	ConfigServiceGetAgentConfigProcedure = "/config.v1alpha1.ConfigService/GetAgentConfig"
+	// ConfigServiceUnassignConfigProcedure is the fully-qualified name of the ConfigService's
+	// UnassignConfig RPC.
+	ConfigServiceUnassignConfigProcedure = "/config.v1alpha1.ConfigService/UnassignConfig"
+	// ConfigServiceListConfigAssignmentsProcedure is the fully-qualified name of the ConfigService's
+	// ListConfigAssignments RPC.
+	ConfigServiceListConfigAssignmentsProcedure = "/config.v1alpha1.ConfigService/ListConfigAssignments"
+	// ConfigServiceGetConfigStatusProcedure is the fully-qualified name of the ConfigService's
+	// GetConfigStatus RPC.
+	ConfigServiceGetConfigStatusProcedure = "/config.v1alpha1.ConfigService/GetConfigStatus"
+	// ConfigServiceBatchAssignConfigProcedure is the fully-qualified name of the ConfigService's
+	// BatchAssignConfig RPC.
+	ConfigServiceBatchAssignConfigProcedure = "/config.v1alpha1.ConfigService/BatchAssignConfig"
+	// ConfigServiceAssignConfigByLabelsProcedure is the fully-qualified name of the ConfigService's
+	// AssignConfigByLabels RPC.
+	ConfigServiceAssignConfigByLabelsProcedure = "/config.v1alpha1.ConfigService/AssignConfigByLabels"
+	// ConfigServiceStartRollingDeploymentProcedure is the fully-qualified name of the ConfigService's
+	// StartRollingDeployment RPC.
+	ConfigServiceStartRollingDeploymentProcedure = "/config.v1alpha1.ConfigService/StartRollingDeployment"
+	// ConfigServiceGetDeploymentStatusProcedure is the fully-qualified name of the ConfigService's
+	// GetDeploymentStatus RPC.
+	ConfigServiceGetDeploymentStatusProcedure = "/config.v1alpha1.ConfigService/GetDeploymentStatus"
+	// ConfigServicePauseDeploymentProcedure is the fully-qualified name of the ConfigService's
+	// PauseDeployment RPC.
+	ConfigServicePauseDeploymentProcedure = "/config.v1alpha1.ConfigService/PauseDeployment"
+	// ConfigServiceResumeDeploymentProcedure is the fully-qualified name of the ConfigService's
+	// ResumeDeployment RPC.
+	ConfigServiceResumeDeploymentProcedure = "/config.v1alpha1.ConfigService/ResumeDeployment"
+	// ConfigServiceCancelDeploymentProcedure is the fully-qualified name of the ConfigService's
+	// CancelDeployment RPC.
+	ConfigServiceCancelDeploymentProcedure = "/config.v1alpha1.ConfigService/CancelDeployment"
+	// ConfigServiceListDeploymentsProcedure is the fully-qualified name of the ConfigService's
+	// ListDeployments RPC.
+	ConfigServiceListDeploymentsProcedure = "/config.v1alpha1.ConfigService/ListDeployments"
 )
 
 // ConfigServiceClient is a client for the config.v1alpha1.ConfigService service.
 type ConfigServiceClient interface {
+	// Config CRUD
 	ValidConfig(context.Context, *connect.Request[v1alpha1.ValidateConfigRequest]) (*connect.Response[emptypb.Empty], error)
 	PutConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error)
 	GetConfig(context.Context, *connect.Request[v1alpha1.ConfigReference]) (*connect.Response[v1alpha1.Config], error)
@@ -64,6 +104,23 @@ type ConfigServiceClient interface {
 	ListConfigs(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.ListConfigReponse], error)
 	GetDefaultConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.Config], error)
 	SetDefaultConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error)
+	// Phase 1: Manual Config Assignment
+	AssignConfig(context.Context, *connect.Request[v1alpha1.AssignConfigRequest]) (*connect.Response[v1alpha1.AssignConfigResponse], error)
+	GetAgentConfig(context.Context, *connect.Request[v1alpha1.GetAgentConfigRequest]) (*connect.Response[v1alpha1.GetAgentConfigResponse], error)
+	UnassignConfig(context.Context, *connect.Request[v1alpha1.UnassignConfigRequest]) (*connect.Response[v1alpha1.UnassignConfigResponse], error)
+	// Phase 2: Config Assignment Queries and Status
+	ListConfigAssignments(context.Context, *connect.Request[v1alpha1.ListConfigAssignmentsRequest]) (*connect.Response[v1alpha1.ListConfigAssignmentsResponse], error)
+	GetConfigStatus(context.Context, *connect.Request[v1alpha1.GetConfigStatusRequest]) (*connect.Response[v1alpha1.GetConfigStatusResponse], error)
+	// Phase 3: Batch Assignment
+	BatchAssignConfig(context.Context, *connect.Request[v1alpha1.BatchAssignConfigRequest]) (*connect.Response[v1alpha1.BatchAssignConfigResponse], error)
+	AssignConfigByLabels(context.Context, *connect.Request[v1alpha1.AssignConfigByLabelsRequest]) (*connect.Response[v1alpha1.AssignConfigByLabelsResponse], error)
+	// Phase 4: Rolling Deployment
+	StartRollingDeployment(context.Context, *connect.Request[v1alpha1.RollingDeploymentRequest]) (*connect.Response[v1alpha1.RollingDeploymentResponse], error)
+	GetDeploymentStatus(context.Context, *connect.Request[v1alpha1.GetDeploymentStatusRequest]) (*connect.Response[v1alpha1.GetDeploymentStatusResponse], error)
+	PauseDeployment(context.Context, *connect.Request[v1alpha1.PauseDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error)
+	ResumeDeployment(context.Context, *connect.Request[v1alpha1.ResumeDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error)
+	CancelDeployment(context.Context, *connect.Request[v1alpha1.CancelDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error)
+	ListDeployments(context.Context, *connect.Request[v1alpha1.ListDeploymentsRequest]) (*connect.Response[v1alpha1.ListDeploymentsResponse], error)
 }
 
 // NewConfigServiceClient constructs a client for the config.v1alpha1.ConfigService service. By
@@ -119,18 +176,109 @@ func NewConfigServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(configServiceMethods.ByName("SetDefaultConfig")),
 			connect.WithClientOptions(opts...),
 		),
+		assignConfig: connect.NewClient[v1alpha1.AssignConfigRequest, v1alpha1.AssignConfigResponse](
+			httpClient,
+			baseURL+ConfigServiceAssignConfigProcedure,
+			connect.WithSchema(configServiceMethods.ByName("AssignConfig")),
+			connect.WithClientOptions(opts...),
+		),
+		getAgentConfig: connect.NewClient[v1alpha1.GetAgentConfigRequest, v1alpha1.GetAgentConfigResponse](
+			httpClient,
+			baseURL+ConfigServiceGetAgentConfigProcedure,
+			connect.WithSchema(configServiceMethods.ByName("GetAgentConfig")),
+			connect.WithClientOptions(opts...),
+		),
+		unassignConfig: connect.NewClient[v1alpha1.UnassignConfigRequest, v1alpha1.UnassignConfigResponse](
+			httpClient,
+			baseURL+ConfigServiceUnassignConfigProcedure,
+			connect.WithSchema(configServiceMethods.ByName("UnassignConfig")),
+			connect.WithClientOptions(opts...),
+		),
+		listConfigAssignments: connect.NewClient[v1alpha1.ListConfigAssignmentsRequest, v1alpha1.ListConfigAssignmentsResponse](
+			httpClient,
+			baseURL+ConfigServiceListConfigAssignmentsProcedure,
+			connect.WithSchema(configServiceMethods.ByName("ListConfigAssignments")),
+			connect.WithClientOptions(opts...),
+		),
+		getConfigStatus: connect.NewClient[v1alpha1.GetConfigStatusRequest, v1alpha1.GetConfigStatusResponse](
+			httpClient,
+			baseURL+ConfigServiceGetConfigStatusProcedure,
+			connect.WithSchema(configServiceMethods.ByName("GetConfigStatus")),
+			connect.WithClientOptions(opts...),
+		),
+		batchAssignConfig: connect.NewClient[v1alpha1.BatchAssignConfigRequest, v1alpha1.BatchAssignConfigResponse](
+			httpClient,
+			baseURL+ConfigServiceBatchAssignConfigProcedure,
+			connect.WithSchema(configServiceMethods.ByName("BatchAssignConfig")),
+			connect.WithClientOptions(opts...),
+		),
+		assignConfigByLabels: connect.NewClient[v1alpha1.AssignConfigByLabelsRequest, v1alpha1.AssignConfigByLabelsResponse](
+			httpClient,
+			baseURL+ConfigServiceAssignConfigByLabelsProcedure,
+			connect.WithSchema(configServiceMethods.ByName("AssignConfigByLabels")),
+			connect.WithClientOptions(opts...),
+		),
+		startRollingDeployment: connect.NewClient[v1alpha1.RollingDeploymentRequest, v1alpha1.RollingDeploymentResponse](
+			httpClient,
+			baseURL+ConfigServiceStartRollingDeploymentProcedure,
+			connect.WithSchema(configServiceMethods.ByName("StartRollingDeployment")),
+			connect.WithClientOptions(opts...),
+		),
+		getDeploymentStatus: connect.NewClient[v1alpha1.GetDeploymentStatusRequest, v1alpha1.GetDeploymentStatusResponse](
+			httpClient,
+			baseURL+ConfigServiceGetDeploymentStatusProcedure,
+			connect.WithSchema(configServiceMethods.ByName("GetDeploymentStatus")),
+			connect.WithClientOptions(opts...),
+		),
+		pauseDeployment: connect.NewClient[v1alpha1.PauseDeploymentRequest, v1alpha1.DeploymentActionResponse](
+			httpClient,
+			baseURL+ConfigServicePauseDeploymentProcedure,
+			connect.WithSchema(configServiceMethods.ByName("PauseDeployment")),
+			connect.WithClientOptions(opts...),
+		),
+		resumeDeployment: connect.NewClient[v1alpha1.ResumeDeploymentRequest, v1alpha1.DeploymentActionResponse](
+			httpClient,
+			baseURL+ConfigServiceResumeDeploymentProcedure,
+			connect.WithSchema(configServiceMethods.ByName("ResumeDeployment")),
+			connect.WithClientOptions(opts...),
+		),
+		cancelDeployment: connect.NewClient[v1alpha1.CancelDeploymentRequest, v1alpha1.DeploymentActionResponse](
+			httpClient,
+			baseURL+ConfigServiceCancelDeploymentProcedure,
+			connect.WithSchema(configServiceMethods.ByName("CancelDeployment")),
+			connect.WithClientOptions(opts...),
+		),
+		listDeployments: connect.NewClient[v1alpha1.ListDeploymentsRequest, v1alpha1.ListDeploymentsResponse](
+			httpClient,
+			baseURL+ConfigServiceListDeploymentsProcedure,
+			connect.WithSchema(configServiceMethods.ByName("ListDeployments")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // configServiceClient implements ConfigServiceClient.
 type configServiceClient struct {
-	validConfig      *connect.Client[v1alpha1.ValidateConfigRequest, emptypb.Empty]
-	putConfig        *connect.Client[v1alpha1.PutConfigRequest, emptypb.Empty]
-	getConfig        *connect.Client[v1alpha1.ConfigReference, v1alpha1.Config]
-	deleteConfig     *connect.Client[v1alpha1.ConfigReference, emptypb.Empty]
-	listConfigs      *connect.Client[emptypb.Empty, v1alpha1.ListConfigReponse]
-	getDefaultConfig *connect.Client[emptypb.Empty, v1alpha1.Config]
-	setDefaultConfig *connect.Client[v1alpha1.PutConfigRequest, emptypb.Empty]
+	validConfig            *connect.Client[v1alpha1.ValidateConfigRequest, emptypb.Empty]
+	putConfig              *connect.Client[v1alpha1.PutConfigRequest, emptypb.Empty]
+	getConfig              *connect.Client[v1alpha1.ConfigReference, v1alpha1.Config]
+	deleteConfig           *connect.Client[v1alpha1.ConfigReference, emptypb.Empty]
+	listConfigs            *connect.Client[emptypb.Empty, v1alpha1.ListConfigReponse]
+	getDefaultConfig       *connect.Client[emptypb.Empty, v1alpha1.Config]
+	setDefaultConfig       *connect.Client[v1alpha1.PutConfigRequest, emptypb.Empty]
+	assignConfig           *connect.Client[v1alpha1.AssignConfigRequest, v1alpha1.AssignConfigResponse]
+	getAgentConfig         *connect.Client[v1alpha1.GetAgentConfigRequest, v1alpha1.GetAgentConfigResponse]
+	unassignConfig         *connect.Client[v1alpha1.UnassignConfigRequest, v1alpha1.UnassignConfigResponse]
+	listConfigAssignments  *connect.Client[v1alpha1.ListConfigAssignmentsRequest, v1alpha1.ListConfigAssignmentsResponse]
+	getConfigStatus        *connect.Client[v1alpha1.GetConfigStatusRequest, v1alpha1.GetConfigStatusResponse]
+	batchAssignConfig      *connect.Client[v1alpha1.BatchAssignConfigRequest, v1alpha1.BatchAssignConfigResponse]
+	assignConfigByLabels   *connect.Client[v1alpha1.AssignConfigByLabelsRequest, v1alpha1.AssignConfigByLabelsResponse]
+	startRollingDeployment *connect.Client[v1alpha1.RollingDeploymentRequest, v1alpha1.RollingDeploymentResponse]
+	getDeploymentStatus    *connect.Client[v1alpha1.GetDeploymentStatusRequest, v1alpha1.GetDeploymentStatusResponse]
+	pauseDeployment        *connect.Client[v1alpha1.PauseDeploymentRequest, v1alpha1.DeploymentActionResponse]
+	resumeDeployment       *connect.Client[v1alpha1.ResumeDeploymentRequest, v1alpha1.DeploymentActionResponse]
+	cancelDeployment       *connect.Client[v1alpha1.CancelDeploymentRequest, v1alpha1.DeploymentActionResponse]
+	listDeployments        *connect.Client[v1alpha1.ListDeploymentsRequest, v1alpha1.ListDeploymentsResponse]
 }
 
 // ValidConfig calls config.v1alpha1.ConfigService.ValidConfig.
@@ -168,8 +316,74 @@ func (c *configServiceClient) SetDefaultConfig(ctx context.Context, req *connect
 	return c.setDefaultConfig.CallUnary(ctx, req)
 }
 
+// AssignConfig calls config.v1alpha1.ConfigService.AssignConfig.
+func (c *configServiceClient) AssignConfig(ctx context.Context, req *connect.Request[v1alpha1.AssignConfigRequest]) (*connect.Response[v1alpha1.AssignConfigResponse], error) {
+	return c.assignConfig.CallUnary(ctx, req)
+}
+
+// GetAgentConfig calls config.v1alpha1.ConfigService.GetAgentConfig.
+func (c *configServiceClient) GetAgentConfig(ctx context.Context, req *connect.Request[v1alpha1.GetAgentConfigRequest]) (*connect.Response[v1alpha1.GetAgentConfigResponse], error) {
+	return c.getAgentConfig.CallUnary(ctx, req)
+}
+
+// UnassignConfig calls config.v1alpha1.ConfigService.UnassignConfig.
+func (c *configServiceClient) UnassignConfig(ctx context.Context, req *connect.Request[v1alpha1.UnassignConfigRequest]) (*connect.Response[v1alpha1.UnassignConfigResponse], error) {
+	return c.unassignConfig.CallUnary(ctx, req)
+}
+
+// ListConfigAssignments calls config.v1alpha1.ConfigService.ListConfigAssignments.
+func (c *configServiceClient) ListConfigAssignments(ctx context.Context, req *connect.Request[v1alpha1.ListConfigAssignmentsRequest]) (*connect.Response[v1alpha1.ListConfigAssignmentsResponse], error) {
+	return c.listConfigAssignments.CallUnary(ctx, req)
+}
+
+// GetConfigStatus calls config.v1alpha1.ConfigService.GetConfigStatus.
+func (c *configServiceClient) GetConfigStatus(ctx context.Context, req *connect.Request[v1alpha1.GetConfigStatusRequest]) (*connect.Response[v1alpha1.GetConfigStatusResponse], error) {
+	return c.getConfigStatus.CallUnary(ctx, req)
+}
+
+// BatchAssignConfig calls config.v1alpha1.ConfigService.BatchAssignConfig.
+func (c *configServiceClient) BatchAssignConfig(ctx context.Context, req *connect.Request[v1alpha1.BatchAssignConfigRequest]) (*connect.Response[v1alpha1.BatchAssignConfigResponse], error) {
+	return c.batchAssignConfig.CallUnary(ctx, req)
+}
+
+// AssignConfigByLabels calls config.v1alpha1.ConfigService.AssignConfigByLabels.
+func (c *configServiceClient) AssignConfigByLabels(ctx context.Context, req *connect.Request[v1alpha1.AssignConfigByLabelsRequest]) (*connect.Response[v1alpha1.AssignConfigByLabelsResponse], error) {
+	return c.assignConfigByLabels.CallUnary(ctx, req)
+}
+
+// StartRollingDeployment calls config.v1alpha1.ConfigService.StartRollingDeployment.
+func (c *configServiceClient) StartRollingDeployment(ctx context.Context, req *connect.Request[v1alpha1.RollingDeploymentRequest]) (*connect.Response[v1alpha1.RollingDeploymentResponse], error) {
+	return c.startRollingDeployment.CallUnary(ctx, req)
+}
+
+// GetDeploymentStatus calls config.v1alpha1.ConfigService.GetDeploymentStatus.
+func (c *configServiceClient) GetDeploymentStatus(ctx context.Context, req *connect.Request[v1alpha1.GetDeploymentStatusRequest]) (*connect.Response[v1alpha1.GetDeploymentStatusResponse], error) {
+	return c.getDeploymentStatus.CallUnary(ctx, req)
+}
+
+// PauseDeployment calls config.v1alpha1.ConfigService.PauseDeployment.
+func (c *configServiceClient) PauseDeployment(ctx context.Context, req *connect.Request[v1alpha1.PauseDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error) {
+	return c.pauseDeployment.CallUnary(ctx, req)
+}
+
+// ResumeDeployment calls config.v1alpha1.ConfigService.ResumeDeployment.
+func (c *configServiceClient) ResumeDeployment(ctx context.Context, req *connect.Request[v1alpha1.ResumeDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error) {
+	return c.resumeDeployment.CallUnary(ctx, req)
+}
+
+// CancelDeployment calls config.v1alpha1.ConfigService.CancelDeployment.
+func (c *configServiceClient) CancelDeployment(ctx context.Context, req *connect.Request[v1alpha1.CancelDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error) {
+	return c.cancelDeployment.CallUnary(ctx, req)
+}
+
+// ListDeployments calls config.v1alpha1.ConfigService.ListDeployments.
+func (c *configServiceClient) ListDeployments(ctx context.Context, req *connect.Request[v1alpha1.ListDeploymentsRequest]) (*connect.Response[v1alpha1.ListDeploymentsResponse], error) {
+	return c.listDeployments.CallUnary(ctx, req)
+}
+
 // ConfigServiceHandler is an implementation of the config.v1alpha1.ConfigService service.
 type ConfigServiceHandler interface {
+	// Config CRUD
 	ValidConfig(context.Context, *connect.Request[v1alpha1.ValidateConfigRequest]) (*connect.Response[emptypb.Empty], error)
 	PutConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error)
 	GetConfig(context.Context, *connect.Request[v1alpha1.ConfigReference]) (*connect.Response[v1alpha1.Config], error)
@@ -177,6 +391,23 @@ type ConfigServiceHandler interface {
 	ListConfigs(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.ListConfigReponse], error)
 	GetDefaultConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1.Config], error)
 	SetDefaultConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error)
+	// Phase 1: Manual Config Assignment
+	AssignConfig(context.Context, *connect.Request[v1alpha1.AssignConfigRequest]) (*connect.Response[v1alpha1.AssignConfigResponse], error)
+	GetAgentConfig(context.Context, *connect.Request[v1alpha1.GetAgentConfigRequest]) (*connect.Response[v1alpha1.GetAgentConfigResponse], error)
+	UnassignConfig(context.Context, *connect.Request[v1alpha1.UnassignConfigRequest]) (*connect.Response[v1alpha1.UnassignConfigResponse], error)
+	// Phase 2: Config Assignment Queries and Status
+	ListConfigAssignments(context.Context, *connect.Request[v1alpha1.ListConfigAssignmentsRequest]) (*connect.Response[v1alpha1.ListConfigAssignmentsResponse], error)
+	GetConfigStatus(context.Context, *connect.Request[v1alpha1.GetConfigStatusRequest]) (*connect.Response[v1alpha1.GetConfigStatusResponse], error)
+	// Phase 3: Batch Assignment
+	BatchAssignConfig(context.Context, *connect.Request[v1alpha1.BatchAssignConfigRequest]) (*connect.Response[v1alpha1.BatchAssignConfigResponse], error)
+	AssignConfigByLabels(context.Context, *connect.Request[v1alpha1.AssignConfigByLabelsRequest]) (*connect.Response[v1alpha1.AssignConfigByLabelsResponse], error)
+	// Phase 4: Rolling Deployment
+	StartRollingDeployment(context.Context, *connect.Request[v1alpha1.RollingDeploymentRequest]) (*connect.Response[v1alpha1.RollingDeploymentResponse], error)
+	GetDeploymentStatus(context.Context, *connect.Request[v1alpha1.GetDeploymentStatusRequest]) (*connect.Response[v1alpha1.GetDeploymentStatusResponse], error)
+	PauseDeployment(context.Context, *connect.Request[v1alpha1.PauseDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error)
+	ResumeDeployment(context.Context, *connect.Request[v1alpha1.ResumeDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error)
+	CancelDeployment(context.Context, *connect.Request[v1alpha1.CancelDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error)
+	ListDeployments(context.Context, *connect.Request[v1alpha1.ListDeploymentsRequest]) (*connect.Response[v1alpha1.ListDeploymentsResponse], error)
 }
 
 // NewConfigServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -228,6 +459,84 @@ func NewConfigServiceHandler(svc ConfigServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(configServiceMethods.ByName("SetDefaultConfig")),
 		connect.WithHandlerOptions(opts...),
 	)
+	configServiceAssignConfigHandler := connect.NewUnaryHandler(
+		ConfigServiceAssignConfigProcedure,
+		svc.AssignConfig,
+		connect.WithSchema(configServiceMethods.ByName("AssignConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServiceGetAgentConfigHandler := connect.NewUnaryHandler(
+		ConfigServiceGetAgentConfigProcedure,
+		svc.GetAgentConfig,
+		connect.WithSchema(configServiceMethods.ByName("GetAgentConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServiceUnassignConfigHandler := connect.NewUnaryHandler(
+		ConfigServiceUnassignConfigProcedure,
+		svc.UnassignConfig,
+		connect.WithSchema(configServiceMethods.ByName("UnassignConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServiceListConfigAssignmentsHandler := connect.NewUnaryHandler(
+		ConfigServiceListConfigAssignmentsProcedure,
+		svc.ListConfigAssignments,
+		connect.WithSchema(configServiceMethods.ByName("ListConfigAssignments")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServiceGetConfigStatusHandler := connect.NewUnaryHandler(
+		ConfigServiceGetConfigStatusProcedure,
+		svc.GetConfigStatus,
+		connect.WithSchema(configServiceMethods.ByName("GetConfigStatus")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServiceBatchAssignConfigHandler := connect.NewUnaryHandler(
+		ConfigServiceBatchAssignConfigProcedure,
+		svc.BatchAssignConfig,
+		connect.WithSchema(configServiceMethods.ByName("BatchAssignConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServiceAssignConfigByLabelsHandler := connect.NewUnaryHandler(
+		ConfigServiceAssignConfigByLabelsProcedure,
+		svc.AssignConfigByLabels,
+		connect.WithSchema(configServiceMethods.ByName("AssignConfigByLabels")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServiceStartRollingDeploymentHandler := connect.NewUnaryHandler(
+		ConfigServiceStartRollingDeploymentProcedure,
+		svc.StartRollingDeployment,
+		connect.WithSchema(configServiceMethods.ByName("StartRollingDeployment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServiceGetDeploymentStatusHandler := connect.NewUnaryHandler(
+		ConfigServiceGetDeploymentStatusProcedure,
+		svc.GetDeploymentStatus,
+		connect.WithSchema(configServiceMethods.ByName("GetDeploymentStatus")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServicePauseDeploymentHandler := connect.NewUnaryHandler(
+		ConfigServicePauseDeploymentProcedure,
+		svc.PauseDeployment,
+		connect.WithSchema(configServiceMethods.ByName("PauseDeployment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServiceResumeDeploymentHandler := connect.NewUnaryHandler(
+		ConfigServiceResumeDeploymentProcedure,
+		svc.ResumeDeployment,
+		connect.WithSchema(configServiceMethods.ByName("ResumeDeployment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServiceCancelDeploymentHandler := connect.NewUnaryHandler(
+		ConfigServiceCancelDeploymentProcedure,
+		svc.CancelDeployment,
+		connect.WithSchema(configServiceMethods.ByName("CancelDeployment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configServiceListDeploymentsHandler := connect.NewUnaryHandler(
+		ConfigServiceListDeploymentsProcedure,
+		svc.ListDeployments,
+		connect.WithSchema(configServiceMethods.ByName("ListDeployments")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/config.v1alpha1.ConfigService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ConfigServiceValidConfigProcedure:
@@ -244,6 +553,32 @@ func NewConfigServiceHandler(svc ConfigServiceHandler, opts ...connect.HandlerOp
 			configServiceGetDefaultConfigHandler.ServeHTTP(w, r)
 		case ConfigServiceSetDefaultConfigProcedure:
 			configServiceSetDefaultConfigHandler.ServeHTTP(w, r)
+		case ConfigServiceAssignConfigProcedure:
+			configServiceAssignConfigHandler.ServeHTTP(w, r)
+		case ConfigServiceGetAgentConfigProcedure:
+			configServiceGetAgentConfigHandler.ServeHTTP(w, r)
+		case ConfigServiceUnassignConfigProcedure:
+			configServiceUnassignConfigHandler.ServeHTTP(w, r)
+		case ConfigServiceListConfigAssignmentsProcedure:
+			configServiceListConfigAssignmentsHandler.ServeHTTP(w, r)
+		case ConfigServiceGetConfigStatusProcedure:
+			configServiceGetConfigStatusHandler.ServeHTTP(w, r)
+		case ConfigServiceBatchAssignConfigProcedure:
+			configServiceBatchAssignConfigHandler.ServeHTTP(w, r)
+		case ConfigServiceAssignConfigByLabelsProcedure:
+			configServiceAssignConfigByLabelsHandler.ServeHTTP(w, r)
+		case ConfigServiceStartRollingDeploymentProcedure:
+			configServiceStartRollingDeploymentHandler.ServeHTTP(w, r)
+		case ConfigServiceGetDeploymentStatusProcedure:
+			configServiceGetDeploymentStatusHandler.ServeHTTP(w, r)
+		case ConfigServicePauseDeploymentProcedure:
+			configServicePauseDeploymentHandler.ServeHTTP(w, r)
+		case ConfigServiceResumeDeploymentProcedure:
+			configServiceResumeDeploymentHandler.ServeHTTP(w, r)
+		case ConfigServiceCancelDeploymentProcedure:
+			configServiceCancelDeploymentHandler.ServeHTTP(w, r)
+		case ConfigServiceListDeploymentsProcedure:
+			configServiceListDeploymentsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -279,4 +614,56 @@ func (UnimplementedConfigServiceHandler) GetDefaultConfig(context.Context, *conn
 
 func (UnimplementedConfigServiceHandler) SetDefaultConfig(context.Context, *connect.Request[v1alpha1.PutConfigRequest]) (*connect.Response[emptypb.Empty], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.SetDefaultConfig is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) AssignConfig(context.Context, *connect.Request[v1alpha1.AssignConfigRequest]) (*connect.Response[v1alpha1.AssignConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.AssignConfig is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) GetAgentConfig(context.Context, *connect.Request[v1alpha1.GetAgentConfigRequest]) (*connect.Response[v1alpha1.GetAgentConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.GetAgentConfig is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) UnassignConfig(context.Context, *connect.Request[v1alpha1.UnassignConfigRequest]) (*connect.Response[v1alpha1.UnassignConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.UnassignConfig is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) ListConfigAssignments(context.Context, *connect.Request[v1alpha1.ListConfigAssignmentsRequest]) (*connect.Response[v1alpha1.ListConfigAssignmentsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.ListConfigAssignments is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) GetConfigStatus(context.Context, *connect.Request[v1alpha1.GetConfigStatusRequest]) (*connect.Response[v1alpha1.GetConfigStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.GetConfigStatus is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) BatchAssignConfig(context.Context, *connect.Request[v1alpha1.BatchAssignConfigRequest]) (*connect.Response[v1alpha1.BatchAssignConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.BatchAssignConfig is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) AssignConfigByLabels(context.Context, *connect.Request[v1alpha1.AssignConfigByLabelsRequest]) (*connect.Response[v1alpha1.AssignConfigByLabelsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.AssignConfigByLabels is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) StartRollingDeployment(context.Context, *connect.Request[v1alpha1.RollingDeploymentRequest]) (*connect.Response[v1alpha1.RollingDeploymentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.StartRollingDeployment is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) GetDeploymentStatus(context.Context, *connect.Request[v1alpha1.GetDeploymentStatusRequest]) (*connect.Response[v1alpha1.GetDeploymentStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.GetDeploymentStatus is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) PauseDeployment(context.Context, *connect.Request[v1alpha1.PauseDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.PauseDeployment is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) ResumeDeployment(context.Context, *connect.Request[v1alpha1.ResumeDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.ResumeDeployment is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) CancelDeployment(context.Context, *connect.Request[v1alpha1.CancelDeploymentRequest]) (*connect.Response[v1alpha1.DeploymentActionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.CancelDeployment is not implemented"))
+}
+
+func (UnimplementedConfigServiceHandler) ListDeployments(context.Context, *connect.Request[v1alpha1.ListDeploymentsRequest]) (*connect.Response[v1alpha1.ListDeploymentsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.ConfigService.ListDeployments is not implemented"))
 }

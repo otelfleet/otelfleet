@@ -113,7 +113,7 @@ func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 	l := s.logger
 	if incomingCfg := msg.RemoteConfig; incomingCfg != nil {
 		l = l.With("type", "remote-config")
-		l.Info("updatading effective configuration")
+		l.Info("updating effective configuration")
 		if err := s.procManager.Update(ctx, incomingCfg); err != nil {
 			// TODO : only send failed apply when the write to disk fails in proc manager
 			if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
@@ -125,6 +125,7 @@ func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 			}
 			return
 		}
+		l.With("cur-hash", s.procManager.curHash).Info("sending remote status update")
 		if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
 			Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
 			LastRemoteConfigHash: incomingCfg.GetConfigHash(),

@@ -3,10 +3,12 @@ package config.v1alpha1;
 
 // import "google/protobuf/duration.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1";
 
 service ConfigService {
+  // Config CRUD
   rpc ValidConfig(ValidateConfigRequest) returns (google.protobuf.Empty);
   rpc PutConfig(PutConfigRequest) returns (google.protobuf.Empty);
   rpc GetConfig(ConfigReference) returns (Config);
@@ -14,6 +16,27 @@ service ConfigService {
   rpc ListConfigs(google.protobuf.Empty) returns (ListConfigReponse);
   rpc GetDefaultConfig(google.protobuf.Empty) returns (Config);
   rpc SetDefaultConfig(PutConfigRequest) returns (google.protobuf.Empty);
+
+  // Phase 1: Manual Config Assignment
+  rpc AssignConfig(AssignConfigRequest) returns (AssignConfigResponse);
+  rpc GetAgentConfig(GetAgentConfigRequest) returns (GetAgentConfigResponse);
+  rpc UnassignConfig(UnassignConfigRequest) returns (UnassignConfigResponse);
+
+  // Phase 2: Config Assignment Queries and Status
+  rpc ListConfigAssignments(ListConfigAssignmentsRequest) returns (ListConfigAssignmentsResponse);
+  rpc GetConfigStatus(GetConfigStatusRequest) returns (GetConfigStatusResponse);
+
+  // Phase 3: Batch Assignment
+  rpc BatchAssignConfig(BatchAssignConfigRequest) returns (BatchAssignConfigResponse);
+  rpc AssignConfigByLabels(AssignConfigByLabelsRequest) returns (AssignConfigByLabelsResponse);
+
+  // Phase 4: Rolling Deployment
+  rpc StartRollingDeployment(RollingDeploymentRequest) returns (RollingDeploymentResponse);
+  rpc GetDeploymentStatus(GetDeploymentStatusRequest) returns (GetDeploymentStatusResponse);
+  rpc PauseDeployment(PauseDeploymentRequest) returns (DeploymentActionResponse);
+  rpc ResumeDeployment(ResumeDeploymentRequest) returns (DeploymentActionResponse);
+  rpc CancelDeployment(CancelDeploymentRequest) returns (DeploymentActionResponse);
+  rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
 }
 
 message PutConfigRequest {
@@ -48,4 +71,215 @@ message Labels {
 
 message Matcher {
   // TODO:
+}
+
+// ============================================================================
+// Config Assignment Enums
+// ============================================================================
+
+// ConfigSource indicates how a config was assigned to an agent
+enum ConfigSource {
+  CONFIG_SOURCE_UNSPECIFIED = 0;
+  CONFIG_SOURCE_DEFAULT = 1;
+  CONFIG_SOURCE_BOOTSTRAP = 2;
+  CONFIG_SOURCE_MANUAL = 3;
+}
+
+// ConfigApplicationStatus indicates whether the agent has applied the config
+enum ConfigApplicationStatus {
+  CONFIG_APPLICATION_STATUS_UNSPECIFIED = 0;
+  CONFIG_APPLICATION_STATUS_PENDING = 1;
+  CONFIG_APPLICATION_STATUS_APPLIED = 2;
+  CONFIG_APPLICATION_STATUS_FAILED = 3;
+}
+
+// ============================================================================
+// Phase 1: Manual Config Assignment Messages
+// ============================================================================
+
+// ConfigAssignment tracks metadata about a config assignment to an agent
+message ConfigAssignment {
+  string agent_id = 1;
+  string config_id = 2;
+  ConfigSource source = 3;
+  google.protobuf.Timestamp assigned_at = 4;
+  bytes config_hash = 5;
+}
+
+message AssignConfigRequest {
+  string agent_id = 1;
+  string config_id = 2;
+}
+
+message AssignConfigResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetAgentConfigRequest {
+  string agent_id = 1;
+}
+
+message GetAgentConfigResponse {
+  string config_id = 1;
+  ConfigSource source = 2;
+  google.protobuf.Timestamp assigned_at = 3;
+}
+
+message UnassignConfigRequest {
+  string agent_id = 1;
+}
+
+message UnassignConfigResponse {
+  bool success = 1;
+}
+
+// ============================================================================
+// Phase 2: Config Assignment Queries and Status Messages
+// ============================================================================
+
+message ListConfigAssignmentsRequest {
+  optional string config_id = 1;  // Filter by config
+}
+
+message ConfigAssignmentInfo {
+  string agent_id = 1;
+  string config_id = 2;
+  ConfigSource source = 3;
+  google.protobuf.Timestamp assigned_at = 4;
+  ConfigApplicationStatus status = 5;
+  string error_message = 6;
+}
+
+message ListConfigAssignmentsResponse {
+  repeated ConfigAssignmentInfo assignments = 1;
+}
+
+message GetConfigStatusRequest {
+  string agent_id = 1;
+}
+
+message GetConfigStatusResponse {
+  ConfigAssignmentInfo assignment = 1;
+  bytes effective_config_hash = 2;  // What agent reports
+  bytes assigned_config_hash = 3;   // What we assigned
+  bool in_sync = 4;
+}
+
+// ============================================================================
+// Phase 3: Batch Assignment Messages
+// ============================================================================
+
+message BatchAssignConfigRequest {
+  repeated string agent_ids = 1;
+  string config_id = 2;
+}
+
+message BatchAssignConfigResponse {
+  int32 successful = 1;
+  int32 failed = 2;
+  repeated string failed_agent_ids = 3;
+  repeated string error_messages = 4;
+}
+
+message AssignConfigByLabelsRequest {
+  map<string, string> labels = 1;  // Agent labels to match
+  string config_id = 2;
+}
+
+message AssignConfigByLabelsResponse {
+  repeated string matched_agent_ids = 1;
+  int32 successful = 2;
+  int32 failed = 3;
+}
+
+// ============================================================================
+// Phase 4: Rolling Deployment Messages
+// ============================================================================
+
+// DeploymentState represents the overall state of a deployment
+enum DeploymentState {
+  DEPLOYMENT_STATE_UNSPECIFIED = 0;
+  DEPLOYMENT_STATE_PENDING = 1;
+  DEPLOYMENT_STATE_IN_PROGRESS = 2;
+  DEPLOYMENT_STATE_PAUSED = 3;
+  DEPLOYMENT_STATE_COMPLETED = 4;
+  DEPLOYMENT_STATE_FAILED = 5;
+  DEPLOYMENT_STATE_CANCELLED = 6;
+}
+
+// AgentDeploymentState represents the state of deployment for a single agent
+enum AgentDeploymentState {
+  AGENT_DEPLOYMENT_STATE_UNSPECIFIED = 0;
+  AGENT_DEPLOYMENT_STATE_PENDING = 1;
+  AGENT_DEPLOYMENT_STATE_APPLYING = 2;
+  AGENT_DEPLOYMENT_STATE_APPLIED = 3;
+  AGENT_DEPLOYMENT_STATE_FAILED = 4;
+}
+
+message RollingDeploymentRequest {
+  string config_id = 1;
+  repeated string agent_ids = 2;
+  map<string, string> agent_labels = 3;  // Alternative to agent_ids
+  int32 batch_size = 4;  // Agents per batch (default: 1)
+  int32 batch_delay_seconds = 5;  // Delay between batches (default: 0)
+  int32 max_failures = 6;  // Stop after N failures (default: 0 = no limit)
+}
+
+message RollingDeploymentResponse {
+  string deployment_id = 1;
+}
+
+message AgentDeploymentStatus {
+  string agent_id = 1;
+  AgentDeploymentState state = 2;
+  string error_message = 3;
+  google.protobuf.Timestamp applied_at = 4;
+}
+
+message DeploymentStatus {
+  string deployment_id = 1;
+  string config_id = 2;
+  DeploymentState state = 3;
+  int32 total_agents = 4;
+  int32 completed_agents = 5;
+  int32 failed_agents = 6;
+  int32 pending_agents = 7;
+  int32 current_batch = 8;
+  repeated AgentDeploymentStatus agent_statuses = 9;
+  google.protobuf.Timestamp started_at = 10;
+  google.protobuf.Timestamp completed_at = 11;
+}
+
+message GetDeploymentStatusRequest {
+  string deployment_id = 1;
+}
+
+message GetDeploymentStatusResponse {
+  DeploymentStatus status = 1;
+}
+
+message PauseDeploymentRequest {
+  string deployment_id = 1;
+}
+
+message ResumeDeploymentRequest {
+  string deployment_id = 1;
+}
+
+message CancelDeploymentRequest {
+  string deployment_id = 1;
+}
+
+message DeploymentActionResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListDeploymentsRequest {
+  optional DeploymentState state_filter = 1;
+}
+
+message ListDeploymentsResponse {
+  repeated DeploymentStatus deployments = 1;
 }

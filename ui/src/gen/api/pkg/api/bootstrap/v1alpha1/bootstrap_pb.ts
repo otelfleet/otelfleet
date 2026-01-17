@@ -119,6 +119,8 @@ export type BootstrapToken = Message<"bootstrap.v1alpha1.BootstrapToken"> & {
   Expiry?: Timestamp;
 
   /**
+   * TODO: eventually this will be insufficient, should refactor to a message ConfigReference in config.proto
+   *
    * @generated from field: optional string configReference = 5;
    */
   configReference?: string;
