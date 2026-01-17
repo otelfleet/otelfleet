@@ -39,6 +39,8 @@ type ProcManager struct {
 	)
 }
 
+var _ AgentDriver = (*ProcManager)(nil)
+
 func NewProcManager(
 	logger *slog.Logger,
 	binaryPath,
@@ -164,6 +166,13 @@ func (p *ProcManager) handleLogs(ctx context.Context, rc io.ReadCloser) {
 	}
 }
 
+// GetCurrentHash returns the hash of the currently applied configuration.
+func (p *ProcManager) GetCurrentHash() []byte {
+	p.runMu.Lock()
+	defer p.runMu.Unlock()
+	return p.curHash
+}
+
 func (p *ProcManager) Shutdown() error {
 	// TODO:
 	if p.cmd != nil && p.cmd.Process != nil {
@@ -204,7 +213,8 @@ func (p *ProcManager) writeConfigLocked(name string, config *protobufs.AgentConf
 	return nil
 }
 
-func (p *ProcManager) getConfigMap() (*protobufs.AgentConfigMap, error) {
+// GetConfigMap returns the current effective configuration as an AgentConfigMap.
+func (p *ProcManager) GetConfigMap() (*protobufs.AgentConfigMap, error) {
 	entries, err := os.ReadDir(p.ConfigDir)
 	if err != nil {
 		return nil, fmt.Errorf("reading config directory: %w", err)

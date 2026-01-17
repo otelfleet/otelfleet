@@ -1,60 +1,39 @@
+//go:build insecure
+
 package opamp_test
 
 import (
 	"context"
-	"log/slog"
 	"net"
 	"testing"
 	"time"
 
-	"github.com/cockroachdb/pebble/v2"
-	"github.com/cockroachdb/pebble/v2/vfs"
 	"github.com/google/go-cmp/cmp"
 	"github.com/open-telemetry/opamp-go/protobufs"
-	"github.com/otelfleet/otelfleet/pkg/services/opamp"
-	"github.com/otelfleet/otelfleet/pkg/storage"
-	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
+	"github.com/otelfleet/otelfleet/pkg/supervisor"
+	"github.com/otelfleet/otelfleet/pkg/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
-func setupTestServer(t *testing.T) (*opamp.Server, storage.KeyValue[*protobufs.ComponentHealth], storage.KeyValue[*protobufs.EffectiveConfig], storage.KeyValue[*protobufs.RemoteConfigStatus]) {
-	t.Helper()
-	db, err := pebble.Open("", &pebble.Options{
-		FS: vfs.NewMem(),
-	})
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, db.Close())
-	})
-
-	broker := otelpebble.NewKVBroker(db)
-	logger := slog.Default()
-
-	healthStore := storage.NewProtoKV[*protobufs.ComponentHealth](logger, broker.KeyValue("agent-health"))
-	configStore := storage.NewProtoKV[*protobufs.EffectiveConfig](logger, broker.KeyValue("agent-effective-config"))
-	statusStore := storage.NewProtoKV[*protobufs.RemoteConfigStatus](logger, broker.KeyValue("agent-remote-config-status"))
-	opampDesc := storage.NewProtoKV[*protobufs.AgentDescription](logger, broker.KeyValue("opamp-agent-description"))
-
-	server := opamp.NewServer(
-		logger,
-		nil,
-		opamp.NewAgentTracker(),
-		healthStore,
-		configStore,
-		statusStore,
-		opampDesc,
-		nil,
-	)
-
-	return server, healthStore, configStore, statusStore
+// makeAgentDescription creates an AgentDescription with the required otelfleet.agent.id attribute
+func makeAgentDescription(agentID string) *protobufs.AgentDescription {
+	return &protobufs.AgentDescription{
+		IdentifyingAttributes: []*protobufs.KeyValue{
+			{
+				Key:   supervisor.AttributeOtelfleetAgentId,
+				Value: &protobufs.AnyValue{Value: &protobufs.AnyValue_StringValue{StringValue: agentID}},
+			},
+		},
+	}
 }
 
 func TestServer_OnMessage_PersistsHealth(t *testing.T) {
-	server, healthStore, _, _ := setupTestServer(t)
+	env := testutil.NewTestEnv(t)
 
-	instanceUID := []byte("test-agent-health-persist")
+	agentID := "test-agent-health-persist"
+	instanceUID := []byte(agentID)
 	health := &protobufs.ComponentHealth{
 		Healthy:           true,
 		StartTimeUnixNano: uint64(time.Now().UnixNano()),
@@ -68,27 +47,29 @@ func TestServer_OnMessage_PersistsHealth(t *testing.T) {
 	}
 
 	msg := &protobufs.AgentToServer{
-		InstanceUid: instanceUID,
-		Health:      health,
+		InstanceUid:      instanceUID,
+		AgentDescription: makeAgentDescription(agentID),
+		Health:           health,
 	}
 
 	conn := &testMockConnection{instanceUID: instanceUID}
 	ctx := context.Background()
 
 	// Process message
-	resp := server.OnMessage(ctx, conn, msg)
+	resp := env.OpampServer.OnMessage(ctx, conn, msg)
 	require.NotNil(t, resp)
 
 	// Verify health was persisted to storage
-	stored, err := healthStore.Get(ctx, string(instanceUID))
+	stored, err := env.HealthStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	assert.Empty(t, cmp.Diff(health, stored, protocmp.Transform()))
 }
 
 func TestServer_OnMessage_PersistsEffectiveConfig(t *testing.T) {
-	server, _, configStore, _ := setupTestServer(t)
+	env := testutil.NewTestEnv(t)
 
-	instanceUID := []byte("test-agent-config-persist")
+	agentID := "test-agent-config-persist"
+	instanceUID := []byte(agentID)
 	config := &protobufs.EffectiveConfig{
 		ConfigMap: &protobufs.AgentConfigMap{
 			ConfigMap: map[string]*protobufs.AgentConfigFile{
@@ -101,27 +82,29 @@ func TestServer_OnMessage_PersistsEffectiveConfig(t *testing.T) {
 	}
 
 	msg := &protobufs.AgentToServer{
-		InstanceUid:     instanceUID,
-		EffectiveConfig: config,
+		InstanceUid:      instanceUID,
+		AgentDescription: makeAgentDescription(agentID),
+		EffectiveConfig:  config,
 	}
 
 	conn := &testMockConnection{instanceUID: instanceUID}
 	ctx := context.Background()
 
 	// Process message
-	resp := server.OnMessage(ctx, conn, msg)
+	resp := env.OpampServer.OnMessage(ctx, conn, msg)
 	require.NotNil(t, resp)
 
 	// Verify config was persisted to storage
-	stored, err := configStore.Get(ctx, string(instanceUID))
+	stored, err := env.EffectiveConfigStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	assert.Empty(t, cmp.Diff(config, stored, protocmp.Transform()))
 }
 
 func TestServer_OnMessage_PersistsRemoteConfigStatus(t *testing.T) {
-	server, _, _, statusStore := setupTestServer(t)
+	env := testutil.NewTestEnv(t)
 
-	instanceUID := []byte("test-agent-status-persist")
+	agentID := "test-agent-status-persist"
+	instanceUID := []byte(agentID)
 	status := &protobufs.RemoteConfigStatus{
 		LastRemoteConfigHash: []byte("config-hash-123"),
 		Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
@@ -129,6 +112,7 @@ func TestServer_OnMessage_PersistsRemoteConfigStatus(t *testing.T) {
 
 	msg := &protobufs.AgentToServer{
 		InstanceUid:        instanceUID,
+		AgentDescription:   makeAgentDescription(agentID),
 		RemoteConfigStatus: status,
 	}
 
@@ -136,19 +120,20 @@ func TestServer_OnMessage_PersistsRemoteConfigStatus(t *testing.T) {
 	ctx := context.Background()
 
 	// Process message
-	resp := server.OnMessage(ctx, conn, msg)
+	resp := env.OpampServer.OnMessage(ctx, conn, msg)
 	require.NotNil(t, resp)
 
 	// Verify status was persisted to storage
-	stored, err := statusStore.Get(ctx, string(instanceUID))
+	stored, err := env.RemoteStatusStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	assert.Empty(t, cmp.Diff(status, stored, protocmp.Transform()))
 }
 
 func TestServer_OnMessage_PersistsAllFields(t *testing.T) {
-	server, healthStore, configStore, statusStore := setupTestServer(t)
+	env := testutil.NewTestEnv(t)
 
-	instanceUID := []byte("test-agent-all-fields")
+	agentID := "test-agent-all-fields"
+	instanceUID := []byte(agentID)
 	health := &protobufs.ComponentHealth{
 		Healthy: true,
 		Status:  "running",
@@ -166,6 +151,7 @@ func TestServer_OnMessage_PersistsAllFields(t *testing.T) {
 
 	msg := &protobufs.AgentToServer{
 		InstanceUid:        instanceUID,
+		AgentDescription:   makeAgentDescription(agentID),
 		Health:             health,
 		EffectiveConfig:    config,
 		RemoteConfigStatus: status,
@@ -174,32 +160,34 @@ func TestServer_OnMessage_PersistsAllFields(t *testing.T) {
 	conn := &testMockConnection{instanceUID: instanceUID}
 	ctx := context.Background()
 
-	resp := server.OnMessage(ctx, conn, msg)
+	resp := env.OpampServer.OnMessage(ctx, conn, msg)
 	require.NotNil(t, resp)
 
 	// Verify all fields were persisted
-	storedHealth, err := healthStore.Get(ctx, string(instanceUID))
+	storedHealth, err := env.HealthStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	assert.True(t, storedHealth.Healthy)
 
-	storedConfig, err := configStore.Get(ctx, string(instanceUID))
+	storedConfig, err := env.EffectiveConfigStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	assert.NotNil(t, storedConfig.ConfigMap)
 
-	storedStatus, err := statusStore.Get(ctx, string(instanceUID))
+	storedStatus, err := env.RemoteStatusStore.Get(ctx, agentID)
 	require.NoError(t, err)
 	assert.Equal(t, protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED, storedStatus.Status)
 }
 
 func TestServer_OnMessage_OnlyPersistsNonNilFields(t *testing.T) {
-	server, healthStore, configStore, statusStore := setupTestServer(t)
+	env := testutil.NewTestEnv(t)
 
-	instanceUID := []byte("test-agent-partial")
+	agentID := "test-agent-partial"
+	instanceUID := []byte(agentID)
 	ctx := context.Background()
 
-	// Message with only health
+	// Message with only health (and required AgentDescription)
 	msg := &protobufs.AgentToServer{
-		InstanceUid: instanceUID,
+		InstanceUid:      instanceUID,
+		AgentDescription: makeAgentDescription(agentID),
 		Health: &protobufs.ComponentHealth{
 			Healthy: true,
 			Status:  "running",
@@ -207,22 +195,22 @@ func TestServer_OnMessage_OnlyPersistsNonNilFields(t *testing.T) {
 	}
 
 	conn := &testMockConnection{instanceUID: instanceUID}
-	resp := server.OnMessage(ctx, conn, msg)
+	resp := env.OpampServer.OnMessage(ctx, conn, msg)
 	require.NotNil(t, resp)
 
 	// Health should be persisted
-	_, err := healthStore.Get(ctx, string(instanceUID))
+	_, err := env.HealthStore.Get(ctx, agentID)
 	require.NoError(t, err)
 
 	// Config and status should not exist
-	_, err = configStore.Get(ctx, string(instanceUID))
+	_, err = env.EffectiveConfigStore.Get(ctx, agentID)
 	require.Error(t, err)
 
-	_, err = statusStore.Get(ctx, string(instanceUID))
+	_, err = env.RemoteStatusStore.Get(ctx, agentID)
 	require.Error(t, err)
 }
 
-// Mock connection for tests
+// Mock connection for tests - needed to call OnMessage directly
 type testMockConnection struct {
 	instanceUID []byte
 }

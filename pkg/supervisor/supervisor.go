@@ -27,11 +27,11 @@ type Supervisor struct {
 	startTime time.Time
 
 	// for direct in-process management
-	procManager *ProcManager
+	agentDriver AgentDriver
 	appliedHash string
 }
 
-func NewSupervisor(
+func NewSupervisorWithProcManager(
 	logger *slog.Logger,
 	tlsConfig *tls.Config,
 	opAmpAddr string,
@@ -45,7 +45,7 @@ func NewSupervisor(
 		agentId:      agentId,
 		startTime:    time.Now(),
 	}
-	s.procManager = NewProcManager(
+	s.agentDriver = NewProcManager(
 		logger.With("process", "otelcol"),
 		//FIXME:
 		"/home/alex/.asdf/shims/otelcol",
@@ -53,6 +53,26 @@ func NewSupervisor(
 		s.reportHealth,
 	)
 	return s
+}
+
+// NewSupervisorWithProcManager creates a new Supervisor with a custom AgentDriver.
+// This is primarily used for testing with mock implementations.
+func NewSupervisor(
+	logger *slog.Logger,
+	tlsConfig *tls.Config,
+	opAmpAddr string,
+	agentId ident.Identity,
+	agentDriver AgentDriver,
+) *Supervisor {
+	return &Supervisor{
+		logger:       logger,
+		tlsConfig:    tlsConfig,
+		clientLogger: logutil.NewOpAMPLogger(logger),
+		opAmpAddr:    opAmpAddr,
+		agentId:      agentId,
+		startTime:    time.Now(),
+		agentDriver:  agentDriver,
+	}
 }
 
 func (s *Supervisor) Start() error {
@@ -114,18 +134,18 @@ func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 	if incomingCfg := msg.RemoteConfig; incomingCfg != nil {
 		l = l.With("type", "remote-config")
 		l.Info("updating effective configuration")
-		if err := s.procManager.Update(ctx, incomingCfg); err != nil {
+		if err := s.agentDriver.Update(ctx, incomingCfg); err != nil {
 			// TODO : only send failed apply when the write to disk fails in proc manager
 			if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
 				Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_FAILED,
-				LastRemoteConfigHash: s.procManager.curHash,
+				LastRemoteConfigHash: s.agentDriver.GetCurrentHash(),
 				ErrorMessage:         err.Error(),
 			}); err != nil {
 				l.With("err", err).With("status", "failed").Error("failed to report remote config status to upstream server")
 			}
 			return
 		}
-		l.With("cur-hash", s.procManager.curHash).Info("sending remote status update")
+		l.With("cur-hash", s.agentDriver.GetCurrentHash()).Info("sending remote status update")
 		if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
 			Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
 			LastRemoteConfigHash: incomingCfg.GetConfigHash(),
@@ -141,7 +161,7 @@ func (s *Supervisor) Shutdown() error {
 }
 
 func (s *Supervisor) createEffectiveConfigMsg() *protobufs.EffectiveConfig {
-	contents, err := s.procManager.getConfigMap()
+	contents, err := s.agentDriver.GetConfigMap()
 	if err != nil {
 		s.logger.With("err", err).Error("failed to get effective config from proc manager")
 		return defaultEffectiveConfig
