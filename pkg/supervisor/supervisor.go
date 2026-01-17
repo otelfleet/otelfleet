@@ -3,7 +3,10 @@ package supervisor
 import (
 	"context"
 	"crypto/tls"
+	"encoding/hex"
 	"log/slog"
+	"os"
+	"path"
 	"time"
 
 	"github.com/open-telemetry/opamp-go/client"
@@ -14,6 +17,13 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/util"
 )
 
+// ExtraAttributes holds additional identifying and non-identifying attributes
+// to be included in the agent description sent to the OpAMP server.
+type ExtraAttributes struct {
+	Identifying    map[string]string
+	NonIdentifying map[string]string
+}
+
 type Supervisor struct {
 	logger       *slog.Logger
 	clientLogger types.Logger
@@ -23,36 +33,74 @@ type Supervisor struct {
 	opampClient client.OpAMPClient
 	opAmpAddr   string
 
-	agentId   ident.Identity
-	startTime time.Time
+	agentId         ident.Identity
+	extraAttributes ExtraAttributes
+	startTime       time.Time
 
 	// for direct in-process management
-	procManager *ProcManager
+	agentDriver AgentDriver
 	appliedHash string
 }
 
+func NewSupervisorWithProcManager(
+	logger *slog.Logger,
+	tlsConfig *tls.Config,
+	opAmpAddr string,
+	agentId ident.Identity,
+	extraAttrs ExtraAttributes,
+) *Supervisor {
+	s := &Supervisor{
+		logger:          logger,
+		tlsConfig:       tlsConfig,
+		clientLogger:    logutil.NewOpAMPLogger(logger),
+		opAmpAddr:       opAmpAddr,
+		agentId:         agentId,
+		startTime:       time.Now(),
+		extraAttributes: extraAttrs,
+	}
+	basePath, err := os.UserConfigDir()
+	// FIXME: temporary hack
+	if err != nil {
+		panic(err)
+	}
+
+	configPath := path.Join(basePath, agentId.UniqueIdentifier().UUID)
+
+	if err := os.MkdirAll(configPath, 0700); err != nil {
+		panic(err)
+	}
+	s.agentDriver = NewProcManager(
+		logger.With("process", "otelcol"),
+		//FIXME:
+		"/home/alex/.asdf/shims/otelcol",
+		configPath,
+		s.reportHealth,
+	)
+	return s
+}
+
+// NewSupervisor creates a new Supervisor with a custom AgentDriver.
+// This is primarily used for testing with mock implementations.
+// Extra attributes can be provided to include additional identifying and non-identifying
+// attributes in the agent description sent to the OpAMP server.
 func NewSupervisor(
 	logger *slog.Logger,
 	tlsConfig *tls.Config,
 	opAmpAddr string,
 	agentId ident.Identity,
+	agentDriver AgentDriver,
+	extraAttrs ExtraAttributes,
 ) *Supervisor {
-	s := &Supervisor{
-		logger:       logger,
-		tlsConfig:    tlsConfig,
-		clientLogger: logutil.NewOpAMPLogger(logger),
-		opAmpAddr:    opAmpAddr,
-		agentId:      agentId,
-		startTime:    time.Now(),
+	return &Supervisor{
+		logger:          logger,
+		tlsConfig:       tlsConfig,
+		clientLogger:    logutil.NewOpAMPLogger(logger),
+		opAmpAddr:       opAmpAddr,
+		agentId:         agentId,
+		extraAttributes: extraAttrs,
+		startTime:       time.Now(),
+		agentDriver:     agentDriver,
 	}
-	s.procManager = NewProcManager(
-		logger.With("process", "otelcol"),
-		//FIXME:
-		"/home/alex/.asdf/shims/otelcol",
-		"/var/lib/otelfleet/",
-		s.reportHealth,
-	)
-	return s
 }
 
 func (s *Supervisor) Start() error {
@@ -78,7 +126,16 @@ func (s *Supervisor) startOpAMP() error {
 				s.logger.With("err", err).Error("failed to connect to the server")
 			},
 			OnError: func(ctx context.Context, err *protobufs.ServerErrorResponse) {
-				s.logger.With("err", err).Error("Server returned an error response")
+				s.logger.With(
+					"error_type", err.GetType().String(),
+					"error_message", err.GetErrorMessage(),
+				).Error("server returned an error response")
+				// For Unavailable errors, the opamp-go client handles retries internally.
+				// For BadRequest/Unknown errors, the agent should not retry.
+				// Report unhealthy state so operators can investigate.
+				if err.GetType() != protobufs.ServerErrorResponseType_ServerErrorResponseType_Unavailable {
+					s.reportHealth(false, "server_error", err.GetErrorMessage())
+				}
 			},
 			GetEffectiveConfig: func(ctx context.Context) (*protobufs.EffectiveConfig, error) {
 				return s.createEffectiveConfigMsg(), nil
@@ -111,36 +168,41 @@ func (s *Supervisor) startOpAMP() error {
 
 func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 	l := s.logger
+	l.Debug("received message")
 	if incomingCfg := msg.RemoteConfig; incomingCfg != nil {
 		l = l.With("type", "remote-config")
-		l.Info("updatading effective configuration")
-		if err := s.procManager.Update(ctx, incomingCfg); err != nil {
-			// TODO : only send failed apply when the write to disk fails in proc manager
+		l.With("incoming-hash", hex.EncodeToString(msg.RemoteConfig.ConfigHash)).With(
+			"cur-hash", hex.EncodeToString(s.agentDriver.GetCurrentHash()),
+		).Info("received effective configuration update")
+		if err := s.agentDriver.Update(ctx, incomingCfg); err != nil {
 			if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
 				Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_FAILED,
-				LastRemoteConfigHash: s.procManager.curHash,
+				LastRemoteConfigHash: s.agentDriver.GetCurrentHash(),
 				ErrorMessage:         err.Error(),
 			}); err != nil {
 				l.With("err", err).With("status", "failed").Error("failed to report remote config status to upstream server")
 			}
 			return
 		}
+		l.With("cur-hash", hex.EncodeToString(s.agentDriver.GetCurrentHash())).Info("sending remote status update")
 		if err := s.opampClient.SetRemoteConfigStatus(&protobufs.RemoteConfigStatus{
 			Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
-			LastRemoteConfigHash: incomingCfg.GetConfigHash(),
+			LastRemoteConfigHash: s.agentDriver.GetCurrentHash(),
 		}); err != nil {
 			l.With("err", err).With("status", "succeeded").Error("failed to report remote config status to upstream server")
 		}
 	}
-	l.Debug("received message")
 }
 
 func (s *Supervisor) Shutdown() error {
+	if err := s.agentDriver.Shutdown(); err != nil {
+		s.logger.With("err", err).Error("failed to shutdown agent driver")
+	}
 	return s.opampClient.Stop(context.TODO())
 }
 
 func (s *Supervisor) createEffectiveConfigMsg() *protobufs.EffectiveConfig {
-	contents, err := s.procManager.getConfigMap()
+	contents, err := s.agentDriver.GetConfigMap()
 	if err != nil {
 		s.logger.With("err", err).Error("failed to get effective config from proc manager")
 		return defaultEffectiveConfig

@@ -25,6 +25,10 @@ interface DynamicTableProps<T> {
   title?: string;
   rowKey?: keyof T | ((row: T, index: number) => string | number);
   expandedContent?: (row: T) => React.ReactNode | null;
+  // Selection support
+  selectable?: boolean;
+  selectedKeys?: Set<string | number>;
+  onSelectionChange?: (selectedKeys: Set<string | number>) => void;
 }
 
 export const Table = <T extends object>({
@@ -33,6 +37,9 @@ export const Table = <T extends object>({
   title,
   rowKey,
   expandedContent,
+  selectable,
+  selectedKeys,
+  onSelectionChange,
 }: DynamicTableProps<T>): React.ReactElement => {
   const getRowKey = (row: T, index: number): string | number => {
     if (!rowKey) return index;
@@ -56,6 +63,30 @@ export const Table = <T extends object>({
     const next = new Set(visibleColumns);
     next.has(columnKey) ? next.delete(columnKey) : next.add(columnKey);
     setVisibleColumns(next);
+  };
+
+  const allRowKeys = useMemo(() => data.map((row, idx) => getRowKey(row, idx)), [data]);
+  const allSelected = selectable && selectedKeys && allRowKeys.length > 0 && allRowKeys.every(key => selectedKeys.has(key));
+  const someSelected = selectable && selectedKeys && allRowKeys.some(key => selectedKeys.has(key));
+
+  const handleSelectAll = () => {
+    if (!onSelectionChange) return;
+    if (allSelected) {
+      onSelectionChange(new Set());
+    } else {
+      onSelectionChange(new Set(allRowKeys));
+    }
+  };
+
+  const handleSelectRow = (key: string | number) => {
+    if (!onSelectionChange || !selectedKeys) return;
+    const next = new Set(selectedKeys);
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
+    onSelectionChange(next);
   };
 
   return (
@@ -97,6 +128,15 @@ export const Table = <T extends object>({
       <MantineTable striped highlightOnHover ta="center">
         <thead>
           <tr>
+            {selectable && (
+              <th style={{ width: 40 }}>
+                <Checkbox
+                  checked={allSelected}
+                  indeterminate={someSelected && !allSelected}
+                  onChange={handleSelectAll}
+                />
+              </th>
+            )}
             {activeColumns.map((col) => (
               <th key={String(col.key)}>
                 <Text fw={600}>{col.label}</Text>
@@ -107,9 +147,19 @@ export const Table = <T extends object>({
         <tbody>
           {data.map((row, idx) => {
             const expanded = expandedContent?.(row);
+            const key = getRowKey(row, idx);
+            const isSelected = selectable && selectedKeys?.has(key);
             return (
-              <Fragment key={getRowKey(row, idx)}>
+              <Fragment key={key}>
                 <tr>
+                  {selectable && (
+                    <td style={{ width: 40 }}>
+                      <Checkbox
+                        checked={isSelected}
+                        onChange={() => handleSelectRow(key)}
+                      />
+                    </td>
+                  )}
                   {activeColumns.map((col) => {
                     const value = col.key in row ? row[col.key as keyof T] : undefined;
                     return (
@@ -123,7 +173,7 @@ export const Table = <T extends object>({
                 </tr>
                 {expanded && (
                   <tr>
-                    <td colSpan={activeColumns.length} style={{ textAlign: 'center', padding: '8px 16px' }}>
+                    <td colSpan={activeColumns.length + (selectable ? 1 : 0)} style={{ textAlign: 'center', padding: '8px 16px' }}>
                       {expanded}
                     </td>
                   </tr>

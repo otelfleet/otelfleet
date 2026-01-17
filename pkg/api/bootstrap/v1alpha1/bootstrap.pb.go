@@ -218,13 +218,14 @@ func (x *BootstrapAuthResponse) GetServerPubKey() []byte {
 }
 
 type BootstrapToken struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	ID              string                 `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	Secret          string                 `protobuf:"bytes,2,opt,name=Secret,proto3" json:"Secret,omitempty"`
-	TTL             *durationpb.Duration   `protobuf:"bytes,3,opt,name=TTL,proto3" json:"TTL,omitempty"`
-	Expiry          *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=Expiry,proto3,oneof" json:"Expiry,omitempty"`
-	ConfigReference *string                `protobuf:"bytes,5,opt,name=configReference,proto3,oneof" json:"configReference,omitempty"`
-	Labels          map[string]string      `protobuf:"bytes,6,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	ID     string                 `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Secret string                 `protobuf:"bytes,2,opt,name=Secret,proto3" json:"Secret,omitempty"`
+	TTL    *durationpb.Duration   `protobuf:"bytes,3,opt,name=TTL,proto3" json:"TTL,omitempty"`
+	Expiry *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=Expiry,proto3,oneof" json:"Expiry,omitempty"`
+	// TODO: eventually this will be insufficient, should refactor to a message ConfigReference in config.proto
+	ConfigReference *string           `protobuf:"bytes,5,opt,name=configReference,proto3,oneof" json:"configReference,omitempty"`
+	Labels          map[string]string `protobuf:"bytes,6,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }

@@ -5,7 +5,22 @@ import (
 	"slices"
 
 	"github.com/open-telemetry/opamp-go/protobufs"
+	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 )
+
+// ConfigToAgentConfigMap converts a Config proto to an AgentConfigMap.
+// This ensures consistent structure when creating configs for agents,
+// using "config.yaml" as the standard filename.
+func ProtoConfigToAgentConfigMap(config *configv1alpha1.Config) *protobufs.AgentConfigMap {
+	return &protobufs.AgentConfigMap{
+		ConfigMap: map[string]*protobufs.AgentConfigFile{
+			"config.yaml": {
+				ContentType: "text/yaml",
+				Body:        config.GetConfig(),
+			},
+		},
+	}
+}
 
 // HashAgentConfigMap computes a stable SHA256 hash of an AgentConfigMap.
 // The hash is computed over sorted filenames and their body content only,

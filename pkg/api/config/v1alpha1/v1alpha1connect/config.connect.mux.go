@@ -54,4 +54,69 @@ func RegisterConfigServiceHandler(mux *mux.Router, svc ConfigServiceHandler, opt
 		svc.SetDefaultConfig,
 		opts...,
 	))
+	mux.Handle("/config.v1alpha1.ConfigService/AssignConfig", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/AssignConfig",
+		svc.AssignConfig,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/GetAgentConfig", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/GetAgentConfig",
+		svc.GetAgentConfig,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/UnassignConfig", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/UnassignConfig",
+		svc.UnassignConfig,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/ListConfigAssignments", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/ListConfigAssignments",
+		svc.ListConfigAssignments,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/GetConfigStatus", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/GetConfigStatus",
+		svc.GetConfigStatus,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/BatchAssignConfig", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/BatchAssignConfig",
+		svc.BatchAssignConfig,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/AssignConfigByLabels", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/AssignConfigByLabels",
+		svc.AssignConfigByLabels,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/StartRollingDeployment", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/StartRollingDeployment",
+		svc.StartRollingDeployment,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/GetDeploymentStatus", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/GetDeploymentStatus",
+		svc.GetDeploymentStatus,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/PauseDeployment", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/PauseDeployment",
+		svc.PauseDeployment,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/ResumeDeployment", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/ResumeDeployment",
+		svc.ResumeDeployment,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/CancelDeployment", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/CancelDeployment",
+		svc.CancelDeployment,
+		opts...,
+	))
+	mux.Handle("/config.v1alpha1.ConfigService/ListDeployments", connect.NewUnaryHandler(
+		"/config.v1alpha1.ConfigService/ListDeployments",
+		svc.ListDeployments,
+		opts...,
+	))
 }

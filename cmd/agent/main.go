@@ -3,13 +3,10 @@ package main
 import (
 	"context"
 	"crypto/sha256"
-	"crypto/tls"
 	"log/slog"
-	"net/http"
 	"os"
 
-	"github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
-	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1/v1alpha1connect"
+	bootstrapclient "github.com/otelfleet/otelfleet/pkg/bootstrap/client"
 	"github.com/otelfleet/otelfleet/pkg/ident"
 	_ "github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/supervisor"
@@ -21,11 +18,6 @@ const (
 	opAmpAddr   = "ws://127.0.0.1:4320/v1/opamp"
 )
 
-type Bootstrapper interface {
-	VerifyToken(token string) error
-	Bootstrap(ctx context.Context, req *v1alpha1.BootstrapAuthRequest) (*tls.Config, error)
-}
-
 func main() {
 	logger := slog.Default()
 	ctx := contextutil.SetupSignals(context.Background())
@@ -33,25 +25,17 @@ func main() {
 	bootstrapToken := os.Getenv("BOOTSTRAP_TOKEN")
 	agentName := os.Getenv("AGENT_NAME")
 
-	logger.Debug("acquiring bootstrap client...")
-	httpClient := http.DefaultClient
-	bootstrapClient := bootstrapv1alpha1.NewBootstrapServiceClient(
-		httpClient,
-		gatewayAddr,
-	)
-	logger.Debug("acquiring token client...")
-	tokenClient := bootstrapv1alpha1.NewTokenServiceClient(
-		httpClient,
-		gatewayAddr,
+	// Create bootstrap client using shared package
+	// isSecureMode() is defined in insecure.go or secure.go based on build tags
+	client := bootstrapclient.New(
+		bootstrapclient.Config{
+			Logger:    logger.With("component", "bootstrapper").With("agent-name", agentName).With("token", bootstrapToken),
+			ServerURL: gatewayAddr,
+		},
+		isSecureMode(),
 	)
 
-	bootstrapper := NewBootstrapper(
-		logger.With("component", "bootstrapper"),
-		bootstrapClient,
-		tokenClient,
-	)
-
-	if err := bootstrapper.VerifyToken(bootstrapToken); err != nil {
+	if err := client.VerifyToken(ctx, bootstrapToken); err != nil {
 		logger.With("err", err).Error("failed to verify bootstrap token")
 		os.Exit(1)
 	}
@@ -70,23 +54,19 @@ func main() {
 	}
 
 	// FIXME: backoff retry
-	tlsConf, err := bootstrapper.Bootstrap(
-		ctx,
-		&v1alpha1.BootstrapAuthRequest{
-			ClientId: agentID.UniqueIdentifier().UUID,
-			Name:     agentName,
-		},
-	)
+	// TODO : bootstrap response should include the labels of the token.
+	result, err := client.BootstrapAgent(ctx, agentID, agentName, bootstrapToken)
 	if err != nil {
 		logger.With("err", err).Error("failed to bootstrap agent")
 		os.Exit(1)
 	}
 
-	supervisor := supervisor.NewSupervisor(
+	supervisor := supervisor.NewSupervisorWithProcManager(
 		slog.Default().With("component", "supervisor"),
-		tlsConf,
+		result.TLSConfig,
 		opAmpAddr,
 		agentID,
+		supervisor.ExtraAttributes{},
 	)
 	logger.With("agentID", agentID.UniqueIdentifier().UUID).Info("otelfleet agent starting...")
 	if err := supervisor.Start(); err != nil {

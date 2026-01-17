@@ -40,9 +40,13 @@ func NewToken(source ...io.Reader) *Token {
 }
 
 func (t *Token) SignDetached(key any) ([]byte, error) {
-	_, ed25519 := key.(ed25519.PrivateKey)
-	_, rsa := key.(*rsa.PrivateKey)
-	if !rsa && !ed25519 {
+	var alg jwa.SignatureAlgorithm
+	switch key.(type) {
+	case ed25519.PrivateKey:
+		alg = jwa.EdDSA
+	case *rsa.PrivateKey:
+		alg = jwa.RS256
+	default:
 		return nil, errors.New("invalid key type, expected ed25519.PrivateKey or rsa.PrivateKey")
 	}
 	jsonData, err := json.Marshal(t)
@@ -50,7 +54,7 @@ func (t *Token) SignDetached(key any) ([]byte, error) {
 		return nil, err
 	}
 
-	sig, err := jws.Sign(jsonData, jwa.RS256, key)
+	sig, err := jws.Sign(jsonData, alg, key)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +67,15 @@ func (t *Token) SignDetached(key any) ([]byte, error) {
 }
 
 func (t *Token) VerifyDetached(sig []byte, key any) ([]byte, error) {
+	var alg jwa.SignatureAlgorithm
+	switch key.(type) {
+	case ed25519.PublicKey:
+		alg = jwa.EdDSA
+	case *rsa.PublicKey:
+		alg = jwa.RS256
+	default:
+		return nil, errors.New("invalid key type, expected ed25519.PublicKey or rsa.PublicKey")
+	}
 	jsonData, err := json.Marshal(t)
 	if err != nil {
 		return nil, err
@@ -78,10 +91,7 @@ func (t *Token) VerifyDetached(sig []byte, key any) ([]byte, error) {
 	buf.WriteString(payload)
 	buf.Write(sig[lastIndex:])
 	fullToken := buf.Bytes()
-	cloned := make([]byte, len(fullToken))
-	copy(cloned, fullToken)
-	// _, err = jws.Verify(cloned, jwa.EdDSA, key)
-	_, err = jws.Verify(buf.Bytes(), jwa.RS256, key)
+	_, err = jws.Verify(fullToken, alg, key)
 	if err != nil {
 		return nil, err
 	}

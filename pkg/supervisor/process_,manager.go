@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -19,6 +20,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/natefinch/atomic"
 	"github.com/open-telemetry/opamp-go/protobufs"
+	"github.com/otelfleet/otelfleet/pkg/util"
 )
 
 type ProcManager struct {
@@ -31,12 +33,18 @@ type ProcManager struct {
 	cmdExited chan struct{}
 	curHash   []byte
 
+	// TODO : this is a hacky implementation
+	// we want all health drivers to be able to report their health - Need to
+	// figure out a mechanism / type contract on he AgentDriver interface that makes sense.
+	// probably something like HealthUpdatesC(ctx context.Context) <-chan HealthUpdates
 	reportHealthFn func(
 		healthy bool,
 		status string,
 		lastErrorMessage string,
 	)
 }
+
+var _ AgentDriver = (*ProcManager)(nil)
 
 func NewProcManager(
 	logger *slog.Logger,
@@ -50,6 +58,7 @@ func NewProcManager(
 		BinaryPath:     binaryPath,
 		ConfigDir:      configPath,
 		reportHealthFn: reportFn,
+		curHash:        []byte{},
 	}
 }
 
@@ -69,10 +78,6 @@ func (p *ProcManager) Update(
 }
 
 func (p *ProcManager) runLocked(ctx context.Context, incoming *protobufs.AgentRemoteConfig) error {
-	hashPath := path.Join(p.ConfigDir, "config.hash")
-	if err := os.WriteFile(hashPath, incoming.GetConfigHash(), 0644); err != nil {
-		return err
-	}
 	// TODO : this doens't handle cleanup of dangling names
 	configMap := incoming.GetConfig().GetConfigMap()
 	for name, contents := range configMap {
@@ -80,6 +85,7 @@ func (p *ProcManager) runLocked(ctx context.Context, incoming *protobufs.AgentRe
 			return err
 		}
 	}
+	p.curHash = util.HashAgentConfigMap(incoming.GetConfig())
 	args := []string{}
 	for name := range configMap {
 		args = append(
@@ -88,6 +94,7 @@ func (p *ProcManager) runLocked(ctx context.Context, incoming *protobufs.AgentRe
 			path.Join(p.ConfigDir, name),
 		)
 	}
+	p.logger.With("hash", hex.EncodeToString(p.curHash)).Info("updated config hash")
 	if len(args) == 0 {
 		panic("0 configs not handled")
 	}
@@ -115,6 +122,8 @@ func (p *ProcManager) runLocked(ctx context.Context, incoming *protobufs.AgentRe
 		return fmt.Errorf("error starting collector")
 	}
 	exited := make(chan struct{})
+	// TODO : this report health fn likely has potential synchronization issues
+	p.reportHealthFn(true, "running", "")
 	go func() {
 		defer close(exited)
 		err := cmd.Wait()
@@ -161,6 +170,13 @@ func (p *ProcManager) handleLogs(ctx context.Context, rc io.ReadCloser) {
 	}
 }
 
+// GetCurrentHash returns the hash of the currently applied configuration.
+func (p *ProcManager) GetCurrentHash() []byte {
+	p.runMu.Lock()
+	defer p.runMu.Unlock()
+	return p.curHash
+}
+
 func (p *ProcManager) Shutdown() error {
 	// TODO:
 	if p.cmd != nil && p.cmd.Process != nil {
@@ -201,7 +217,8 @@ func (p *ProcManager) writeConfigLocked(name string, config *protobufs.AgentConf
 	return nil
 }
 
-func (p *ProcManager) getConfigMap() (*protobufs.AgentConfigMap, error) {
+// GetConfigMap returns the current effective configuration as an AgentConfigMap.
+func (p *ProcManager) GetConfigMap() (*protobufs.AgentConfigMap, error) {
 	entries, err := os.ReadDir(p.ConfigDir)
 	if err != nil {
 		return nil, fmt.Errorf("reading config directory: %w", err)
