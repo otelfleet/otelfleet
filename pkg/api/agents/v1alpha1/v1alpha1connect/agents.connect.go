@@ -9,6 +9,7 @@ import (
 	context "context"
 	errors "errors"
 	v1alpha1 "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	http "net/http"
 	strings "strings"
 )
@@ -39,6 +40,9 @@ const (
 	AgentServiceGetAgentProcedure = "/config.v1alpha1.AgentService/GetAgent"
 	// AgentServiceStatusProcedure is the fully-qualified name of the AgentService's Status RPC.
 	AgentServiceStatusProcedure = "/config.v1alpha1.AgentService/Status"
+	// AgentServiceDeleteAgentProcedure is the fully-qualified name of the AgentService's DeleteAgent
+	// RPC.
+	AgentServiceDeleteAgentProcedure = "/config.v1alpha1.AgentService/DeleteAgent"
 )
 
 // AgentServiceClient is a client for the config.v1alpha1.AgentService service.
@@ -46,6 +50,7 @@ type AgentServiceClient interface {
 	ListAgents(context.Context, *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsResponse], error)
 	GetAgent(context.Context, *connect.Request[v1alpha1.GetAgentRequest]) (*connect.Response[v1alpha1.GetAgentResponse], error)
 	Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.GetAgentStatusResponse], error)
+	DeleteAgent(context.Context, *connect.Request[v1alpha1.DeleteAgentRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewAgentServiceClient constructs a client for the config.v1alpha1.AgentService service. By
@@ -77,14 +82,21 @@ func NewAgentServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(agentServiceMethods.ByName("Status")),
 			connect.WithClientOptions(opts...),
 		),
+		deleteAgent: connect.NewClient[v1alpha1.DeleteAgentRequest, emptypb.Empty](
+			httpClient,
+			baseURL+AgentServiceDeleteAgentProcedure,
+			connect.WithSchema(agentServiceMethods.ByName("DeleteAgent")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // agentServiceClient implements AgentServiceClient.
 type agentServiceClient struct {
-	listAgents *connect.Client[v1alpha1.ListAgentsRequest, v1alpha1.ListAgentsResponse]
-	getAgent   *connect.Client[v1alpha1.GetAgentRequest, v1alpha1.GetAgentResponse]
-	status     *connect.Client[v1alpha1.GetAgentStatusRequest, v1alpha1.GetAgentStatusResponse]
+	listAgents  *connect.Client[v1alpha1.ListAgentsRequest, v1alpha1.ListAgentsResponse]
+	getAgent    *connect.Client[v1alpha1.GetAgentRequest, v1alpha1.GetAgentResponse]
+	status      *connect.Client[v1alpha1.GetAgentStatusRequest, v1alpha1.GetAgentStatusResponse]
+	deleteAgent *connect.Client[v1alpha1.DeleteAgentRequest, emptypb.Empty]
 }
 
 // ListAgents calls config.v1alpha1.AgentService.ListAgents.
@@ -102,11 +114,17 @@ func (c *agentServiceClient) Status(ctx context.Context, req *connect.Request[v1
 	return c.status.CallUnary(ctx, req)
 }
 
+// DeleteAgent calls config.v1alpha1.AgentService.DeleteAgent.
+func (c *agentServiceClient) DeleteAgent(ctx context.Context, req *connect.Request[v1alpha1.DeleteAgentRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.deleteAgent.CallUnary(ctx, req)
+}
+
 // AgentServiceHandler is an implementation of the config.v1alpha1.AgentService service.
 type AgentServiceHandler interface {
 	ListAgents(context.Context, *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsResponse], error)
 	GetAgent(context.Context, *connect.Request[v1alpha1.GetAgentRequest]) (*connect.Response[v1alpha1.GetAgentResponse], error)
 	Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.GetAgentStatusResponse], error)
+	DeleteAgent(context.Context, *connect.Request[v1alpha1.DeleteAgentRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewAgentServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -134,6 +152,12 @@ func NewAgentServiceHandler(svc AgentServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(agentServiceMethods.ByName("Status")),
 		connect.WithHandlerOptions(opts...),
 	)
+	agentServiceDeleteAgentHandler := connect.NewUnaryHandler(
+		AgentServiceDeleteAgentProcedure,
+		svc.DeleteAgent,
+		connect.WithSchema(agentServiceMethods.ByName("DeleteAgent")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/config.v1alpha1.AgentService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AgentServiceListAgentsProcedure:
@@ -142,6 +166,8 @@ func NewAgentServiceHandler(svc AgentServiceHandler, opts ...connect.HandlerOpti
 			agentServiceGetAgentHandler.ServeHTTP(w, r)
 		case AgentServiceStatusProcedure:
 			agentServiceStatusHandler.ServeHTTP(w, r)
+		case AgentServiceDeleteAgentProcedure:
+			agentServiceDeleteAgentHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -161,4 +187,8 @@ func (UnimplementedAgentServiceHandler) GetAgent(context.Context, *connect.Reque
 
 func (UnimplementedAgentServiceHandler) Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.GetAgentStatusResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.AgentService.Status is not implemented"))
+}
+
+func (UnimplementedAgentServiceHandler) DeleteAgent(context.Context, *connect.Request[v1alpha1.DeleteAgentRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.AgentService.DeleteAgent is not implemented"))
 }

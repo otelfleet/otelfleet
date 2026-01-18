@@ -34,4 +34,9 @@ func RegisterAgentServiceHandler(mux *mux.Router, svc AgentServiceHandler, opts 
 		svc.Status,
 		opts...,
 	))
+	mux.Handle("/config.v1alpha1.AgentService/DeleteAgent", connect.NewUnaryHandler(
+		"/config.v1alpha1.AgentService/DeleteAgent",
+		svc.DeleteAgent,
+		opts...,
+	))
 }

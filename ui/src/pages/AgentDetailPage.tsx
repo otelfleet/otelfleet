@@ -42,7 +42,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { AlertCircle } from 'react-feather';
 import { CheckCircledIcon } from '@radix-ui/react-icons';
-import MonacoEditor from '@monaco-editor/react';
+import { Editor } from '../components/Editor';
 
 interface AgentDetailPageProps {
     agentId: string;
@@ -636,33 +636,17 @@ function EffectiveConfigTab({ status }: { status: AgentStatus | null }) {
         ? new TextDecoder().decode(configFile.body)
         : '';
 
-    // Determine language from content type
-    const language = configFile?.contentType?.includes('yaml') ? 'yaml' : 'text';
-
     return (
-        <Paper p="md" withBorder style={{ height: '100%', minHeight: 400, display: 'flex', flexDirection: 'column' }}>
+        <Paper p="md" withBorder style={{ display: 'flex', flexDirection: 'column' }}>
             <Group justify="space-between" mb="md">
                 <Title order={4}>Effective Configuration</Title>
                 <Text size="sm" c="dimmed">{configName}</Text>
             </Group>
-            <Box style={{ flex: 1 }}>
-                <MonacoEditor
-                    value={configContent}
-                    height={400}
-                    language={language}
-                    theme="vs-dark"
-                    options={{
-                        readOnly: true,
-                        minimap: { enabled: false },
-                        scrollbar: { verticalScrollbarSize: 8, horizontal: 'hidden' },
-                        padding: { top: 10 },
-                        fontSize: 13,
-                        lineNumbers: 'on',
-                        folding: true,
-                        wordWrap: 'on',
-                    }}
-                />
-            </Box>
+            <Editor
+                defaultConfig={configContent}
+                readOnly
+                height={500}
+            />
         </Paper>
     );
 }

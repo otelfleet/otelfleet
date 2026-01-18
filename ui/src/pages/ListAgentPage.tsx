@@ -5,11 +5,11 @@ import type { ConfigReference, ConfigAssignmentInfo } from '../gen/api/pkg/api/c
 import { useClient } from '../api';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { notifyGRPCError } from '../api/notifications';
-import { Badge, Tooltip, Text, Button, Group, Modal, Select, Stack, Paper } from '@mantine/core';
+import { Badge, Tooltip, Text, Button, Group, Modal, Select, Stack, Paper, ActionIcon } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { Link } from '@tanstack/react-router';
-import { CheckCircledIcon } from '@radix-ui/react-icons';
+import { CheckCircledIcon, TrashIcon } from '@radix-ui/react-icons';
 import {
     Table,
     type ColumnConfig
@@ -100,6 +100,9 @@ export const AgentPage = () => {
     const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
     const [assignModalOpened, { open: openAssignModal, close: closeAssignModal }] = useDisclosure(false);
     const [assigning, setAssigning] = useState(false);
+    const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
+    const [agentToDelete, setAgentToDelete] = useState<{ id: string; name: string } | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     const handleListAgents = useCallback(async () => {
         try {
@@ -156,6 +159,33 @@ export const AgentPage = () => {
             setSelectedConfig(null);
         }
     }, [selectedConfig, selectedAgents, configClient, fetchAssignments, closeAssignModal]);
+
+    const handleDeleteAgent = useCallback(async () => {
+        if (!agentToDelete) return;
+        setDeleting(true);
+        try {
+            await agentClient.deleteAgent({ agentId: agentToDelete.id });
+            notifications.show({
+                title: 'Agent Deleted',
+                message: `Agent "${agentToDelete.name}" has been deleted`,
+                color: 'green',
+                icon: <CheckCircledIcon />,
+            });
+            handleListAgents();
+            fetchAssignments();
+        } catch (error) {
+            notifyGRPCError("Failed to delete agent", error);
+        } finally {
+            setDeleting(false);
+            closeDeleteModal();
+            setAgentToDelete(null);
+        }
+    }, [agentClient, agentToDelete, handleListAgents, fetchAssignments, closeDeleteModal]);
+
+    const confirmDelete = useCallback((agentId: string, agentName: string) => {
+        setAgentToDelete({ id: agentId, name: agentName });
+        openDeleteModal();
+    }, [openDeleteModal]);
 
     useEffect(() => {
         handleListAgents();
@@ -220,15 +250,26 @@ export const AgentPage = () => {
             render: (_: unknown, row: AgentDescriptionAndStatus) => {
                 if (!row.agent?.id) return null;
                 return (
-                    <Link to="/agents/$agentId" params={{ agentId: row.agent.id }}>
-                        <Button size="xs" variant="light">
-                            Details
-                        </Button>
-                    </Link>
+                    <Group gap="xs" justify="center">
+                        <Link to="/agents/$agentId" params={{ agentId: row.agent.id }}>
+                            <Button size="xs" variant="light">
+                                Details
+                            </Button>
+                        </Link>
+                        <ActionIcon
+                            color="red"
+                            variant="subtle"
+                            size="lg"
+                            onClick={() => confirmDelete(row.agent!.id, row.agent!.friendlyName || 'Unknown')}
+                            title="Delete agent"
+                        >
+                            <TrashIcon width={18} height={18} />
+                        </ActionIcon>
+                    </Group>
                 );
             }
         },
-    ], [assignments]);
+    ], [assignments, confirmDelete]);
 
     return (
         <>
@@ -287,6 +328,25 @@ export const AgentPage = () => {
                         <Button variant="default" onClick={closeAssignModal}>Cancel</Button>
                         <Button onClick={handleBatchAssign} loading={assigning} disabled={!selectedConfig}>
                             Assign to {selectedAgents.size} Agent{selectedAgents.size > 1 ? 's' : ''}
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
+
+            {/* Delete Agent Confirmation Modal */}
+            <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Agent" centered>
+                <Stack gap="md">
+                    <Text size="sm">
+                        Are you sure you want to delete agent <Text span fw={700}>{agentToDelete?.name}</Text>?
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                        This will permanently remove the agent and all its associated data including
+                        health status, configuration state, and connection history. This action cannot be undone.
+                    </Text>
+                    <Group justify="flex-end" mt="md">
+                        <Button variant="default" onClick={closeDeleteModal}>Cancel</Button>
+                        <Button color="red" onClick={handleDeleteAgent} loading={deleting}>
+                            Delete Agent
                         </Button>
                     </Group>
                 </Stack>

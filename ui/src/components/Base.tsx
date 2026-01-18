@@ -2,7 +2,7 @@ import { useState, useCallback, type FC } from 'react'
 import { Link, Outlet } from '@tanstack/react-router'
 import ColorSchemeContext, { useColorScheme } from '../contexts/ColorSchemeContext';
 import { Notifications } from '@mantine/notifications';
-import { elevationShadows } from '../theme/elevation';
+import { elevationShadows, elevationStylesOverrides } from '../theme/elevation';
 
 
 import {
@@ -79,22 +79,22 @@ const theme = createTheme({
 
     components: {
         AppShell: {
-            styles: {
-                main: { backgroundColor: 'var(--elevation-base-bg)' },
-                header: {
-                    backgroundColor: 'var(--elevation-surface-bg)',
-                    borderBottom: '1px solid var(--mantine-color-default-border)',
-                },
-                navbar: {
-                    backgroundColor: 'var(--elevation-surface-bg)',
-                    borderRight: '1px solid var(--mantine-color-default-border)',
-                },
-            },
+            styles: elevationStylesOverrides.AppShell,
         },
         Paper: {
-            styles: {
-                root: { backgroundColor: 'var(--elevation-surface-bg)' },
-            },
+            styles: elevationStylesOverrides.Paper,
+        },
+        Card: {
+            styles: elevationStylesOverrides.Card,
+        },
+        Modal: {
+            styles: elevationStylesOverrides.Modal,
+        },
+        Menu: {
+            styles: elevationStylesOverrides.Menu,
+        },
+        Popover: {
+            styles: elevationStylesOverrides.Popover,
         },
     },
 });
@@ -130,7 +130,7 @@ const Base: FC = () => {
         setColorScheme((current) => {
             if (current === 'auto') return 'dark';
             if (current === 'dark') return 'light';
-            return 'dark';
+            return 'auto';
         });
     }, [setColorScheme]);
 

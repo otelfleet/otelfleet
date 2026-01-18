@@ -105,14 +105,16 @@ export const Table = <T extends object>({
           </Menu.Target>
           <Menu.Dropdown>
             <Stack gap="xs" p="xs">
-              {columns.map((col) => (
-                <Checkbox
-                  key={String(col.key)}
-                  label={col.label}
-                  checked={visibleColumns.has(String(col.key))}
-                  onChange={() => handleColumnToggle(String(col.key))}
-                />
-              ))}
+              {columns
+                .filter((col) => col.label)
+                .map((col) => (
+                  <Checkbox
+                    key={String(col.key)}
+                    label={col.label}
+                    checked={visibleColumns.has(String(col.key))}
+                    onChange={() => handleColumnToggle(String(col.key))}
+                  />
+                ))}
             </Stack>
           </Menu.Dropdown>
         </Menu>

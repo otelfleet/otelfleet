@@ -12,6 +12,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1/v1alpha1connect"
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // AgentServer provides the agent management API.
@@ -110,6 +111,26 @@ func (a *AgentServer) Status(ctx context.Context, req *connect.Request[v1alpha1.
 	return connect.NewResponse(&v1alpha1.GetAgentStatusResponse{
 		Status: agentdomain.ToAPIStatus(domainAgent),
 	}), nil
+}
+
+func (a *AgentServer) DeleteAgent(ctx context.Context, req *connect.Request[v1alpha1.DeleteAgentRequest]) (*connect.Response[emptypb.Empty], error) {
+	agentID := req.Msg.GetAgentId()
+	if agentID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("agent_id must not be empty"))
+	}
+
+	a.logger.With("agent_id", agentID).Info("deleting agent")
+
+	if err := a.repository.Delete(ctx, agentID); err != nil {
+		if errors.Is(err, agentdomain.ErrAgentNotFound) {
+			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("agent not found: %s", agentID))
+		}
+		a.logger.With("agent_id", agentID, "err", err).Error("failed to delete agent")
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to delete agent: %w", err))
+	}
+
+	a.logger.With("agent_id", agentID).Info("agent deleted successfully")
+	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
 // toAPIAgentDescription converts a domain Agent to the v1alpha1.AgentDescription proto type.

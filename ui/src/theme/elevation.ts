@@ -115,7 +115,7 @@ export const elevationStylesOverrides = {
   // Modals are overlay level
   Modal: {
     content: {
-      backgroundColor: 'var(--elevation-overlay-bg)',
+      backgroundColor: 'var(--mantine-color-body)',
       boxShadow: elevationShadows.overlay,
     },
   },

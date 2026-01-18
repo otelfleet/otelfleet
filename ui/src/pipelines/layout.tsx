@@ -137,34 +137,40 @@ export const calcNodes = (value: OTELConfig) => {
     }
 
     const nodesToAdd: Node[] = [];
+    const gapBetweenPipelines = 60;
+    let currentY = 0;
 
     for (const [pipelineName, pipeline] of Object.entries(pipelines)) {
         const receivers = pipeline.receivers?.length ?? 0;
         const exporters = pipeline.exporters?.length ?? 0;
-        const maxNodes = Math.max(receivers, exporters) ?? 1;
+        const maxNodes = Math.max(receivers, exporters, 1);
         const spaceBetweenParents = 40;
         const spaceBetweenNodes = 90;
         const totalSpacing = maxNodes * spaceBetweenNodes;
         const parentHeight = totalSpacing + maxNodes * childNodesHeight;
+        const actualHeight = maxNodes === 1 ? parentHeight : parentHeight + spaceBetweenParents;
 
         nodesToAdd.push({
             id: pipelineName,
             type: "parentNodeType",
-            position: { x: 0, y: 0 },
+            position: { x: 0, y: currentY },
             data: {
                 label: pipelineName,
                 parentNode: pipelineName,
                 width: 430 + 200 * (pipeline.processors?.length ?? 0),
-                height: maxNodes === 1 ? parentHeight : parentHeight + spaceBetweenParents,
+                height: actualHeight,
                 type: "parentNodeType",
-                childNodes: createNode(pipelineName, pipeline, parentHeight + spaceBetweenParents, connectors),
+                childNodes: createNode(pipelineName, pipeline, actualHeight, connectors),
             },
             draggable: false,
             ariaLabel: pipelineName,
             expandParent: true,
         });
-        const childNodes = createNode(pipelineName, pipeline, parentHeight + spaceBetweenParents, connectors);
+        const childNodes = createNode(pipelineName, pipeline, actualHeight, connectors);
         nodesToAdd.push(...childNodes);
+
+        // Move Y position down for the next pipeline
+        currentY += actualHeight + gapBetweenPipelines;
     }
     return nodesToAdd;
 };
