@@ -1,6 +1,6 @@
 import { useState } from "react";
 import MonacoEditor, { type OnChange, type OnMount } from "@monaco-editor/react";
-import { Box, Button, Group, TextInput, Paper } from '@mantine/core';
+import { Box, Button, Group, TextInput, Paper, SegmentedControl } from '@mantine/core';
 import { useForm } from '@mantine/form'
 import { useClient } from "../api";
 import { ConfigService } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
@@ -9,24 +9,27 @@ import { notifyGRPCError } from "../api/notifications";
 import { useNavigate } from '@tanstack/react-router';
 import { useMonacoTheme } from "../hooks/useMonacoTheme";
 import { CheckCircledIcon } from '@radix-ui/react-icons';
+import PipelineGraph from "../pipelines/Pipeline";
 
 interface EditorProps {
     defaultConfig?: string | null;
     configId?: string;
-    containerWidth?: number;
-    containerHeight?: number;
-    style?: React.CSSProperties;
+    readOnly?: boolean;
+    height?: number | string;
 }
 
-export function Editor({ defaultConfig, configId }: EditorProps) {
+type ViewMode = 'editor' | 'graph' | 'split';
+
+export function Editor({ defaultConfig, configId, readOnly = false, height }: EditorProps) {
     const isEditMode = Boolean(configId);
 
     const monacoTheme = useMonacoTheme();
     const actualConfig = defaultConfig ? defaultConfig : ""
     const [configData, setConfig] = useState(actualConfig)
+    const [viewMode, setViewMode] = useState<ViewMode>('split');
 
     const handleEditorChange: OnChange = (value) => {
-        if (value !== undefined) {
+        if (value !== undefined && !readOnly) {
             setConfig(value);
         }
     }
@@ -51,6 +54,7 @@ export function Editor({ defaultConfig, configId }: EditorProps) {
     const navigate = useNavigate();
 
     const handleSubmit = async (values: { configName: string }) => {
+        if (readOnly) return;
         try {
             const bytes = new TextEncoder().encode(configData);
             await otelConfigClient.putConfig({
@@ -76,50 +80,116 @@ export function Editor({ defaultConfig, configId }: EditorProps) {
         }
     }
 
+    const showEditor = viewMode === 'editor' || viewMode === 'split';
+    const showGraph = viewMode === 'graph' || viewMode === 'split';
+
+    const containerHeight = height ?? (readOnly ? 400 : "calc(100vh - 92px)");
+
     return (
         <Box
             style={{
                 display: "flex",
                 flexDirection: "column",
-                height: "calc(100vh - 92px)",
+                height: containerHeight,
                 gap: 16,
             }}
         >
-            <form onSubmit={form.onSubmit(handleSubmit)}>
-                <Group align="flex-end" gap="md">
-                    <TextInput
-                        withAsterisk
-                        label="Config name"
-                        placeholder="config"
-                        disabled={isEditMode}
-                        {...form.getInputProps('configName')}
+            {!readOnly && (
+                <form onSubmit={form.onSubmit(handleSubmit)}>
+                    <Group align="flex-end" gap="md">
+                        <TextInput
+                            withAsterisk
+                            label="Config name"
+                            placeholder="config"
+                            disabled={isEditMode}
+                            {...form.getInputProps('configName')}
+                        />
+                        <SegmentedControl
+                            value={viewMode}
+                            onChange={(value) => setViewMode(value as ViewMode)}
+                            data={[
+                                { label: 'Editor', value: 'editor' },
+                                { label: 'Split', value: 'split' },
+                                { label: 'Graph', value: 'graph' },
+                            ]}
+                        />
+                        <Button type="submit">
+                            {isEditMode ? 'Update config' : 'Save config'}
+                        </Button>
+                    </Group>
+                </form>
+            )}
+
+            {readOnly && (
+                <Group>
+                    <SegmentedControl
+                        value={viewMode}
+                        onChange={(value) => setViewMode(value as ViewMode)}
+                        data={[
+                            { label: 'Editor', value: 'editor' },
+                            { label: 'Split', value: 'split' },
+                            { label: 'Graph', value: 'graph' },
+                        ]}
                     />
-                    <Button type="submit">
-                        {isEditMode ? 'Update config' : 'Save config'}
-                    </Button>
                 </Group>
-            </form>
-            <Paper shadow="sm" radius="md" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                <MonacoEditor
-                    defaultValue={actualConfig}
-                    value={configData}
-                    width="100%"
-                    height="100%"
-                    defaultLanguage="yaml"
-                    theme={monacoTheme}
-                    options={{
-                        quickSuggestions: { other: true, strings: true },
-                        automaticLayout: true,
-                        minimap: { enabled: false },
-                        scrollbar: { verticalScrollbarSize: 8, horizontal: "hidden" },
-                        padding: { top: 5 },
-                        fontSize: 13,
-                        fontWeight: "400",
-                    }}
-                    onMount={handleEditorMount}
-                    onChange={handleEditorChange}
-                />
-            </Paper>
+            )}
+
+            <Box
+                style={{
+                    flex: 1,
+                    minHeight: 0,
+                    display: 'flex',
+                    gap: 16,
+                }}
+            >
+                {showEditor && (
+                    <Paper
+                        shadow="sm"
+                        radius="md"
+                        style={{
+                            flex: 1,
+                            minHeight: 0,
+                            overflow: 'hidden',
+                        }}
+                    >
+                        <MonacoEditor
+                            defaultValue={actualConfig}
+                            value={configData}
+                            width="100%"
+                            height="100%"
+                            defaultLanguage="yaml"
+                            theme={monacoTheme}
+                            options={{
+                                readOnly: readOnly,
+                                quickSuggestions: readOnly ? false : { other: true, strings: true },
+                                automaticLayout: true,
+                                minimap: { enabled: false },
+                                scrollbar: { verticalScrollbarSize: 8, horizontal: "hidden" },
+                                padding: { top: 5 },
+                                fontSize: 13,
+                                fontWeight: "400",
+                            }}
+                            onMount={handleEditorMount}
+                            onChange={handleEditorChange}
+                        />
+                    </Paper>
+                )}
+
+                {showGraph && (
+                    <Paper
+                        shadow="sm"
+                        radius="md"
+                        style={{
+                            flex: 1,
+                            minHeight: 0,
+                            overflow: 'hidden',
+                            backgroundColor: 'var(--elevation-surface-bg)',
+                        }}
+                    >
+                        <PipelineGraph key={viewMode} value={configData} />
+                    </Paper>
+                )}
+            </Box>
         </Box>
     );
 }
