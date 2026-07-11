@@ -1,93 +1,16 @@
-import { AgentService, AgentState as AgentStateEnum, ConfigSyncStatus as ConfigSyncStatusEnum } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import type { AgentDescriptionAndStatus, AgentState, ComponentHealth, ConfigSyncStatus } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import { ConfigService, ConfigApplicationStatus } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
+import { AgentService } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+import type { AgentDescriptionAndStatus } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+import { ConfigService } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
 import type { ConfigReference, ConfigAssignmentInfo } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
 import { useClient } from '../api';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { notifyGRPCError } from '../api/notifications';
-import { Badge, Tooltip, Text, Button, Group, Modal, Select, Stack, Paper, ActionIcon } from '@mantine/core';
+import { Text, Button, Group, Modal, Select, Stack, Paper } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { Link } from '@tanstack/react-router';
-import { CheckCircledIcon, TrashIcon } from '@radix-ui/react-icons';
-import {
-    Table,
-    type ColumnConfig
-} from '../components/Table'
-
-function StatusBadge({ state }: { state: AgentState }) {
-    const enumStr = AgentStateEnum[state].replace(/AgentState$/i, "");
-    const trimmed = typeof enumStr === 'string' && enumStr.toLowerCase().startsWith("agentstate")
-        ? enumStr.slice("AgentState".length)
-        : enumStr;
-    const color = {
-        0: 'gray',
-        1: 'green',
-        2: 'red'
-    }[state] ?? 'gray';
-
-    return <Badge color={color} variant="filled" radius="sm">
-        {trimmed}
-    </Badge>
-}
-
-function HealthBadge({ health }: { health?: ComponentHealth }) {
-    if (!health) {
-        return <Badge color="gray" variant="filled" radius="sm">Unknown</Badge>
-    }
-    const color = health.healthy ? 'green' : 'red';
-    const label = health.healthy ? 'Healthy' : 'Unhealthy';
-
-    return (
-        <Badge color={color} variant="filled" radius="sm">
-            {label}
-        </Badge>
-    );
-}
-
-function ConfigSyncStatusBadge({ status, reason }: { status?: ConfigSyncStatus; reason?: string }) {
-    const statusMap: Record<number, { color: string; label: string }> = {
-        [ConfigSyncStatusEnum.UNKNOWN]: { color: 'gray', label: 'Unknown' },
-        [ConfigSyncStatusEnum.IN_SYNC]: { color: 'green', label: 'In Sync' },
-        [ConfigSyncStatusEnum.OUT_OF_SYNC]: { color: 'yellow', label: 'Out of Sync' },
-        [ConfigSyncStatusEnum.APPLYING]: { color: 'blue', label: 'Applying' },
-        [ConfigSyncStatusEnum.ERROR]: { color: 'red', label: 'Error' },
-    };
-
-    const { color, label } = statusMap[status ?? 0] ?? { color: 'gray', label: 'Unknown' };
-
-    return (
-        <Tooltip label={reason} disabled={!reason}>
-            <Badge color={color} variant="filled" radius="sm">
-                {label}
-            </Badge>
-        </Tooltip>
-    );
-}
-
-function AssignedConfigBadge({ assignment }: { assignment?: ConfigAssignmentInfo }) {
-    if (!assignment?.configId) {
-        return <Text size="sm" c="dimmed">(none)</Text>;
-    }
-
-    const statusMap: Record<number, { color: string; label: string }> = {
-        [ConfigApplicationStatus.UNSPECIFIED]: { color: 'gray', label: '' },
-        [ConfigApplicationStatus.PENDING]: { color: 'yellow', label: 'Pending' },
-        [ConfigApplicationStatus.APPLIED]: { color: 'green', label: 'Applied' },
-        [ConfigApplicationStatus.FAILED]: { color: 'red', label: 'Failed' },
-    };
-
-    const { color, label } = statusMap[assignment.status] ?? { color: 'gray', label: '' };
-
-    return (
-        <Tooltip label={assignment.errorMessage} disabled={!assignment.errorMessage}>
-            <Group gap="xs" justify="center">
-                <Text size="sm" fw={500}>{assignment.configId}</Text>
-                {label && <Badge color={color} variant="light" size="xs">{label}</Badge>}
-            </Group>
-        </Tooltip>
-    );
-}
+import { CheckCircledIcon } from '@radix-ui/react-icons';
+import { Table } from '../components/Table'
+import { buildAgentColumns } from '../components/agents/agentColumns'
 
 export const AgentPage = () => {
     const agentClient = useClient(AgentService);
@@ -198,78 +121,10 @@ export const AgentPage = () => {
         }
     }, [assignModalOpened, fetchAvailableConfigs]);
 
-    const agentColumns = useMemo<ColumnConfig<AgentDescriptionAndStatus>[]>(() => [
-        {
-            key: 'name',
-            label: 'Name',
-            visible: true,
-            render: (_: unknown, row: AgentDescriptionAndStatus) => {
-                return <Text fw={500}>{row.agent?.friendlyName || 'Unknown'}</Text>
-            }
-        },
-        {
-            key: 'connection',
-            label: 'Connection',
-            visible: true,
-            render: (_: unknown, row: AgentDescriptionAndStatus) => {
-                return <StatusBadge state={row.status?.state ?? 0} />
-            }
-        },
-        {
-            key: 'health',
-            label: 'Health',
-            visible: true,
-            render: (_: unknown, row: AgentDescriptionAndStatus) => {
-                return <HealthBadge health={row.status?.health} />
-            }
-        },
-        {
-            key: 'configStatus',
-            label: 'Config Sync',
-            visible: true,
-            render: (_: unknown, row: AgentDescriptionAndStatus) => {
-                return <ConfigSyncStatusBadge
-                    status={row.status?.configSyncStatus}
-                    reason={row.status?.configSyncReason}
-                />
-            }
-        },
-        {
-            key: 'assignedConfig',
-            label: 'Assigned Config',
-            visible: true,
-            render: (_: unknown, row: AgentDescriptionAndStatus) => {
-                const assignment = assignments.get(row.agent?.id ?? '');
-                return <AssignedConfigBadge assignment={assignment} />
-            }
-        },
-        {
-            key: 'actions',
-            label: '',
-            visible: true,
-            render: (_: unknown, row: AgentDescriptionAndStatus) => {
-                if (!row.agent?.id) return null;
-                return (
-                    <Group gap="xs" justify="center">
-                        <Link to="/agents/$agentId" params={{ agentId: row.agent.id }}>
-                            <Button size="xs" variant="light">
-                                Details
-                            </Button>
-                        </Link>
-                        <ActionIcon
-                            color="red"
-                            variant="subtle"
-                            size="lg"
-                            onClick={() => confirmDelete(row.agent!.id, row.agent!.friendlyName || 'Unknown')}
-                            title="Delete agent"
-                        >
-                            <TrashIcon width={18} height={18} />
-                        </ActionIcon>
-                    </Group>
-                );
-            }
-        },
-    ], [assignments, confirmDelete]);
+    const agentColumns = useMemo(
+        () => buildAgentColumns({ assignments, onDelete: confirmDelete }),
+        [assignments, confirmDelete]
+    );
 
     return (
         <>
