@@ -4,7 +4,7 @@ import { Code } from "@connectrpc/connect";
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 
 export function notifyGRPCError(
-    title : String,
+    title : string,
     error: unknown,
 ) {
     const connectErr = ConnectError.from(error);

@@ -81,7 +81,7 @@ const createNode = (pipelineName: string, parentNode: OTELPipeline, height: numb
 				break;
 			case "receivers":
 				receivers?.map((receiver, index) => {
-					const isConnector = connectors?.hasOwnProperty(receiver) ? "connectors/receivers" : "receivers";
+					const isConnector = Object.hasOwn(connectors ?? {}, receiver) ? "connectors/receivers" : "receivers";
 					const id = `${pipelineName}-Receiver-receiverNode-${receiver}`;
 
 					nodesToAdd.push({
@@ -104,7 +104,7 @@ const createNode = (pipelineName: string, parentNode: OTELPipeline, height: numb
 				break;
 			case "exporters":
 				exporters?.map((exporter, index) => {
-					const isConnector = connectors?.hasOwnProperty(exporter) ? "connectors/exporters" : "exporters";
+					const isConnector = Object.hasOwn(connectors ?? {}, exporter) ? "connectors/exporters" : "exporters";
 					const id = `${pipelineName}-exporter-exporterNode-${exporter}`;
 					nodesToAdd.push({
 						id: id,
