@@ -4,12 +4,14 @@ package opamp_test
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/open-telemetry/opamp-go/protobufs"
+	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/supervisor"
 	"github.com/otelfleet/otelfleet/pkg/util/testutil"
 	"github.com/stretchr/testify/assert"
@@ -29,14 +31,30 @@ func makeAgentDescription(agentID string) *protobufs.AgentDescription {
 	}
 }
 
+// newTestHandler builds a per-connection ServerAgentHandler wired to the test
+// environment's repository and config store, mirroring what Server.OnConnecting
+// constructs for each real connection.
+func newTestHandler(env *testutil.TestEnv) *opamp.ServerAgentHandler {
+	return opamp.NewServerAgentHandler(
+		context.Background(),
+		"test-conn",
+		env.AgentRepo,
+		env.AssignedConfigStore,
+		env.Logger,
+	)
+}
+
+// agentStoreKey returns the storage key the handler derives from an instance
+// UID. The handler identifies agents by the hex-encoded instance UID.
+func agentStoreKey(instanceUID []byte) string {
+	return fmt.Sprintf("%x", instanceUID)
+}
+
 func TestServer_OnMessage_PersistsHealth(t *testing.T) {
 	env := testutil.NewTestEnv(t)
 
 	agentID := "test-agent-health-persist"
 	instanceUID := []byte(agentID)
-
-	// Register the agent first
-	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
 
 	health := &protobufs.ComponentHealth{
 		Healthy:           true,
@@ -60,11 +78,11 @@ func TestServer_OnMessage_PersistsHealth(t *testing.T) {
 	ctx := context.Background()
 
 	// Process message
-	resp := env.OpampServer.OnMessage(ctx, conn, msg)
+	resp := newTestHandler(env).OnMessage(ctx, conn, msg)
 	require.NotNil(t, resp)
 
 	// Verify health was persisted to storage
-	stored, err := env.HealthStore.Get(ctx, agentID)
+	stored, err := env.HealthStore.Get(ctx, agentStoreKey(instanceUID))
 	require.NoError(t, err)
 	assert.Empty(t, cmp.Diff(health, stored, protocmp.Transform()))
 }
@@ -74,9 +92,6 @@ func TestServer_OnMessage_PersistsEffectiveConfig(t *testing.T) {
 
 	agentID := "test-agent-config-persist"
 	instanceUID := []byte(agentID)
-
-	// Register the agent first
-	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
 
 	config := &protobufs.EffectiveConfig{
 		ConfigMap: &protobufs.AgentConfigMap{
@@ -99,11 +114,11 @@ func TestServer_OnMessage_PersistsEffectiveConfig(t *testing.T) {
 	ctx := context.Background()
 
 	// Process message
-	resp := env.OpampServer.OnMessage(ctx, conn, msg)
+	resp := newTestHandler(env).OnMessage(ctx, conn, msg)
 	require.NotNil(t, resp)
 
 	// Verify config was persisted to storage
-	stored, err := env.EffectiveConfigStore.Get(ctx, agentID)
+	stored, err := env.EffectiveConfigStore.Get(ctx, agentStoreKey(instanceUID))
 	require.NoError(t, err)
 	assert.Empty(t, cmp.Diff(config, stored, protocmp.Transform()))
 }
@@ -113,9 +128,6 @@ func TestServer_OnMessage_PersistsRemoteConfigStatus(t *testing.T) {
 
 	agentID := "test-agent-status-persist"
 	instanceUID := []byte(agentID)
-
-	// Register the agent first
-	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
 
 	status := &protobufs.RemoteConfigStatus{
 		LastRemoteConfigHash: []byte("config-hash-123"),
@@ -132,11 +144,11 @@ func TestServer_OnMessage_PersistsRemoteConfigStatus(t *testing.T) {
 	ctx := context.Background()
 
 	// Process message
-	resp := env.OpampServer.OnMessage(ctx, conn, msg)
+	resp := newTestHandler(env).OnMessage(ctx, conn, msg)
 	require.NotNil(t, resp)
 
 	// Verify status was persisted to storage
-	stored, err := env.RemoteStatusStore.Get(ctx, agentID)
+	stored, err := env.RemoteStatusStore.Get(ctx, agentStoreKey(instanceUID))
 	require.NoError(t, err)
 	assert.Empty(t, cmp.Diff(status, stored, protocmp.Transform()))
 }
@@ -146,9 +158,6 @@ func TestServer_OnMessage_PersistsAllFields(t *testing.T) {
 
 	agentID := "test-agent-all-fields"
 	instanceUID := []byte(agentID)
-
-	// Register the agent first
-	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
 
 	health := &protobufs.ComponentHealth{
 		Healthy: true,
@@ -176,19 +185,19 @@ func TestServer_OnMessage_PersistsAllFields(t *testing.T) {
 	conn := &testMockConnection{instanceUID: instanceUID}
 	ctx := context.Background()
 
-	resp := env.OpampServer.OnMessage(ctx, conn, msg)
+	resp := newTestHandler(env).OnMessage(ctx, conn, msg)
 	require.NotNil(t, resp)
 
 	// Verify all fields were persisted
-	storedHealth, err := env.HealthStore.Get(ctx, agentID)
+	storedHealth, err := env.HealthStore.Get(ctx, agentStoreKey(instanceUID))
 	require.NoError(t, err)
 	assert.True(t, storedHealth.Healthy)
 
-	storedConfig, err := env.EffectiveConfigStore.Get(ctx, agentID)
+	storedConfig, err := env.EffectiveConfigStore.Get(ctx, agentStoreKey(instanceUID))
 	require.NoError(t, err)
 	assert.NotNil(t, storedConfig.ConfigMap)
 
-	storedStatus, err := env.RemoteStatusStore.Get(ctx, agentID)
+	storedStatus, err := env.RemoteStatusStore.Get(ctx, agentStoreKey(instanceUID))
 	require.NoError(t, err)
 	assert.Equal(t, protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED, storedStatus.Status)
 }
@@ -199,9 +208,6 @@ func TestServer_OnMessage_OnlyPersistsNonNilFields(t *testing.T) {
 	agentID := "test-agent-partial"
 	instanceUID := []byte(agentID)
 	ctx := context.Background()
-
-	// Register the agent first
-	require.NoError(t, env.AgentRepo.Register(ctx, agentID, agentID))
 
 	// Message with only health (and required AgentDescription)
 	msg := &protobufs.AgentToServer{
@@ -214,18 +220,18 @@ func TestServer_OnMessage_OnlyPersistsNonNilFields(t *testing.T) {
 	}
 
 	conn := &testMockConnection{instanceUID: instanceUID}
-	resp := env.OpampServer.OnMessage(ctx, conn, msg)
+	resp := newTestHandler(env).OnMessage(ctx, conn, msg)
 	require.NotNil(t, resp)
 
 	// Health should be persisted
-	_, err := env.HealthStore.Get(ctx, agentID)
+	_, err := env.HealthStore.Get(ctx, agentStoreKey(instanceUID))
 	require.NoError(t, err)
 
 	// Config and status should not exist
-	_, err = env.EffectiveConfigStore.Get(ctx, agentID)
+	_, err = env.EffectiveConfigStore.Get(ctx, agentStoreKey(instanceUID))
 	require.Error(t, err)
 
-	_, err = env.RemoteStatusStore.Get(ctx, agentID)
+	_, err = env.RemoteStatusStore.Get(ctx, agentStoreKey(instanceUID))
 	require.Error(t, err)
 }
 

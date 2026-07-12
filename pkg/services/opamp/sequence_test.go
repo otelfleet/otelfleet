@@ -34,9 +34,7 @@ func TestServer_SequenceNumTracking_Sequential(t *testing.T) {
 	instanceUID := []byte(agentID)
 	conn := &seqMockConnection{instanceUID: instanceUID}
 	desc := makeSeqAgentDescription(agentID)
-
-	// Register the agent first
-	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+	handler := newTestHandler(env)
 
 	// First message (seq 0)
 	msg1 := &protobufs.AgentToServer{
@@ -44,7 +42,7 @@ func TestServer_SequenceNumTracking_Sequential(t *testing.T) {
 		AgentDescription: desc,
 		SequenceNum:      0,
 	}
-	resp1 := env.OpampServer.OnMessage(context.Background(), conn, msg1)
+	resp1 := handler.OnMessage(context.Background(), conn, msg1)
 	require.NotNil(t, resp1)
 	assert.Equal(t, uint64(0), resp1.Flags, "First message should not request full state")
 
@@ -54,7 +52,7 @@ func TestServer_SequenceNumTracking_Sequential(t *testing.T) {
 		AgentDescription: desc,
 		SequenceNum:      1,
 	}
-	resp2 := env.OpampServer.OnMessage(context.Background(), conn, msg2)
+	resp2 := handler.OnMessage(context.Background(), conn, msg2)
 	require.NotNil(t, resp2)
 	assert.Equal(t, uint64(0), resp2.Flags, "Sequential message should not request full state")
 
@@ -64,7 +62,7 @@ func TestServer_SequenceNumTracking_Sequential(t *testing.T) {
 		AgentDescription: desc,
 		SequenceNum:      2,
 	}
-	resp3 := env.OpampServer.OnMessage(context.Background(), conn, msg3)
+	resp3 := handler.OnMessage(context.Background(), conn, msg3)
 	require.NotNil(t, resp3)
 	assert.Equal(t, uint64(0), resp3.Flags, "Sequential message should not request full state")
 }
@@ -76,9 +74,7 @@ func TestServer_SequenceNumTracking_Gap(t *testing.T) {
 	instanceUID := []byte(agentID)
 	conn := &seqMockConnection{instanceUID: instanceUID}
 	desc := makeSeqAgentDescription(agentID)
-
-	// Register the agent first
-	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+	handler := newTestHandler(env)
 
 	// First message (seq 0)
 	msg1 := &protobufs.AgentToServer{
@@ -86,7 +82,7 @@ func TestServer_SequenceNumTracking_Gap(t *testing.T) {
 		AgentDescription: desc,
 		SequenceNum:      0,
 	}
-	resp1 := env.OpampServer.OnMessage(context.Background(), conn, msg1)
+	resp1 := handler.OnMessage(context.Background(), conn, msg1)
 	require.NotNil(t, resp1)
 
 	// Second message (seq 1)
@@ -95,7 +91,7 @@ func TestServer_SequenceNumTracking_Gap(t *testing.T) {
 		AgentDescription: desc,
 		SequenceNum:      1,
 	}
-	resp2 := env.OpampServer.OnMessage(context.Background(), conn, msg2)
+	resp2 := handler.OnMessage(context.Background(), conn, msg2)
 	require.NotNil(t, resp2)
 
 	// Skip to seq 5 (gap)
@@ -104,7 +100,7 @@ func TestServer_SequenceNumTracking_Gap(t *testing.T) {
 		AgentDescription: desc,
 		SequenceNum:      5,
 	}
-	resp3 := env.OpampServer.OnMessage(context.Background(), conn, msg3)
+	resp3 := handler.OnMessage(context.Background(), conn, msg3)
 	require.NotNil(t, resp3)
 
 	// Should request full state
@@ -118,9 +114,7 @@ func TestServer_SequenceNumTracking_NewAgent(t *testing.T) {
 	agentID := "test-new-agent"
 	instanceUID := []byte(agentID)
 	conn := &seqMockConnection{instanceUID: instanceUID}
-
-	// Register the agent first
-	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+	handler := newTestHandler(env)
 
 	// First message from new agent starting with seq 0
 	// Include both the otelfleet.agent.id and the service.name
@@ -134,7 +128,7 @@ func TestServer_SequenceNumTracking_NewAgent(t *testing.T) {
 			},
 		},
 	}
-	resp := env.OpampServer.OnMessage(context.Background(), conn, msg)
+	resp := handler.OnMessage(context.Background(), conn, msg)
 	require.NotNil(t, resp)
 
 	// New agent should not need full state if starting from 0
@@ -147,16 +141,14 @@ func TestServer_SequenceNumTracking_ResponseContainsInstanceUID(t *testing.T) {
 	agentID := "test-agent-uid"
 	instanceUID := []byte(agentID)
 	conn := &seqMockConnection{instanceUID: instanceUID}
-
-	// Register the agent first
-	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
+	handler := newTestHandler(env)
 
 	msg := &protobufs.AgentToServer{
 		InstanceUid:      instanceUID,
 		AgentDescription: makeSeqAgentDescription(agentID),
 		SequenceNum:      0,
 	}
-	resp := env.OpampServer.OnMessage(context.Background(), conn, msg)
+	resp := handler.OnMessage(context.Background(), conn, msg)
 	require.NotNil(t, resp)
 	assert.Equal(t, instanceUID, resp.InstanceUid, "Response should contain the agent's instance UID")
 }
@@ -172,10 +164,9 @@ func TestServer_SequenceNumTracking_MultipleAgents(t *testing.T) {
 	conn2 := &seqMockConnection{instanceUID: agent2}
 	desc1 := makeSeqAgentDescription(agentID1)
 	desc2 := makeSeqAgentDescription(agentID2)
-
-	// Register both agents first
-	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID1, agentID1))
-	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID2, agentID2))
+	// Each connection gets its own handler, as it would in production.
+	handler1 := newTestHandler(env)
+	handler2 := newTestHandler(env)
 
 	// Agent 1 sends seq 0, 1, 2
 	for seq := range uint64(3) {
@@ -184,7 +175,7 @@ func TestServer_SequenceNumTracking_MultipleAgents(t *testing.T) {
 			AgentDescription: desc1,
 			SequenceNum:      seq,
 		}
-		resp := env.OpampServer.OnMessage(context.Background(), conn1, msg)
+		resp := handler1.OnMessage(context.Background(), conn1, msg)
 		assert.Equal(t, uint64(0), resp.Flags)
 	}
 
@@ -195,7 +186,7 @@ func TestServer_SequenceNumTracking_MultipleAgents(t *testing.T) {
 			AgentDescription: desc2,
 			SequenceNum:      seq,
 		}
-		resp := env.OpampServer.OnMessage(context.Background(), conn2, msg)
+		resp := handler2.OnMessage(context.Background(), conn2, msg)
 		assert.Equal(t, uint64(0), resp.Flags)
 	}
 
@@ -205,7 +196,7 @@ func TestServer_SequenceNumTracking_MultipleAgents(t *testing.T) {
 		AgentDescription: desc1,
 		SequenceNum:      10,
 	}
-	resp := env.OpampServer.OnMessage(context.Background(), conn1, msg)
+	resp := handler1.OnMessage(context.Background(), conn1, msg)
 	expectedFlag := uint64(protobufs.ServerToAgentFlags_ServerToAgentFlags_ReportFullState)
 	assert.Equal(t, expectedFlag, resp.Flags, "Agent 1 should request full state due to gap")
 
@@ -215,7 +206,7 @@ func TestServer_SequenceNumTracking_MultipleAgents(t *testing.T) {
 		AgentDescription: desc2,
 		SequenceNum:      2,
 	}
-	resp2 := env.OpampServer.OnMessage(context.Background(), conn2, msg2)
+	resp2 := handler2.OnMessage(context.Background(), conn2, msg2)
 	assert.Equal(t, uint64(0), resp2.Flags, "Agent 2 should not need full state")
 }
 
@@ -259,10 +250,11 @@ func (m *seqMockAddr) String() string {
 	return m.addr
 }
 
-func TestServer_OnMessage_UnregisteredAgent_ReturnsError(t *testing.T) {
+func TestServer_OnMessage_UnknownAgent_AutoRegisters(t *testing.T) {
 	env := testutil.NewTestEnv(t)
 
-	// Do NOT register the agent
+	// Do NOT register the agent up front; the handler bootstraps it on the
+	// first message.
 	agentID := "unregistered-agent"
 	instanceUID := []byte(agentID)
 	conn := &seqMockConnection{instanceUID: instanceUID}
@@ -274,12 +266,15 @@ func TestServer_OnMessage_UnregisteredAgent_ReturnsError(t *testing.T) {
 		SequenceNum:      0,
 	}
 
-	resp := env.OpampServer.OnMessage(context.Background(), conn, msg)
+	resp := newTestHandler(env).OnMessage(context.Background(), conn, msg)
 
 	require.NotNil(t, resp)
-	require.NotNil(t, resp.ErrorResponse, "response should contain an error for unregistered agent")
-	assert.Equal(t, protobufs.ServerErrorResponseType_ServerErrorResponseType_BadRequest, resp.ErrorResponse.Type)
-	assert.Contains(t, resp.ErrorResponse.ErrorMessage, "not registered")
+	require.Nil(t, resp.ErrorResponse, "unknown agent should be auto-registered, not rejected")
+
+	// The agent is now registered under its hex-encoded instance UID.
+	exists, err := env.AgentRepo.Exists(context.Background(), agentStoreKey(instanceUID))
+	require.NoError(t, err)
+	assert.True(t, exists, "handler should have registered the agent on first message")
 }
 
 func TestServer_OnMessage_SuccessResponse_NoErrorField(t *testing.T) {
@@ -290,16 +285,13 @@ func TestServer_OnMessage_SuccessResponse_NoErrorField(t *testing.T) {
 	conn := &seqMockConnection{instanceUID: instanceUID}
 	desc := makeSeqAgentDescription(agentID)
 
-	// Register the agent first
-	require.NoError(t, env.AgentRepo.Register(context.Background(), agentID, agentID))
-
 	msg := &protobufs.AgentToServer{
 		InstanceUid:      instanceUID,
 		AgentDescription: desc,
 		SequenceNum:      0,
 	}
 
-	resp := env.OpampServer.OnMessage(context.Background(), conn, msg)
+	resp := newTestHandler(env).OnMessage(context.Background(), conn, msg)
 
 	require.NotNil(t, resp)
 	assert.Nil(t, resp.ErrorResponse, "successful response should not contain error")

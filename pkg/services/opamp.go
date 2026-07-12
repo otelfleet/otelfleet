@@ -6,6 +6,7 @@ import (
 
 	clienttypes "github.com/open-telemetry/opamp-go/client/types"
 	"github.com/open-telemetry/opamp-go/protobufs"
+	"github.com/open-telemetry/opamp-go/server/types"
 	servertypes "github.com/open-telemetry/opamp-go/server/types"
 )
 
@@ -31,6 +32,9 @@ type OpAmpServerHandler interface {
 
 	// OnReadMessageError is called when an error occurs while reading or deserializing a message.
 	OnReadMessageError(conn servertypes.Connection, mt int, msgByte []byte, err error)
+
+	// OnMessageResponseError is called when an error occurs while sending the response message from the OnMessage loop.
+	OnMessageResponseError(conn types.Connection, message *protobufs.ServerToAgent, err error)
 }
 
 type OpAmpClientHandler interface {

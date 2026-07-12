@@ -33,6 +33,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
 	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/rs/cors"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -79,36 +80,36 @@ type OtelFleet struct {
 	mm   *modules.Manager
 	deps map[string][]string
 
-	store           storage.KVBroker
-	tokenStore      storage.KeyValue[*bootstrapv1alpha1.BootstrapToken]
-	agentStore      storage.KeyValue[*agentsv1alpha1.AgentDescription]
-	opampAgentStore storage.KeyValue[*protobufs.AgentToServer]
+	store           types.KVBroker
+	tokenStore      types.KeyValue[*bootstrapv1alpha1.BootstrapToken]
+	agentStore      types.KeyValue[*agentsv1alpha1.AgentDescription]
+	opampAgentStore types.KeyValue[*protobufs.AgentToServer]
 
-	agentHealthStore       storage.KeyValue[*protobufs.ComponentHealth]
-	agentEffectiveConfig   storage.KeyValue[*protobufs.EffectiveConfig]
-	agentRemoteConfigStore storage.KeyValue[*protobufs.RemoteConfigStatus]
-	opampAgentDescription  storage.KeyValue[*protobufs.AgentDescription]
+	agentHealthStore       types.KeyValue[*protobufs.ComponentHealth]
+	agentEffectiveConfig   types.KeyValue[*protobufs.EffectiveConfig]
+	agentRemoteConfigStore types.KeyValue[*protobufs.RemoteConfigStatus]
+	opampAgentDescription  types.KeyValue[*protobufs.AgentDescription]
 
 	// store for raw configs
-	configStore storage.KeyValue[*configv1alpha1.Config]
+	configStore types.KeyValue[*configv1alpha1.Config]
 	// store for default configs
-	defaultConfigStore storage.KeyValue[*configv1alpha1.Config]
+	defaultConfigStore types.KeyValue[*configv1alpha1.Config]
 	// store for bootstrap configs
 	// tokenID -> config
-	bootstrapConfigStore storage.KeyValue[*configv1alpha1.Config]
+	bootstrapConfigStore types.KeyValue[*configv1alpha1.Config]
 	// store for associating configs to agents
 	// otelfleet agentID -> config
-	assignmentConfigStore storage.KeyValue[*configv1alpha1.Config]
+	assignmentConfigStore types.KeyValue[*configv1alpha1.Config]
 	// store for config assignment metadata
 	// otelfleet agentID -> ConfigAssignment
-	configAssignmentStore storage.KeyValue[*configv1alpha1.ConfigAssignment]
+	configAssignmentStore types.KeyValue[*configv1alpha1.ConfigAssignment]
 
 	// store for deployment status
-	deploymentStore storage.KeyValue[*configv1alpha1.DeploymentStatus]
+	deploymentStore types.KeyValue[*configv1alpha1.DeploymentStatus]
 	// store for per-agent deployment status
-	agentDeploymentStore storage.KeyValue[*configv1alpha1.AgentDeploymentStatus]
+	agentDeploymentStore types.KeyValue[*configv1alpha1.AgentDeploymentStatus]
 	// store for persisted connection state (replaces in-memory agentTracker)
-	connectionStateStore storage.KeyValue[*agentsv1alpha1.AgentConnectionState]
+	connectionStateStore types.KeyValue[*agentsv1alpha1.AgentConnectionState]
 
 	// Agent repository - unified access to agent data
 	agentRepo agentdomain.Repository

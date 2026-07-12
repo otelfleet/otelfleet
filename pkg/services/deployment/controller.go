@@ -12,7 +12,7 @@ import (
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
-	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -69,9 +69,9 @@ type ConfigAssigner interface {
 type Controller struct {
 	logger *slog.Logger
 
-	deploymentStore      storage.KeyValue[*configv1alpha1.DeploymentStatus]
-	agentDeploymentStore storage.KeyValue[*configv1alpha1.AgentDeploymentStatus]
-	configStore          storage.KeyValue[*configv1alpha1.Config]
+	deploymentStore      types.KeyValue[*configv1alpha1.DeploymentStatus]
+	agentDeploymentStore types.KeyValue[*configv1alpha1.AgentDeploymentStatus]
+	configStore          types.KeyValue[*configv1alpha1.Config]
 	agentRepo            agentdomain.Repository
 
 	configAssigner ConfigAssigner
@@ -88,9 +88,9 @@ var _ otelconfig.DeploymentController = (*Controller)(nil)
 // NewController creates a new deployment controller
 func NewController(
 	logger *slog.Logger,
-	deploymentStore storage.KeyValue[*configv1alpha1.DeploymentStatus],
-	agentDeploymentStore storage.KeyValue[*configv1alpha1.AgentDeploymentStatus],
-	configStore storage.KeyValue[*configv1alpha1.Config],
+	deploymentStore types.KeyValue[*configv1alpha1.DeploymentStatus],
+	agentDeploymentStore types.KeyValue[*configv1alpha1.AgentDeploymentStatus],
+	configStore types.KeyValue[*configv1alpha1.Config],
 	agentRepo agentdomain.Repository,
 ) *Controller {
 	c := &Controller{

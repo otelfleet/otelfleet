@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/open-telemetry/opamp-go/server"
+	servertypes "github.com/open-telemetry/opamp-go/server/types"
 	agentsv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
@@ -27,6 +28,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
+	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,25 +41,25 @@ func init() {
 type TestEnv struct {
 	// Storage
 	db     *pebble.DB
-	Broker storage.KVBroker
+	Broker types.KVBroker
 
 	// KV Stores - all exposed for direct test manipulation
-	TokenStore                 storage.KeyValue[*bootstrapv1alpha1.BootstrapToken]
-	AgentStore                 storage.KeyValue[*agentsv1alpha1.AgentDescription]
-	OpampAgentStore            storage.KeyValue[*protobufs.AgentToServer]
-	ConfigStore                storage.KeyValue[*configv1alpha1.Config]
-	DefaultConfigStore         storage.KeyValue[*configv1alpha1.Config]
-	BootstrapConfigStore       storage.KeyValue[*configv1alpha1.Config]
-	AssignedConfigStore        storage.KeyValue[*configv1alpha1.Config]
-	ConfigAssignmentStore      storage.KeyValue[*configv1alpha1.ConfigAssignment]
-	HealthStore                storage.KeyValue[*protobufs.ComponentHealth]
-	EffectiveConfigStore       storage.KeyValue[*protobufs.EffectiveConfig]
-	RemoteStatusStore          storage.KeyValue[*protobufs.RemoteConfigStatus]
-	OpampAgentDescriptionStore storage.KeyValue[*protobufs.AgentDescription]
-	DeploymentStore            storage.KeyValue[*configv1alpha1.DeploymentStatus]
-	AgentDeploymentStore       storage.KeyValue[*configv1alpha1.AgentDeploymentStatus]
+	TokenStore                 types.KeyValue[*bootstrapv1alpha1.BootstrapToken]
+	AgentStore                 types.KeyValue[*agentsv1alpha1.AgentDescription]
+	OpampAgentStore            types.KeyValue[*protobufs.AgentToServer]
+	ConfigStore                types.KeyValue[*configv1alpha1.Config]
+	DefaultConfigStore         types.KeyValue[*configv1alpha1.Config]
+	BootstrapConfigStore       types.KeyValue[*configv1alpha1.Config]
+	AssignedConfigStore        types.KeyValue[*configv1alpha1.Config]
+	ConfigAssignmentStore      types.KeyValue[*configv1alpha1.ConfigAssignment]
+	HealthStore                types.KeyValue[*protobufs.ComponentHealth]
+	EffectiveConfigStore       types.KeyValue[*protobufs.EffectiveConfig]
+	RemoteStatusStore          types.KeyValue[*protobufs.RemoteConfigStatus]
+	OpampAgentDescriptionStore types.KeyValue[*protobufs.AgentDescription]
+	DeploymentStore            types.KeyValue[*configv1alpha1.DeploymentStatus]
+	AgentDeploymentStore       types.KeyValue[*configv1alpha1.AgentDeploymentStatus]
 	// ConnectionStateStore replaces the in-memory AgentTracker
-	ConnectionStateStore storage.KeyValue[*agentsv1alpha1.AgentConnectionState]
+	ConnectionStateStore types.KeyValue[*agentsv1alpha1.AgentConnectionState]
 
 	// Agent Repository - unified access to agent data
 	AgentRepo agentdomain.Repository
@@ -136,7 +138,7 @@ func NewTestEnv(t *testing.T) *TestEnv {
 	return env
 }
 
-func (e *TestEnv) initStores(logger *slog.Logger, broker storage.KVBroker) {
+func (e *TestEnv) initStores(logger *slog.Logger, broker types.KVBroker) {
 	e.TokenStore = storage.NewProtoKV[*bootstrapv1alpha1.BootstrapToken](logger, broker.KeyValue("tokens"))
 	e.AgentStore = storage.NewProtoKV[*agentsv1alpha1.AgentDescription](logger, broker.KeyValue("agents"))
 	e.OpampAgentStore = storage.NewProtoKV[*protobufs.AgentToServer](logger, broker.KeyValue("opamp-agents"))
@@ -235,9 +237,15 @@ func (e *TestEnv) setupHTTPServers(t *testing.T) {
 	e.HTTPServer = httptest.NewServer(router)
 	e.BaseURL = e.HTTPServer.URL
 
-	// Create separate OpAMP WebSocket test server
+	// Create separate OpAMP WebSocket test server. The Server wires a fresh
+	// per-connection ServerAgentHandler for each incoming connection via
+	// OnConnecting, mirroring the production start path.
 	opampSrv := server.New(nil)
-	settings := SetupOpampServerImpl(t, e.OpampServer)
+	settings := server.Settings{
+		Callbacks: servertypes.Callbacks{
+			OnConnecting: e.OpampServer.OnConnecting,
+		},
+	}
 	handlerFunc, _, err := opampSrv.Attach(settings)
 	require.NoError(t, err)
 

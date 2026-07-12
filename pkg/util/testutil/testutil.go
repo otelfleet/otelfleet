@@ -9,8 +9,6 @@ import (
 	"github.com/open-telemetry/opamp-go/client/types"
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/open-telemetry/opamp-go/server"
-	servertypes "github.com/open-telemetry/opamp-go/server/types"
-	services_int "github.com/otelfleet/otelfleet/pkg/services"
 
 	"github.com/stretchr/testify/require"
 )
@@ -47,24 +45,4 @@ func SetupOpampClient(
 	require.NoError(t, oClient.Start(t.Context(), *startSet))
 	t.Cleanup(func() { oClient.Stop(t.Context()) })
 	return oClient
-}
-
-func SetupOpampServerImpl(t *testing.T, s services_int.OpAmpServerHandler) server.Settings {
-	t.Helper()
-	return server.Settings{
-		Callbacks: servertypes.Callbacks{
-			OnConnecting: func(request *http.Request) servertypes.ConnectionResponse {
-				return servertypes.ConnectionResponse{
-					Accept: true,
-					ConnectionCallbacks: servertypes.ConnectionCallbacks{
-						OnConnected:        s.OnConnected,
-						OnMessage:          s.OnMessage,
-						OnConnectionClose:  s.OnConnectionClose,
-						OnReadMessageError: s.OnReadMessageError,
-					},
-				}
-			},
-		},
-	}
-
 }

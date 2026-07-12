@@ -6,23 +6,21 @@ import (
 
 	"github.com/cockroachdb/pebble/v2"
 	"github.com/grafana/dskit/services"
-	"github.com/otelfleet/otelfleet/pkg/storage"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
+	"github.com/otelfleet/otelfleet/pkg/storage/types"
 )
 
 type StorageService struct {
 	logger *slog.Logger
 	db     *pebble.DB
-	broker storage.KVBroker
+	broker types.KVBroker
 
 	services.Service
 	storagePath string
 }
 
 var _ services.Service = (*StorageService)(nil)
-var _ storage.KVBroker = (*StorageService)(nil)
-
-// var _ storage.KVStorageFactory = (*StorageService)(nil)
+var _ types.KVBroker = (*StorageService)(nil)
 
 func NewStorageService(
 	logger *slog.Logger,
@@ -66,6 +64,6 @@ func (s *StorageService) stopping(_ error) error {
 	return nil
 }
 
-func (s *StorageService) KeyValue(prefix string) storage.KV {
+func (s *StorageService) KeyValue(prefix string) types.KV {
 	return s.broker.KeyValue(prefix)
 }

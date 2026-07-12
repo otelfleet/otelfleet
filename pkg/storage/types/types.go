@@ -1,12 +1,12 @@
-package storage
+package types
 
 import "context"
 
 type KV interface {
 	Put(ctx context.Context, key string, obj []byte) error
 	Get(ctx context.Context, key string) ([]byte, error)
-	ListKeys(ctx context.Context) ([]string, error)
-	List(ctx context.Context) ([][]byte, error)
+	ListKeys(ctx context.Context, prefix string) ([]string, error)
+	List(ctx context.Context, prefix string) ([][]byte, error)
 	Delete(ctx context.Context, key string) error
 }
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/cockroachdb/pebble/v2"
 	"github.com/cockroachdb/pebble/v2/vfs"
-	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 )
 
@@ -72,7 +72,7 @@ func NewKVBroker(db *pebble.DB) *KVBroker {
 	}
 }
 
-func (k *KVBroker) KeyValue(prefix string) storage.KV {
+func (k *KVBroker) KeyValue(prefix string) types.KV {
 	return k.newPrefixedKeyValue(prefix)
 }
 
@@ -112,15 +112,24 @@ func (k *prefixedKV) Get(_ context.Context, key string) ([]byte, error) {
 	return data, nil
 }
 
-func (k *prefixedKV) listPrefix() []byte {
-	prefix := make([]byte, len(k.prefix)+1)
-	copy(prefix, k.prefix)
-	prefix[len(k.prefix)] = '/'
+func (k *prefixedKV) listPrefix(listPrefix string) []byte {
+	size := len(k.prefix) + 1
+	if listPrefix != "" {
+		size += len(listPrefix) + 1
+	}
+	prefix := make([]byte, size)
+	n := copy(prefix, k.prefix)
+	prefix[n] = '/'
+	n++
+	if listPrefix != "" {
+		n += copy(prefix[n:], listPrefix)
+		prefix[n] = '/'
+	}
 	return prefix
 }
 
-func (k *prefixedKV) ListKeys(ctx context.Context) ([]string, error) {
-	prefix := k.listPrefix()
+func (k *prefixedKV) ListKeys(ctx context.Context, listPrefix string) ([]string, error) {
+	prefix := k.listPrefix(listPrefix)
 	pn := len(prefix)
 	upper := make([]byte, len(prefix))
 	copy(upper, prefix)
@@ -145,8 +154,8 @@ func (k *prefixedKV) ListKeys(ctx context.Context) ([]string, error) {
 	return keys, nil
 }
 
-func (k *prefixedKV) List(ctx context.Context) ([][]byte, error) {
-	prefix := k.listPrefix()
+func (k *prefixedKV) List(ctx context.Context, listPrefix string) ([][]byte, error) {
+	prefix := k.listPrefix(listPrefix)
 	upper := make([]byte, len(prefix))
 	copy(upper, prefix)
 	upper[len(prefix)-1]++
@@ -172,5 +181,5 @@ func (k *prefixedKV) Delete(ctx context.Context, key string) error {
 	return k.db.Delete(k.key(key), &pebble.WriteOptions{})
 }
 
-var _ storage.KV = (*prefixedKV)(nil)
-var _ storage.KVBroker = (*KVBroker)(nil)
+var _ types.KV = (*prefixedKV)(nil)
+var _ types.KVBroker = (*KVBroker)(nil)
