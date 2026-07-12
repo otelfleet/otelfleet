@@ -1,0 +1,15 @@
+services:
+  supervisor:
+    network_mode: host
+    build:
+      context: ..
+      dockerfile: package/Dockerfile.supervisor
+    image: otelfleet:supervisor
+    volumes:
+      - ./supervisor.yaml:/etc/otel/supervisor.yaml:ro
+      - ./otel/config.yaml:/etc/otel/config.yaml:ro
+      # Persist supervisor state (storage.directory in supervisor.yaml).
+      - supervisor-data:/etc/otel/supervisor-data
+
+volumes:
+  supervisor-data:
