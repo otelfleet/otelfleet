@@ -8,7 +8,6 @@ require (
 	connectrpc.com/connect v1.19.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cockroachdb/pebble/v2 v2.1.6
-	github.com/ettle/strcase v0.2.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-kit/log v0.2.1
 	github.com/google/go-cmp v0.7.0
