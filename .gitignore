@@ -39,3 +39,5 @@ bin/
 otelfleet.kv
 .issues
 .plans
+
+.config*.yaml

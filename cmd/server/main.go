@@ -13,6 +13,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/server"
 	"github.com/otelfleet/otelfleet/pkg/version"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -25,14 +26,32 @@ func init() {
 }
 
 func BuildRootCommand() *cobra.Command {
+	var configFilePath string
 	cmd := &cobra.Command{
 		Use: "otelfleet",
 		Run: func(cmd *cobra.Command, args []string) {
 			logger := slog.Default()
 			logger.With("version", version.FullVersion()).Info("starting otelfleet")
-			srv, err := server.New(config.Config{
-				StoragePath: "./otelfleet.kv",
-			})
+			cfg := &config.Config{}
+			if configFilePath != "" {
+				configData, err := os.ReadFile(configFilePath)
+				if err != nil {
+					logger.With("err", err).Error("failed to read config file")
+					os.Exit(1)
+				}
+				if err := yaml.Unmarshal(configData, &cfg); err != nil {
+					logger.With("err", err).Error("failed to decode config file")
+					os.Exit(1)
+				}
+			}
+			cfg.Sanitize()
+
+			if err := cfg.Validate(); err != nil {
+				logger.With("err", err).Error("invalid config")
+				os.Exit(1)
+			}
+
+			srv, err := server.New(*cfg)
 			if err != nil {
 				logger.With("err", err).Error("failed to construct server")
 				os.Exit(1)
@@ -45,6 +64,7 @@ func BuildRootCommand() *cobra.Command {
 		},
 		Version: version.FullVersion(),
 	}
+	cmd.Flags().StringVarP(&configFilePath, "config", "f", "", "path to config file")
 	return cmd
 }
 

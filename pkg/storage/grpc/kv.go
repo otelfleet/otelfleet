@@ -10,12 +10,12 @@ import (
 )
 
 type GrpcKeyValue struct {
-	underlying schema.StorageSchemaProto
+	underlying *schema.StorageSchemaProto
 }
 
-// TODO : handle storage errors and return appropriate grpc codes
+// TODO : handle storage errors and return appropriate error codes?
 
-func NewGrpcKeyValue(underlying schema.StorageSchemaProto) *GrpcKeyValue {
+func NewGrpcKeyValue(underlying *schema.StorageSchemaProto) *GrpcKeyValue {
 	return &GrpcKeyValue{
 		underlying: underlying,
 	}

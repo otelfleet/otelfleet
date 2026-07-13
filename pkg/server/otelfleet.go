@@ -6,9 +6,11 @@ import (
 	"io"
 	"log/slog"
 	"maps"
+	"net"
 	"os"
 	"slices"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/go-kit/log"
@@ -71,6 +73,10 @@ const (
 	ConfigOTEL       = "config-otel"
 	AgentManager     = "agent-manager"
 	DeploymentModule = "deployment"
+	// Control is the control plane service. This is the public
+	// entry point for all other services, whether other services
+	// run in-process or not
+	Gateway = "gateway"
 )
 
 type OtelFleet struct {
@@ -80,7 +86,7 @@ type OtelFleet struct {
 	mm   *modules.Manager
 	deps map[string][]string
 
-	store           types.KVBroker
+	store           *storagesvc.StorageService
 	tokenStore      types.KeyValue[*bootstrapv1alpha1.BootstrapToken]
 	agentStore      types.KeyValue[*agentsv1alpha1.AgentDescription]
 	opampAgentStore types.KeyValue[*protobufs.AgentToServer]
@@ -130,9 +136,18 @@ func New(cfg config.Config) (*OtelFleet, error) {
 		cfg:    cfg,
 	}
 
+	listenHost, listenPort, err := net.SplitHostPort(cfg.HttpListenAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse http_listen_addr : %w", err)
+	}
+	listenPortNum, err := strconv.Atoi(listenPort)
+	if err != nil {
+		return nil, fmt.Errorf("http_listen_addr port is not a number : %w", err)
+	}
+
 	conf := server.Config{
-		HTTPListenAddress:             "127.0.0.1",
-		HTTPListenPort:                16587,
+		HTTPListenAddress:             listenHost,
+		HTTPListenPort:                listenPortNum,
 		DoNotAddDefaultHTTPMiddleware: true,
 		LogFormat:                     dslog.LogfmtFormat,
 		LogLevel: dslog.Level{
@@ -158,82 +173,41 @@ func New(cfg config.Config) (*OtelFleet, error) {
 func (o *OtelFleet) setupModuleManager() error {
 	mm := modules.NewManager(o.serverConf.Log)
 	mm.RegisterModule(All, nil)
+	mm.RegisterModule(Gateway, nil)
 
 	mm.RegisterModule(Storage, func() (services.Service, error) {
 		storeSvc, err := storagesvc.NewStorageService(
 			o.logger.With("service", Storage),
-			o.cfg.StoragePath,
+			o.cfg.StorageConfig,
 		)
 		if err != nil {
 			return nil, err
 		}
 		o.store = storeSvc
-		o.opampAgentStore = storage.NewProtoKV[*protobufs.AgentToServer](
-			o.logger.With("store", "opamp-agent"),
-			o.store.KeyValue("opamp-agents"),
-		)
+		storeSvc.ConfigureHTTP(o.server.HTTP)
+		o.opampAgentStore = storage.NewProtoKVFromSchemaImpl[*protobufs.AgentToServer](o.store.Schema())
 
-		o.agentStore = storage.NewProtoKV[*agentsv1alpha1.AgentDescription](
-			o.logger.With("store", "agents"),
-			o.store.KeyValue("agents"),
-		)
+		o.agentStore = storage.NewProtoKVFromSchemaImpl[*agentsv1alpha1.AgentDescription](o.store.Schema())
 
-		o.tokenStore = storage.NewProtoKV[*bootstrapv1alpha1.BootstrapToken](
-			o.logger.With("store", "tokens"),
-			o.store.KeyValue("tokens"),
-		)
+		o.tokenStore = storage.NewProtoKVFromSchemaImpl[*bootstrapv1alpha1.BootstrapToken](o.store.Schema())
 
-		o.configStore = storage.NewProtoKV[*configv1alpha1.Config](
-			o.logger.With("store", "configs"),
-			o.store.KeyValue("configs"),
-		)
+		// dedupe: all *configv1alpha1.Config stores share one underlying store
+		// TODO : figure out best to decouple these
+		configStore := storage.NewProtoKVFromSchemaImpl[*configv1alpha1.Config](o.store.Schema())
+		o.configStore = configStore
+		o.defaultConfigStore = configStore
+		o.bootstrapConfigStore = configStore
+		o.assignmentConfigStore = configStore
 
-		o.defaultConfigStore = storage.NewProtoKV[*configv1alpha1.Config](
-			o.logger.With("store", "default-configs"),
-			o.store.KeyValue("defaultconfigs"),
-		)
+		o.agentHealthStore = storage.NewProtoKVFromSchemaImpl[*protobufs.ComponentHealth](o.store.Schema())
+		o.agentEffectiveConfig = storage.NewProtoKVFromSchemaImpl[*protobufs.EffectiveConfig](o.store.Schema())
+		o.agentRemoteConfigStore = storage.NewProtoKVFromSchemaImpl[*protobufs.RemoteConfigStatus](o.store.Schema())
 
-		o.agentHealthStore = storage.NewProtoKV[*protobufs.ComponentHealth](
-			o.logger.With("store", "agent-health"),
-			o.store.KeyValue("agent-health"),
-		)
-		o.agentEffectiveConfig = storage.NewProtoKV[*protobufs.EffectiveConfig](
-			o.logger.With("store", "agent-effective-config"),
-			o.store.KeyValue("agent-effective-config"),
-		)
-		o.agentRemoteConfigStore = storage.NewProtoKV[*protobufs.RemoteConfigStatus](
-			o.logger.With("store", "agent-remote-config-status"),
-			o.store.KeyValue("agent-remote-config-status"),
-		)
-
-		o.opampAgentDescription = storage.NewProtoKV[*protobufs.AgentDescription](
-			o.logger.With("store", "opamp-agent-description"),
-			o.store.KeyValue("opamp-agent-description"),
-		)
-		o.bootstrapConfigStore = storage.NewProtoKV[*configv1alpha1.Config](
-			o.logger.With("store", "bootstrap-configs"),
-			o.store.KeyValue("bootstrapconfigs"),
-		)
-		o.assignmentConfigStore = storage.NewProtoKV[*configv1alpha1.Config](
-			o.logger.With("store", "assignmentconfigs"),
-			o.store.KeyValue("assignmentconfigs"),
-		)
-		o.configAssignmentStore = storage.NewProtoKV[*configv1alpha1.ConfigAssignment](
-			o.logger.With("store", "config-assignments"),
-			o.store.KeyValue("config-assignments"),
-		)
-		o.deploymentStore = storage.NewProtoKV[*configv1alpha1.DeploymentStatus](
-			o.logger.With("store", "deployments"),
-			o.store.KeyValue("deployments"),
-		)
-		o.agentDeploymentStore = storage.NewProtoKV[*configv1alpha1.AgentDeploymentStatus](
-			o.logger.With("store", "agent-deployments"),
-			o.store.KeyValue("agent-deployments"),
-		)
-		o.connectionStateStore = storage.NewProtoKV[*agentsv1alpha1.AgentConnectionState](
-			o.logger.With("store", "agent-connection-state"),
-			o.store.KeyValue("agent-connection-state"),
-		)
+		o.opampAgentDescription = storage.NewProtoKVFromSchemaImpl[*protobufs.AgentDescription](o.store.Schema())
+		o.configAssignmentStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.ConfigAssignment](o.store.Schema())
+		o.deploymentStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.DeploymentStatus](o.store.Schema())
+		o.agentDeploymentStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.AgentDeploymentStatus](o.store.Schema())
+		o.connectionStateStore = storage.NewProtoKVFromSchemaImpl[*agentsv1alpha1.AgentConnectionState](o.store.Schema())
 
 		// Create the agent repository with all the underlying stores
 		o.agentRepo = agentdomain.NewRepository(
@@ -351,14 +325,19 @@ func (o *OtelFleet) setupModuleManager() error {
 	// Add dependencies
 	deps := map[string][]string{
 		All: {
-			ServerService,
+			Gateway,
 		},
-		ServerService:    {Bootstrap, OpAmp, AgentManager, DeploymentModule},
-		AgentManager:     {OpAmp},
-		OpAmp:            {ConfigOTEL, Storage},
-		Bootstrap:        {Storage},
-		ConfigOTEL:       {Storage},
-		DeploymentModule: {ConfigOTEL, Storage},
+		Gateway: {
+			Bootstrap, OpAmp, AgentManager, DeploymentModule,
+		},
+		ServerService: {},
+
+		Storage:          {ServerService},
+		AgentManager:     {ServerService, OpAmp},
+		OpAmp:            {ServerService, ConfigOTEL, Storage},
+		Bootstrap:        {ServerService, Storage},
+		ConfigOTEL:       {ServerService, Storage},
+		DeploymentModule: {ServerService, ConfigOTEL, Storage},
 	}
 
 	for mod, targets := range deps {
@@ -369,26 +348,27 @@ func (o *OtelFleet) setupModuleManager() error {
 
 	o.mm = mm
 	o.deps = deps
-	allDeps := o.mm.DependenciesForModule(All)
-	for _, m := range o.mm.UserVisibleModuleNames() {
-		ix := sort.SearchStrings(allDeps, m)
-		included := ix < len(allDeps) && allDeps[ix] == m
+	for _, curSvc := range o.cfg.Services {
+		curDeps := o.mm.DependenciesForModule(curSvc)
+		for _, m := range o.mm.UserVisibleModuleNames() {
+			ix := sort.SearchStrings(curDeps, m)
+			included := ix < len(curDeps) && curDeps[ix] == m
 
-		if included {
-			fmt.Fprintln(os.Stdout, m, "*")
-		} else {
-			fmt.Fprintln(os.Stdout, m)
+			if included {
+				fmt.Fprintln(os.Stdout, m, "*")
+			} else {
+				fmt.Fprintln(os.Stdout, m)
+			}
 		}
-	}
 
-	fmt.Fprintln(os.Stdout)
-	fmt.Fprintln(os.Stdout, "Modules marked with * are included in target All.")
+		fmt.Fprintln(os.Stdout)
+		fmt.Fprintln(os.Stdout, fmt.Sprintf("Modules marked with * are included in target %s.", curSvc))
+	}
 	return nil
 }
 
 func (o *OtelFleet) Run(ctx context.Context) error {
-	// FIXME: config driven services
-	svcMap, err := o.mm.InitModuleServices(All)
+	svcMap, err := o.mm.InitModuleServices(o.cfg.Services...)
 	if err != nil {
 		return err
 	}

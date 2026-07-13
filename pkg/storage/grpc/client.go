@@ -14,6 +14,12 @@ type StorageClient struct {
 	client v1alpha1connect.KeyValueServiceClient
 }
 
+func NewStorageClient(client v1alpha1connect.KeyValueServiceClient) *StorageClient {
+	return &StorageClient{
+		client: client,
+	}
+}
+
 var _ schema.SchemaProto = (*StorageClient)(nil)
 
 func (s *StorageClient) Put(ctx context.Context, typeURL, key string, obj *anypb.Any) error {
