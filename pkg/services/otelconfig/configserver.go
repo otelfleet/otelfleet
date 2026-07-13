@@ -14,7 +14,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1/v1alpha1connect"
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
-	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/otelfleet/otelfleet/pkg/util"
 	"github.com/otelfleet/otelfleet/pkg/util/configsync"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
@@ -42,13 +42,13 @@ type DeploymentController interface {
 }
 
 type ConfigServer struct {
-	configStore           storage.KeyValue[*v1alpha1.Config]
-	defaultConfigStore    storage.KeyValue[*v1alpha1.Config]
-	assignedConfigStore   storage.KeyValue[*v1alpha1.Config]
-	configAssignmentStore storage.KeyValue[*v1alpha1.ConfigAssignment]
+	configStore           types.KeyValue[*v1alpha1.Config]
+	defaultConfigStore    types.KeyValue[*v1alpha1.Config]
+	assignedConfigStore   types.KeyValue[*v1alpha1.Config]
+	configAssignmentStore types.KeyValue[*v1alpha1.ConfigAssignment]
 	agentRepo             agentdomain.Repository
-	effectiveConfigStore  storage.KeyValue[*protobufs.EffectiveConfig]
-	remoteStatusStore     storage.KeyValue[*protobufs.RemoteConfigStatus]
+	effectiveConfigStore  types.KeyValue[*protobufs.EffectiveConfig]
+	remoteStatusStore     types.KeyValue[*protobufs.RemoteConfigStatus]
 	logger                *slog.Logger
 
 	notifier             ConfigChangeNotifier
@@ -61,13 +61,13 @@ var _ v1alpha1connect.ConfigServiceHandler = (*ConfigServer)(nil)
 
 func NewConfigServer(
 	logger *slog.Logger,
-	configStore storage.KeyValue[*v1alpha1.Config],
-	defaultConfigStore storage.KeyValue[*v1alpha1.Config],
-	assignedConfigStore storage.KeyValue[*v1alpha1.Config],
-	configAssignmentStore storage.KeyValue[*v1alpha1.ConfigAssignment],
+	configStore types.KeyValue[*v1alpha1.Config],
+	defaultConfigStore types.KeyValue[*v1alpha1.Config],
+	assignedConfigStore types.KeyValue[*v1alpha1.Config],
+	configAssignmentStore types.KeyValue[*v1alpha1.ConfigAssignment],
 	agentRepo agentdomain.Repository,
-	effectiveConfigStore storage.KeyValue[*protobufs.EffectiveConfig],
-	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus],
+	effectiveConfigStore types.KeyValue[*protobufs.EffectiveConfig],
+	remoteStatusStore types.KeyValue[*protobufs.RemoteConfigStatus],
 ) *ConfigServer {
 	cs := &ConfigServer{
 		logger:                logger,
@@ -495,7 +495,6 @@ func (c *ConfigServer) BatchAssignConfig(ctx context.Context, req *connect.Reque
 		ErrorMessages:  errorMessages,
 	}), nil
 }
-
 
 // AssignConfigByLabels assigns a config to agents matching the specified labels
 func (c *ConfigServer) AssignConfigByLabels(ctx context.Context, req *connect.Request[v1alpha1.AssignConfigByLabelsRequest]) (*connect.Response[v1alpha1.AssignConfigByLabelsResponse], error) {

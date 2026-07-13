@@ -8,7 +8,7 @@ import (
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
-	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/otelfleet/otelfleet/pkg/util/configsync"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 )
@@ -18,34 +18,34 @@ type repository struct {
 	logger *slog.Logger
 
 	// Existing stores (same as current services)
-	registryStore        storage.KeyValue[*v1alpha1.AgentDescription]
-	attributesStore      storage.KeyValue[*protobufs.AgentDescription]
-	connectionStore      storage.KeyValue[*v1alpha1.AgentConnectionState]
-	healthStore          storage.KeyValue[*protobufs.ComponentHealth]
-	effectiveStore       storage.KeyValue[*protobufs.EffectiveConfig]
-	remoteStatusStore    storage.KeyValue[*protobufs.RemoteConfigStatus]
-	configAssignmentStore storage.KeyValue[*configv1alpha1.ConfigAssignment]
+	registryStore         types.KeyValue[*v1alpha1.AgentDescription]
+	attributesStore       types.KeyValue[*protobufs.AgentDescription]
+	connectionStore       types.KeyValue[*v1alpha1.AgentConnectionState]
+	healthStore           types.KeyValue[*protobufs.ComponentHealth]
+	effectiveStore        types.KeyValue[*protobufs.EffectiveConfig]
+	remoteStatusStore     types.KeyValue[*protobufs.RemoteConfigStatus]
+	configAssignmentStore types.KeyValue[*configv1alpha1.ConfigAssignment]
 }
 
 // NewRepository creates a new agent repository with the specified stores.
 func NewRepository(
 	logger *slog.Logger,
-	registryStore storage.KeyValue[*v1alpha1.AgentDescription],
-	attributesStore storage.KeyValue[*protobufs.AgentDescription],
-	connectionStore storage.KeyValue[*v1alpha1.AgentConnectionState],
-	healthStore storage.KeyValue[*protobufs.ComponentHealth],
-	effectiveStore storage.KeyValue[*protobufs.EffectiveConfig],
-	remoteStatusStore storage.KeyValue[*protobufs.RemoteConfigStatus],
-	configAssignmentStore storage.KeyValue[*configv1alpha1.ConfigAssignment],
+	registryStore types.KeyValue[*v1alpha1.AgentDescription],
+	attributesStore types.KeyValue[*protobufs.AgentDescription],
+	connectionStore types.KeyValue[*v1alpha1.AgentConnectionState],
+	healthStore types.KeyValue[*protobufs.ComponentHealth],
+	effectiveStore types.KeyValue[*protobufs.EffectiveConfig],
+	remoteStatusStore types.KeyValue[*protobufs.RemoteConfigStatus],
+	configAssignmentStore types.KeyValue[*configv1alpha1.ConfigAssignment],
 ) Repository {
 	return &repository{
-		logger:               logger,
-		registryStore:        registryStore,
-		attributesStore:      attributesStore,
-		connectionStore:      connectionStore,
-		healthStore:          healthStore,
-		effectiveStore:       effectiveStore,
-		remoteStatusStore:    remoteStatusStore,
+		logger:                logger,
+		registryStore:         registryStore,
+		attributesStore:       attributesStore,
+		connectionStore:       connectionStore,
+		healthStore:           healthStore,
+		effectiveStore:        effectiveStore,
+		remoteStatusStore:     remoteStatusStore,
 		configAssignmentStore: configAssignmentStore,
 	}
 }
@@ -231,7 +231,9 @@ func (r *repository) Delete(ctx context.Context, agentID string) error {
 	// Log failures but continue - agent may not have data in all stores
 	stores := []struct {
 		name  string
-		store interface{ Delete(context.Context, string) error }
+		store interface {
+			Delete(context.Context, string) error
+		}
 	}{
 		{"configAssignment", r.configAssignmentStore},
 		{"remoteStatus", r.remoteStatusStore},

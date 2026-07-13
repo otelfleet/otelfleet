@@ -28,7 +28,7 @@ interface TokenDetailPageProps {
 function timestampToDate(ts?: Timestamp | null): Date | null {
     if (!ts) return null;
 
-    const rawSec = (ts as any).seconds ?? 0;
+    const rawSec = (ts as { seconds?: number | string | bigint | { toNumber(): number } }).seconds ?? 0;
     const seconds =
         typeof rawSec === "number"
             ? rawSec
@@ -40,7 +40,7 @@ function timestampToDate(ts?: Timestamp | null): Date | null {
                         ? rawSec.toNumber()
                         : Number(rawSec);
 
-    const nanos = Number((ts as any).nanos ?? 0);
+    const nanos = Number((ts as { nanos?: number }).nanos ?? 0);
     const ms = seconds * 1000 + Math.floor(nanos / 1_000_000);
     return new Date(ms);
 }
@@ -86,7 +86,7 @@ export function TokenDetailPage({ tokenId }: TokenDetailPageProps) {
                     const decoded = new TextDecoder().decode(configResponse.config.config);
                     setConfigContent(decoded);
                 }
-            } catch (configErr) {
+            } catch {
                 // Config might not exist, that's okay
                 setConfigContent(null);
             }

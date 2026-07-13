@@ -1,6 +1,7 @@
 import { useState, useCallback, type FC } from 'react'
 import { Link, Outlet } from '@tanstack/react-router'
-import ColorSchemeContext, { useColorScheme } from '../contexts/ColorSchemeContext';
+import ColorSchemeContext from '../contexts/ColorSchemeContext';
+import { useColorScheme } from '../contexts/useColorScheme';
 import { Notifications } from '@mantine/notifications';
 import { elevationShadows, elevationStylesOverrides } from '../theme/elevation';
 

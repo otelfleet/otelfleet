@@ -1,0 +1,23 @@
+# Shared image tag applied to both the collector and supervisor images.
+ARG OTEL_VERSION=latest
+
+# Mirrors upstream opentelemetry-collector-opampsupervisor image
+ARG USER_UID=10001
+ARG USER_GID=10001
+
+FROM otel/opentelemetry-collector-contrib:${OTEL_VERSION} AS collector
+
+FROM alpine:latest AS prep
+RUN mkdir -p /etc/otel/supervisor-data
+
+
+FROM ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-opampsupervisor:${OTEL_VERSION}
+
+COPY --from=collector /otelcol-contrib /otelcontribcol
+
+ARG USER_UID
+ARG USER_GID
+COPY --from=prep --chmod=777 --chown=${USER_UID}:${USER_GID} /etc/otel/supervisor-data /etc/otel/supervisor-data
+
+# Mirrors upstream opentelemetry-collector-opampsupervisor image
+CMD ["--config", "/etc/otel/supervisor.yaml"]

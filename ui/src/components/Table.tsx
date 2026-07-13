@@ -9,13 +9,14 @@ import {
   Text,
   Box,
 } from '@mantine/core';
-import { useState, useMemo, Fragment } from 'react';
+import { useState, useMemo, useCallback, Fragment } from 'react';
 import { Menu as MenuIcon } from 'react-feather';
 
 export type ColumnConfig<T> = {
   key: keyof T | string;
   label: string;
   visible?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   render?: (value: any, row: T) => React.ReactNode;
 };
 
@@ -41,11 +42,11 @@ export const Table = <T extends object>({
   selectedKeys,
   onSelectionChange,
 }: DynamicTableProps<T>): React.ReactElement => {
-  const getRowKey = (row: T, index: number): string | number => {
+  const getRowKey = useCallback((row: T, index: number): string | number => {
     if (!rowKey) return index;
     if (typeof rowKey === 'function') return rowKey(row, index);
     return String(row[rowKey]);
-  };
+  }, [rowKey]);
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
     new Set(
       columns
@@ -61,11 +62,15 @@ export const Table = <T extends object>({
 
   const handleColumnToggle = (columnKey: string) => {
     const next = new Set(visibleColumns);
-    next.has(columnKey) ? next.delete(columnKey) : next.add(columnKey);
+    if (next.has(columnKey)) {
+      next.delete(columnKey);
+    } else {
+      next.add(columnKey);
+    }
     setVisibleColumns(next);
   };
 
-  const allRowKeys = useMemo(() => data.map((row, idx) => getRowKey(row, idx)), [data]);
+  const allRowKeys = useMemo(() => data.map((row, idx) => getRowKey(row, idx)), [data, getRowKey]);
   const allSelected = selectable && selectedKeys && allRowKeys.length > 0 && allRowKeys.every(key => selectedKeys.has(key));
   const someSelected = selectable && selectedKeys && allRowKeys.some(key => selectedKeys.has(key));
 

@@ -13,18 +13,19 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
+	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 type testStores struct {
-	registry         storage.KeyValue[*agentsv1alpha1.AgentDescription]
-	attributes       storage.KeyValue[*protobufs.AgentDescription]
-	connection       storage.KeyValue[*agentsv1alpha1.AgentConnectionState]
-	health           storage.KeyValue[*protobufs.ComponentHealth]
-	effective        storage.KeyValue[*protobufs.EffectiveConfig]
-	remoteStatus     storage.KeyValue[*protobufs.RemoteConfigStatus]
-	configAssignment storage.KeyValue[*configv1alpha1.ConfigAssignment]
+	registry         types.KeyValue[*agentsv1alpha1.AgentDescription]
+	attributes       types.KeyValue[*protobufs.AgentDescription]
+	connection       types.KeyValue[*agentsv1alpha1.AgentConnectionState]
+	health           types.KeyValue[*protobufs.ComponentHealth]
+	effective        types.KeyValue[*protobufs.EffectiveConfig]
+	remoteStatus     types.KeyValue[*protobufs.RemoteConfigStatus]
+	configAssignment types.KeyValue[*configv1alpha1.ConfigAssignment]
 }
 
 func setupTest(t *testing.T) (agent.Repository, *testStores) {

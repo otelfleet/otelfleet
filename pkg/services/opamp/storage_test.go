@@ -12,12 +12,13 @@ import (
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
+	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
-func setupTestStorage(t *testing.T) storage.KVBroker {
+func setupTestStorage(t *testing.T) types.KVBroker {
 	t.Helper()
 	db, err := pebble.Open("", &pebble.Options{
 		FS: vfs.NewMem(),
