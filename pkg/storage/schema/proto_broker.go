@@ -3,17 +3,20 @@ package schema
 import (
 	"context"
 	"path"
+	"sort"
 
+	keyvaluev1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type SchemaProto interface {
-	Put(ctx context.Context, typeURL, key string, obj *anypb.Any) error
-	Get(ctx context.Context, typeURL, key string) (*anypb.Any, error)
+	Put(ctx context.Context, typeURL, key string, revision uint64, obj *anypb.Any) (*keyvaluev1.KeyValueObject, error)
+	Get(ctx context.Context, typeURL, key string) (*keyvaluev1.KeyValueObject, error)
+	GetRevision(ctx context.Context, typeURL, key string, revision uint64) (*keyvaluev1.KeyValueObject, error)
 	ListKeys(ctx context.Context, typeURL string) ([]string, error)
-	List(ctx context.Context, typeURL string) ([]*anypb.Any, error)
+	List(ctx context.Context, typeURL string) ([]*keyvaluev1.KeyValueObject, error)
 	Delete(ctx context.Context, typeURL, key string) error
 }
 
@@ -36,13 +39,12 @@ func encodeProto(msg proto.Message) []byte {
 	return data
 }
 
-func decodeProto(data []byte) (*anypb.Any, error) {
-	any := &anypb.Any{}
-	err := unmarshalOptions.Unmarshal(data, any)
-	if err != nil {
+func decodeKeyValueObject(data []byte) (*keyvaluev1.KeyValueObject, error) {
+	obj := &keyvaluev1.KeyValueObject{}
+	if err := unmarshalOptions.Unmarshal(data, obj); err != nil {
 		return nil, err
 	}
-	return any, nil
+	return obj, nil
 }
 
 const (
@@ -52,6 +54,7 @@ const (
 type StorageSchemaProto struct {
 	baseVersion string
 	underlying  types.KV
+	revisions   *RevisionEngine
 }
 
 func NewStorageSchemaProto(
@@ -60,6 +63,7 @@ func NewStorageSchemaProto(
 	return &StorageSchemaProto{
 		baseVersion: defaultVersion,
 		underlying:  kv,
+		revisions:   NewRevisionEngine(kv),
 	}
 }
 
@@ -73,39 +77,48 @@ func (s *StorageSchemaProto) keyPath(typeURL, key string) string {
 	return path.Join(s.protoPath(typeURL), key)
 }
 
-func (s *StorageSchemaProto) Put(ctx context.Context, typeURL string, key string, obj *anypb.Any) error {
-	return s.underlying.Put(ctx, s.keyPath(typeURL, key), encodeProto(obj))
+func (s *StorageSchemaProto) Put(ctx context.Context, typeURL string, key string, revision uint64, obj *anypb.Any) (*keyvaluev1.KeyValueObject, error) {
+	return s.revisions.Put(ctx, s.keyPath(typeURL, key), typeURL, revision, obj)
 }
 
-func (s *StorageSchemaProto) Get(ctx context.Context, typeURL string, key string) (*anypb.Any, error) {
-	data, err := s.underlying.Get(ctx, s.keyPath(typeURL, key))
-	if err != nil {
-		return nil, err
-	}
-	return decodeProto(data)
+func (s *StorageSchemaProto) Get(ctx context.Context, typeURL string, key string) (*keyvaluev1.KeyValueObject, error) {
+	return s.revisions.Get(ctx, s.keyPath(typeURL, key))
+}
+
+func (s *StorageSchemaProto) GetRevision(ctx context.Context, typeURL, key string, revision uint64) (*keyvaluev1.KeyValueObject, error) {
+	return s.revisions.GetRevision(ctx, s.keyPath(typeURL, key), revision)
 }
 
 func (s *StorageSchemaProto) ListKeys(ctx context.Context, typeURL string) ([]string, error) {
-	return s.underlying.ListKeys(ctx, s.protoPath(typeURL))
-}
-
-func (s *StorageSchemaProto) List(ctx context.Context, typeURL string) ([]*anypb.Any, error) {
-	objs, err := s.underlying.List(ctx, s.protoPath(typeURL))
+	latest, err := s.revisions.ListLatest(ctx, s.protoPath(typeURL))
 	if err != nil {
 		return nil, err
 	}
-	anys := make([]*anypb.Any, len(objs))
-	for i, obj := range objs {
-		any, err := decodeProto(obj)
-		if err != nil {
-			// TODO : probably worth skipping instead of errorring
-			return nil, err
-		}
-		anys[i] = any
+	keys := make([]string, 0, len(latest))
+	for key := range latest {
+		keys = append(keys, key)
 	}
-	return anys, nil
+	sort.Strings(keys)
+	return keys, nil
+}
+
+func (s *StorageSchemaProto) List(ctx context.Context, typeURL string) ([]*keyvaluev1.KeyValueObject, error) {
+	latest, err := s.revisions.ListLatest(ctx, s.protoPath(typeURL))
+	if err != nil {
+		return nil, err
+	}
+	keys := make([]string, 0, len(latest))
+	for key := range latest {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	objs := make([]*keyvaluev1.KeyValueObject, 0, len(latest))
+	for _, key := range keys {
+		objs = append(objs, latest[key])
+	}
+	return objs, nil
 }
 
 func (s *StorageSchemaProto) Delete(ctx context.Context, typeURL, key string) error {
-	return s.underlying.Delete(ctx, s.keyPath(typeURL, key))
+	return s.revisions.Delete(ctx, s.keyPath(typeURL, key))
 }

@@ -12,7 +12,41 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file pkg/api/keyvalue/v1alpha1/keyvalue.proto.
  */
 export const file_pkg_api_keyvalue_v1alpha1_keyvalue: GenFile = /*@__PURE__*/
-  fileDesc("Cihwa2cvYXBpL2tleXZhbHVlL3YxYWxwaGExL2tleXZhbHVlLnByb3RvEhFrZXl2YWx1ZS52MWFscGhhMSJPCgpQdXRSZXF1ZXN0EhAKCHR5cGVfdXJsGAEgASgJEgsKA2tleRgCIAEoCRIiCgRkYXRhGAMgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueSINCgtQdXRSZXNwb25zZSIrCgpHZXRSZXF1ZXN0EhAKCHR5cGVfdXJsGAEgASgJEgsKA2tleRgCIAEoCSJDCgtHZXRSZXNwb25zZRIQCgh0eXBlX3VybBgBIAEoCRIiCgRkYXRhGAIgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueSIfCgtMaXN0UmVxdWVzdBIQCgh0eXBlX3VybBgBIAEoCSJECgxMaXN0UmVzcG9uc2USEAoIdHlwZV91cmwYASABKAkSIgoEZGF0YRgCIAMoCzIULmdvb2dsZS5wcm90b2J1Zi5BbnkiIwoPTGlzdEtleXNSZXF1ZXN0EhAKCHR5cGVfdXJsGAEgASgJIiAKEExpc3RLZXlzUmVzcG9uc2USDAoEa2V5cxgBIAMoCSIuCg1EZWxldGVSZXF1ZXN0EhAKCHR5cGVfdXJsGAEgASgJEgsKA2tleRgCIAEoCSIQCg5EZWxldGVSZXNwb25zZTKKAwoPS2V5VmFsdWVTZXJ2aWNlEkQKA0dldBIdLmtleXZhbHVlLnYxYWxwaGExLkdldFJlcXVlc3QaHi5rZXl2YWx1ZS52MWFscGhhMS5HZXRSZXNwb25zZRJECgNQdXQSHS5rZXl2YWx1ZS52MWFscGhhMS5QdXRSZXF1ZXN0Gh4ua2V5dmFsdWUudjFhbHBoYTEuUHV0UmVzcG9uc2USUwoITGlzdEtleXMSIi5rZXl2YWx1ZS52MWFscGhhMS5MaXN0S2V5c1JlcXVlc3QaIy5rZXl2YWx1ZS52MWFscGhhMS5MaXN0S2V5c1Jlc3BvbnNlEkcKBExpc3QSHi5rZXl2YWx1ZS52MWFscGhhMS5MaXN0UmVxdWVzdBofLmtleXZhbHVlLnYxYWxwaGExLkxpc3RSZXNwb25zZRJNCgZEZWxldGUSIC5rZXl2YWx1ZS52MWFscGhhMS5EZWxldGVSZXF1ZXN0GiEua2V5dmFsdWUudjFhbHBoYTEuRGVsZXRlUmVzcG9uc2VCOlo4Z2l0aHViLmNvbS9vdGVsZmxlZXQvb3RlbGZsZWV0L3BrZy9hcGkva2V5dmFsdWUvdjFhbHBoYTFiBnByb3RvMw", [file_google_protobuf_any]);
+  fileDesc("Cihwa2cvYXBpL2tleXZhbHVlL3YxYWxwaGExL2tleXZhbHVlLnByb3RvEhFrZXl2YWx1ZS52MWFscGhhMSJlCg5LZXlWYWx1ZU9iamVjdBIQCghyZXZpc2lvbhgBIAEoBBIMCgRoYXNoGAIgASgMEhAKCHR5cGVfdXJsGAMgASgJEiEKA29iahgEIAEoCzIULmdvb2dsZS5wcm90b2J1Zi5BbnkiYQoKUHV0UmVxdWVzdBIQCgh0eXBlX3VybBgBIAEoCRILCgNrZXkYAiABKAkSIgoEZGF0YRgDIAEoCzIULmdvb2dsZS5wcm90b2J1Zi5BbnkSEAoIcmV2aXNpb24YBCABKAQiQAoLUHV0UmVzcG9uc2USMQoGb2JqZWN0GAEgASgLMiEua2V5dmFsdWUudjFhbHBoYTEuS2V5VmFsdWVPYmplY3QiPQoKR2V0UmVxdWVzdBIQCgh0eXBlX3VybBgBIAEoCRILCgNrZXkYAiABKAkSEAoIcmV2aXNpb24YAyABKAQiUgoLR2V0UmVzcG9uc2USEAoIdHlwZV91cmwYASABKAkSMQoGb2JqZWN0GAIgASgLMiEua2V5dmFsdWUudjFhbHBoYTEuS2V5VmFsdWVPYmplY3QiHwoLTGlzdFJlcXVlc3QSEAoIdHlwZV91cmwYASABKAkiVAoMTGlzdFJlc3BvbnNlEhAKCHR5cGVfdXJsGAEgASgJEjIKB29iamVjdHMYAiADKAsyIS5rZXl2YWx1ZS52MWFscGhhMS5LZXlWYWx1ZU9iamVjdCIjCg9MaXN0S2V5c1JlcXVlc3QSEAoIdHlwZV91cmwYASABKAkiIAoQTGlzdEtleXNSZXNwb25zZRIMCgRrZXlzGAEgAygJIi4KDURlbGV0ZVJlcXVlc3QSEAoIdHlwZV91cmwYASABKAkSCwoDa2V5GAIgASgJIhAKDkRlbGV0ZVJlc3BvbnNlMooDCg9LZXlWYWx1ZVNlcnZpY2USRAoDR2V0Eh0ua2V5dmFsdWUudjFhbHBoYTEuR2V0UmVxdWVzdBoeLmtleXZhbHVlLnYxYWxwaGExLkdldFJlc3BvbnNlEkQKA1B1dBIdLmtleXZhbHVlLnYxYWxwaGExLlB1dFJlcXVlc3QaHi5rZXl2YWx1ZS52MWFscGhhMS5QdXRSZXNwb25zZRJTCghMaXN0S2V5cxIiLmtleXZhbHVlLnYxYWxwaGExLkxpc3RLZXlzUmVxdWVzdBojLmtleXZhbHVlLnYxYWxwaGExLkxpc3RLZXlzUmVzcG9uc2USRwoETGlzdBIeLmtleXZhbHVlLnYxYWxwaGExLkxpc3RSZXF1ZXN0Gh8ua2V5dmFsdWUudjFhbHBoYTEuTGlzdFJlc3BvbnNlEk0KBkRlbGV0ZRIgLmtleXZhbHVlLnYxYWxwaGExLkRlbGV0ZVJlcXVlc3QaIS5rZXl2YWx1ZS52MWFscGhhMS5EZWxldGVSZXNwb25zZUI6WjhnaXRodWIuY29tL290ZWxmbGVldC9vdGVsZmxlZXQvcGtnL2FwaS9rZXl2YWx1ZS92MWFscGhhMWIGcHJvdG8z", [file_google_protobuf_any]);
+
+/**
+ * @generated from message keyvalue.v1alpha1.KeyValueObject
+ */
+export type KeyValueObject = Message<"keyvalue.v1alpha1.KeyValueObject"> & {
+  /**
+   * @generated from field: uint64 revision = 1;
+   */
+  revision: bigint;
+
+  /**
+   * @generated from field: bytes hash = 2;
+   */
+  hash: Uint8Array;
+
+  /**
+   * @generated from field: string type_url = 3;
+   */
+  typeUrl: string;
+
+  /**
+   * unset for a tombstone (deleted) revision
+   *
+   * @generated from field: google.protobuf.Any obj = 4;
+   */
+  obj?: Any | undefined;
+};
+
+/**
+ * Describes the message keyvalue.v1alpha1.KeyValueObject.
+ * Use `create(KeyValueObjectSchema)` to create a new message.
+ */
+export const KeyValueObjectSchema: GenMessage<KeyValueObject> = /*@__PURE__*/
+  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 0);
 
 /**
  * @generated from message keyvalue.v1alpha1.PutRequest
@@ -32,6 +66,13 @@ export type PutRequest = Message<"keyvalue.v1alpha1.PutRequest"> & {
    * @generated from field: google.protobuf.Any data = 3;
    */
   data?: Any | undefined;
+
+  /**
+   * expected revision (current + 1); 0 applies unconditionally without a CAS check
+   *
+   * @generated from field: uint64 revision = 4;
+   */
+  revision: bigint;
 };
 
 /**
@@ -39,12 +80,16 @@ export type PutRequest = Message<"keyvalue.v1alpha1.PutRequest"> & {
  * Use `create(PutRequestSchema)` to create a new message.
  */
 export const PutRequestSchema: GenMessage<PutRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 0);
+  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 1);
 
 /**
  * @generated from message keyvalue.v1alpha1.PutResponse
  */
 export type PutResponse = Message<"keyvalue.v1alpha1.PutResponse"> & {
+  /**
+   * @generated from field: keyvalue.v1alpha1.KeyValueObject object = 1;
+   */
+  object?: KeyValueObject | undefined;
 };
 
 /**
@@ -52,7 +97,7 @@ export type PutResponse = Message<"keyvalue.v1alpha1.PutResponse"> & {
  * Use `create(PutResponseSchema)` to create a new message.
  */
 export const PutResponseSchema: GenMessage<PutResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 1);
+  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 2);
 
 /**
  * @generated from message keyvalue.v1alpha1.GetRequest
@@ -67,6 +112,13 @@ export type GetRequest = Message<"keyvalue.v1alpha1.GetRequest"> & {
    * @generated from field: string key = 2;
    */
   key: string;
+
+  /**
+   * 0 means latest
+   *
+   * @generated from field: uint64 revision = 3;
+   */
+  revision: bigint;
 };
 
 /**
@@ -74,7 +126,7 @@ export type GetRequest = Message<"keyvalue.v1alpha1.GetRequest"> & {
  * Use `create(GetRequestSchema)` to create a new message.
  */
 export const GetRequestSchema: GenMessage<GetRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 2);
+  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 3);
 
 /**
  * @generated from message keyvalue.v1alpha1.GetResponse
@@ -86,9 +138,9 @@ export type GetResponse = Message<"keyvalue.v1alpha1.GetResponse"> & {
   typeUrl: string;
 
   /**
-   * @generated from field: google.protobuf.Any data = 2;
+   * @generated from field: keyvalue.v1alpha1.KeyValueObject object = 2;
    */
-  data?: Any | undefined;
+  object?: KeyValueObject | undefined;
 };
 
 /**
@@ -96,7 +148,7 @@ export type GetResponse = Message<"keyvalue.v1alpha1.GetResponse"> & {
  * Use `create(GetResponseSchema)` to create a new message.
  */
 export const GetResponseSchema: GenMessage<GetResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 3);
+  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 4);
 
 /**
  * @generated from message keyvalue.v1alpha1.ListRequest
@@ -113,7 +165,7 @@ export type ListRequest = Message<"keyvalue.v1alpha1.ListRequest"> & {
  * Use `create(ListRequestSchema)` to create a new message.
  */
 export const ListRequestSchema: GenMessage<ListRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 4);
+  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 5);
 
 /**
  * @generated from message keyvalue.v1alpha1.ListResponse
@@ -125,9 +177,9 @@ export type ListResponse = Message<"keyvalue.v1alpha1.ListResponse"> & {
   typeUrl: string;
 
   /**
-   * @generated from field: repeated google.protobuf.Any data = 2;
+   * @generated from field: repeated keyvalue.v1alpha1.KeyValueObject objects = 2;
    */
-  data: Any[];
+  objects: KeyValueObject[];
 };
 
 /**
@@ -135,7 +187,7 @@ export type ListResponse = Message<"keyvalue.v1alpha1.ListResponse"> & {
  * Use `create(ListResponseSchema)` to create a new message.
  */
 export const ListResponseSchema: GenMessage<ListResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 5);
+  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 6);
 
 /**
  * @generated from message keyvalue.v1alpha1.ListKeysRequest
@@ -152,7 +204,7 @@ export type ListKeysRequest = Message<"keyvalue.v1alpha1.ListKeysRequest"> & {
  * Use `create(ListKeysRequestSchema)` to create a new message.
  */
 export const ListKeysRequestSchema: GenMessage<ListKeysRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 6);
+  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 7);
 
 /**
  * @generated from message keyvalue.v1alpha1.ListKeysResponse
@@ -169,7 +221,7 @@ export type ListKeysResponse = Message<"keyvalue.v1alpha1.ListKeysResponse"> & {
  * Use `create(ListKeysResponseSchema)` to create a new message.
  */
 export const ListKeysResponseSchema: GenMessage<ListKeysResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 7);
+  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 8);
 
 /**
  * @generated from message keyvalue.v1alpha1.DeleteRequest
@@ -191,7 +243,7 @@ export type DeleteRequest = Message<"keyvalue.v1alpha1.DeleteRequest"> & {
  * Use `create(DeleteRequestSchema)` to create a new message.
  */
 export const DeleteRequestSchema: GenMessage<DeleteRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 8);
+  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 9);
 
 /**
  * @generated from message keyvalue.v1alpha1.DeleteResponse
@@ -204,7 +256,7 @@ export type DeleteResponse = Message<"keyvalue.v1alpha1.DeleteResponse"> & {
  * Use `create(DeleteResponseSchema)` to create a new message.
  */
 export const DeleteResponseSchema: GenMessage<DeleteResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 9);
+  messageDesc(file_pkg_api_keyvalue_v1alpha1_keyvalue, 10);
 
 /**
  * @generated from service keyvalue.v1alpha1.KeyValueService

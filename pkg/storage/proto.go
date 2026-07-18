@@ -3,8 +3,9 @@ package storage
 import (
 	"context"
 	"log/slog"
-	"reflect"
+	"sort"
 
+	keyvaluev1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"google.golang.org/protobuf/proto"
@@ -14,6 +15,14 @@ import (
 func NewMessage[T proto.Message]() T {
 	var t T
 	return t.ProtoReflect().New().Interface().(T)
+}
+
+func unmarshalTyped[T proto.Message](obj *keyvaluev1.KeyValueObject) (T, error) {
+	t := NewMessage[T]()
+	if err := obj.GetObj().UnmarshalTo(t); err != nil {
+		return t, err
+	}
+	return t, nil
 }
 
 type schemaWrapper[T proto.Message] struct {
@@ -37,24 +46,39 @@ func (w *schemaWrapper[T]) typeURL() string {
 }
 
 func (w *schemaWrapper[T]) Put(ctx context.Context, key string, obj T) error {
+	_, err := w.PutRevision(ctx, key, 0, obj)
+	return err
+}
+
+func (w *schemaWrapper[T]) PutRevision(ctx context.Context, key string, revision uint64, obj T) (uint64, error) {
 	any, err := anypb.New(obj)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return w.underlying.Put(ctx, any.GetTypeUrl(), key, any)
+	stored, err := w.underlying.Put(ctx, any.GetTypeUrl(), key, revision, any)
+	if err != nil {
+		return 0, err
+	}
+	return stored.GetRevision(), nil
 }
 
 func (w *schemaWrapper[T]) Get(ctx context.Context, key string) (T, error) {
 	var t T
-	any, err := w.underlying.Get(ctx, w.typeURL(), key)
+	obj, err := w.underlying.Get(ctx, w.typeURL(), key)
 	if err != nil {
 		return t, err
 	}
-	t = NewMessage[T]()
-	if err := any.UnmarshalTo(t); err != nil {
+	return unmarshalTyped[T](obj)
+}
+
+func (w *schemaWrapper[T]) GetRevision(ctx context.Context, key string, revision uint64) (T, error) {
+	var t T
+	obj, err := w.underlying.GetRevision(ctx, w.typeURL(), key, revision)
+	if err != nil {
 		return t, err
 	}
-	return t, nil
+	t, err = unmarshalTyped[T](obj)
+	return t, err
 }
 
 func (w *schemaWrapper[T]) ListKeys(ctx context.Context) ([]string, error) {
@@ -62,14 +86,14 @@ func (w *schemaWrapper[T]) ListKeys(ctx context.Context) ([]string, error) {
 }
 
 func (w *schemaWrapper[T]) List(ctx context.Context) ([]T, error) {
-	anys, err := w.underlying.List(ctx, w.typeURL())
+	objs, err := w.underlying.List(ctx, w.typeURL())
 	if err != nil {
 		return nil, err
 	}
-	ret := make([]T, len(anys))
-	for idx, any := range anys {
-		t := NewMessage[T]()
-		if err := any.UnmarshalTo(t); err != nil {
+	ret := make([]T, len(objs))
+	for idx, obj := range objs {
+		t, err := unmarshalTyped[T](obj)
+		if err != nil {
 			return nil, err
 		}
 		ret[idx] = t
@@ -86,57 +110,86 @@ func NewProtoKV[T proto.Message](
 	kv types.KV,
 ) types.KeyValue[T] {
 	return &protoKeyValue[T]{
-		underlying: kv,
-		logger:     logger,
+		revisions: schema.NewRevisionEngine(kv),
+		logger:    logger,
 	}
 }
 
 type protoKeyValue[T proto.Message] struct {
-	logger     *slog.Logger
-	underlying types.KV
+	logger    *slog.Logger
+	revisions *schema.RevisionEngine
 }
 
 func (kv *protoKeyValue[T]) Put(ctx context.Context, key string, obj T) error {
-	data, err := proto.Marshal(obj)
-	if err != nil {
-		return err
-	}
-
-	return kv.underlying.Put(ctx, key, data)
+	_, err := kv.PutRevision(ctx, key, 0, obj)
+	return err
 }
+
+func (kv *protoKeyValue[T]) PutRevision(ctx context.Context, key string, revision uint64, obj T) (uint64, error) {
+	any, err := anypb.New(obj)
+	if err != nil {
+		return 0, err
+	}
+	stored, err := kv.revisions.Put(ctx, key, any.GetTypeUrl(), revision, any)
+	if err != nil {
+		return 0, err
+	}
+	return stored.GetRevision(), nil
+}
+
 func (kv *protoKeyValue[T]) Get(ctx context.Context, key string) (T, error) {
 	var t T
-	raw, err := kv.underlying.Get(ctx, key)
+	obj, err := kv.revisions.Get(ctx, key)
 	if err != nil {
 		return t, err
 	}
-	t = NewMessage[T]()
-	if err := proto.Unmarshal(raw, t); err != nil {
+	return unmarshalTyped[T](obj)
+}
+
+func (kv *protoKeyValue[T]) GetRevision(ctx context.Context, key string, revision uint64) (T, error) {
+	var t T
+	obj, err := kv.revisions.GetRevision(ctx, key, revision)
+	if err != nil {
 		return t, err
 	}
-	return t, nil
+	t, err = unmarshalTyped[T](obj)
+	return t, err
 }
 
 func (kv *protoKeyValue[T]) ListKeys(ctx context.Context) ([]string, error) {
-	return kv.underlying.ListKeys(ctx, "")
-}
-func (kv *protoKeyValue[T]) List(ctx context.Context) ([]T, error) {
-	raw, err := kv.underlying.List(ctx, "")
+	latest, err := kv.revisions.ListLatest(ctx, "")
 	if err != nil {
 		return nil, err
 	}
-	ret := make([]T, len(raw))
-	for idx, el := range raw {
-		t := NewMessage[T]()
-		if err := proto.Unmarshal(el, t); err != nil {
-			kv.logger.With("type", reflect.TypeOf(t)).With("error", err).Error("failed to unmarshal proto-type")
-			continue
+	keys := make([]string, 0, len(latest))
+	for key := range latest {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys, nil
+}
+
+func (kv *protoKeyValue[T]) List(ctx context.Context) ([]T, error) {
+	latest, err := kv.revisions.ListLatest(ctx, "")
+	if err != nil {
+		return nil, err
+	}
+	keys := make([]string, 0, len(latest))
+	for key := range latest {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	ret := make([]T, 0, len(latest))
+	for _, key := range keys {
+		t, err := unmarshalTyped[T](latest[key])
+		if err != nil {
+			return nil, err
 		}
-		ret[idx] = t
+		ret = append(ret, t)
 	}
 	return ret, nil
-
 }
+
 func (kv *protoKeyValue[T]) Delete(ctx context.Context, key string) error {
-	return kv.underlying.Delete(ctx, key)
+	return kv.revisions.Delete(ctx, key)
 }

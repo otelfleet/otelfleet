@@ -12,22 +12,36 @@ service KeyValueService {
     rpc Delete(DeleteRequest) returns (DeleteResponse);
 }
 
+message KeyValueObject {
+    uint64 revision = 1;
+    bytes hash = 2;
+    string type_url = 3;
+    // unset for a tombstone (deleted) revision
+    google.protobuf.Any obj = 4;
+}
+
 message PutRequest {
     string type_url = 1;
     string key = 2;
     google.protobuf.Any data = 3;
+    // expected revision (current + 1); 0 applies unconditionally without a CAS check
+    uint64 revision = 4;
 }
 
-message PutResponse{}
+message PutResponse{
+    KeyValueObject object = 1;
+}
 
 message GetRequest {
     string type_url = 1;
     string key = 2;
+    // 0 means latest
+    uint64 revision = 3;
 }
 
 message GetResponse{
     string type_url = 1;
-    google.protobuf.Any data = 2;
+    KeyValueObject object = 2;
 }
 
 message ListRequest{
@@ -36,7 +50,7 @@ message ListRequest{
 
 message ListResponse{
     string type_url = 1;
-    repeated google.protobuf.Any data = 2;
+    repeated KeyValueObject objects = 2;
 }
 
 message ListKeysRequest{

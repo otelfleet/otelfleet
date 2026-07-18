@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
+	keyvaluev1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1/v1alpha1connect"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -22,26 +22,41 @@ func NewStorageClient(client v1alpha1connect.KeyValueServiceClient) *StorageClie
 
 var _ schema.SchemaProto = (*StorageClient)(nil)
 
-func (s *StorageClient) Put(ctx context.Context, typeURL, key string, obj *anypb.Any) error {
-	_, err := s.client.Put(ctx, connect.NewRequest(&v1alpha1.PutRequest{
-		TypeUrl: typeURL,
-		Key:     key,
-		Data:    obj,
+func (s *StorageClient) Put(ctx context.Context, typeURL, key string, revision uint64, obj *anypb.Any) (*keyvaluev1.KeyValueObject, error) {
+	resp, err := s.client.Put(ctx, connect.NewRequest(&keyvaluev1.PutRequest{
+		TypeUrl:  typeURL,
+		Key:      key,
+		Data:     obj,
+		Revision: revision,
 	}))
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return resp.Msg.GetObject(), nil
 }
-func (s *StorageClient) Get(ctx context.Context, typeURL, key string) (*anypb.Any, error) {
-	resp, err := s.client.Get(ctx, connect.NewRequest(&v1alpha1.GetRequest{
+func (s *StorageClient) Get(ctx context.Context, typeURL, key string) (*keyvaluev1.KeyValueObject, error) {
+	resp, err := s.client.Get(ctx, connect.NewRequest(&keyvaluev1.GetRequest{
 		TypeUrl: typeURL,
 		Key:     key,
 	}))
 	if err != nil {
 		return nil, err
 	}
-	return resp.Msg.GetData(), nil
+	return resp.Msg.GetObject(), nil
+}
+func (s *StorageClient) GetRevision(ctx context.Context, typeURL, key string, revision uint64) (*keyvaluev1.KeyValueObject, error) {
+	resp, err := s.client.Get(ctx, connect.NewRequest(&keyvaluev1.GetRequest{
+		TypeUrl:  typeURL,
+		Key:      key,
+		Revision: revision,
+	}))
+	if err != nil {
+		return nil, err
+	}
+	return resp.Msg.GetObject(), nil
 }
 func (s *StorageClient) ListKeys(ctx context.Context, typeURL string) ([]string, error) {
-	resp, err := s.client.ListKeys(ctx, connect.NewRequest(&v1alpha1.ListKeysRequest{
+	resp, err := s.client.ListKeys(ctx, connect.NewRequest(&keyvaluev1.ListKeysRequest{
 		TypeUrl: typeURL,
 	}))
 	if err != nil {
@@ -49,17 +64,17 @@ func (s *StorageClient) ListKeys(ctx context.Context, typeURL string) ([]string,
 	}
 	return resp.Msg.GetKeys(), nil
 }
-func (s *StorageClient) List(ctx context.Context, typeURL string) ([]*anypb.Any, error) {
-	resp, err := s.client.List(ctx, connect.NewRequest(&v1alpha1.ListRequest{
+func (s *StorageClient) List(ctx context.Context, typeURL string) ([]*keyvaluev1.KeyValueObject, error) {
+	resp, err := s.client.List(ctx, connect.NewRequest(&keyvaluev1.ListRequest{
 		TypeUrl: typeURL,
 	}))
 	if err != nil {
 		return nil, err
 	}
-	return resp.Msg.GetData(), nil
+	return resp.Msg.GetObjects(), nil
 }
 func (s *StorageClient) Delete(ctx context.Context, typeURL, key string) error {
-	_, err := s.client.Delete(ctx, connect.NewRequest(&v1alpha1.DeleteRequest{
+	_, err := s.client.Delete(ctx, connect.NewRequest(&keyvaluev1.DeleteRequest{
 		TypeUrl: typeURL,
 		Key:     key,
 	}))
