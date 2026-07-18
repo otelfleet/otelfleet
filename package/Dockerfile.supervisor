@@ -19,5 +19,3 @@ ARG USER_UID
 ARG USER_GID
 COPY --from=prep --chmod=777 --chown=${USER_UID}:${USER_GID} /etc/otel/supervisor-data /etc/otel/supervisor-data
 
-# Mirrors upstream opentelemetry-collector-opampsupervisor image
-CMD ["--config", "/etc/otel/supervisor.yaml"]
