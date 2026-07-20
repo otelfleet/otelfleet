@@ -4,10 +4,14 @@ import (
 	"context"
 	"testing"
 
+	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/google/go-cmp/cmp"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -150,4 +154,61 @@ func TestRevision_DeleteThenRecreateIsMonotonic(t *testing.T) {
 	recreated, err := s.Put(ctx, typeURL, "k", 0, a)
 	require.NoError(t, err)
 	assert.Equal(t, uint64(3), recreated.GetRevision())
+}
+
+func TestRevision_History(t *testing.T) {
+	s := newSchema(t)
+	type testcase struct {
+		limit    uint64
+		offset   uint64
+		expected []*anypb.Any
+	}
+	ctx := t.Context()
+	for i := range 50 {
+		typeURL, v := mustAny(t, &wrappers.Int64Value{
+			Value: int64(i),
+		})
+		_, err := s.Put(ctx, typeURL, "foo", 0, v)
+		require.NoError(t, err)
+	}
+
+	val := func(i int64) *anypb.Any {
+		return mustAnyNoType(t, &wrappers.Int64Value{Value: i})
+	}
+
+	tcs := []testcase{
+		{
+			limit:    5,
+			offset:   0,
+			expected: []*anypb.Any{val(49), val(48), val(47), val(46), val(45)},
+		},
+		{
+			limit:    5,
+			offset:   5,
+			expected: []*anypb.Any{val(44), val(43), val(42), val(41), val(40)},
+		},
+		{
+			limit:    0,
+			offset:   49,
+			expected: []*anypb.Any{val(0)},
+		},
+		{
+			limit:    0,
+			offset:   50,
+			expected: []*anypb.Any{},
+		},
+	}
+	typeURL, _ := mustAny(t, &wrappers.Int64Value{
+		Value: int64(0),
+	})
+	for _, tc := range tcs {
+		resp, err := s.History(ctx, typeURL, "foo", tc.offset, tc.limit)
+		require.NoError(t, err)
+		got := make([]*anypb.Any, len(resp.Objs))
+		for i, obj := range resp.Objs {
+			got[i] = obj.GetObj()
+		}
+		assert.Empty(t, cmp.Diff(tc.expected, got, protocmp.Transform()))
+	}
+
 }

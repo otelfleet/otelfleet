@@ -57,6 +57,7 @@ func (k *GrpcKeyValue) Get(ctx context.Context, req *connect.Request[v1alpha1.Ge
 		Object:  got,
 	}), nil
 }
+
 func (k *GrpcKeyValue) Put(ctx context.Context, req *connect.Request[v1alpha1.PutRequest]) (*connect.Response[v1alpha1.PutResponse], error) {
 	stored, err := k.underlying.Put(ctx, req.Msg.GetTypeUrl(), req.Msg.GetKey(), req.Msg.GetRevision(), req.Msg.GetData())
 	if err != nil {
@@ -64,6 +65,7 @@ func (k *GrpcKeyValue) Put(ctx context.Context, req *connect.Request[v1alpha1.Pu
 	}
 	return connect.NewResponse(&v1alpha1.PutResponse{Object: stored}), nil
 }
+
 func (k *GrpcKeyValue) ListKeys(ctx context.Context, req *connect.Request[v1alpha1.ListKeysRequest]) (*connect.Response[v1alpha1.ListKeysResponse], error) {
 	keys, err := k.underlying.ListKeys(ctx, req.Msg.GetTypeUrl())
 	if err != nil {
@@ -73,6 +75,7 @@ func (k *GrpcKeyValue) ListKeys(ctx context.Context, req *connect.Request[v1alph
 		Keys: keys,
 	}), nil
 }
+
 func (k *GrpcKeyValue) List(ctx context.Context, req *connect.Request[v1alpha1.ListRequest]) (*connect.Response[v1alpha1.ListResponse], error) {
 	objs, err := k.underlying.List(ctx, req.Msg.GetTypeUrl())
 	if err != nil {
@@ -83,9 +86,23 @@ func (k *GrpcKeyValue) List(ctx context.Context, req *connect.Request[v1alpha1.L
 		Objects: objs,
 	}), nil
 }
+
 func (k *GrpcKeyValue) Delete(ctx context.Context, req *connect.Request[v1alpha1.DeleteRequest]) (*connect.Response[v1alpha1.DeleteResponse], error) {
 	if err := k.underlying.Delete(ctx, req.Msg.GetTypeUrl(), req.Msg.GetKey()); err != nil {
 		return nil, toConnectError(err)
 	}
 	return connect.NewResponse(&v1alpha1.DeleteResponse{}), nil
+}
+
+func (k *GrpcKeyValue) History(ctx context.Context, req *connect.Request[v1alpha1.GetHistoryRequest]) (*connect.Response[v1alpha1.GetHistoryResponse], error) {
+	resp, err := k.underlying.History(
+		ctx, req.Msg.GetTypeUrl(),
+		req.Msg.GetKey(),
+		req.Msg.GetQuery().GetOffset(),
+		req.Msg.GetQuery().GetLimit(),
+	)
+	if err != nil {
+		return nil, toConnectError(err)
+	}
+	return connect.NewResponse(resp), nil
 }

@@ -23,12 +23,6 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-// These tests treat proto_broker as a black box: callers only ever address
-// objects by (typeURL, key), and the on-disk key layout (version prefix, path
-// joining, etc.) is an implementation detail. Nothing here references a
-// concrete key path, so changing the underlying prefix scheme should not
-// require changing the tests.
-
 // newSchema wires a StorageSchemaProto on top of a real (in-memory) KV, so the
 // tests observe end-to-end behaviour rather than a hand-rolled fake.
 func newSchema(t *testing.T) *schema.StorageSchemaProto {
@@ -40,8 +34,6 @@ func newSchema(t *testing.T) *schema.StorageSchemaProto {
 	return schema.NewStorageSchemaProto(kv)
 }
 
-// mustAny wraps a proto message into an anypb.Any and returns it alongside its
-// type URL, which is what callers use to address the object.
 func mustAny(t *testing.T, msg proto.Message) (string, *anypb.Any) {
 	t.Helper()
 	any, err := anypb.New(msg)
@@ -49,7 +41,13 @@ func mustAny(t *testing.T, msg proto.Message) (string, *anypb.Any) {
 	return any.GetTypeUrl(), any
 }
 
-// anyDiff reports the protocmp diff between two Any values ("" when equal).
+func mustAnyNoType(t *testing.T, msg proto.Message) *anypb.Any {
+	t.Helper()
+	any, err := anypb.New(msg)
+	require.NoError(t, err)
+	return any
+}
+
 func anyDiff(want, got *anypb.Any) string {
 	return cmp.Diff(want, got, protocmp.Transform())
 }

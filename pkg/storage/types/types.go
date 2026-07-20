@@ -38,6 +38,7 @@ type KeyValue[T any] interface {
 	ListKeys(ctx context.Context) ([]string, error)
 	List(ctx context.Context) ([]T, error)
 	Delete(ctx context.Context, key string) error
+	History(ctx context.Context, key string, offset uint64, limit uint64) ([]T, error)
 }
 
 type KeyValueBroker[T any] interface {

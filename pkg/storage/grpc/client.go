@@ -80,3 +80,11 @@ func (s *StorageClient) Delete(ctx context.Context, typeURL, key string) error {
 	}))
 	return err
 }
+
+func (s *StorageClient) History(ctx context.Context, typeURL, key string, offset, limit uint64) (*keyvaluev1.GetHistoryResponse, error) {
+	resp, err := s.client.History(ctx, connect.NewRequest(&keyvaluev1.GetHistoryRequest{}))
+	if err != nil {
+		return nil, err
+	}
+	return resp.Msg, nil
+}

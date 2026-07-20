@@ -22,6 +22,178 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type GetHistoryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TypeUrl       string                 `protobuf:"bytes,1,opt,name=type_url,json=typeUrl,proto3" json:"type_url,omitempty"`
+	Key           string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	Query         *RangeRequest          `protobuf:"bytes,3,opt,name=query,proto3" json:"query,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetHistoryRequest) Reset() {
+	*x = GetHistoryRequest{}
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetHistoryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetHistoryRequest) ProtoMessage() {}
+
+func (x *GetHistoryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetHistoryRequest.ProtoReflect.Descriptor instead.
+func (*GetHistoryRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *GetHistoryRequest) GetTypeUrl() string {
+	if x != nil {
+		return x.TypeUrl
+	}
+	return ""
+}
+
+func (x *GetHistoryRequest) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *GetHistoryRequest) GetQuery() *RangeRequest {
+	if x != nil {
+		return x.Query
+	}
+	return nil
+}
+
+type RangeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Offset        uint64                 `protobuf:"varint,1,opt,name=offset,proto3" json:"offset,omitempty"`
+	Limit         uint64                 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RangeRequest) Reset() {
+	*x = RangeRequest{}
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RangeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RangeRequest) ProtoMessage() {}
+
+func (x *RangeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RangeRequest.ProtoReflect.Descriptor instead.
+func (*RangeRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *RangeRequest) GetOffset() uint64 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *RangeRequest) GetLimit() uint64 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type GetHistoryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TypeUrl       string                 `protobuf:"bytes,1,opt,name=type_url,json=typeUrl,proto3" json:"type_url,omitempty"`
+	Objs          []*KeyValueObject      `protobuf:"bytes,2,rep,name=objs,proto3" json:"objs,omitempty"`
+	Position      *RangeRequest          `protobuf:"bytes,3,opt,name=position,proto3" json:"position,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetHistoryResponse) Reset() {
+	*x = GetHistoryResponse{}
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetHistoryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetHistoryResponse) ProtoMessage() {}
+
+func (x *GetHistoryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetHistoryResponse.ProtoReflect.Descriptor instead.
+func (*GetHistoryResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetHistoryResponse) GetTypeUrl() string {
+	if x != nil {
+		return x.TypeUrl
+	}
+	return ""
+}
+
+func (x *GetHistoryResponse) GetObjs() []*KeyValueObject {
+	if x != nil {
+		return x.Objs
+	}
+	return nil
+}
+
+func (x *GetHistoryResponse) GetPosition() *RangeRequest {
+	if x != nil {
+		return x.Position
+	}
+	return nil
+}
+
 type KeyValueObject struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	Revision uint64                 `protobuf:"varint,1,opt,name=revision,proto3" json:"revision,omitempty"`
@@ -35,7 +207,7 @@ type KeyValueObject struct {
 
 func (x *KeyValueObject) Reset() {
 	*x = KeyValueObject{}
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[0]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -47,7 +219,7 @@ func (x *KeyValueObject) String() string {
 func (*KeyValueObject) ProtoMessage() {}
 
 func (x *KeyValueObject) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[0]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -60,7 +232,7 @@ func (x *KeyValueObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyValueObject.ProtoReflect.Descriptor instead.
 func (*KeyValueObject) Descriptor() ([]byte, []int) {
-	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{0}
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *KeyValueObject) GetRevision() uint64 {
@@ -104,7 +276,7 @@ type PutRequest struct {
 
 func (x *PutRequest) Reset() {
 	*x = PutRequest{}
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[1]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -116,7 +288,7 @@ func (x *PutRequest) String() string {
 func (*PutRequest) ProtoMessage() {}
 
 func (x *PutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[1]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -129,7 +301,7 @@ func (x *PutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutRequest.ProtoReflect.Descriptor instead.
 func (*PutRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{1}
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *PutRequest) GetTypeUrl() string {
@@ -169,7 +341,7 @@ type PutResponse struct {
 
 func (x *PutResponse) Reset() {
 	*x = PutResponse{}
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[2]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -181,7 +353,7 @@ func (x *PutResponse) String() string {
 func (*PutResponse) ProtoMessage() {}
 
 func (x *PutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[2]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -194,7 +366,7 @@ func (x *PutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutResponse.ProtoReflect.Descriptor instead.
 func (*PutResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{2}
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *PutResponse) GetObject() *KeyValueObject {
@@ -216,7 +388,7 @@ type GetRequest struct {
 
 func (x *GetRequest) Reset() {
 	*x = GetRequest{}
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[3]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -228,7 +400,7 @@ func (x *GetRequest) String() string {
 func (*GetRequest) ProtoMessage() {}
 
 func (x *GetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[3]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -241,7 +413,7 @@ func (x *GetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRequest.ProtoReflect.Descriptor instead.
 func (*GetRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{3}
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetRequest) GetTypeUrl() string {
@@ -275,7 +447,7 @@ type GetResponse struct {
 
 func (x *GetResponse) Reset() {
 	*x = GetResponse{}
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[4]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -287,7 +459,7 @@ func (x *GetResponse) String() string {
 func (*GetResponse) ProtoMessage() {}
 
 func (x *GetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[4]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -300,7 +472,7 @@ func (x *GetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetResponse.ProtoReflect.Descriptor instead.
 func (*GetResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{4}
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetResponse) GetTypeUrl() string {
@@ -326,7 +498,7 @@ type ListRequest struct {
 
 func (x *ListRequest) Reset() {
 	*x = ListRequest{}
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[5]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -338,7 +510,7 @@ func (x *ListRequest) String() string {
 func (*ListRequest) ProtoMessage() {}
 
 func (x *ListRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[5]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -351,7 +523,7 @@ func (x *ListRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRequest.ProtoReflect.Descriptor instead.
 func (*ListRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{5}
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ListRequest) GetTypeUrl() string {
@@ -371,7 +543,7 @@ type ListResponse struct {
 
 func (x *ListResponse) Reset() {
 	*x = ListResponse{}
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[6]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -383,7 +555,7 @@ func (x *ListResponse) String() string {
 func (*ListResponse) ProtoMessage() {}
 
 func (x *ListResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[6]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -396,7 +568,7 @@ func (x *ListResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListResponse.ProtoReflect.Descriptor instead.
 func (*ListResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{6}
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ListResponse) GetTypeUrl() string {
@@ -422,7 +594,7 @@ type ListKeysRequest struct {
 
 func (x *ListKeysRequest) Reset() {
 	*x = ListKeysRequest{}
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[7]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -434,7 +606,7 @@ func (x *ListKeysRequest) String() string {
 func (*ListKeysRequest) ProtoMessage() {}
 
 func (x *ListKeysRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[7]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -447,7 +619,7 @@ func (x *ListKeysRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListKeysRequest.ProtoReflect.Descriptor instead.
 func (*ListKeysRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{7}
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ListKeysRequest) GetTypeUrl() string {
@@ -466,7 +638,7 @@ type ListKeysResponse struct {
 
 func (x *ListKeysResponse) Reset() {
 	*x = ListKeysResponse{}
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[8]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -478,7 +650,7 @@ func (x *ListKeysResponse) String() string {
 func (*ListKeysResponse) ProtoMessage() {}
 
 func (x *ListKeysResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[8]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -491,7 +663,7 @@ func (x *ListKeysResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListKeysResponse.ProtoReflect.Descriptor instead.
 func (*ListKeysResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{8}
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ListKeysResponse) GetKeys() []string {
@@ -511,7 +683,7 @@ type DeleteRequest struct {
 
 func (x *DeleteRequest) Reset() {
 	*x = DeleteRequest{}
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[9]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -523,7 +695,7 @@ func (x *DeleteRequest) String() string {
 func (*DeleteRequest) ProtoMessage() {}
 
 func (x *DeleteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[9]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -536,7 +708,7 @@ func (x *DeleteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteRequest.ProtoReflect.Descriptor instead.
 func (*DeleteRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{9}
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *DeleteRequest) GetTypeUrl() string {
@@ -561,7 +733,7 @@ type DeleteResponse struct {
 
 func (x *DeleteResponse) Reset() {
 	*x = DeleteResponse{}
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[10]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -573,7 +745,7 @@ func (x *DeleteResponse) String() string {
 func (*DeleteResponse) ProtoMessage() {}
 
 func (x *DeleteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[10]
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -586,14 +758,25 @@ func (x *DeleteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteResponse.ProtoReflect.Descriptor instead.
 func (*DeleteResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{10}
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{13}
 }
 
 var File_pkg_api_keyvalue_v1alpha1_keyvalue_proto protoreflect.FileDescriptor
 
 const file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDesc = "" +
 	"\n" +
-	"(pkg/api/keyvalue/v1alpha1/keyvalue.proto\x12\x11keyvalue.v1alpha1\x1a\x19google/protobuf/any.proto\"\x83\x01\n" +
+	"(pkg/api/keyvalue/v1alpha1/keyvalue.proto\x12\x11keyvalue.v1alpha1\x1a\x19google/protobuf/any.proto\"w\n" +
+	"\x11GetHistoryRequest\x12\x19\n" +
+	"\btype_url\x18\x01 \x01(\tR\atypeUrl\x12\x10\n" +
+	"\x03key\x18\x02 \x01(\tR\x03key\x125\n" +
+	"\x05query\x18\x03 \x01(\v2\x1f.keyvalue.v1alpha1.RangeRequestR\x05query\"<\n" +
+	"\fRangeRequest\x12\x16\n" +
+	"\x06offset\x18\x01 \x01(\x04R\x06offset\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x04R\x05limit\"\xa3\x01\n" +
+	"\x12GetHistoryResponse\x12\x19\n" +
+	"\btype_url\x18\x01 \x01(\tR\atypeUrl\x125\n" +
+	"\x04objs\x18\x02 \x03(\v2!.keyvalue.v1alpha1.KeyValueObjectR\x04objs\x12;\n" +
+	"\bposition\x18\x03 \x01(\v2\x1f.keyvalue.v1alpha1.RangeRequestR\bposition\"\x83\x01\n" +
 	"\x0eKeyValueObject\x12\x1a\n" +
 	"\brevision\x18\x01 \x01(\x04R\brevision\x12\x12\n" +
 	"\x04hash\x18\x02 \x01(\fR\x04hash\x12\x19\n" +
@@ -627,13 +810,14 @@ const file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDesc = "" +
 	"\rDeleteRequest\x12\x19\n" +
 	"\btype_url\x18\x01 \x01(\tR\atypeUrl\x12\x10\n" +
 	"\x03key\x18\x02 \x01(\tR\x03key\"\x10\n" +
-	"\x0eDeleteResponse2\x8a\x03\n" +
+	"\x0eDeleteResponse2\xe2\x03\n" +
 	"\x0fKeyValueService\x12D\n" +
 	"\x03Get\x12\x1d.keyvalue.v1alpha1.GetRequest\x1a\x1e.keyvalue.v1alpha1.GetResponse\x12D\n" +
 	"\x03Put\x12\x1d.keyvalue.v1alpha1.PutRequest\x1a\x1e.keyvalue.v1alpha1.PutResponse\x12S\n" +
 	"\bListKeys\x12\".keyvalue.v1alpha1.ListKeysRequest\x1a#.keyvalue.v1alpha1.ListKeysResponse\x12G\n" +
 	"\x04List\x12\x1e.keyvalue.v1alpha1.ListRequest\x1a\x1f.keyvalue.v1alpha1.ListResponse\x12M\n" +
-	"\x06Delete\x12 .keyvalue.v1alpha1.DeleteRequest\x1a!.keyvalue.v1alpha1.DeleteResponseB:Z8github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1b\x06proto3"
+	"\x06Delete\x12 .keyvalue.v1alpha1.DeleteRequest\x1a!.keyvalue.v1alpha1.DeleteResponse\x12V\n" +
+	"\aHistory\x12$.keyvalue.v1alpha1.GetHistoryRequest\x1a%.keyvalue.v1alpha1.GetHistoryResponseB:Z8github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1b\x06proto3"
 
 var (
 	file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescOnce sync.Once
@@ -647,42 +831,50 @@ func file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP() []byte {
 	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescData
 }
 
-var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_goTypes = []any{
-	(*KeyValueObject)(nil),   // 0: keyvalue.v1alpha1.KeyValueObject
-	(*PutRequest)(nil),       // 1: keyvalue.v1alpha1.PutRequest
-	(*PutResponse)(nil),      // 2: keyvalue.v1alpha1.PutResponse
-	(*GetRequest)(nil),       // 3: keyvalue.v1alpha1.GetRequest
-	(*GetResponse)(nil),      // 4: keyvalue.v1alpha1.GetResponse
-	(*ListRequest)(nil),      // 5: keyvalue.v1alpha1.ListRequest
-	(*ListResponse)(nil),     // 6: keyvalue.v1alpha1.ListResponse
-	(*ListKeysRequest)(nil),  // 7: keyvalue.v1alpha1.ListKeysRequest
-	(*ListKeysResponse)(nil), // 8: keyvalue.v1alpha1.ListKeysResponse
-	(*DeleteRequest)(nil),    // 9: keyvalue.v1alpha1.DeleteRequest
-	(*DeleteResponse)(nil),   // 10: keyvalue.v1alpha1.DeleteResponse
-	(*anypb.Any)(nil),        // 11: google.protobuf.Any
+	(*GetHistoryRequest)(nil),  // 0: keyvalue.v1alpha1.GetHistoryRequest
+	(*RangeRequest)(nil),       // 1: keyvalue.v1alpha1.RangeRequest
+	(*GetHistoryResponse)(nil), // 2: keyvalue.v1alpha1.GetHistoryResponse
+	(*KeyValueObject)(nil),     // 3: keyvalue.v1alpha1.KeyValueObject
+	(*PutRequest)(nil),         // 4: keyvalue.v1alpha1.PutRequest
+	(*PutResponse)(nil),        // 5: keyvalue.v1alpha1.PutResponse
+	(*GetRequest)(nil),         // 6: keyvalue.v1alpha1.GetRequest
+	(*GetResponse)(nil),        // 7: keyvalue.v1alpha1.GetResponse
+	(*ListRequest)(nil),        // 8: keyvalue.v1alpha1.ListRequest
+	(*ListResponse)(nil),       // 9: keyvalue.v1alpha1.ListResponse
+	(*ListKeysRequest)(nil),    // 10: keyvalue.v1alpha1.ListKeysRequest
+	(*ListKeysResponse)(nil),   // 11: keyvalue.v1alpha1.ListKeysResponse
+	(*DeleteRequest)(nil),      // 12: keyvalue.v1alpha1.DeleteRequest
+	(*DeleteResponse)(nil),     // 13: keyvalue.v1alpha1.DeleteResponse
+	(*anypb.Any)(nil),          // 14: google.protobuf.Any
 }
 var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_depIdxs = []int32{
-	11, // 0: keyvalue.v1alpha1.KeyValueObject.obj:type_name -> google.protobuf.Any
-	11, // 1: keyvalue.v1alpha1.PutRequest.data:type_name -> google.protobuf.Any
-	0,  // 2: keyvalue.v1alpha1.PutResponse.object:type_name -> keyvalue.v1alpha1.KeyValueObject
-	0,  // 3: keyvalue.v1alpha1.GetResponse.object:type_name -> keyvalue.v1alpha1.KeyValueObject
-	0,  // 4: keyvalue.v1alpha1.ListResponse.objects:type_name -> keyvalue.v1alpha1.KeyValueObject
-	3,  // 5: keyvalue.v1alpha1.KeyValueService.Get:input_type -> keyvalue.v1alpha1.GetRequest
-	1,  // 6: keyvalue.v1alpha1.KeyValueService.Put:input_type -> keyvalue.v1alpha1.PutRequest
-	7,  // 7: keyvalue.v1alpha1.KeyValueService.ListKeys:input_type -> keyvalue.v1alpha1.ListKeysRequest
-	5,  // 8: keyvalue.v1alpha1.KeyValueService.List:input_type -> keyvalue.v1alpha1.ListRequest
-	9,  // 9: keyvalue.v1alpha1.KeyValueService.Delete:input_type -> keyvalue.v1alpha1.DeleteRequest
-	4,  // 10: keyvalue.v1alpha1.KeyValueService.Get:output_type -> keyvalue.v1alpha1.GetResponse
-	2,  // 11: keyvalue.v1alpha1.KeyValueService.Put:output_type -> keyvalue.v1alpha1.PutResponse
-	8,  // 12: keyvalue.v1alpha1.KeyValueService.ListKeys:output_type -> keyvalue.v1alpha1.ListKeysResponse
-	6,  // 13: keyvalue.v1alpha1.KeyValueService.List:output_type -> keyvalue.v1alpha1.ListResponse
-	10, // 14: keyvalue.v1alpha1.KeyValueService.Delete:output_type -> keyvalue.v1alpha1.DeleteResponse
-	10, // [10:15] is the sub-list for method output_type
-	5,  // [5:10] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	1,  // 0: keyvalue.v1alpha1.GetHistoryRequest.query:type_name -> keyvalue.v1alpha1.RangeRequest
+	3,  // 1: keyvalue.v1alpha1.GetHistoryResponse.objs:type_name -> keyvalue.v1alpha1.KeyValueObject
+	1,  // 2: keyvalue.v1alpha1.GetHistoryResponse.position:type_name -> keyvalue.v1alpha1.RangeRequest
+	14, // 3: keyvalue.v1alpha1.KeyValueObject.obj:type_name -> google.protobuf.Any
+	14, // 4: keyvalue.v1alpha1.PutRequest.data:type_name -> google.protobuf.Any
+	3,  // 5: keyvalue.v1alpha1.PutResponse.object:type_name -> keyvalue.v1alpha1.KeyValueObject
+	3,  // 6: keyvalue.v1alpha1.GetResponse.object:type_name -> keyvalue.v1alpha1.KeyValueObject
+	3,  // 7: keyvalue.v1alpha1.ListResponse.objects:type_name -> keyvalue.v1alpha1.KeyValueObject
+	6,  // 8: keyvalue.v1alpha1.KeyValueService.Get:input_type -> keyvalue.v1alpha1.GetRequest
+	4,  // 9: keyvalue.v1alpha1.KeyValueService.Put:input_type -> keyvalue.v1alpha1.PutRequest
+	10, // 10: keyvalue.v1alpha1.KeyValueService.ListKeys:input_type -> keyvalue.v1alpha1.ListKeysRequest
+	8,  // 11: keyvalue.v1alpha1.KeyValueService.List:input_type -> keyvalue.v1alpha1.ListRequest
+	12, // 12: keyvalue.v1alpha1.KeyValueService.Delete:input_type -> keyvalue.v1alpha1.DeleteRequest
+	0,  // 13: keyvalue.v1alpha1.KeyValueService.History:input_type -> keyvalue.v1alpha1.GetHistoryRequest
+	7,  // 14: keyvalue.v1alpha1.KeyValueService.Get:output_type -> keyvalue.v1alpha1.GetResponse
+	5,  // 15: keyvalue.v1alpha1.KeyValueService.Put:output_type -> keyvalue.v1alpha1.PutResponse
+	11, // 16: keyvalue.v1alpha1.KeyValueService.ListKeys:output_type -> keyvalue.v1alpha1.ListKeysResponse
+	9,  // 17: keyvalue.v1alpha1.KeyValueService.List:output_type -> keyvalue.v1alpha1.ListResponse
+	13, // 18: keyvalue.v1alpha1.KeyValueService.Delete:output_type -> keyvalue.v1alpha1.DeleteResponse
+	2,  // 19: keyvalue.v1alpha1.KeyValueService.History:output_type -> keyvalue.v1alpha1.GetHistoryResponse
+	14, // [14:20] is the sub-list for method output_type
+	8,  // [8:14] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_init() }
@@ -696,7 +888,7 @@ func file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDesc), len(file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

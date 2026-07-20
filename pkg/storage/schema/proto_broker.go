@@ -18,6 +18,7 @@ type SchemaProto interface {
 	ListKeys(ctx context.Context, typeURL string) ([]string, error)
 	List(ctx context.Context, typeURL string) ([]*keyvaluev1.KeyValueObject, error)
 	Delete(ctx context.Context, typeURL, key string) error
+	History(ctx context.Context, typeURL, key string, offset, limit uint64) (*keyvaluev1.GetHistoryResponse, error)
 }
 
 var (
@@ -121,4 +122,14 @@ func (s *StorageSchemaProto) List(ctx context.Context, typeURL string) ([]*keyva
 
 func (s *StorageSchemaProto) Delete(ctx context.Context, typeURL, key string) error {
 	return s.revisions.Delete(ctx, s.keyPath(typeURL, key))
+}
+
+func (s *StorageSchemaProto) History(ctx context.Context, typeURL, key string, offset, limit uint64) (*keyvaluev1.GetHistoryResponse, error) {
+	base := s.keyPath(typeURL, key)
+	resp, err := s.revisions.History(ctx, base, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	resp.TypeUrl = typeURL
+	return resp, nil
 }

@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/cespare/xxhash/v2"
@@ -15,6 +17,10 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+const (
+	defaultLimit = 50
+)
+
 type RevisionEngine struct {
 	kv types.BaseKV
 }
@@ -23,7 +29,7 @@ func NewRevisionEngine(kv types.BaseKV) *RevisionEngine {
 	return &RevisionEngine{kv: kv}
 }
 
-func revEntryKey(base string, revision uint64) string {
+func (e *RevisionEngine) pathRevision(base string, revision uint64) string {
 	return fmt.Sprintf("%s/%016x", base, revision)
 }
 
@@ -75,7 +81,7 @@ func (e *RevisionEngine) Put(ctx context.Context, base, typeURL string, revision
 		TypeUrl:  typeURL,
 		Obj:      obj,
 	}
-	if err := e.kv.Put(ctx, revEntryKey(base, target), encodeProto(newObj)); err != nil {
+	if err := e.kv.Put(ctx, e.pathRevision(base, target), encodeProto(newObj)); err != nil {
 		return nil, err
 	}
 	return newObj, nil
@@ -93,7 +99,7 @@ func (e *RevisionEngine) Get(ctx context.Context, base string) (*keyvaluev1.KeyV
 }
 
 func (e *RevisionEngine) GetRevision(ctx context.Context, base string, revision uint64) (*keyvaluev1.KeyValueObject, error) {
-	data, err := e.kv.Get(ctx, revEntryKey(base, revision))
+	data, err := e.kv.Get(ctx, e.pathRevision(base, revision))
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +122,7 @@ func (e *RevisionEngine) Delete(ctx context.Context, base string) error {
 		return nil
 	}
 	tombstone := &keyvaluev1.KeyValueObject{Revision: cur.GetRevision() + 1}
-	return e.kv.Put(ctx, revEntryKey(base, tombstone.GetRevision()), encodeProto(tombstone))
+	return e.kv.Put(ctx, e.pathRevision(base, tombstone.GetRevision()), encodeProto(tombstone))
 }
 
 func (e *RevisionEngine) ListLatest(ctx context.Context, listPrefix string) (map[string]*keyvaluev1.KeyValueObject, error) {
@@ -143,4 +149,62 @@ func (e *RevisionEngine) ListLatest(ctx context.Context, listPrefix string) (map
 		}
 	}
 	return latest, nil
+}
+
+func (e *RevisionEngine) History(ctx context.Context, base string, offset, limit uint64) (*keyvaluev1.GetHistoryResponse, error) {
+	if limit <= 0 {
+		limit = defaultLimit
+	}
+
+	entries, err := e.kv.ListEntries(ctx, base)
+	if err != nil {
+		return nil, err
+	}
+	revisions := []uint64{}
+	for _, entry := range entries {
+		key := entry.Key
+		if idx := strings.LastIndex(key, "/"); idx >= 0 {
+			key = key[idx+1:]
+		}
+		rev, err := strconv.ParseUint(key, 16, 64)
+		if err != nil {
+			panic(err)
+		}
+		revisions = append(revisions, rev)
+	}
+	slices.Sort(revisions)
+
+	n := uint64(len(revisions))
+	empty := &keyvaluev1.GetHistoryResponse{
+		Position: &keyvaluev1.RangeRequest{
+			Offset: offset,
+			Limit:  limit,
+		},
+		Objs: []*keyvaluev1.KeyValueObject{},
+	}
+	if offset >= n {
+		return empty, nil
+	}
+	offsetN := n - offset
+	limitN := uint64(0)
+	if limit != 0 && limit < offsetN {
+		limitN = offsetN - limit
+	}
+	actualRevisions := revisions[limitN:offsetN]
+	objs := make([]*keyvaluev1.KeyValueObject, len(actualRevisions))
+	last := len(actualRevisions) - 1
+	for i, rev := range slices.Backward(actualRevisions) {
+		kvobj, err := e.GetRevision(ctx, base, rev)
+		if err != nil {
+			return nil, err
+		}
+		objs[last-i] = kvobj
+	}
+	return &keyvaluev1.GetHistoryResponse{
+		Objs: objs,
+		Position: &keyvaluev1.RangeRequest{
+			Offset: offset,
+			Limit:  limit,
+		},
+	}, nil
 }
