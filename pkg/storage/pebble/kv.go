@@ -72,7 +72,7 @@ func NewKVBroker(db *pebble.DB) *KVBroker {
 	}
 }
 
-func (k *KVBroker) KeyValue(prefix string) types.KV {
+func (k *KVBroker) KeyValue(prefix string) types.BaseKV {
 	return k.newPrefixedKeyValue(prefix)
 }
 
@@ -223,5 +223,5 @@ func (k *prefixedKV) Delete(ctx context.Context, key string) error {
 	return k.db.Delete(k.key(key), &pebble.WriteOptions{})
 }
 
-var _ types.KV = (*prefixedKV)(nil)
+var _ types.BaseKV = (*prefixedKV)(nil)
 var _ types.KVBroker = (*KVBroker)(nil)

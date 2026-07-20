@@ -107,7 +107,7 @@ func (w *schemaWrapper[T]) Delete(ctx context.Context, key string) error {
 
 func NewProtoKV[T proto.Message](
 	logger *slog.Logger,
-	kv types.KV,
+	kv types.BaseKV,
 ) types.KeyValue[T] {
 	return &protoKeyValue[T]{
 		revisions: schema.NewRevisionEngine(kv),

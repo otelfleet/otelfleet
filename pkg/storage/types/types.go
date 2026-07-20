@@ -7,7 +7,7 @@ type KVEntry struct {
 	Value []byte
 }
 
-type KV interface {
+type BaseKV interface {
 	Put(ctx context.Context, key string, obj []byte) error
 	// Get is an exact-key point lookup.
 	Get(ctx context.Context, key string) ([]byte, error)
@@ -27,7 +27,7 @@ type KV interface {
 }
 
 type KVBroker interface {
-	KeyValue(prefix string) KV
+	KeyValue(prefix string) BaseKV
 }
 
 type KeyValue[T any] interface {

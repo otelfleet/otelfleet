@@ -53,12 +53,12 @@ const (
 
 type StorageSchemaProto struct {
 	baseVersion string
-	underlying  types.KV
+	underlying  types.BaseKV
 	revisions   *RevisionEngine
 }
 
 func NewStorageSchemaProto(
-	kv types.KV,
+	kv types.BaseKV,
 ) *StorageSchemaProto {
 	return &StorageSchemaProto{
 		baseVersion: defaultVersion,

@@ -16,10 +16,10 @@ import (
 )
 
 type RevisionEngine struct {
-	kv types.KV
+	kv types.BaseKV
 }
 
-func NewRevisionEngine(kv types.KV) *RevisionEngine {
+func NewRevisionEngine(kv types.BaseKV) *RevisionEngine {
 	return &RevisionEngine{kv: kv}
 }
 
