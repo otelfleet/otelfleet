@@ -1,7 +1,6 @@
 package storage_test
 
 import (
-	"log/slog"
 	"testing"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
+	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -23,9 +23,11 @@ func TestProtoStorage(t *testing.T) {
 		FS: vfs.NewMem(),
 	})
 	require.NoError(t, err)
+
 	broker := otelpebble.NewKVBroker(db)
-	kv := broker.KeyValue("test")
-	protoKv := storage.NewProtoKV[*bootstrapv1alpha1.BootstrapToken](slog.Default(), kv)
+	kv := broker.KeyValue("")
+	protoSchema := schema.NewStorageSchemaProto(kv)
+	protoKv := storage.NewProtoKVFromSchemaImpl[*bootstrapv1alpha1.BootstrapToken](protoSchema)
 
 	tok := &bootstrapv1alpha1.BootstrapToken{
 		ID:     "b1",

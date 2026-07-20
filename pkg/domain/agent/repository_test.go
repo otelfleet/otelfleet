@@ -13,6 +13,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
+	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -39,13 +40,13 @@ func setupTest(t *testing.T) (agent.Repository, *testStores) {
 	logger := slog.Default()
 
 	stores := &testStores{
-		registry:         storage.NewProtoKV[*agentsv1alpha1.AgentDescription](logger, broker.KeyValue("registry")),
-		attributes:       storage.NewProtoKV[*protobufs.AgentDescription](logger, broker.KeyValue("attributes")),
-		connection:       storage.NewProtoKV[*agentsv1alpha1.AgentConnectionState](logger, broker.KeyValue("connection")),
-		health:           storage.NewProtoKV[*protobufs.ComponentHealth](logger, broker.KeyValue("health")),
-		effective:        storage.NewProtoKV[*protobufs.EffectiveConfig](logger, broker.KeyValue("effective")),
-		remoteStatus:     storage.NewProtoKV[*protobufs.RemoteConfigStatus](logger, broker.KeyValue("remote-status")),
-		configAssignment: storage.NewProtoKV[*configv1alpha1.ConfigAssignment](logger, broker.KeyValue("config-assignment")),
+		registry:         storage.NewProtoKVFromSchemaImpl[*agentsv1alpha1.AgentDescription](schema.NewStorageSchemaProto(broker.KeyValue("registry"))),
+		attributes:       storage.NewProtoKVFromSchemaImpl[*protobufs.AgentDescription](schema.NewStorageSchemaProto(broker.KeyValue("attributes"))),
+		connection:       storage.NewProtoKVFromSchemaImpl[*agentsv1alpha1.AgentConnectionState](schema.NewStorageSchemaProto(broker.KeyValue("connection"))),
+		health:           storage.NewProtoKVFromSchemaImpl[*protobufs.ComponentHealth](schema.NewStorageSchemaProto(broker.KeyValue("health"))),
+		effective:        storage.NewProtoKVFromSchemaImpl[*protobufs.EffectiveConfig](schema.NewStorageSchemaProto(broker.KeyValue("effective"))),
+		remoteStatus:     storage.NewProtoKVFromSchemaImpl[*protobufs.RemoteConfigStatus](schema.NewStorageSchemaProto(broker.KeyValue("remote-status"))),
+		configAssignment: storage.NewProtoKVFromSchemaImpl[*configv1alpha1.ConfigAssignment](schema.NewStorageSchemaProto(broker.KeyValue("config-assignment"))),
 	}
 
 	repo := agent.NewRepository(

@@ -2,8 +2,6 @@ package storage
 
 import (
 	"context"
-	"log/slog"
-	"sort"
 
 	keyvaluev1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
@@ -105,91 +103,18 @@ func (w *schemaWrapper[T]) Delete(ctx context.Context, key string) error {
 	return w.underlying.Delete(ctx, w.typeURL(), key)
 }
 
-func NewProtoKV[T proto.Message](
-	logger *slog.Logger,
-	kv types.BaseKV,
-) types.KeyValue[T] {
-	return &protoKeyValue[T]{
-		revisions: schema.NewRevisionEngine(kv),
-		logger:    logger,
-	}
-}
-
-type protoKeyValue[T proto.Message] struct {
-	logger    *slog.Logger
-	revisions *schema.RevisionEngine
-}
-
-func (kv *protoKeyValue[T]) Put(ctx context.Context, key string, obj T) error {
-	_, err := kv.PutRevision(ctx, key, 0, obj)
-	return err
-}
-
-func (kv *protoKeyValue[T]) PutRevision(ctx context.Context, key string, revision uint64, obj T) (uint64, error) {
-	any, err := anypb.New(obj)
-	if err != nil {
-		return 0, err
-	}
-	stored, err := kv.revisions.Put(ctx, key, any.GetTypeUrl(), revision, any)
-	if err != nil {
-		return 0, err
-	}
-	return stored.GetRevision(), nil
-}
-
-func (kv *protoKeyValue[T]) Get(ctx context.Context, key string) (T, error) {
-	var t T
-	obj, err := kv.revisions.Get(ctx, key)
-	if err != nil {
-		return t, err
-	}
-	return unmarshalTyped[T](obj)
-}
-
-func (kv *protoKeyValue[T]) GetRevision(ctx context.Context, key string, revision uint64) (T, error) {
-	var t T
-	obj, err := kv.revisions.GetRevision(ctx, key, revision)
-	if err != nil {
-		return t, err
-	}
-	t, err = unmarshalTyped[T](obj)
-	return t, err
-}
-
-func (kv *protoKeyValue[T]) ListKeys(ctx context.Context) ([]string, error) {
-	latest, err := kv.revisions.ListLatest(ctx, "")
+func (w *schemaWrapper[T]) History(ctx context.Context, key string, offset uint64, limit uint64) ([]T, error) {
+	resp, err := w.underlying.History(ctx, w.typeURL(), key, offset, limit)
 	if err != nil {
 		return nil, err
 	}
-	keys := make([]string, 0, len(latest))
-	for key := range latest {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	return keys, nil
-}
-
-func (kv *protoKeyValue[T]) List(ctx context.Context) ([]T, error) {
-	latest, err := kv.revisions.ListLatest(ctx, "")
-	if err != nil {
-		return nil, err
-	}
-	keys := make([]string, 0, len(latest))
-	for key := range latest {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	ret := make([]T, 0, len(latest))
-	for _, key := range keys {
-		t, err := unmarshalTyped[T](latest[key])
+	ret := make([]T, len(resp.GetObjs()))
+	for idx, obj := range resp.GetObjs() {
+		t, err := unmarshalTyped[T](obj)
 		if err != nil {
 			return nil, err
 		}
-		ret = append(ret, t)
+		ret[idx] = t
 	}
 	return ret, nil
-}
-
-func (kv *protoKeyValue[T]) Delete(ctx context.Context, key string) error {
-	return kv.revisions.Delete(ctx, key)
 }
