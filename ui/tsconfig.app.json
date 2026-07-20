@@ -15,6 +15,7 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "disableSourceOfProjectReferenceRedirect": true,
 
     /* Linting */
     "strict": true,
@@ -24,5 +25,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/gen"],
+  "references": [{ "path": "./tsconfig.gen.json" }]
 }

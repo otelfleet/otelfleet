@@ -34,6 +34,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
+	"github.com/otelfleet/otelfleet/pkg/services/ui"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/rs/cors"
@@ -77,6 +78,8 @@ const (
 	// entry point for all other services, whether other services
 	// run in-process or not
 	Gateway = "gateway"
+	// UI serves the web UI. Attached to the all-in-one target only.
+	UI = "ui"
 )
 
 type OtelFleet struct {
@@ -296,6 +299,18 @@ func (o *OtelFleet) setupModuleManager() error {
 		return ctrl, nil
 	})
 
+	mm.RegisterModule(UI, func() (services.Service, error) {
+		uiSvc, err := ui.NewUIService(
+			o.logger.With("service", UI),
+			o.cfg.UI,
+		)
+		if err != nil {
+			return nil, err
+		}
+		uiSvc.ConfigureHTTP(o.server.HTTP)
+		return uiSvc, nil
+	})
+
 	mm.RegisterModule(ServerService, func() (services.Service, error) {
 		servicesToWaitFor := func() []services.Service {
 			svs := []services.Service(nil)
@@ -325,7 +340,7 @@ func (o *OtelFleet) setupModuleManager() error {
 	// Add dependencies
 	deps := map[string][]string{
 		All: {
-			Gateway,
+			Gateway, UI,
 		},
 		Gateway: {
 			Bootstrap, OpAmp, AgentManager, DeploymentModule,
@@ -338,6 +353,7 @@ func (o *OtelFleet) setupModuleManager() error {
 		Bootstrap:        {ServerService, Storage},
 		ConfigOTEL:       {ServerService, Storage},
 		DeploymentModule: {ServerService, ConfigOTEL, Storage},
+		UI:               {ServerService},
 	}
 
 	for mod, targets := range deps {

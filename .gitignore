@@ -41,3 +41,6 @@ otelfleet.kv
 .plans
 
 .config*.yaml
+
+/pkg/services/ui/dist/*
+!/pkg/services/ui/dist/.gitkeep

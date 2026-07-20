@@ -1,11 +1,15 @@
 package config
 
-import "errors"
+import (
+	"errors"
+	"net/url"
+)
 
 type Config struct {
 	Services       []string       `yaml:"services"`
 	HttpListenAddr string         `yaml:"http_listen_addr"`
 	StorageConfig  *StorageConfig `yaml:"storage"`
+	UI             *UIConfig      `yaml:"ui,omitempty"`
 }
 
 // Sanitize sets sane required defaults if none are present
@@ -23,6 +27,10 @@ func (c *Config) Sanitize() {
 			},
 		}
 	}
+	if c.UI == nil {
+		c.UI = &UIConfig{}
+	}
+	c.UI.Sanitize()
 }
 
 func (c *Config) Validate() error {
@@ -35,6 +43,35 @@ func (c *Config) Validate() error {
 	}
 	if err := c.StorageConfig.Validate(); err != nil {
 		return err
+	}
+	if c.UI != nil {
+		if err := c.UI.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type UIConfig struct {
+	ApiURL     string `yaml:"api_url,omitempty"`
+	PathPrefix string `yaml:"path_prefix,omitempty"`
+}
+
+func (u *UIConfig) Sanitize() {
+	if u.PathPrefix == "" {
+		u.PathPrefix = "/ui"
+	}
+}
+
+func (u *UIConfig) Validate() error {
+	if u.ApiURL != "" {
+		parsed, err := url.Parse(u.ApiURL)
+		if err != nil {
+			return errors.New("ui upstream is not a valid URL")
+		}
+		if parsed.Scheme == "" || parsed.Host == "" {
+			return errors.New("ui upstream must be an absolute URL (scheme and host)")
+		}
 	}
 	return nil
 }
@@ -77,7 +114,7 @@ func (s *StorageConfigFilesystem) Validate() error {
 
 type StorageConfigClient struct {
 	HttpAddr string `yaml:"http_addr"`
-	// TODO : other grpc stuff
+	// TODO : other client stuff
 }
 
 func (s *StorageConfigClient) Validate() error {

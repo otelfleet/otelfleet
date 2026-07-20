@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, type ReactNode } from 'react';
 import { Box, type BoxProps } from '@mantine/core';
 import { elevationShadows, type ElevationLevel } from '../theme/elevation';
 
@@ -15,6 +15,7 @@ export interface SurfaceProps extends BoxProps {
    * Border radius - defaults to 'md'
    */
   radius?: BoxProps['style'] extends { borderRadius?: infer R } ? R : string | number;
+  children?: ReactNode;
 }
 
 /**
