@@ -33,6 +33,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/deployment"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
+	"github.com/otelfleet/otelfleet/pkg/services/otlp"
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
 	"github.com/otelfleet/otelfleet/pkg/services/ui"
 	"github.com/otelfleet/otelfleet/pkg/storage"
@@ -74,12 +75,14 @@ const (
 	ConfigOTEL       = "config-otel"
 	AgentManager     = "agent-manager"
 	DeploymentModule = "deployment"
-	// Control is the control plane service. This is the public
+	// UI serves the web UI. Attached to the all-in-one target only.
+	UI = "ui"
+	// Embedded OTLP service
+	OTLP = "otlp"
+	// Gatewat acts as the control plane service. This is the public
 	// entry point for all other services, whether other services
 	// run in-process or not
 	Gateway = "gateway"
-	// UI serves the web UI. Attached to the all-in-one target only.
-	UI = "ui"
 )
 
 type OtelFleet struct {
@@ -139,18 +142,30 @@ func New(cfg config.Config) (*OtelFleet, error) {
 		cfg:    cfg,
 	}
 
-	listenHost, listenPort, err := net.SplitHostPort(cfg.HttpListenAddr)
+	httpListenHost, httpListenPort, err := net.SplitHostPort(cfg.HttpListenAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse http_listen_addr : %w", err)
 	}
-	listenPortNum, err := strconv.Atoi(listenPort)
+	httpListenPortNum, err := strconv.Atoi(httpListenPort)
 	if err != nil {
 		return nil, fmt.Errorf("http_listen_addr port is not a number : %w", err)
 	}
 
+	grpcListenHost, grpcListenPort, err := net.SplitHostPort(cfg.GRPCListenAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse grpc_listen_addr : %w", err)
+	}
+
+	grpcListenPortNum, err := strconv.Atoi(grpcListenPort)
+	if err != nil {
+		return nil, fmt.Errorf("grpc_listen_addr port is not a number : %w", err)
+	}
+
 	conf := server.Config{
-		HTTPListenAddress:             listenHost,
-		HTTPListenPort:                listenPortNum,
+		HTTPListenAddress:             httpListenHost,
+		HTTPListenPort:                httpListenPortNum,
+		GRPCListenAddress:             grpcListenHost,
+		GRPCListenPort:                grpcListenPortNum,
 		DoNotAddDefaultHTTPMiddleware: true,
 		LogFormat:                     dslog.LogfmtFormat,
 		LogLevel: dslog.Level{
@@ -264,6 +279,8 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("service", OpAmp),
 			o.agentRepo,
 			o.assignmentConfigStore,
+			o.server.HTTPListenAddr().String(),
+			o.cfg.OTLP,
 		)
 		o.opampServer = srv
 		// Wire up the config change notifier so ConfigServer can push configs to agents
@@ -311,6 +328,13 @@ func (o *OtelFleet) setupModuleManager() error {
 		return uiSvc, nil
 	})
 
+	mm.RegisterModule(OTLP, func() (services.Service, error) {
+		otlpSvc := otlp.NewServer(o.logger.With("service", "otlp"), o.cfg.OTLP)
+		otlpSvc.ConfigureGRPC(o.server.GRPC)
+		otlpSvc.ConfigureHTTP(o.server.HTTP)
+		return otlpSvc, nil
+	})
+
 	mm.RegisterModule(ServerService, func() (services.Service, error) {
 		servicesToWaitFor := func() []services.Service {
 			svs := []services.Service(nil)
@@ -343,7 +367,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			Gateway, UI,
 		},
 		Gateway: {
-			Bootstrap, OpAmp, AgentManager, DeploymentModule,
+			Bootstrap, OpAmp, AgentManager, DeploymentModule, OTLP,
 		},
 		ServerService: {},
 
@@ -354,6 +378,7 @@ func (o *OtelFleet) setupModuleManager() error {
 		ConfigOTEL:       {ServerService, Storage},
 		DeploymentModule: {ServerService, ConfigOTEL, Storage},
 		UI:               {ServerService},
+		OTLP:             {ServerService},
 	}
 
 	for mod, targets := range deps {

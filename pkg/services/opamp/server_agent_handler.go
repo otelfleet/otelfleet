@@ -6,11 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/url"
+	"path"
 	"time"
 
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/open-telemetry/opamp-go/server/types"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/config"
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
 	services_int "github.com/otelfleet/otelfleet/pkg/services"
@@ -23,17 +26,18 @@ import (
 var _ services_int.OpAmpServerHandler = (*ServerAgentHandler)(nil)
 
 type ServerAgentHandler struct {
-	ctx context.Context
+	ctx            context.Context
+	logger         *slog.Logger
+	otlpServerAddr string
+	otlpConfig     *config.OTLPConfig
+
 	// serverAssignedConnID is a temporary ID
 	// assigned by the server to identify the agent
 	// before we know how to track its instance_uid
 	serverAssignedConnID string
 
-	logger *slog.Logger
-
 	// Repository for agent data access
 	agentRepo agentdomain.Repository
-
 	// Config store for OpAMP-specific config logic
 	assignedConfigStore stypes.KeyValue[*configv1alpha1.Config]
 
@@ -48,6 +52,9 @@ func NewServerAgentHandler(
 	agentRepo agentdomain.Repository,
 	assignedConfigStore stypes.KeyValue[*configv1alpha1.Config],
 	logger *slog.Logger,
+	// FIXME: simple example to pass connection settings
+	otlpServerAddr string,
+	otlpConfig *config.OTLPConfig,
 ) *ServerAgentHandler {
 	return &ServerAgentHandler{
 		ctx:                  ctx,
@@ -56,6 +63,8 @@ func NewServerAgentHandler(
 		agentRepo:            agentRepo,
 		instanceUID:          nil,
 		assignedConfigStore:  assignedConfigStore,
+		otlpServerAddr:       otlpServerAddr,
+		otlpConfig:           otlpConfig,
 	}
 }
 
@@ -76,10 +85,10 @@ func (s *ServerAgentHandler) OnConnected(ctx context.Context, conn types.Connect
 // For plain HTTP requests once OnMessage returns and the response is sent
 // to the Agent the OnConnectionClose message will be called immediately.
 func (s *ServerAgentHandler) OnMessage(ctx context.Context, conn types.Connection, message *protobufs.AgentToServer) *protobufs.ServerToAgent {
-
 	instanceUID := fmt.Sprintf("%x", message.InstanceUid)
 	logger := s.logger.With("instance-uid", instanceUID)
 	logger.With("sequenceNum", message.SequenceNum).Debug("received message from agent")
+	ctx = logutil.WithContext(ctx, logger)
 
 	// bootstrap
 	if s.instanceUID == nil {
@@ -92,39 +101,104 @@ func (s *ServerAgentHandler) OnMessage(ctx context.Context, conn types.Connectio
 	}
 	// Update connection state and check for sequence gaps
 	needsFullState := s.updateConnectionState(ctx, *s.agentID, message)
-	if message.RemoteConfigStatus != nil {
-		if err := s.handleRemoteConfigStatus(ctx, conn, *s.agentID, message.RemoteConfigStatus); err != nil {
-			logger.With("err", err).Error("failed to handle remote config status message")
-		}
+
+	if err := s.persistAgentInformation(ctx, conn, message); err != nil {
+		return ErrorResponse(message.InstanceUid, NewUnavailableError(err.Error()))
 	}
 
-	if message.AgentDescription != nil {
-		logger.Info("persisting agent description")
-		if err := s.agentRepo.UpdateAttributes(ctx, *s.agentID, message.AgentDescription); err != nil {
-			logger.With("err", err).Error("failed to persist opamp agent-description")
-			return ErrorResponse(message.InstanceUid, NewUnavailableError("failed to persist agent description"))
-		}
+	// TODO : set these conditionally
+	connSettings, err := s.buildTelemetryOptions(ctx, conn, message)
+	if err != nil {
+		return ErrorResponse(message.InstanceUid, NewUnavailableError(err.Error()))
 	}
-	if message.Health != nil {
-		logger.Info("persisting agent health")
-		if err := s.agentRepo.UpdateHealth(ctx, *s.agentID, message.Health); err != nil {
-			logger.With("err", err).Error("failed to persist health")
-			return ErrorResponse(message.InstanceUid, NewUnavailableError("failed to persist agent health"))
-		}
-	}
+	resp.ConnectionSettings = connSettings
 
-	if message.EffectiveConfig != nil {
-		logger.Info("persisting effective config")
-		if err := s.agentRepo.UpdateEffectiveConfig(ctx, *s.agentID, message.EffectiveConfig); err != nil {
-			logger.With("err", err).Error("failed to persist effective config")
-			return ErrorResponse(message.InstanceUid, NewUnavailableError("failed to persist effective config"))
-		}
-	}
 	if needsFullState {
 		resp.Flags = uint64(protobufs.ServerToAgentFlags_ServerToAgentFlags_ReportFullState)
 		logger.Info("requesting full state report due to sequence gap")
 	}
 	return resp
+}
+
+func (s *ServerAgentHandler) persistAgentInformation(ctx context.Context, conn types.Connection, msg *protobufs.AgentToServer) error {
+	logger := logutil.FromContext(ctx)
+	errs := []error{}
+	if msg.RemoteConfigStatus != nil {
+		if err := s.handleRemoteConfigStatus(ctx, conn, *s.agentID, msg.RemoteConfigStatus); err != nil {
+			logger.With("err", err).Error("failed to handle remote config status message")
+			// ignore status update from returned errors
+		}
+	}
+
+	if msg.AgentDescription != nil {
+		logger.Info("persisting agent description")
+		if err := s.agentRepo.UpdateAttributes(ctx, *s.agentID, msg.AgentDescription); err != nil {
+			logger.With("err", err).Error("failed to persist opamp agent-description")
+			errs = append(errs, err)
+		}
+	}
+	if msg.Health != nil {
+		logger.Info("persisting agent health")
+		if err := s.agentRepo.UpdateHealth(ctx, *s.agentID, msg.Health); err != nil {
+			logger.With("err", err).Error("failed to persist health")
+			errs = append(errs, err)
+		}
+	}
+
+	if msg.EffectiveConfig != nil {
+		logger.Info("persisting effective config")
+		if err := s.agentRepo.UpdateEffectiveConfig(ctx, *s.agentID, msg.EffectiveConfig); err != nil {
+			logger.With("err", err).Error("failed to persist effective config")
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+func (s *ServerAgentHandler) buildTelemetryOptions(ctx context.Context, _ types.Connection, message *protobufs.AgentToServer) (*protobufs.ConnectionSettingsOffers, error) {
+	logger := logutil.FromContext(ctx)
+	resp := &protobufs.ConnectionSettingsOffers{}
+	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnLogs) != 0 {
+		logsAddr := &url.URL{
+			Scheme: "http",
+			Host:   s.otlpServerAddr,
+			Path:   path.Join(s.otlpConfig.BasePath, s.otlpConfig.LogsAPIPath),
+		}
+		logger.With("supplied-addr", logsAddr.String()).Debug("agent supports reporting own logs")
+		resp.OwnLogs = &protobufs.TelemetryConnectionSettings{
+			DestinationEndpoint: logsAddr.String(),
+		}
+	}
+	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnMetrics) != 0 {
+		metricsAddr := &url.URL{
+			Scheme: "http",
+			Host:   s.otlpServerAddr,
+			Path:   path.Join(s.otlpConfig.BasePath, s.otlpConfig.MetricsAPIPath),
+		}
+		logger.With("supplied-addr", metricsAddr.String()).Debug("agent supports reporting own metrics")
+		resp.OwnMetrics = &protobufs.TelemetryConnectionSettings{
+			DestinationEndpoint: metricsAddr.String(),
+		}
+	}
+	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnTraces) != 0 {
+		traceAddr := &url.URL{
+			Scheme: "http",
+			Host:   s.otlpServerAddr,
+			Path:   path.Join(s.otlpConfig.BasePath, s.otlpConfig.TraceAPIPath),
+		}
+		logger.With("supplied-addr", traceAddr.String()).Debug("agent supports reporting own tracess")
+		resp.OwnTraces = &protobufs.TelemetryConnectionSettings{
+			DestinationEndpoint: traceAddr.String(),
+		}
+	}
+
+	hash, err := util.ProtoHash(resp)
+	if err != nil {
+		return nil, err
+	}
+	resp.Hash = hash
+	return resp, nil
 }
 
 func (s *ServerAgentHandler) bootstrap(

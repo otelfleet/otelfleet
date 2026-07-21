@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/open-telemetry/opamp-go/protobufs"
+	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 )
 
 // Common domain errors.
@@ -20,6 +21,7 @@ type Repository interface {
 	Get(ctx context.Context, agentID string) (*Agent, error)
 	List(ctx context.Context) ([]*Agent, error)
 	Exists(ctx context.Context, agentID string) (bool, error)
+	History(ctx context.Context, agentID string, offset, limit uint64) ([]*v1alpha1.EffectiveConfig, error)
 
 	// Registration operations
 	Register(ctx context.Context, id, friendlyName string) error

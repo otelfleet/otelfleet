@@ -1,0 +1,29 @@
+/* Elevation surface backgrounds, consumed by the component overrides in
+ * elevation.ts. Defined on :root so portaled content (dropdowns, modals)
+ * resolves them too.
+ *
+ * Dark mode is a navy scale: light comes from above, so each step toward the
+ * viewer catches more of it and lifts in luminance. Steps are ~4-6% lightness
+ * apart — enough to read as separate planes, small enough that they still feel
+ * like one material.
+ *
+ * Light mode inverts the logic. Raising a surface can't make it brighter than
+ * white, so depth is carried by the *recessed* background being grey while
+ * surfaces sit at white, with shadow doing the rest of the work. This is why
+ * raised and overlay share white: they separate by shadow, not by fill.
+ */
+
+:root,
+[data-mantine-color-scheme='dark'] {
+  --elevation-base-bg: #0f1626;
+  --elevation-surface-bg: #172033;
+  --elevation-raised-bg: #1f2a41;
+  --elevation-overlay-bg: #28344f;
+}
+
+[data-mantine-color-scheme='light'] {
+  --elevation-base-bg: #eef0f3;
+  --elevation-surface-bg: #f8f9fa;
+  --elevation-raised-bg: #ffffff;
+  --elevation-overlay-bg: #ffffff;
+}

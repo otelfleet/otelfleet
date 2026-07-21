@@ -9,7 +9,7 @@ GOLDFLAGS = -X github.com/otelfleet/otelfleet/pkg/version.Version=${VERSION} \
 
 UI_DIST := pkg/services/ui/dist
 
-build: ui-build build-go
+build: build-ui build-go
 
 build-ui:
 	cd ui && npm ci && npm run build

@@ -35,9 +35,15 @@ export function Editor({ defaultConfig, configId, readOnly = false, height }: Ed
     }
 
     const handleEditorMount: OnMount = (editor) => {
-        requestAnimationFrame(() => {
+        const node = editor.getContainerDomNode();
+        const observer = new ResizeObserver(() => {
+            const { width, height } = node.getBoundingClientRect();
+            if (width === 0 || height === 0) return;
             editor.layout();
+            editor.setScrollTop(0);
+            observer.disconnect();
         });
+        observer.observe(node);
     }
 
     const form = useForm({
@@ -83,14 +89,14 @@ export function Editor({ defaultConfig, configId, readOnly = false, height }: Ed
     const showEditor = viewMode === 'editor' || viewMode === 'split';
     const showGraph = viewMode === 'graph' || viewMode === 'split';
 
-    const containerHeight = height ?? (readOnly ? 400 : "calc(100vh - 92px)");
-
     return (
         <Box
             style={{
                 display: "flex",
                 flexDirection: "column",
-                height: containerHeight,
+                flex: 1,
+                height: height ?? "100%",
+                minHeight: 0,
                 gap: 16,
             }}
         >
@@ -163,6 +169,7 @@ export function Editor({ defaultConfig, configId, readOnly = false, height }: Ed
                                 readOnly: readOnly,
                                 quickSuggestions: readOnly ? false : { other: true, strings: true },
                                 automaticLayout: true,
+                                scrollBeyondLastLine: false,
                                 minimap: { enabled: false },
                                 scrollbar: { verticalScrollbarSize: 8, horizontal: "hidden" },
                                 padding: { top: 5 },

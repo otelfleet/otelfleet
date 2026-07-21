@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback } from "react";
+import { useEffect, useMemo, useCallback, useRef } from "react";
 import type { Node } from "reactflow"
 import ReactFlow, {
     ReactFlowProvider,
@@ -83,7 +83,26 @@ function PipelineGraphInner({ value }: PipelineGraphProps) {
         reactFlowInstance.fitView({ padding: 0.2 });
     }, [reactFlowInstance]);
 
+    const containerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        let frame = 0;
+        const observer = new ResizeObserver(() => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => {
+                reactFlowInstance.fitView({ padding: 0.2 });
+            });
+        });
+        observer.observe(el);
+        return () => {
+            cancelAnimationFrame(frame);
+            observer.disconnect();
+        };
+    }, [reactFlowInstance]);
+
     return (
+        <div ref={containerRef} style={{ width: "100%", height: "100%", minHeight: 0 }}>
         <ReactFlow
             nodes={jsonData ? nodes : EmptyStateNodeData}
             edges={edges}
@@ -114,5 +133,6 @@ function PipelineGraphInner({ value }: PipelineGraphProps) {
                 color="#4d4f66"
             />
         </ReactFlow>
+        </div>
     );
 }

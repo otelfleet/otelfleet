@@ -22,9 +22,9 @@ export type ElevationLevel = 'base' | 'surface' | 'raised' | 'overlay';
  */
 export const elevationShadows = {
   base: 'none',
-  surface: '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)',
-  raised: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)',
-  overlay: '0 12px 28px rgba(0, 0, 0, 0.2), 0 4px 10px rgba(0, 0, 0, 0.12)',
+  surface: '0 1px 2px rgba(8, 13, 26, 0.16), 0 2px 6px rgba(8, 13, 26, 0.12)',
+  raised: '0 2px 4px rgba(8, 13, 26, 0.22), 0 6px 16px rgba(8, 13, 26, 0.18)',
+  overlay: '0 6px 12px rgba(8, 13, 26, 0.3), 0 16px 40px rgba(8, 13, 26, 0.26)',
 } as const;
 
 /**
@@ -33,10 +33,10 @@ export const elevationShadows = {
  * Index 0 is lightest, index 9 is darkest
  */
 export const darkSurfaceShades = {
-  base: 8,      // Darkest - deep background
-  surface: 7,   // Card/panel level
-  raised: 6,    // Popover/dropdown level
-  overlay: 5,   // Modal/dialog level (lightest)
+  base: 7,      // Darkest - deep background
+  surface: 6,   // Card/panel level
+  raised: 5,    // Popover/dropdown level
+  overlay: 4,   // Modal/dialog level (lightest)
 } as const;
 
 /**
@@ -121,6 +121,16 @@ export const elevationStylesOverrides = {
   },
   // Menus/Dropdowns are raised level
   Menu: {
+    dropdown: {
+      backgroundColor: 'var(--elevation-raised-bg)',
+      boxShadow: elevationShadows.raised,
+      border: '1px solid var(--mantine-color-default-border)',
+      backdropFilter: 'none',
+    },
+  },
+  // Select/MultiSelect/Autocomplete dropdowns render through Combobox, which is
+  // not a Popover as far as Mantine's styles API is concerned.
+  Combobox: {
     dropdown: {
       backgroundColor: 'var(--elevation-raised-bg)',
       boxShadow: elevationShadows.raised,

@@ -5,6 +5,7 @@ import { AgentService } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import type {
     AgentDescription,
     AgentStatus,
+    EffectiveConfig,
 } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import { ConfigService } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
 import type {
@@ -26,19 +27,30 @@ import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { AlertCircle } from 'react-feather';
 import { CheckCircledIcon } from '@radix-ui/react-icons';
-import { AgentDetailView } from '../components/agents/agentDetail';
+import { AgentDetailView, isAgentTab, type AgentTab } from '../components/agents/agentDetail';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 
 interface AgentDetailPageProps {
     agentId: string;
 }
 
 export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
+    const navigate = useNavigate();
+    const hash = useLocation({ select: (location) => location.hash });
+    const tab: AgentTab = isAgentTab(hash) ? hash : 'health';
+
+    const handleTabChange = useCallback((next: AgentTab) => {
+        navigate({ to: '.', hash: next, replace: true });
+    }, [navigate]);
+
     const agentClient = useClient(AgentService);
     const configClient = useClient(ConfigService);
     const [agent, setAgent] = useState<AgentDescription | null>(null);
     const [status, setStatus] = useState<AgentStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [history, setHistory] = useState<EffectiveConfig[]>([]);
+    const [historyLoading, setHistoryLoading] = useState(true);
 
     // Config assignment state
     const [configAssignment, setConfigAssignment] = useState<GetAgentConfigResponse | null>(null);
@@ -57,6 +69,19 @@ export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
             setConfigAssignment(null);
         }
     }, [agentId, configClient]);
+
+    const fetchHistory = useCallback(async () => {
+        setHistoryLoading(true);
+        try {
+            const response = await agentClient.agentHistory({ agentId, offset: 0n, limit: 50n });
+            setHistory(response.effectiveConfig);
+        } catch (err) {
+            notifyGRPCError('Failed to load agent history', err);
+            setHistory([]);
+        } finally {
+            setHistoryLoading(false);
+        }
+    }, [agentId, agentClient]);
 
     const fetchAvailableConfigs = useCallback(async () => {
         try {
@@ -134,7 +159,8 @@ export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
 
         fetchAgentData();
         fetchConfigAssignment();
-    }, [agentId, agentClient, fetchConfigAssignment]);
+        fetchHistory();
+    }, [agentId, agentClient, fetchConfigAssignment, fetchHistory]);
 
     useEffect(() => {
         if (assignModalOpened) {
@@ -166,6 +192,10 @@ export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
                 assignment={configAssignment}
                 onAssign={openAssignModal}
                 onUnassign={openUnassignModal}
+                history={history}
+                historyLoading={historyLoading}
+                tab={tab}
+                onTabChange={handleTabChange}
             />
 
             {/* Assign Config Modal */}

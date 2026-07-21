@@ -29,6 +29,11 @@ func RegisterAgentServiceHandler(mux *mux.Router, svc AgentServiceHandler, opts 
 		svc.GetAgent,
 		opts...,
 	))
+	mux.Handle("/config.v1alpha1.AgentService/AgentHistory", connect.NewUnaryHandler(
+		"/config.v1alpha1.AgentService/AgentHistory",
+		svc.AgentHistory,
+		opts...,
+	))
 	mux.Handle("/config.v1alpha1.AgentService/Status", connect.NewUnaryHandler(
 		"/config.v1alpha1.AgentService/Status",
 		svc.Status,

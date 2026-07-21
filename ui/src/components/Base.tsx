@@ -50,17 +50,20 @@ const theme = createTheme({
             '#424e88',
             '#364379',
         ],
+        // Navy ramp shared with the elevation scale in theme/elevation.css:
+        // 0-3 are text/border tints, 4-8 are the elevation surfaces, 9 is the
+        // deepest well. Keep 5-8 in sync with the --elevation-* variables.
         dark: [
-            '#d5d7e0',
-            '#acaebf',
-            '#8c8fa3',
-            '#666980',
-            '#4d4f66',
-            '#34354a',
-            '#2b2c3d',
-            '#1d1e30',
-            '#0c0d21',
-            '#01010a',
+            '#d3d8e3',
+            '#a7b0c4',
+            '#8189a0',
+            '#5d6580',
+            '#28344f',
+            '#1f2a41',
+            '#172033',
+            '#0f1626',
+            '#0a1020',
+            '#050912',
         ],
     },
     shadows: {
@@ -93,6 +96,9 @@ const theme = createTheme({
         },
         Menu: {
             styles: elevationStylesOverrides.Menu,
+        },
+        Combobox: {
+            styles: elevationStylesOverrides.Combobox,
         },
         Popover: {
             styles: elevationStylesOverrides.Popover,
@@ -180,9 +186,7 @@ const Base: FC = () => {
                             active={active === 'tokens'}
                             onClick={() => setActive(active === 'tokens' ? null : 'tokens')}
                         >
-                            <Link to="/tokens" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All tokens" />
-                            </Link>
+                            <NavLink component={Link} to="/tokens" label="All tokens" />
                         </NavLink>
 
                         <NavLink
@@ -192,9 +196,7 @@ const Base: FC = () => {
                             active={active === 'configs'}
                             onClick={() => setActive(active === 'configs' ? null : 'configs')}
                         >
-                            <Link to="/configs" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All configs" />
-                            </Link>
+                            <NavLink component={Link} to="/configs" label="All configs" />
                         </NavLink>
 
                         <NavLink
@@ -204,9 +206,7 @@ const Base: FC = () => {
                             active={active === 'agents'}
                             onClick={() => setActive(active === 'agents' ? null : 'agents')}
                         >
-                            <Link to="/agents" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All agents" />
-                            </Link>
+                            <NavLink component={Link} to="/agents" label="All agents" />
                         </NavLink>
 
                         <NavLink
@@ -216,13 +216,11 @@ const Base: FC = () => {
                             active={active === 'assignments'}
                             onClick={() => setActive(active === 'assignments' ? null : 'assignments')}
                         >
-                            <Link to="/assignments" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All assignments" />
-                            </Link>
+                            <NavLink component={Link} to="/assignments" label="All assignments" />
                         </NavLink>
                     </Stack>
                 </AppShell.Navbar>
-                <AppShell.Main>
+                <AppShell.Main style={{ display: 'flex', flexDirection: 'column', height: '100dvh', minHeight: 0, overflow: 'auto' }}>
                     <Outlet></Outlet>
                 </AppShell.Main>
             </AppShell>

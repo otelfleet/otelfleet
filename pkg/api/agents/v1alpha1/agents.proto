@@ -7,10 +7,22 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1";
 
 service AgentService {
+  // TODO : these APIs need to be refined
   rpc ListAgents(ListAgentsRequest) returns (ListAgentsResponse);
   rpc GetAgent(GetAgentRequest) returns (GetAgentResponse);
+  rpc AgentHistory(GetAgentHistoryRequest) returns (GetAgentHistoryResponse);
   rpc Status(GetAgentStatusRequest) returns (GetAgentStatusResponse);
   rpc DeleteAgent(DeleteAgentRequest) returns (google.protobuf.Empty);
+}
+
+message GetAgentHistoryRequest {
+  string agent_id = 1;
+  uint64 offset = 2;
+  uint64 limit = 3;
+}
+
+message GetAgentHistoryResponse {
+  repeated EffectiveConfig effective_config     = 1;
 }
 
 message ListAgentsRequest {

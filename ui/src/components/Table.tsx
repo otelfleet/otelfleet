@@ -32,6 +32,13 @@ interface DynamicTableProps<T> {
   onSelectionChange?: (selectedKeys: Set<string | number>) => void;
 }
 
+const stickyHeaderCell: React.CSSProperties = {
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
+  background: 'var(--mantine-color-body)',
+};
+
 export const Table = <T extends object>({
   data,
   columns,
@@ -95,14 +102,18 @@ export const Table = <T extends object>({
   };
 
   return (
-    <Paper shadow="sm" radius="md">
+    <Paper
+      shadow="sm"
+      radius="md"
+      style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+    >
       <Group
         px="sm"
         py="xs"
         justify="space-between"
-        style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
+        style={{ borderBottom: '1px solid var(--mantine-color-default-border)', flexShrink: 0 }}
       >
-        <Menu shadow="md" width={200}>
+        <Menu shadow="md" width={200} position="bottom-start">
           <Menu.Target>
             <ActionIcon variant="subtle">
               <MenuIcon></MenuIcon>
@@ -132,11 +143,12 @@ export const Table = <T extends object>({
         <Box style={{ width: 28 }} />
       </Group>
 
+      <Box style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
       <MantineTable striped highlightOnHover ta="center">
         <thead>
           <tr>
             {selectable && (
-              <th style={{ width: 40 }}>
+              <th style={{ ...stickyHeaderCell, width: 40 }}>
                 <Checkbox
                   checked={allSelected}
                   indeterminate={someSelected && !allSelected}
@@ -145,7 +157,7 @@ export const Table = <T extends object>({
               </th>
             )}
             {activeColumns.map((col) => (
-              <th key={String(col.key)}>
+              <th key={String(col.key)} style={stickyHeaderCell}>
                 <Text fw={600}>{col.label}</Text>
               </th>
             ))}
@@ -190,6 +202,7 @@ export const Table = <T extends object>({
           })}
         </tbody>
       </MantineTable>
+      </Box>
     </Paper>
   );
 };
