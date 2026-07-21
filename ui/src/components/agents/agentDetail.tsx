@@ -427,7 +427,7 @@ function ComponentRow({ name, component, depth, hasChildren }: {
     depth: number;
     hasChildren: boolean;
 }) {
-    const [expanded, setExpanded] = useState(true);
+    const [expanded, setExpanded] = useState(depth > 0);
 
     return (
         <>
