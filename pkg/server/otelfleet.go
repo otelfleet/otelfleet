@@ -34,6 +34,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	"github.com/otelfleet/otelfleet/pkg/services/otlp"
+	"github.com/otelfleet/otelfleet/pkg/services/resource"
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
 	"github.com/otelfleet/otelfleet/pkg/services/ui"
 	"github.com/otelfleet/otelfleet/pkg/storage"
@@ -79,6 +80,8 @@ const (
 	UI = "ui"
 	// Embedded OTLP service
 	OTLP = "otlp"
+	// Resource server is the API over the first class resources in the data layer.
+	Resource = "resource"
 	// Gatewat acts as the control plane service. This is the public
 	// entry point for all other services, whether other services
 	// run in-process or not
@@ -335,6 +338,12 @@ func (o *OtelFleet) setupModuleManager() error {
 		return otlpSvc, nil
 	})
 
+	mm.RegisterModule(Resource, func() (services.Service, error) {
+		resourceSvc := resource.NewServer(o.logger.With("service", "resource-server"), o.store.Schema())
+		resourceSvc.ConfigureHTTP(o.server.HTTP)
+		return resourceSvc, nil
+	})
+
 	mm.RegisterModule(ServerService, func() (services.Service, error) {
 		servicesToWaitFor := func() []services.Service {
 			svs := []services.Service(nil)
@@ -367,7 +376,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			Gateway, UI,
 		},
 		Gateway: {
-			Bootstrap, OpAmp, AgentManager, DeploymentModule, OTLP,
+			Bootstrap, OpAmp, AgentManager, DeploymentModule, OTLP, Resource,
 		},
 		ServerService: {},
 
@@ -377,6 +386,7 @@ func (o *OtelFleet) setupModuleManager() error {
 		Bootstrap:        {ServerService, Storage},
 		ConfigOTEL:       {ServerService, Storage},
 		DeploymentModule: {ServerService, ConfigOTEL, Storage},
+		Resource:         {ServerService, Storage},
 		UI:               {ServerService},
 		OTLP:             {ServerService},
 	}
