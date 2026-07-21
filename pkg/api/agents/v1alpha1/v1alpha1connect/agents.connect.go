@@ -38,6 +38,9 @@ const (
 	AgentServiceListAgentsProcedure = "/config.v1alpha1.AgentService/ListAgents"
 	// AgentServiceGetAgentProcedure is the fully-qualified name of the AgentService's GetAgent RPC.
 	AgentServiceGetAgentProcedure = "/config.v1alpha1.AgentService/GetAgent"
+	// AgentServiceAgentHistoryProcedure is the fully-qualified name of the AgentService's AgentHistory
+	// RPC.
+	AgentServiceAgentHistoryProcedure = "/config.v1alpha1.AgentService/AgentHistory"
 	// AgentServiceStatusProcedure is the fully-qualified name of the AgentService's Status RPC.
 	AgentServiceStatusProcedure = "/config.v1alpha1.AgentService/Status"
 	// AgentServiceDeleteAgentProcedure is the fully-qualified name of the AgentService's DeleteAgent
@@ -47,8 +50,10 @@ const (
 
 // AgentServiceClient is a client for the config.v1alpha1.AgentService service.
 type AgentServiceClient interface {
+	// TODO : these APIs need to be refined
 	ListAgents(context.Context, *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsResponse], error)
 	GetAgent(context.Context, *connect.Request[v1alpha1.GetAgentRequest]) (*connect.Response[v1alpha1.GetAgentResponse], error)
+	AgentHistory(context.Context, *connect.Request[v1alpha1.GetAgentHistoryRequest]) (*connect.Response[v1alpha1.GetAgentHistoryResponse], error)
 	Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.GetAgentStatusResponse], error)
 	DeleteAgent(context.Context, *connect.Request[v1alpha1.DeleteAgentRequest]) (*connect.Response[emptypb.Empty], error)
 }
@@ -76,6 +81,12 @@ func NewAgentServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(agentServiceMethods.ByName("GetAgent")),
 			connect.WithClientOptions(opts...),
 		),
+		agentHistory: connect.NewClient[v1alpha1.GetAgentHistoryRequest, v1alpha1.GetAgentHistoryResponse](
+			httpClient,
+			baseURL+AgentServiceAgentHistoryProcedure,
+			connect.WithSchema(agentServiceMethods.ByName("AgentHistory")),
+			connect.WithClientOptions(opts...),
+		),
 		status: connect.NewClient[v1alpha1.GetAgentStatusRequest, v1alpha1.GetAgentStatusResponse](
 			httpClient,
 			baseURL+AgentServiceStatusProcedure,
@@ -93,10 +104,11 @@ func NewAgentServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 
 // agentServiceClient implements AgentServiceClient.
 type agentServiceClient struct {
-	listAgents  *connect.Client[v1alpha1.ListAgentsRequest, v1alpha1.ListAgentsResponse]
-	getAgent    *connect.Client[v1alpha1.GetAgentRequest, v1alpha1.GetAgentResponse]
-	status      *connect.Client[v1alpha1.GetAgentStatusRequest, v1alpha1.GetAgentStatusResponse]
-	deleteAgent *connect.Client[v1alpha1.DeleteAgentRequest, emptypb.Empty]
+	listAgents   *connect.Client[v1alpha1.ListAgentsRequest, v1alpha1.ListAgentsResponse]
+	getAgent     *connect.Client[v1alpha1.GetAgentRequest, v1alpha1.GetAgentResponse]
+	agentHistory *connect.Client[v1alpha1.GetAgentHistoryRequest, v1alpha1.GetAgentHistoryResponse]
+	status       *connect.Client[v1alpha1.GetAgentStatusRequest, v1alpha1.GetAgentStatusResponse]
+	deleteAgent  *connect.Client[v1alpha1.DeleteAgentRequest, emptypb.Empty]
 }
 
 // ListAgents calls config.v1alpha1.AgentService.ListAgents.
@@ -107,6 +119,11 @@ func (c *agentServiceClient) ListAgents(ctx context.Context, req *connect.Reques
 // GetAgent calls config.v1alpha1.AgentService.GetAgent.
 func (c *agentServiceClient) GetAgent(ctx context.Context, req *connect.Request[v1alpha1.GetAgentRequest]) (*connect.Response[v1alpha1.GetAgentResponse], error) {
 	return c.getAgent.CallUnary(ctx, req)
+}
+
+// AgentHistory calls config.v1alpha1.AgentService.AgentHistory.
+func (c *agentServiceClient) AgentHistory(ctx context.Context, req *connect.Request[v1alpha1.GetAgentHistoryRequest]) (*connect.Response[v1alpha1.GetAgentHistoryResponse], error) {
+	return c.agentHistory.CallUnary(ctx, req)
 }
 
 // Status calls config.v1alpha1.AgentService.Status.
@@ -121,8 +138,10 @@ func (c *agentServiceClient) DeleteAgent(ctx context.Context, req *connect.Reque
 
 // AgentServiceHandler is an implementation of the config.v1alpha1.AgentService service.
 type AgentServiceHandler interface {
+	// TODO : these APIs need to be refined
 	ListAgents(context.Context, *connect.Request[v1alpha1.ListAgentsRequest]) (*connect.Response[v1alpha1.ListAgentsResponse], error)
 	GetAgent(context.Context, *connect.Request[v1alpha1.GetAgentRequest]) (*connect.Response[v1alpha1.GetAgentResponse], error)
+	AgentHistory(context.Context, *connect.Request[v1alpha1.GetAgentHistoryRequest]) (*connect.Response[v1alpha1.GetAgentHistoryResponse], error)
 	Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.GetAgentStatusResponse], error)
 	DeleteAgent(context.Context, *connect.Request[v1alpha1.DeleteAgentRequest]) (*connect.Response[emptypb.Empty], error)
 }
@@ -146,6 +165,12 @@ func NewAgentServiceHandler(svc AgentServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(agentServiceMethods.ByName("GetAgent")),
 		connect.WithHandlerOptions(opts...),
 	)
+	agentServiceAgentHistoryHandler := connect.NewUnaryHandler(
+		AgentServiceAgentHistoryProcedure,
+		svc.AgentHistory,
+		connect.WithSchema(agentServiceMethods.ByName("AgentHistory")),
+		connect.WithHandlerOptions(opts...),
+	)
 	agentServiceStatusHandler := connect.NewUnaryHandler(
 		AgentServiceStatusProcedure,
 		svc.Status,
@@ -164,6 +189,8 @@ func NewAgentServiceHandler(svc AgentServiceHandler, opts ...connect.HandlerOpti
 			agentServiceListAgentsHandler.ServeHTTP(w, r)
 		case AgentServiceGetAgentProcedure:
 			agentServiceGetAgentHandler.ServeHTTP(w, r)
+		case AgentServiceAgentHistoryProcedure:
+			agentServiceAgentHistoryHandler.ServeHTTP(w, r)
 		case AgentServiceStatusProcedure:
 			agentServiceStatusHandler.ServeHTTP(w, r)
 		case AgentServiceDeleteAgentProcedure:
@@ -183,6 +210,10 @@ func (UnimplementedAgentServiceHandler) ListAgents(context.Context, *connect.Req
 
 func (UnimplementedAgentServiceHandler) GetAgent(context.Context, *connect.Request[v1alpha1.GetAgentRequest]) (*connect.Response[v1alpha1.GetAgentResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.AgentService.GetAgent is not implemented"))
+}
+
+func (UnimplementedAgentServiceHandler) AgentHistory(context.Context, *connect.Request[v1alpha1.GetAgentHistoryRequest]) (*connect.Response[v1alpha1.GetAgentHistoryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.v1alpha1.AgentService.AgentHistory is not implemented"))
 }
 
 func (UnimplementedAgentServiceHandler) Status(context.Context, *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.GetAgentStatusResponse], error) {

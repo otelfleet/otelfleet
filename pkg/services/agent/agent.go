@@ -133,6 +133,20 @@ func (a *AgentServer) DeleteAgent(ctx context.Context, req *connect.Request[v1al
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
+func (a *AgentServer) AgentHistory(ctx context.Context, req *connect.Request[v1alpha1.GetAgentHistoryRequest]) (*connect.Response[v1alpha1.GetAgentHistoryResponse], error) {
+	agentID := req.Msg.GetAgentId()
+	offset, limit := req.Msg.GetOffset(), req.Msg.GetLimit()
+
+	a.logger.With("agent_id", agentID).Debug("requesting agent history")
+	configs, err := a.repository.History(ctx, agentID, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&v1alpha1.GetAgentHistoryResponse{
+		EffectiveConfig: configs,
+	}), nil
+}
+
 // toAPIAgentDescription converts a domain Agent to the v1alpha1.AgentDescription proto type.
 // This maintains backward compatibility with the existing API.
 func toAPIAgentDescription(agent *agentdomain.Agent) *v1alpha1.AgentDescription {

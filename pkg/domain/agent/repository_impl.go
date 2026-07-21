@@ -259,3 +259,16 @@ func (r *repository) Delete(ctx context.Context, agentID string) error {
 	r.logger.With("agent_id", agentID).Info("agent deleted successfully")
 	return nil
 }
+
+func (r *repository) History(ctx context.Context, agentID string, offset, limit uint64) ([]*v1alpha1.EffectiveConfig, error) {
+	resp, err := r.effectiveStore.History(ctx, agentID, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	ret := make([]*v1alpha1.EffectiveConfig, len(resp))
+	for idx, cfg := range resp {
+		ret[idx] = convertToAPIEffectiveConfig(ConvertEffectiveConfig(cfg))
+	}
+
+	return ret, nil
+}
