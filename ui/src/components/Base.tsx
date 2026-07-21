@@ -180,9 +180,7 @@ const Base: FC = () => {
                             active={active === 'tokens'}
                             onClick={() => setActive(active === 'tokens' ? null : 'tokens')}
                         >
-                            <Link to="/tokens" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All tokens" />
-                            </Link>
+                            <NavLink component={Link} to="/tokens" label="All tokens" />
                         </NavLink>
 
                         <NavLink
@@ -192,9 +190,7 @@ const Base: FC = () => {
                             active={active === 'configs'}
                             onClick={() => setActive(active === 'configs' ? null : 'configs')}
                         >
-                            <Link to="/configs" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All configs" />
-                            </Link>
+                            <NavLink component={Link} to="/configs" label="All configs" />
                         </NavLink>
 
                         <NavLink
@@ -204,9 +200,7 @@ const Base: FC = () => {
                             active={active === 'agents'}
                             onClick={() => setActive(active === 'agents' ? null : 'agents')}
                         >
-                            <Link to="/agents" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All agents" />
-                            </Link>
+                            <NavLink component={Link} to="/agents" label="All agents" />
                         </NavLink>
 
                         <NavLink
@@ -216,9 +210,7 @@ const Base: FC = () => {
                             active={active === 'assignments'}
                             onClick={() => setActive(active === 'assignments' ? null : 'assignments')}
                         >
-                            <Link to="/assignments" style={{ all: 'unset', display: 'inline-block', cursor: 'pointer' }}>
-                                <NavLink label="All assignments" />
-                            </Link>
+                            <NavLink component={Link} to="/assignments" label="All assignments" />
                         </NavLink>
                     </Stack>
                 </AppShell.Navbar>
