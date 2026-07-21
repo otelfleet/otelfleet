@@ -16,6 +16,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -80,10 +81,11 @@ func (e *RevisionEngine) Put(ctx context.Context, base, typeURL string, revision
 	}
 
 	newObj := &keyvaluev1.KeyValueObject{
-		Revision: target,
-		Hash:     hash,
-		TypeUrl:  typeURL,
-		Obj:      obj,
+		Revision:   target,
+		Hash:       hash,
+		TypeUrl:    typeURL,
+		Obj:        obj,
+		ModifiedAt: timestamppb.Now(),
 	}
 	if err := e.kv.Put(ctx, e.pathRevision(base, target), encodeProto(newObj)); err != nil {
 		return nil, err

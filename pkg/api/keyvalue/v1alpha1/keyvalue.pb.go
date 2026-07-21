@@ -10,6 +10,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -200,7 +201,8 @@ type KeyValueObject struct {
 	Hash     []byte                 `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
 	TypeUrl  string                 `protobuf:"bytes,3,opt,name=type_url,json=typeUrl,proto3" json:"type_url,omitempty"`
 	// unset for a tombstone (deleted) revision
-	Obj           *anypb.Any `protobuf:"bytes,4,opt,name=obj,proto3" json:"obj,omitempty"`
+	Obj           *anypb.Any             `protobuf:"bytes,4,opt,name=obj,proto3" json:"obj,omitempty"`
+	ModifiedAt    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=modified_at,json=modifiedAt,proto3" json:"modified_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -259,6 +261,13 @@ func (x *KeyValueObject) GetTypeUrl() string {
 func (x *KeyValueObject) GetObj() *anypb.Any {
 	if x != nil {
 		return x.Obj
+	}
+	return nil
+}
+
+func (x *KeyValueObject) GetModifiedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ModifiedAt
 	}
 	return nil
 }
@@ -765,7 +774,7 @@ var File_pkg_api_keyvalue_v1alpha1_keyvalue_proto protoreflect.FileDescriptor
 
 const file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDesc = "" +
 	"\n" +
-	"(pkg/api/keyvalue/v1alpha1/keyvalue.proto\x12\x11keyvalue.v1alpha1\x1a\x19google/protobuf/any.proto\"w\n" +
+	"(pkg/api/keyvalue/v1alpha1/keyvalue.proto\x12\x11keyvalue.v1alpha1\x1a\x19google/protobuf/any.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"w\n" +
 	"\x11GetHistoryRequest\x12\x19\n" +
 	"\btype_url\x18\x01 \x01(\tR\atypeUrl\x12\x10\n" +
 	"\x03key\x18\x02 \x01(\tR\x03key\x125\n" +
@@ -776,12 +785,14 @@ const file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDesc = "" +
 	"\x12GetHistoryResponse\x12\x19\n" +
 	"\btype_url\x18\x01 \x01(\tR\atypeUrl\x125\n" +
 	"\x04objs\x18\x02 \x03(\v2!.keyvalue.v1alpha1.KeyValueObjectR\x04objs\x12;\n" +
-	"\bposition\x18\x03 \x01(\v2\x1f.keyvalue.v1alpha1.RangeRequestR\bposition\"\x83\x01\n" +
+	"\bposition\x18\x03 \x01(\v2\x1f.keyvalue.v1alpha1.RangeRequestR\bposition\"\xc0\x01\n" +
 	"\x0eKeyValueObject\x12\x1a\n" +
 	"\brevision\x18\x01 \x01(\x04R\brevision\x12\x12\n" +
 	"\x04hash\x18\x02 \x01(\fR\x04hash\x12\x19\n" +
 	"\btype_url\x18\x03 \x01(\tR\atypeUrl\x12&\n" +
-	"\x03obj\x18\x04 \x01(\v2\x14.google.protobuf.AnyR\x03obj\"\x7f\n" +
+	"\x03obj\x18\x04 \x01(\v2\x14.google.protobuf.AnyR\x03obj\x12;\n" +
+	"\vmodified_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"modifiedAt\"\x7f\n" +
 	"\n" +
 	"PutRequest\x12\x19\n" +
 	"\btype_url\x18\x01 \x01(\tR\atypeUrl\x12\x10\n" +
@@ -833,48 +844,50 @@ func file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP() []byte {
 
 var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_goTypes = []any{
-	(*GetHistoryRequest)(nil),  // 0: keyvalue.v1alpha1.GetHistoryRequest
-	(*RangeRequest)(nil),       // 1: keyvalue.v1alpha1.RangeRequest
-	(*GetHistoryResponse)(nil), // 2: keyvalue.v1alpha1.GetHistoryResponse
-	(*KeyValueObject)(nil),     // 3: keyvalue.v1alpha1.KeyValueObject
-	(*PutRequest)(nil),         // 4: keyvalue.v1alpha1.PutRequest
-	(*PutResponse)(nil),        // 5: keyvalue.v1alpha1.PutResponse
-	(*GetRequest)(nil),         // 6: keyvalue.v1alpha1.GetRequest
-	(*GetResponse)(nil),        // 7: keyvalue.v1alpha1.GetResponse
-	(*ListRequest)(nil),        // 8: keyvalue.v1alpha1.ListRequest
-	(*ListResponse)(nil),       // 9: keyvalue.v1alpha1.ListResponse
-	(*ListKeysRequest)(nil),    // 10: keyvalue.v1alpha1.ListKeysRequest
-	(*ListKeysResponse)(nil),   // 11: keyvalue.v1alpha1.ListKeysResponse
-	(*DeleteRequest)(nil),      // 12: keyvalue.v1alpha1.DeleteRequest
-	(*DeleteResponse)(nil),     // 13: keyvalue.v1alpha1.DeleteResponse
-	(*anypb.Any)(nil),          // 14: google.protobuf.Any
+	(*GetHistoryRequest)(nil),     // 0: keyvalue.v1alpha1.GetHistoryRequest
+	(*RangeRequest)(nil),          // 1: keyvalue.v1alpha1.RangeRequest
+	(*GetHistoryResponse)(nil),    // 2: keyvalue.v1alpha1.GetHistoryResponse
+	(*KeyValueObject)(nil),        // 3: keyvalue.v1alpha1.KeyValueObject
+	(*PutRequest)(nil),            // 4: keyvalue.v1alpha1.PutRequest
+	(*PutResponse)(nil),           // 5: keyvalue.v1alpha1.PutResponse
+	(*GetRequest)(nil),            // 6: keyvalue.v1alpha1.GetRequest
+	(*GetResponse)(nil),           // 7: keyvalue.v1alpha1.GetResponse
+	(*ListRequest)(nil),           // 8: keyvalue.v1alpha1.ListRequest
+	(*ListResponse)(nil),          // 9: keyvalue.v1alpha1.ListResponse
+	(*ListKeysRequest)(nil),       // 10: keyvalue.v1alpha1.ListKeysRequest
+	(*ListKeysResponse)(nil),      // 11: keyvalue.v1alpha1.ListKeysResponse
+	(*DeleteRequest)(nil),         // 12: keyvalue.v1alpha1.DeleteRequest
+	(*DeleteResponse)(nil),        // 13: keyvalue.v1alpha1.DeleteResponse
+	(*anypb.Any)(nil),             // 14: google.protobuf.Any
+	(*timestamppb.Timestamp)(nil), // 15: google.protobuf.Timestamp
 }
 var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_depIdxs = []int32{
 	1,  // 0: keyvalue.v1alpha1.GetHistoryRequest.query:type_name -> keyvalue.v1alpha1.RangeRequest
 	3,  // 1: keyvalue.v1alpha1.GetHistoryResponse.objs:type_name -> keyvalue.v1alpha1.KeyValueObject
 	1,  // 2: keyvalue.v1alpha1.GetHistoryResponse.position:type_name -> keyvalue.v1alpha1.RangeRequest
 	14, // 3: keyvalue.v1alpha1.KeyValueObject.obj:type_name -> google.protobuf.Any
-	14, // 4: keyvalue.v1alpha1.PutRequest.data:type_name -> google.protobuf.Any
-	3,  // 5: keyvalue.v1alpha1.PutResponse.object:type_name -> keyvalue.v1alpha1.KeyValueObject
-	3,  // 6: keyvalue.v1alpha1.GetResponse.object:type_name -> keyvalue.v1alpha1.KeyValueObject
-	3,  // 7: keyvalue.v1alpha1.ListResponse.objects:type_name -> keyvalue.v1alpha1.KeyValueObject
-	6,  // 8: keyvalue.v1alpha1.KeyValueService.Get:input_type -> keyvalue.v1alpha1.GetRequest
-	4,  // 9: keyvalue.v1alpha1.KeyValueService.Put:input_type -> keyvalue.v1alpha1.PutRequest
-	10, // 10: keyvalue.v1alpha1.KeyValueService.ListKeys:input_type -> keyvalue.v1alpha1.ListKeysRequest
-	8,  // 11: keyvalue.v1alpha1.KeyValueService.List:input_type -> keyvalue.v1alpha1.ListRequest
-	12, // 12: keyvalue.v1alpha1.KeyValueService.Delete:input_type -> keyvalue.v1alpha1.DeleteRequest
-	0,  // 13: keyvalue.v1alpha1.KeyValueService.History:input_type -> keyvalue.v1alpha1.GetHistoryRequest
-	7,  // 14: keyvalue.v1alpha1.KeyValueService.Get:output_type -> keyvalue.v1alpha1.GetResponse
-	5,  // 15: keyvalue.v1alpha1.KeyValueService.Put:output_type -> keyvalue.v1alpha1.PutResponse
-	11, // 16: keyvalue.v1alpha1.KeyValueService.ListKeys:output_type -> keyvalue.v1alpha1.ListKeysResponse
-	9,  // 17: keyvalue.v1alpha1.KeyValueService.List:output_type -> keyvalue.v1alpha1.ListResponse
-	13, // 18: keyvalue.v1alpha1.KeyValueService.Delete:output_type -> keyvalue.v1alpha1.DeleteResponse
-	2,  // 19: keyvalue.v1alpha1.KeyValueService.History:output_type -> keyvalue.v1alpha1.GetHistoryResponse
-	14, // [14:20] is the sub-list for method output_type
-	8,  // [8:14] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	15, // 4: keyvalue.v1alpha1.KeyValueObject.modified_at:type_name -> google.protobuf.Timestamp
+	14, // 5: keyvalue.v1alpha1.PutRequest.data:type_name -> google.protobuf.Any
+	3,  // 6: keyvalue.v1alpha1.PutResponse.object:type_name -> keyvalue.v1alpha1.KeyValueObject
+	3,  // 7: keyvalue.v1alpha1.GetResponse.object:type_name -> keyvalue.v1alpha1.KeyValueObject
+	3,  // 8: keyvalue.v1alpha1.ListResponse.objects:type_name -> keyvalue.v1alpha1.KeyValueObject
+	6,  // 9: keyvalue.v1alpha1.KeyValueService.Get:input_type -> keyvalue.v1alpha1.GetRequest
+	4,  // 10: keyvalue.v1alpha1.KeyValueService.Put:input_type -> keyvalue.v1alpha1.PutRequest
+	10, // 11: keyvalue.v1alpha1.KeyValueService.ListKeys:input_type -> keyvalue.v1alpha1.ListKeysRequest
+	8,  // 12: keyvalue.v1alpha1.KeyValueService.List:input_type -> keyvalue.v1alpha1.ListRequest
+	12, // 13: keyvalue.v1alpha1.KeyValueService.Delete:input_type -> keyvalue.v1alpha1.DeleteRequest
+	0,  // 14: keyvalue.v1alpha1.KeyValueService.History:input_type -> keyvalue.v1alpha1.GetHistoryRequest
+	7,  // 15: keyvalue.v1alpha1.KeyValueService.Get:output_type -> keyvalue.v1alpha1.GetResponse
+	5,  // 16: keyvalue.v1alpha1.KeyValueService.Put:output_type -> keyvalue.v1alpha1.PutResponse
+	11, // 17: keyvalue.v1alpha1.KeyValueService.ListKeys:output_type -> keyvalue.v1alpha1.ListKeysResponse
+	9,  // 18: keyvalue.v1alpha1.KeyValueService.List:output_type -> keyvalue.v1alpha1.ListResponse
+	13, // 19: keyvalue.v1alpha1.KeyValueService.Delete:output_type -> keyvalue.v1alpha1.DeleteResponse
+	2,  // 20: keyvalue.v1alpha1.KeyValueService.History:output_type -> keyvalue.v1alpha1.GetHistoryResponse
+	15, // [15:21] is the sub-list for method output_type
+	9,  // [9:15] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_init() }
