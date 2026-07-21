@@ -9,6 +9,7 @@ import type {
     ComponentHealth,
     KeyValue,
     AnyValue,
+    EffectiveConfig,
 } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import { ConfigSource } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
 import type { GetAgentConfigResponse } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
@@ -24,6 +25,10 @@ import {
     Table,
     Alert,
     Box,
+    Center,
+    Loader,
+    NavLink,
+    ScrollArea,
 } from '@mantine/core';
 import { Editor } from '../Editor';
 
@@ -39,15 +44,19 @@ export function AgentDetailView({
     assignment,
     onAssign,
     onUnassign,
+    history = [],
+    historyLoading = false,
 }: {
     agent: AgentDescription | null;
     status: AgentStatus | null;
     assignment: GetAgentConfigResponse | null;
     onAssign: () => void;
     onUnassign: () => void;
+    history?: EffectiveConfig[];
+    historyLoading?: boolean;
 }) {
     return (
-        <Stack gap="md" style={{ height: '100%' }}>
+        <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
             <AgentHeader agent={agent} status={status} />
             <ConfigAssignmentSection
                 assignment={assignment}
@@ -59,6 +68,7 @@ export function AgentDetailView({
                     <Tabs.Tab value="health">Health</Tabs.Tab>
                     <Tabs.Tab value="details">Details</Tabs.Tab>
                     <Tabs.Tab value="config">Effective Config</Tabs.Tab>
+                    <Tabs.Tab value="history">History</Tabs.Tab>
                 </Tabs.List>
 
                 <Tabs.Panel value="health" pt="md" style={{ flex: 1 }}>
@@ -69,8 +79,12 @@ export function AgentDetailView({
                     <DetailsTab agent={agent} />
                 </Tabs.Panel>
 
-                <Tabs.Panel value="config" pt="md" style={{ flex: 1, minHeight: 400 }}>
+                <Tabs.Panel value="config" pt="md" style={{ flex: 1, minHeight: 0, display: 'flex' }}>
                     <EffectiveConfigTab status={status} />
+                </Tabs.Panel>
+
+                <Tabs.Panel value="history" pt="md" style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+                    <HistoryTab history={history} loading={historyLoading} />
                 </Tabs.Panel>
             </Tabs>
         </Stack>
@@ -457,6 +471,107 @@ function ComponentRow({ name, component, depth, hasChildren }: {
     );
 }
 
+/**
+ * The "History" tab: the agent's past effective configurations, keyed by
+ * revision. Selecting a revision opens its effective config in the pane on the
+ * right.
+ *
+ * The API returns history newest-first and carries no revision numbers, so they
+ * are derived from position: the last entry is revision 0, the first is the
+ * newest.
+ */
+export function HistoryTab({
+    history,
+    loading = false,
+}: {
+    history: EffectiveConfig[];
+    loading?: boolean;
+}) {
+    // `null` keeps the newest entry selected as history grows, until the user picks one.
+    const [selected, setSelected] = useState<number | null>(null);
+
+    if (loading) {
+        return (
+            <Center style={{ flex: 1 }}>
+                <Loader size="lg" />
+            </Center>
+        );
+    }
+
+    if (history.length === 0) {
+        return (
+            <Alert color="gray" title="No History">
+                No configuration history recorded for this agent.
+            </Alert>
+        );
+    }
+
+    const index = selected !== null && selected < history.length ? selected : 0;
+    const revisionOf = (position: number) => history.length - 1 - position;
+
+    return (
+        <Group align="stretch" gap="md" wrap="nowrap" style={{ flex: 1, minHeight: 0 }}>
+            <Paper withBorder style={{ width: 260, flexShrink: 0, display: 'flex' }}>
+                <ScrollArea style={{ flex: 1 }}>
+                    <Stack gap={0} p="xs">
+                        {history.map((entry, position) => (
+                            <NavLink
+                                key={position}
+                                active={position === index}
+                                onClick={() => setSelected(position)}
+                                label={`Revision ${revisionOf(position)}`}
+                                description={describeRevision(entry)}
+                            />
+                        ))}
+                    </Stack>
+                </ScrollArea>
+            </Paper>
+            <Box style={{ flex: 1, minWidth: 0, display: 'flex' }}>
+                <RevisionConfig revision={revisionOf(index)} config={history[index]} />
+            </Box>
+        </Group>
+    );
+}
+
+function describeRevision(config: EffectiveConfig): string {
+    const names = Object.keys(config.configMap?.configMap ?? {});
+    if (names.length === 0) return 'No config files';
+    if (names.length === 1) return names[0];
+    return `${names.length} config files`;
+}
+
+function RevisionConfig({ revision, config }: { revision: number; config: EffectiveConfig }) {
+    const configMap = config.configMap?.configMap;
+
+    if (!configMap || Object.keys(configMap).length === 0) {
+        return (
+            <Alert color="gray" title={`Revision ${revision}`}>
+                This revision has no configuration files.
+            </Alert>
+        );
+    }
+
+    const [configName, configFile] = Object.entries(configMap)[0];
+    const configContent = configFile?.body
+        ? new TextDecoder().decode(configFile.body)
+        : '';
+
+    return (
+        <Paper p="md" withBorder style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <Group justify="space-between" mb="md">
+                <Title order={4}>Revision {revision}</Title>
+                <Text size="sm" c="dimmed">{configName}</Text>
+            </Group>
+            <Editor
+                key={revision}
+                defaultConfig={configContent}
+                readOnly
+                height="100%"
+            />
+        </Paper>
+    );
+}
+
 export function EffectiveConfigTab({ status }: { status: AgentStatus | null }) {
     const configMap = status?.effectiveConfig?.configMap?.configMap;
 
@@ -475,7 +590,7 @@ export function EffectiveConfigTab({ status }: { status: AgentStatus | null }) {
         : '';
 
     return (
-        <Paper p="md" withBorder style={{ display: 'flex', flexDirection: 'column' }}>
+        <Paper p="md" withBorder style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <Group justify="space-between" mb="md">
                 <Title order={4}>Effective Configuration</Title>
                 <Text size="sm" c="dimmed">{configName}</Text>
@@ -483,7 +598,7 @@ export function EffectiveConfigTab({ status }: { status: AgentStatus | null }) {
             <Editor
                 defaultConfig={configContent}
                 readOnly
-                height={500}
+                height="100%"
             />
         </Paper>
     );

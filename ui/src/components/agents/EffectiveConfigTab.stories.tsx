@@ -15,6 +15,13 @@ const meta = {
     parameters: {
         layout: 'fullscreen',
     },
+    decorators: [
+        (Story) => (
+            <div style={{ height: '95vh', padding: 16, display: 'flex', boxSizing: 'border-box' }}>
+                <Story />
+            </div>
+        ),
+    ],
 } satisfies Meta<typeof EffectiveConfigTab>;
 
 export default meta;

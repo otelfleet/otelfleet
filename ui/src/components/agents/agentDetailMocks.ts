@@ -6,11 +6,13 @@ import {
     AgentStatusSchema,
     AgentState,
     ConfigSyncStatus,
+    EffectiveConfigSchema,
 } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import type {
     AgentDescription,
     AgentStatus,
     ComponentHealth,
+    EffectiveConfig,
 } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import {
     GetAgentConfigResponseSchema,
@@ -150,3 +152,28 @@ service:
       processors: [batch]
       exporters: [otlphttp]
 `;
+
+export function mockEffectiveConfig(files: { [name: string]: string }): EffectiveConfig {
+    return create(EffectiveConfigSchema, {
+        configMap: {
+            configMap: Object.fromEntries(
+                Object.entries(files).map(([name, body]) => [
+                    name,
+                    { body: new TextEncoder().encode(body), contentType: 'text/yaml' },
+                ]),
+            ),
+        },
+    });
+}
+
+/** Config history, newest-first as the API returns it, each revision swapping the exporter endpoint. */
+export function mockHistory(count = 4): EffectiveConfig[] {
+    return Array.from({ length: count }, (_, position) => count - 1 - position).map((revision) =>
+        mockEffectiveConfig({
+            'collector.yaml': SAMPLE_EFFECTIVE_CONFIG.replace(
+                'https://otel-collector.example.com',
+                `https://otel-collector-v${revision}.example.com`,
+            ),
+        }),
+    );
+}
