@@ -20,6 +20,7 @@ import (
 	agentsv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/config"
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/bootstrap"
@@ -198,6 +199,9 @@ func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
 		logger.With("service", "opamp"),
 		e.AgentRepo,
 		e.AssignedConfigStore,
+		//FIXME:
+		"",
+		&config.OTLPConfig{},
 	)
 
 	// AgentServer - uses repository for agent data access

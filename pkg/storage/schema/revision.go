@@ -12,6 +12,7 @@ import (
 	"github.com/cespare/xxhash/v2"
 	keyvaluev1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage/types"
+	"github.com/otelfleet/otelfleet/pkg/util"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -70,7 +71,10 @@ func (e *RevisionEngine) Put(ctx context.Context, base, typeURL string, revision
 	}
 
 	// TODO : I don't think this should be included in the engine.
-	hash := contentHash(encodeProto(obj))
+	hash, err := util.ProtoHash(obj)
+	if err != nil {
+		return nil, err
+	}
 	if cur != nil && cur.GetObj() != nil && bytes.Equal(cur.GetHash(), hash) {
 		return cur, nil
 	}

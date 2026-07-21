@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/open-telemetry/opamp-go/protobufs"
+	"github.com/otelfleet/otelfleet/pkg/config"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/supervisor"
 	"github.com/otelfleet/otelfleet/pkg/util/testutil"
@@ -41,6 +42,8 @@ func newTestHandler(env *testutil.TestEnv) *opamp.ServerAgentHandler {
 		env.AgentRepo,
 		env.AssignedConfigStore,
 		env.Logger,
+		"",
+		&config.OTLPConfig{},
 	)
 }
 

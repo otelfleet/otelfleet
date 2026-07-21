@@ -2,20 +2,28 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
+	stdpath "path"
+	"strings"
 )
 
 type Config struct {
 	Services       []string       `yaml:"services"`
 	HttpListenAddr string         `yaml:"http_listen_addr"`
+	GRPCListenAddr string         `yaml:"grpc_listen_addr"`
 	StorageConfig  *StorageConfig `yaml:"storage"`
 	UI             *UIConfig      `yaml:"ui,omitempty"`
+	OTLP           *OTLPConfig    `yaml:"otlp,omitempty"`
 }
 
 // Sanitize sets sane required defaults if none are present
 func (c *Config) Sanitize() {
 	if c.HttpListenAddr == "" {
 		c.HttpListenAddr = "127.0.0.1:16587"
+	}
+	if c.GRPCListenAddr == "" {
+		c.GRPCListenAddr = "127.0.0.1:16586"
 	}
 	if len(c.Services) == 0 {
 		c.Services = []string{"all"}
@@ -30,12 +38,21 @@ func (c *Config) Sanitize() {
 	if c.UI == nil {
 		c.UI = &UIConfig{}
 	}
+	if c.OTLP == nil {
+		c.OTLP = &OTLPConfig{}
+	}
+
 	c.UI.Sanitize()
+	c.OTLP.Sanitize()
 }
 
 func (c *Config) Validate() error {
 	if c.HttpListenAddr == "" {
 		return errors.New("http listen address must be set")
+	}
+
+	if c.GRPCListenAddr == "" {
+		return errors.New("grpc listen addr must be set")
 	}
 
 	if c.StorageConfig == nil {
@@ -120,6 +137,74 @@ type StorageConfigClient struct {
 func (s *StorageConfigClient) Validate() error {
 	if s.HttpAddr == "" {
 		return errors.New("http address must be set")
+	}
+	return nil
+}
+
+type OTLPConfig struct {
+	BasePath       string `yaml:"base_path"`
+	MetricsAPIPath string `yaml:"metrics_api_path"`
+	LogsAPIPath    string `yaml:"logs_api_path"`
+	TraceAPIPath   string `yaml:"trace_api_path"`
+}
+
+func (c *OTLPConfig) Sanitize() {
+	if c.BasePath == "" {
+		c.BasePath = "/otlp"
+	}
+	if c.MetricsAPIPath == "" {
+		c.MetricsAPIPath = "/v1/metrics"
+	}
+	if c.LogsAPIPath == "" {
+		c.LogsAPIPath = "/v1/logs"
+	}
+	if c.TraceAPIPath == "" {
+		c.TraceAPIPath = "/v1/trace"
+	}
+}
+
+func (c *OTLPConfig) Validate() error {
+	if err := validateAPIPath(c.BasePath); err != nil {
+		return fmt.Errorf("base api path : %w", err)
+	}
+	if err := validateAPIPath(c.MetricsAPIPath); err != nil {
+		return fmt.Errorf("metrics api path: %w", err)
+	}
+	if err := validateAPIPath(c.LogsAPIPath); err != nil {
+		return fmt.Errorf("logs api path: %w", err)
+	}
+	if err := validateAPIPath(c.TraceAPIPath); err != nil {
+		return fmt.Errorf("trace api path: %w", err)
+	}
+	if c.MetricsAPIPath == c.LogsAPIPath ||
+		c.MetricsAPIPath == c.TraceAPIPath ||
+		c.LogsAPIPath == c.TraceAPIPath {
+		return errors.New("otlp api paths must be distinct")
+	}
+	return nil
+}
+
+func validateAPIPath(path string) error {
+	if !strings.HasPrefix(path, "/") {
+		return errors.New("must start with '/'")
+	}
+	if strings.ContainsAny(path, "?#") {
+		return errors.New("must not contain a query or fragment")
+	}
+	if strings.ContainsFunc(path, func(r rune) bool {
+		return r <= ' ' || r == 0x7f
+	}) {
+		return errors.New("must not contain whitespace or control characters")
+	}
+	unescaped, err := url.PathUnescape(path)
+	if err != nil {
+		return errors.New("contains an invalid percent-encoded sequence")
+	}
+	if unescaped != path {
+		return errors.New("must not be percent-encoded")
+	}
+	if cleaned := stdpath.Clean(path); cleaned != path {
+		return fmt.Errorf("must be a clean path (did you mean %q?)", cleaned)
 	}
 	return nil
 }

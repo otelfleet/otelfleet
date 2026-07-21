@@ -2,11 +2,19 @@ package util
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"slices"
 
+	"github.com/cespare/xxhash/v2"
 	"github.com/open-telemetry/opamp-go/protobufs"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 )
+
+func XXHash(data []byte) []byte {
+	h := make([]byte, 8)
+	binary.BigEndian.PutUint64(h, xxhash.Sum64(data))
+	return h
+}
 
 // ConfigToAgentConfigMap converts a Config proto to an AgentConfigMap.
 // This ensures consistent structure when creating configs for agents,
