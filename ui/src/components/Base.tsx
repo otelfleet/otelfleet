@@ -222,7 +222,7 @@ const Base: FC = () => {
                         </NavLink>
                     </Stack>
                 </AppShell.Navbar>
-                <AppShell.Main style={{ display: 'flex', flexDirection: 'column' }}>
+                <AppShell.Main style={{ display: 'flex', flexDirection: 'column', height: '100dvh', minHeight: 0, overflow: 'auto' }}>
                     <Outlet></Outlet>
                 </AppShell.Main>
             </AppShell>

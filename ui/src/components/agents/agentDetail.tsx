@@ -63,7 +63,7 @@ export function AgentDetailView({
                 onAssign={onAssign}
                 onUnassign={onUnassign}
             />
-            <Tabs defaultValue="health" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Tabs defaultValue="health" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <Tabs.List>
                     <Tabs.Tab value="health">Health</Tabs.Tab>
                     <Tabs.Tab value="details">Details</Tabs.Tab>
@@ -71,11 +71,11 @@ export function AgentDetailView({
                     <Tabs.Tab value="history">History</Tabs.Tab>
                 </Tabs.List>
 
-                <Tabs.Panel value="health" pt="md" style={{ flex: 1 }}>
+                <Tabs.Panel value="health" pt="md" style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
                     <HealthTab health={status?.health} />
                 </Tabs.Panel>
 
-                <Tabs.Panel value="details" pt="md" style={{ flex: 1 }}>
+                <Tabs.Panel value="details" pt="md" style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
                     <DetailsTab agent={agent} />
                 </Tabs.Panel>
 

@@ -247,7 +247,7 @@ export function ListAssignmentsPage() {
     ];
 
     return (
-        <Stack gap="md">
+        <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
             {/* Label-based assignment section */}
             <LabelSelector onAssignmentComplete={fetchAssignments} />
 

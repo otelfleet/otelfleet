@@ -272,8 +272,8 @@ export const TokenPage = () => {
   }, [handleListTokens])
 
   return (
-    <Box>
-      <Box style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+    <Box style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <Box style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
         <Button onClick={handleOpenCreateModal}>
           Create Token
         </Button>

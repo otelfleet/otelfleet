@@ -83,14 +83,14 @@ export function Editor({ defaultConfig, configId, readOnly = false, height }: Ed
     const showEditor = viewMode === 'editor' || viewMode === 'split';
     const showGraph = viewMode === 'graph' || viewMode === 'split';
 
-    const containerHeight = height ?? (readOnly ? 400 : "calc(100vh - 92px)");
-
     return (
         <Box
             style={{
                 display: "flex",
                 flexDirection: "column",
-                height: containerHeight,
+                flex: 1,
+                height: height ?? "100%",
+                minHeight: 0,
                 gap: 16,
             }}
         >
