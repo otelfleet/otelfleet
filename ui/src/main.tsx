@@ -5,6 +5,7 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 // All packages except `@mantine/hooks` require styles imports
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
+import './theme/elevation.css';
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'

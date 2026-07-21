@@ -113,7 +113,7 @@ export const Table = <T extends object>({
         justify="space-between"
         style={{ borderBottom: '1px solid var(--mantine-color-default-border)', flexShrink: 0 }}
       >
-        <Menu shadow="md" width={200}>
+        <Menu shadow="md" width={200} position="bottom-start">
           <Menu.Target>
             <ActionIcon variant="subtle">
               <MenuIcon></MenuIcon>

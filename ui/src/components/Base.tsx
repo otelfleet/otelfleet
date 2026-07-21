@@ -50,17 +50,20 @@ const theme = createTheme({
             '#424e88',
             '#364379',
         ],
+        // Navy ramp shared with the elevation scale in theme/elevation.css:
+        // 0-3 are text/border tints, 4-8 are the elevation surfaces, 9 is the
+        // deepest well. Keep 5-8 in sync with the --elevation-* variables.
         dark: [
-            '#d5d7e0',
-            '#acaebf',
-            '#8c8fa3',
-            '#666980',
-            '#4d4f66',
-            '#34354a',
-            '#2b2c3d',
-            '#1d1e30',
-            '#0c0d21',
-            '#01010a',
+            '#d3d8e3',
+            '#a7b0c4',
+            '#8189a0',
+            '#5d6580',
+            '#28344f',
+            '#1f2a41',
+            '#172033',
+            '#0f1626',
+            '#0a1020',
+            '#050912',
         ],
     },
     shadows: {
@@ -93,6 +96,9 @@ const theme = createTheme({
         },
         Menu: {
             styles: elevationStylesOverrides.Menu,
+        },
+        Combobox: {
+            styles: elevationStylesOverrides.Combobox,
         },
         Popover: {
             styles: elevationStylesOverrides.Popover,
