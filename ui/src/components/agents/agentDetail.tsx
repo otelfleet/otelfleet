@@ -38,6 +38,14 @@ import { Editor } from '../Editor';
  * page container ([AgentDetailPage]) handles data fetching and the
  * assign/unassign modals.
  */
+export const AGENT_TABS = ['health', 'details', 'config', 'history'] as const;
+
+export type AgentTab = (typeof AGENT_TABS)[number];
+
+export function isAgentTab(value: string | null | undefined): value is AgentTab {
+    return AGENT_TABS.includes(value as AgentTab);
+}
+
 export function AgentDetailView({
     agent,
     status,
@@ -46,6 +54,8 @@ export function AgentDetailView({
     onUnassign,
     history = [],
     historyLoading = false,
+    tab,
+    onTabChange,
 }: {
     agent: AgentDescription | null;
     status: AgentStatus | null;
@@ -54,6 +64,8 @@ export function AgentDetailView({
     onUnassign: () => void;
     history?: EffectiveConfig[];
     historyLoading?: boolean;
+    tab?: AgentTab;
+    onTabChange?: (tab: AgentTab) => void;
 }) {
     return (
         <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
@@ -63,7 +75,11 @@ export function AgentDetailView({
                 onAssign={onAssign}
                 onUnassign={onUnassign}
             />
-            <Tabs defaultValue="health" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <Tabs
+                value={tab ?? 'health'}
+                onChange={(value) => onTabChange?.(isAgentTab(value) ? value : 'health')}
+                style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+            >
                 <Tabs.List>
                     <Tabs.Tab value="health">Health</Tabs.Tab>
                     <Tabs.Tab value="details">Details</Tabs.Tab>

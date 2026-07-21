@@ -27,13 +27,22 @@ import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { AlertCircle } from 'react-feather';
 import { CheckCircledIcon } from '@radix-ui/react-icons';
-import { AgentDetailView } from '../components/agents/agentDetail';
+import { AgentDetailView, isAgentTab, type AgentTab } from '../components/agents/agentDetail';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 
 interface AgentDetailPageProps {
     agentId: string;
 }
 
 export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
+    const navigate = useNavigate();
+    const hash = useLocation({ select: (location) => location.hash });
+    const tab: AgentTab = isAgentTab(hash) ? hash : 'health';
+
+    const handleTabChange = useCallback((next: AgentTab) => {
+        navigate({ to: '.', hash: next, replace: true });
+    }, [navigate]);
+
     const agentClient = useClient(AgentService);
     const configClient = useClient(ConfigService);
     const [agent, setAgent] = useState<AgentDescription | null>(null);
@@ -185,6 +194,8 @@ export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
                 onUnassign={openUnassignModal}
                 history={history}
                 historyLoading={historyLoading}
+                tab={tab}
+                onTabChange={handleTabChange}
             />
 
             {/* Assign Config Modal */}
