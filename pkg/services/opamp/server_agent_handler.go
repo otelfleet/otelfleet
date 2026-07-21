@@ -133,6 +133,16 @@ func (s *ServerAgentHandler) bootstrap(
 	instanceUID string,
 	message *protobufs.AgentToServer,
 ) *protobufs.ServerToAgent {
+	flags := message.GetFlags()
+	if flags&uint64(protobufs.AgentToServerFlags_AgentToServerFlags_RequestInstanceUid) == 1 {
+		// server assigns new instance UID
+		instanceUID = util.NewUUID()
+		// TODO : without custom methods - can we uniquely assign an ID to a remote agent?
+		logger.With("temp-id", fmt.Sprintf("%x", message.InstanceUid), "assigned-id", instanceUID).Info(
+			"agent requested an instanceUID from server",
+		)
+		// TODO : do we need to keep track of the temporary ID? idk
+	}
 	ok, err := s.agentRepo.Exists(ctx, instanceUID)
 	if err != nil {
 		logger.With("err", err).Error("failed to verify agent is registered")

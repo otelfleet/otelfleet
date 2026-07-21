@@ -28,6 +28,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
+	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/stretchr/testify/require"
 )
@@ -139,21 +140,21 @@ func NewTestEnv(t *testing.T) *TestEnv {
 }
 
 func (e *TestEnv) initStores(logger *slog.Logger, broker types.KVBroker) {
-	e.TokenStore = storage.NewProtoKV[*bootstrapv1alpha1.BootstrapToken](logger, broker.KeyValue("tokens"))
-	e.AgentStore = storage.NewProtoKV[*agentsv1alpha1.AgentDescription](logger, broker.KeyValue("agents"))
-	e.OpampAgentStore = storage.NewProtoKV[*protobufs.AgentToServer](logger, broker.KeyValue("opamp-agents"))
-	e.ConfigStore = storage.NewProtoKV[*configv1alpha1.Config](logger, broker.KeyValue("configs"))
-	e.DefaultConfigStore = storage.NewProtoKV[*configv1alpha1.Config](logger, broker.KeyValue("default-configs"))
-	e.BootstrapConfigStore = storage.NewProtoKV[*configv1alpha1.Config](logger, broker.KeyValue("bootstrap-configs"))
-	e.AssignedConfigStore = storage.NewProtoKV[*configv1alpha1.Config](logger, broker.KeyValue("assigned-configs"))
-	e.ConfigAssignmentStore = storage.NewProtoKV[*configv1alpha1.ConfigAssignment](logger, broker.KeyValue("config-assignments"))
-	e.HealthStore = storage.NewProtoKV[*protobufs.ComponentHealth](logger, broker.KeyValue("agent-health"))
-	e.EffectiveConfigStore = storage.NewProtoKV[*protobufs.EffectiveConfig](logger, broker.KeyValue("effective-config"))
-	e.RemoteStatusStore = storage.NewProtoKV[*protobufs.RemoteConfigStatus](logger, broker.KeyValue("remote-config-status"))
-	e.OpampAgentDescriptionStore = storage.NewProtoKV[*protobufs.AgentDescription](logger, broker.KeyValue("opamp-agent-description"))
-	e.DeploymentStore = storage.NewProtoKV[*configv1alpha1.DeploymentStatus](logger, broker.KeyValue("deployments"))
-	e.AgentDeploymentStore = storage.NewProtoKV[*configv1alpha1.AgentDeploymentStatus](logger, broker.KeyValue("agent-deployments"))
-	e.ConnectionStateStore = storage.NewProtoKV[*agentsv1alpha1.AgentConnectionState](logger, broker.KeyValue("connection-state"))
+	e.TokenStore = storage.NewProtoKVFromSchemaImpl[*bootstrapv1alpha1.BootstrapToken](schema.NewStorageSchemaProto(broker.KeyValue("tokens")))
+	e.AgentStore = storage.NewProtoKVFromSchemaImpl[*agentsv1alpha1.AgentDescription](schema.NewStorageSchemaProto(broker.KeyValue("agents")))
+	e.OpampAgentStore = storage.NewProtoKVFromSchemaImpl[*protobufs.AgentToServer](schema.NewStorageSchemaProto(broker.KeyValue("opamp-agents")))
+	e.ConfigStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.Config](schema.NewStorageSchemaProto(broker.KeyValue("configs")))
+	e.DefaultConfigStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.Config](schema.NewStorageSchemaProto(broker.KeyValue("default-configs")))
+	e.BootstrapConfigStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.Config](schema.NewStorageSchemaProto(broker.KeyValue("bootstrap-configs")))
+	e.AssignedConfigStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.Config](schema.NewStorageSchemaProto(broker.KeyValue("assigned-configs")))
+	e.ConfigAssignmentStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.ConfigAssignment](schema.NewStorageSchemaProto(broker.KeyValue("config-assignments")))
+	e.HealthStore = storage.NewProtoKVFromSchemaImpl[*protobufs.ComponentHealth](schema.NewStorageSchemaProto(broker.KeyValue("agent-health")))
+	e.EffectiveConfigStore = storage.NewProtoKVFromSchemaImpl[*protobufs.EffectiveConfig](schema.NewStorageSchemaProto(broker.KeyValue("effective-config")))
+	e.RemoteStatusStore = storage.NewProtoKVFromSchemaImpl[*protobufs.RemoteConfigStatus](schema.NewStorageSchemaProto(broker.KeyValue("remote-config-status")))
+	e.OpampAgentDescriptionStore = storage.NewProtoKVFromSchemaImpl[*protobufs.AgentDescription](schema.NewStorageSchemaProto(broker.KeyValue("opamp-agent-description")))
+	e.DeploymentStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.DeploymentStatus](schema.NewStorageSchemaProto(broker.KeyValue("deployments")))
+	e.AgentDeploymentStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.AgentDeploymentStatus](schema.NewStorageSchemaProto(broker.KeyValue("agent-deployments")))
+	e.ConnectionStateStore = storage.NewProtoKVFromSchemaImpl[*agentsv1alpha1.AgentConnectionState](schema.NewStorageSchemaProto(broker.KeyValue("connection-state")))
 
 	// Create the agent repository with all stores
 	e.AgentRepo = agentdomain.NewRepository(

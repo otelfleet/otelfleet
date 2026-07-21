@@ -44,4 +44,9 @@ func RegisterKeyValueServiceHandler(mux *mux.Router, svc KeyValueServiceHandler,
 		svc.Delete,
 		opts...,
 	))
+	mux.Handle("/keyvalue.v1alpha1.KeyValueService/History", connect.NewUnaryHandler(
+		"/keyvalue.v1alpha1.KeyValueService/History",
+		svc.History,
+		opts...,
+	))
 }

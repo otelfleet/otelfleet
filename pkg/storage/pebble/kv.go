@@ -72,7 +72,7 @@ func NewKVBroker(db *pebble.DB) *KVBroker {
 	}
 }
 
-func (k *KVBroker) KeyValue(prefix string) types.KV {
+func (k *KVBroker) KeyValue(prefix string) types.BaseKV {
 	return k.newPrefixedKeyValue(prefix)
 }
 
@@ -110,6 +110,30 @@ func (k *prefixedKV) Get(_ context.Context, key string) ([]byte, error) {
 	}
 	defer closer.Close()
 	return data, nil
+}
+
+func (k *prefixedKV) GetLatest(ctx context.Context, prefix string) ([]byte, error) {
+	lp := k.listPrefix(prefix)
+	upper := make([]byte, len(lp))
+	copy(upper, lp)
+	upper[len(lp)-1]++
+	iter, err := k.db.NewIterWithContext(ctx, &pebble.IterOptions{
+		LowerBound: lp,
+		UpperBound: upper,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+	if !iter.Last() {
+		if err := iter.Error(); err != nil {
+			return nil, err
+		}
+		return nil, grpcutil.ErrorNotFound(pebble.ErrNotFound)
+	}
+	value := make([]byte, len(iter.Value()))
+	copy(value, iter.Value())
+	return value, nil
 }
 
 func (k *prefixedKV) listPrefix(listPrefix string) []byte {
@@ -155,7 +179,20 @@ func (k *prefixedKV) ListKeys(ctx context.Context, listPrefix string) ([]string,
 }
 
 func (k *prefixedKV) List(ctx context.Context, listPrefix string) ([][]byte, error) {
+	entries, err := k.ListEntries(ctx, listPrefix)
+	if err != nil {
+		return nil, err
+	}
+	vs := make([][]byte, len(entries))
+	for i, e := range entries {
+		vs[i] = e.Value
+	}
+	return vs, nil
+}
+
+func (k *prefixedKV) ListEntries(ctx context.Context, listPrefix string) ([]types.KVEntry, error) {
 	prefix := k.listPrefix(listPrefix)
+	pn := len(prefix)
 	upper := make([]byte, len(prefix))
 	copy(upper, prefix)
 	upper[len(prefix)-1]++
@@ -167,19 +204,24 @@ func (k *prefixedKV) List(ctx context.Context, listPrefix string) ([][]byte, err
 		return nil, err
 	}
 	defer iter.Close()
-	vs := [][]byte{}
+	entries := []types.KVEntry{}
 	for iter.First(); iter.Valid(); iter.Next() {
-		vs = append(vs, iter.Value())
+		value := make([]byte, len(iter.Value()))
+		copy(value, iter.Value())
+		entries = append(entries, types.KVEntry{
+			Key:   string(iter.Key()[pn:]),
+			Value: value,
+		})
 	}
 	if err := iter.Error(); err != nil {
 		return nil, err
 	}
-	return vs, nil
+	return entries, nil
 }
 
 func (k *prefixedKV) Delete(ctx context.Context, key string) error {
 	return k.db.Delete(k.key(key), &pebble.WriteOptions{})
 }
 
-var _ types.KV = (*prefixedKV)(nil)
+var _ types.BaseKV = (*prefixedKV)(nil)
 var _ types.KVBroker = (*KVBroker)(nil)

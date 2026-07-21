@@ -7,10 +7,14 @@ GOLDFLAGS = -X github.com/otelfleet/otelfleet/pkg/version.Version=${VERSION} \
 	-X github.com/otelfleet/otelfleet/pkg/version.Commit=${GITCOMMIT}
 
 
-build: build-ui build-go
+UI_DIST := pkg/services/ui/dist
+
+build: ui-build build-go
 
 build-ui:
-# 	cd ui && npm run build
+	cd ui && npm ci && npm run build
+	touch $(UI_DIST)/.gitkeep
+
 build-agent:
 	CGO_ENABLED=0 go build --ldflags="$(GOLDFLAGS)" -o ./bin/agent ./cmd/agent/main.go
 build-go:

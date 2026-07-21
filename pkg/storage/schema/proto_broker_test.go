@@ -9,6 +9,7 @@ import (
 	"github.com/cockroachdb/pebble/v2/vfs"
 	"github.com/google/go-cmp/cmp"
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
+	keyvaluev1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
@@ -22,12 +23,6 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-// These tests treat proto_broker as a black box: callers only ever address
-// objects by (typeURL, key), and the on-disk key layout (version prefix, path
-// joining, etc.) is an implementation detail. Nothing here references a
-// concrete key path, so changing the underlying prefix scheme should not
-// require changing the tests.
-
 // newSchema wires a StorageSchemaProto on top of a real (in-memory) KV, so the
 // tests observe end-to-end behaviour rather than a hand-rolled fake.
 func newSchema(t *testing.T) *schema.StorageSchemaProto {
@@ -39,8 +34,6 @@ func newSchema(t *testing.T) *schema.StorageSchemaProto {
 	return schema.NewStorageSchemaProto(kv)
 }
 
-// mustAny wraps a proto message into an anypb.Any and returns it alongside its
-// type URL, which is what callers use to address the object.
 func mustAny(t *testing.T, msg proto.Message) (string, *anypb.Any) {
 	t.Helper()
 	any, err := anypb.New(msg)
@@ -48,9 +41,21 @@ func mustAny(t *testing.T, msg proto.Message) (string, *anypb.Any) {
 	return any.GetTypeUrl(), any
 }
 
-// anyDiff reports the protocmp diff between two Any values ("" when equal).
+func mustAnyNoType(t *testing.T, msg proto.Message) *anypb.Any {
+	t.Helper()
+	any, err := anypb.New(msg)
+	require.NoError(t, err)
+	return any
+}
+
 func anyDiff(want, got *anypb.Any) string {
 	return cmp.Diff(want, got, protocmp.Transform())
+}
+
+func putAny(t *testing.T, ctx context.Context, s *schema.StorageSchemaProto, typeURL, key string, obj *anypb.Any) {
+	t.Helper()
+	_, err := s.Put(ctx, typeURL, key, 0, obj)
+	require.NoError(t, err)
 }
 
 func TestStorageSchemaProto_PutGet(t *testing.T) {
@@ -98,11 +103,11 @@ func TestStorageSchemaProto_PutGet(t *testing.T) {
 			s := newSchema(t)
 			typeURL, want := mustAny(t, c.msg)
 
-			require.NoError(t, s.Put(ctx, typeURL, c.key, want))
+			putAny(t, ctx, s, typeURL, c.key, want)
 
 			got, err := s.Get(ctx, typeURL, c.key)
 			require.NoError(t, err)
-			assert.Empty(t, anyDiff(want, got))
+			assert.Empty(t, anyDiff(want, got.GetObj()))
 		})
 	}
 }
@@ -123,7 +128,7 @@ func TestStorageSchemaProto_Get_NotFound(t *testing.T) {
 			name: "wrong key",
 			setup: func(t *testing.T, ctx context.Context, s *schema.StorageSchemaProto, typeURL string) {
 				_, any := mustAny(t, wrapperspb.String("present"))
-				require.NoError(t, s.Put(ctx, typeURL, "present", any))
+				putAny(t, ctx, s, typeURL, "present", any)
 			},
 			key: "absent",
 		},
@@ -131,7 +136,7 @@ func TestStorageSchemaProto_Get_NotFound(t *testing.T) {
 			name: "after delete",
 			setup: func(t *testing.T, ctx context.Context, s *schema.StorageSchemaProto, typeURL string) {
 				_, any := mustAny(t, wrapperspb.String("v"))
-				require.NoError(t, s.Put(ctx, typeURL, "gone", any))
+				putAny(t, ctx, s, typeURL, "gone", any)
 				require.NoError(t, s.Delete(ctx, typeURL, "gone"))
 			},
 			key: "gone",
@@ -186,7 +191,7 @@ func TestStorageSchemaProto_Delete(t *testing.T) {
 			ctx := context.Background()
 			s := newSchema(t)
 			typeURL, any := mustAny(t, wrapperspb.String("payload"))
-			require.NoError(t, s.Put(ctx, typeURL, c.key, any))
+			putAny(t, ctx, s, typeURL, c.key, any)
 
 			require.NoError(t, s.Delete(ctx, typeURL, c.deleteKey))
 
@@ -196,7 +201,7 @@ func TestStorageSchemaProto_Delete(t *testing.T) {
 				assert.True(t, grpcutil.IsErrorNotFound(err), "expected NotFound, got %v", err)
 			} else {
 				require.NoError(t, err)
-				assert.Empty(t, anyDiff(any, got))
+				assert.Empty(t, anyDiff(any, got.GetObj()))
 			}
 		})
 	}
@@ -245,7 +250,7 @@ func TestStorageSchemaProto_ListKeys(t *testing.T) {
 	ctx := context.Background()
 	s := newSchema(t)
 	for _, e := range entries {
-		require.NoError(t, s.Put(ctx, e.typeURL, e.key, anyForType(t, e.typeURL)))
+		putAny(t, ctx, s, e.typeURL, e.key, anyForType(t, e.typeURL))
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -269,9 +274,9 @@ func TestStorageSchemaProto_List(t *testing.T) {
 
 	ctx := context.Background()
 	s := newSchema(t)
-	require.NoError(t, s.Put(ctx, typeStr, "k1", av1))
-	require.NoError(t, s.Put(ctx, typeStr, "k2", av2))
-	require.NoError(t, s.Put(ctx, typeDur, "k3", adur))
+	putAny(t, ctx, s, typeStr, "k1", av1)
+	putAny(t, ctx, s, typeStr, "k2", av2)
+	putAny(t, ctx, s, typeDur, "k3", adur)
 
 	cases := []tc{
 		{
@@ -297,7 +302,7 @@ func TestStorageSchemaProto_List(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, got, len(c.wantVals))
 			// List makes no ordering guarantee, so compare as an unordered set.
-			assert.ElementsMatch(t, anySet(c.wantVals), anySet(got))
+			assert.ElementsMatch(t, anySet(c.wantVals), kvoSet(got))
 		})
 	}
 }
@@ -308,6 +313,14 @@ func anySet(anys []*anypb.Any) []string {
 	out := make([]string, len(anys))
 	for i, a := range anys {
 		out[i] = a.GetTypeUrl() + "|" + string(a.GetValue())
+	}
+	return out
+}
+
+func kvoSet(objs []*keyvaluev1.KeyValueObject) []string {
+	out := make([]string, len(objs))
+	for i, o := range objs {
+		out[i] = o.GetObj().GetTypeUrl() + "|" + string(o.GetObj().GetValue())
 	}
 	return out
 }

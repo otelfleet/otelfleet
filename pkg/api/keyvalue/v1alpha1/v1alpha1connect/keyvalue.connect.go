@@ -44,6 +44,8 @@ const (
 	KeyValueServiceListProcedure = "/keyvalue.v1alpha1.KeyValueService/List"
 	// KeyValueServiceDeleteProcedure is the fully-qualified name of the KeyValueService's Delete RPC.
 	KeyValueServiceDeleteProcedure = "/keyvalue.v1alpha1.KeyValueService/Delete"
+	// KeyValueServiceHistoryProcedure is the fully-qualified name of the KeyValueService's History RPC.
+	KeyValueServiceHistoryProcedure = "/keyvalue.v1alpha1.KeyValueService/History"
 )
 
 // KeyValueServiceClient is a client for the keyvalue.v1alpha1.KeyValueService service.
@@ -53,6 +55,7 @@ type KeyValueServiceClient interface {
 	ListKeys(context.Context, *connect.Request[v1alpha1.ListKeysRequest]) (*connect.Response[v1alpha1.ListKeysResponse], error)
 	List(context.Context, *connect.Request[v1alpha1.ListRequest]) (*connect.Response[v1alpha1.ListResponse], error)
 	Delete(context.Context, *connect.Request[v1alpha1.DeleteRequest]) (*connect.Response[v1alpha1.DeleteResponse], error)
+	History(context.Context, *connect.Request[v1alpha1.GetHistoryRequest]) (*connect.Response[v1alpha1.GetHistoryResponse], error)
 }
 
 // NewKeyValueServiceClient constructs a client for the keyvalue.v1alpha1.KeyValueService service.
@@ -96,6 +99,12 @@ func NewKeyValueServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(keyValueServiceMethods.ByName("Delete")),
 			connect.WithClientOptions(opts...),
 		),
+		history: connect.NewClient[v1alpha1.GetHistoryRequest, v1alpha1.GetHistoryResponse](
+			httpClient,
+			baseURL+KeyValueServiceHistoryProcedure,
+			connect.WithSchema(keyValueServiceMethods.ByName("History")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -106,6 +115,7 @@ type keyValueServiceClient struct {
 	listKeys *connect.Client[v1alpha1.ListKeysRequest, v1alpha1.ListKeysResponse]
 	list     *connect.Client[v1alpha1.ListRequest, v1alpha1.ListResponse]
 	delete   *connect.Client[v1alpha1.DeleteRequest, v1alpha1.DeleteResponse]
+	history  *connect.Client[v1alpha1.GetHistoryRequest, v1alpha1.GetHistoryResponse]
 }
 
 // Get calls keyvalue.v1alpha1.KeyValueService.Get.
@@ -133,6 +143,11 @@ func (c *keyValueServiceClient) Delete(ctx context.Context, req *connect.Request
 	return c.delete.CallUnary(ctx, req)
 }
 
+// History calls keyvalue.v1alpha1.KeyValueService.History.
+func (c *keyValueServiceClient) History(ctx context.Context, req *connect.Request[v1alpha1.GetHistoryRequest]) (*connect.Response[v1alpha1.GetHistoryResponse], error) {
+	return c.history.CallUnary(ctx, req)
+}
+
 // KeyValueServiceHandler is an implementation of the keyvalue.v1alpha1.KeyValueService service.
 type KeyValueServiceHandler interface {
 	Get(context.Context, *connect.Request[v1alpha1.GetRequest]) (*connect.Response[v1alpha1.GetResponse], error)
@@ -140,6 +155,7 @@ type KeyValueServiceHandler interface {
 	ListKeys(context.Context, *connect.Request[v1alpha1.ListKeysRequest]) (*connect.Response[v1alpha1.ListKeysResponse], error)
 	List(context.Context, *connect.Request[v1alpha1.ListRequest]) (*connect.Response[v1alpha1.ListResponse], error)
 	Delete(context.Context, *connect.Request[v1alpha1.DeleteRequest]) (*connect.Response[v1alpha1.DeleteResponse], error)
+	History(context.Context, *connect.Request[v1alpha1.GetHistoryRequest]) (*connect.Response[v1alpha1.GetHistoryResponse], error)
 }
 
 // NewKeyValueServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -179,6 +195,12 @@ func NewKeyValueServiceHandler(svc KeyValueServiceHandler, opts ...connect.Handl
 		connect.WithSchema(keyValueServiceMethods.ByName("Delete")),
 		connect.WithHandlerOptions(opts...),
 	)
+	keyValueServiceHistoryHandler := connect.NewUnaryHandler(
+		KeyValueServiceHistoryProcedure,
+		svc.History,
+		connect.WithSchema(keyValueServiceMethods.ByName("History")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/keyvalue.v1alpha1.KeyValueService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case KeyValueServiceGetProcedure:
@@ -191,6 +213,8 @@ func NewKeyValueServiceHandler(svc KeyValueServiceHandler, opts ...connect.Handl
 			keyValueServiceListHandler.ServeHTTP(w, r)
 		case KeyValueServiceDeleteProcedure:
 			keyValueServiceDeleteHandler.ServeHTTP(w, r)
+		case KeyValueServiceHistoryProcedure:
+			keyValueServiceHistoryHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -218,4 +242,8 @@ func (UnimplementedKeyValueServiceHandler) List(context.Context, *connect.Reques
 
 func (UnimplementedKeyValueServiceHandler) Delete(context.Context, *connect.Request[v1alpha1.DeleteRequest]) (*connect.Response[v1alpha1.DeleteResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("keyvalue.v1alpha1.KeyValueService.Delete is not implemented"))
+}
+
+func (UnimplementedKeyValueServiceHandler) History(context.Context, *connect.Request[v1alpha1.GetHistoryRequest]) (*connect.Response[v1alpha1.GetHistoryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("keyvalue.v1alpha1.KeyValueService.History is not implemented"))
 }

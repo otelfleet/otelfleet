@@ -38,3 +38,7 @@ func (e *erroringServer) List(context.Context, *connect.Request[v1alpha1.ListReq
 func (e *erroringServer) Delete(context.Context, *connect.Request[v1alpha1.DeleteRequest]) (*connect.Response[v1alpha1.DeleteResponse], error) {
 	return nil, connect.NewError(e.code, e.err)
 }
+
+func (e *erroringServer) History(context.Context, *connect.Request[v1alpha1.GetHistoryRequest]) (*connect.Response[v1alpha1.GetHistoryResponse], error) {
+	return nil, connect.NewError(e.code, e.err)
+}

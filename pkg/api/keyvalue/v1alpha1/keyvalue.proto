@@ -10,24 +10,56 @@ service KeyValueService {
     rpc ListKeys(ListKeysRequest) returns (ListKeysResponse);
     rpc List(ListRequest) returns (ListResponse);
     rpc Delete(DeleteRequest) returns (DeleteResponse);
+    rpc History(GetHistoryRequest) returns (GetHistoryResponse);
+}
+
+message GetHistoryRequest {
+    string type_url = 1;
+    string key = 2;
+    RangeRequest query = 3;
+}
+
+message RangeRequest {
+    uint64 offset = 1;
+    uint64 limit = 2;
+}
+
+message GetHistoryResponse {   
+    string type_url = 1;
+    repeated KeyValueObject objs = 2;
+    RangeRequest position = 3;
+}
+
+message KeyValueObject {
+    uint64 revision = 1;
+    bytes hash = 2;
+    string type_url = 3;
+    // unset for a tombstone (deleted) revision
+    google.protobuf.Any obj = 4;
 }
 
 message PutRequest {
     string type_url = 1;
     string key = 2;
     google.protobuf.Any data = 3;
+    // expected revision (current + 1); 0 applies unconditionally without a CAS check
+    uint64 revision = 4;
 }
 
-message PutResponse{}
+message PutResponse{
+    KeyValueObject object = 1;
+}
 
 message GetRequest {
     string type_url = 1;
     string key = 2;
+    // 0 means latest
+    uint64 revision = 3;
 }
 
 message GetResponse{
     string type_url = 1;
-    google.protobuf.Any data = 2;
+    KeyValueObject object = 2;
 }
 
 message ListRequest{
@@ -36,7 +68,7 @@ message ListRequest{
 
 message ListResponse{
     string type_url = 1;
-    repeated google.protobuf.Any data = 2;
+    repeated KeyValueObject objects = 2;
 }
 
 message ListKeysRequest{
