@@ -39,6 +39,20 @@ const stickyHeaderCell: React.CSSProperties = {
   background: 'var(--mantine-color-body)',
 };
 
+// Aligns the selection checkboxes with the header menu button, which sits at
+// spacing-sm padding plus half its icon width from the table's left edge.
+const selectionCell: React.CSSProperties = {
+  padding: 0,
+  paddingLeft: 'var(--mantine-spacing-sm)',
+  width: 40,
+};
+
+const selectionInner: React.CSSProperties = {
+  width: 28,
+  display: 'flex',
+  justifyContent: 'center',
+};
+
 export const Table = <T extends object>({
   data,
   columns,
@@ -148,12 +162,14 @@ export const Table = <T extends object>({
         <thead>
           <tr>
             {selectable && (
-              <th style={{ ...stickyHeaderCell, width: 40 }}>
-                <Checkbox
-                  checked={allSelected}
-                  indeterminate={someSelected && !allSelected}
-                  onChange={handleSelectAll}
-                />
+              <th style={{ ...stickyHeaderCell, ...selectionCell }}>
+                <Box style={selectionInner}>
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={someSelected && !allSelected}
+                    onChange={handleSelectAll}
+                  />
+                </Box>
               </th>
             )}
             {activeColumns.map((col) => (
@@ -172,11 +188,13 @@ export const Table = <T extends object>({
               <Fragment key={key}>
                 <tr>
                   {selectable && (
-                    <td style={{ width: 40 }}>
-                      <Checkbox
-                        checked={isSelected}
-                        onChange={() => handleSelectRow(key)}
-                      />
+                    <td style={selectionCell}>
+                      <Box style={selectionInner}>
+                        <Checkbox
+                          checked={isSelected}
+                          onChange={() => handleSelectRow(key)}
+                        />
+                      </Box>
                     </td>
                   )}
                   {activeColumns.map((col) => {

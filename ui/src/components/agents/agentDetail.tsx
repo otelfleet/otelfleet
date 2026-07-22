@@ -204,7 +204,7 @@ export function ConfigAssignmentSection({
                             </Group>
                         </>
                     ) : (
-                        <Text c="dimmed">No config assigned - using default configuration</Text>
+                        <Text c="dimmed">No server-side config assigned - using agent provided config.</Text>
                     )}
                 </Stack>
                 <Group gap="xs">

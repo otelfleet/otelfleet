@@ -166,7 +166,7 @@ const Base: FC = () => {
 
                     <Group justify="space-between" style={{ flex: 1, height: '100%', alignItems: 'center', paddingLeft: 12, paddingRight: 12 }}>
                         <img
-                            src="/otelfleet.png"
+                            src={`${import.meta.env.BASE_URL}otelfleet.png`}
                             alt="otelfleet logo"
                             style={{ height: '90%', maxHeight: '100%', objectFit: 'contain' }}
                         />

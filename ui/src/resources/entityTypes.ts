@@ -83,7 +83,7 @@ function componentEntity<T extends ComponentEntity>(
 const collectorConfig: EntityType = {
   slug: "collectorconfig",
   label: "Collector",
-  description: "Complete collector configurations",
+  description: "Collector configurations",
   icon: LayersIcon,
   typeUrl: TYPE_URL_PREFIX + CollectorConfigSchema.typeName,
   component: false,
