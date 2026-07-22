@@ -19,7 +19,8 @@ import {
     type MantineColorScheme,
 } from '@mantine/core';
 import { useDisclosure, useLocalStorage } from '@mantine/hooks'
-import { GitHubLogoIcon, SunIcon, MoonIcon } from '@radix-ui/react-icons';
+import { GitHubLogoIcon, SunIcon, MoonIcon, StackIcon } from '@radix-ui/react-icons';
+import { COMPONENT_ENTITY_TYPES, COLLECTOR_ENTITY_TYPES } from '../resources/entityTypes';
 
 
 const theme = createTheme({
@@ -128,6 +129,7 @@ const ColorSchemeToggle: FC = () => {
 const Base: FC = () => {
     const [opened, { toggle }] = useDisclosure();
     const [active, setActive] = useState<string | null>(null);
+    const [componentsOpened, setComponentsOpened] = useState(false);
     const [colorScheme, setColorScheme] = useLocalStorage<MantineColorScheme>({
         key: 'mantine-color-scheme',
         defaultValue: 'auto',
@@ -196,7 +198,37 @@ const Base: FC = () => {
                             active={active === 'configs'}
                             onClick={() => setActive(active === 'configs' ? null : 'configs')}
                         >
-                            <NavLink component={Link} to="/configs" label="All configs" />
+                            {COLLECTOR_ENTITY_TYPES.map((entityType) => (
+                                <NavLink
+                                    key={entityType.slug}
+                                    label={entityType.label}
+                                    leftSection={<entityType.icon />}
+                                    renderRoot={(props) => (
+                                        <Link to="/resources/$type" params={{ type: entityType.slug }} {...props} />
+                                    )}
+                                />
+                            ))}
+                            <NavLink
+                                label="Components"
+                                description="Individual collector components"
+                                leftSection={<StackIcon />}
+                                opened={componentsOpened}
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    setComponentsOpened((o) => !o);
+                                }}
+                            >
+                                {COMPONENT_ENTITY_TYPES.map((entityType) => (
+                                    <NavLink
+                                        key={entityType.slug}
+                                        label={entityType.label}
+                                        leftSection={<entityType.icon />}
+                                        renderRoot={(props) => (
+                                            <Link to="/resources/$type" params={{ type: entityType.slug }} {...props} />
+                                        )}
+                                    />
+                                ))}
+                            </NavLink>
                         </NavLink>
 
                         <NavLink

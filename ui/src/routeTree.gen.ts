@@ -17,7 +17,9 @@ import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TokensTokenIdRouteImport } from './routes/tokens.$tokenId'
+import { Route as ResourcesTypeRouteImport } from './routes/resources.$type'
 import { Route as AgentsAgentIdRouteImport } from './routes/agents.$agentId'
+import { Route as ResourcesTypeEditorRouteImport } from './routes/resources.$type_.editor'
 
 const TokensRoute = TokensRouteImport.update({
   id: '/tokens',
@@ -59,10 +61,20 @@ const TokensTokenIdRoute = TokensTokenIdRouteImport.update({
   path: '/$tokenId',
   getParentRoute: () => TokensRoute,
 } as any)
+const ResourcesTypeRoute = ResourcesTypeRouteImport.update({
+  id: '/resources/$type',
+  path: '/resources/$type',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgentsAgentIdRoute = AgentsAgentIdRouteImport.update({
   id: '/$agentId',
   path: '/$agentId',
   getParentRoute: () => AgentsRoute,
+} as any)
+const ResourcesTypeEditorRoute = ResourcesTypeEditorRouteImport.update({
+  id: '/resources/$type_/editor',
+  path: '/resources/$type/editor',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -74,7 +86,9 @@ export interface FileRoutesByFullPath {
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
   '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
+  '/resources/$type/editor': typeof ResourcesTypeEditorRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -85,7 +99,9 @@ export interface FileRoutesByTo {
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
   '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
+  '/resources/$type/editor': typeof ResourcesTypeEditorRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -97,7 +113,9 @@ export interface FileRoutesById {
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
   '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
+  '/resources/$type_/editor': typeof ResourcesTypeEditorRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,7 +128,9 @@ export interface FileRouteTypes {
     | '/editor'
     | '/tokens'
     | '/agents/$agentId'
+    | '/resources/$type'
     | '/tokens/$tokenId'
+    | '/resources/$type/editor'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -121,7 +141,9 @@ export interface FileRouteTypes {
     | '/editor'
     | '/tokens'
     | '/agents/$agentId'
+    | '/resources/$type'
     | '/tokens/$tokenId'
+    | '/resources/$type/editor'
   id:
     | '__root__'
     | '/'
@@ -132,7 +154,9 @@ export interface FileRouteTypes {
     | '/editor'
     | '/tokens'
     | '/agents/$agentId'
+    | '/resources/$type'
     | '/tokens/$tokenId'
+    | '/resources/$type_/editor'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -143,6 +167,8 @@ export interface RootRouteChildren {
   ConfigsRoute: typeof ConfigsRoute
   EditorRoute: typeof EditorRoute
   TokensRoute: typeof TokensRouteWithChildren
+  ResourcesTypeRoute: typeof ResourcesTypeRoute
+  ResourcesTypeEditorRoute: typeof ResourcesTypeEditorRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -203,12 +229,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TokensTokenIdRouteImport
       parentRoute: typeof TokensRoute
     }
+    '/resources/$type': {
+      id: '/resources/$type'
+      path: '/resources/$type'
+      fullPath: '/resources/$type'
+      preLoaderRoute: typeof ResourcesTypeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/agents/$agentId': {
       id: '/agents/$agentId'
       path: '/$agentId'
       fullPath: '/agents/$agentId'
       preLoaderRoute: typeof AgentsAgentIdRouteImport
       parentRoute: typeof AgentsRoute
+    }
+    '/resources/$type_/editor': {
+      id: '/resources/$type_/editor'
+      path: '/resources/$type/editor'
+      fullPath: '/resources/$type/editor'
+      preLoaderRoute: typeof ResourcesTypeEditorRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -243,6 +283,8 @@ const rootRouteChildren: RootRouteChildren = {
   ConfigsRoute: ConfigsRoute,
   EditorRoute: EditorRoute,
   TokensRoute: TokensRouteWithChildren,
+  ResourcesTypeRoute: ResourcesTypeRoute,
+  ResourcesTypeEditorRoute: ResourcesTypeEditorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
