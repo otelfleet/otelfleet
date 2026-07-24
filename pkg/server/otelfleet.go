@@ -29,7 +29,7 @@ import (
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	logutil "github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/services/agent"
-	"github.com/otelfleet/otelfleet/pkg/services/bootstrap"
+	"github.com/otelfleet/otelfleet/pkg/services/authorization"
 	"github.com/otelfleet/otelfleet/pkg/services/deployment"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
@@ -70,7 +70,7 @@ type logger struct {
 const (
 	All              = "all"
 	Storage          = "storage"
-	Bootstrap        = "bootstrap"
+	Auth             = "authorization"
 	ServerService    = "server"
 	OpAmp            = "opamp"
 	ConfigOTEL       = "config-otel"
@@ -245,9 +245,9 @@ func (o *OtelFleet) setupModuleManager() error {
 		return storeSvc, nil
 	}, modules.UserInvisibleModule)
 
-	mm.RegisterModule(Bootstrap, func() (services.Service, error) {
-		bootstrapSvc := bootstrap.NewBootstrapServer(
-			o.logger.With("service", Bootstrap),
+	mm.RegisterModule(Auth, func() (services.Service, error) {
+		bootstrapSvc := authorization.NewBootstrapServer(
+			o.logger.With("service", Auth),
 			nil, // TODO: privateKey for secure bootstrap
 			o.tokenStore,
 			o.agentRepo,
@@ -376,14 +376,14 @@ func (o *OtelFleet) setupModuleManager() error {
 			Gateway, UI,
 		},
 		Gateway: {
-			Bootstrap, OpAmp, AgentManager, DeploymentModule, OTLP, Resource,
+			Auth, OpAmp, AgentManager, DeploymentModule, OTLP, Resource,
 		},
 		ServerService: {},
 
 		Storage:          {ServerService},
 		AgentManager:     {ServerService, OpAmp},
 		OpAmp:            {ServerService, ConfigOTEL, Storage},
-		Bootstrap:        {ServerService, Storage},
+		Auth:             {ServerService, Storage},
 		ConfigOTEL:       {ServerService, Storage},
 		DeploymentModule: {ServerService, ConfigOTEL, Storage},
 		Resource:         {ServerService, Storage},

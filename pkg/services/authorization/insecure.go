@@ -1,6 +1,6 @@
 //go:build insecure
 
-package bootstrap
+package authorization
 
 import (
 	"crypto"

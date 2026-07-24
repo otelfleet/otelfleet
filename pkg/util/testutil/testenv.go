@@ -23,7 +23,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/config"
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/agent"
-	"github.com/otelfleet/otelfleet/pkg/services/bootstrap"
+	"github.com/otelfleet/otelfleet/pkg/services/authorization"
 	"github.com/otelfleet/otelfleet/pkg/services/deployment"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
@@ -67,7 +67,7 @@ type TestEnv struct {
 	AgentRepo agentdomain.Repository
 
 	// Services
-	BootstrapServer      *bootstrap.BootstrapServer
+	BootstrapServer      *authorization.BootstrapServer
 	ConfigServer         *otelconfig.ConfigServer
 	OpampServer          *opamp.Server
 	AgentServer          *agent.AgentServer
@@ -172,7 +172,7 @@ func (e *TestEnv) initStores(logger *slog.Logger, broker types.KVBroker) {
 
 func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
 	// BootstrapServer
-	e.BootstrapServer = bootstrap.NewBootstrapServer(
+	e.BootstrapServer = authorization.NewBootstrapServer(
 		logger.With("service", "bootstrap"),
 		privateKey,
 		e.TokenStore,
