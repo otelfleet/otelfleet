@@ -11,6 +11,7 @@ import ReactFlow, {
 } from "reactflow";
 import YAML from "yaml";
 import type { OTELConfig } from "./types";
+import { PipelineErrorBoundary } from "./PipelineErrorBoundary";
 import { useClientNodes, useEdgeCreator } from "./layout";
 import {
     ReceiverNode,
@@ -40,9 +41,11 @@ interface PipelineGraphProps {
 
 export default function PipelineGraph({ value }: PipelineGraphProps) {
     return (
-        <ReactFlowProvider>
-            <PipelineGraphInner value={value} />
-        </ReactFlowProvider>
+        <PipelineErrorBoundary resetKey={value}>
+            <ReactFlowProvider>
+                <PipelineGraphInner value={value} />
+            </ReactFlowProvider>
+        </PipelineErrorBoundary>
     );
 }
 

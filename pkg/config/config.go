@@ -15,6 +15,7 @@ type Config struct {
 	StorageConfig  *StorageConfig `yaml:"storage"`
 	UI             *UIConfig      `yaml:"ui,omitempty"`
 	OTLP           *OTLPConfig    `yaml:"otlp,omitempty"`
+	LSP            *LSPConfig     `yaml:"lsp, omitempty"`
 }
 
 // Sanitize sets sane required defaults if none are present
@@ -41,8 +42,12 @@ func (c *Config) Sanitize() {
 	if c.OTLP == nil {
 		c.OTLP = &OTLPConfig{}
 	}
+	if c.LSP == nil {
+		c.LSP = &LSPConfig{}
+	}
 
 	c.UI.Sanitize()
+	c.LSP.Sanitize()
 	c.OTLP.Sanitize()
 }
 
@@ -207,4 +212,29 @@ func validateAPIPath(path string) error {
 		return fmt.Errorf("must be a clean path (did you mean %q?)", cleaned)
 	}
 	return nil
+}
+
+type LSPConfig struct {
+	// DistCache path to the dist cache required by the otelcol-lsp
+	DistCache string `yaml:"dist_cache"`
+	// Default distribution for LSP if none is specified. i.e. otelcol
+	DefaultDistributionName string `yaml:"default_distribution"`
+	// Default distribution version for LSP if none is specified i.e. 0.156.0
+	DefaultDistributionVersion string `yaml:"default_version"`
+}
+
+func (c *LSPConfig) Validate() error {
+	return nil
+}
+
+func (c *LSPConfig) Sanitize() {
+	if c.DistCache == "" {
+		c.DistCache = "/var/lib/cache/otelconf"
+	}
+	if c.DefaultDistributionName == "" {
+		c.DefaultDistributionName = "otelcol-contrib"
+	}
+	if c.DefaultDistributionVersion == "" {
+		c.DefaultDistributionVersion = "0.157.0"
+	}
 }

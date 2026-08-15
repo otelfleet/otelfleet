@@ -41,6 +41,8 @@ export interface EntityType {
   component: boolean;
   // Collector configs get the pipeline graph visualization alongside the editor.
   visualize: boolean;
+  // Seeded into the editor when creating a new entity.
+  defaultContent?: string;
   pack: (raw: string) => Any;
   unpack: (obj?: Any) => string;
 }
@@ -80,6 +82,37 @@ function componentEntity<T extends ComponentEntity>(
   };
 }
 
+const DEFAULT_COLLECTOR_CONFIG = `receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+
+exporters:
+  debug:
+    verbosity: basic
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+`;
+
 const collectorConfig: EntityType = {
   slug: "collectorconfig",
   label: "Collector",
@@ -88,6 +121,7 @@ const collectorConfig: EntityType = {
   typeUrl: TYPE_URL_PREFIX + CollectorConfigSchema.typeName,
   component: false,
   visualize: true,
+  defaultContent: DEFAULT_COLLECTOR_CONFIG,
   pack: (raw) =>
     anyPack(
       CollectorConfigSchema,

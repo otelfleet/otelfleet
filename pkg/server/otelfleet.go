@@ -31,6 +31,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/authorization"
 	"github.com/otelfleet/otelfleet/pkg/services/deployment"
+	"github.com/otelfleet/otelfleet/pkg/services/lsp"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	"github.com/otelfleet/otelfleet/pkg/services/otlp"
@@ -76,6 +77,7 @@ const (
 	ConfigOTEL       = "config-otel"
 	AgentManager     = "agent-manager"
 	DeploymentModule = "deployment"
+	LSP              = "lsp"
 	// UI serves the web UI. Attached to the all-in-one target only.
 	UI = "ui"
 	// Embedded OTLP service
@@ -344,6 +346,15 @@ func (o *OtelFleet) setupModuleManager() error {
 		return resourceSvc, nil
 	})
 
+	mm.RegisterModule(LSP, func() (services.Service, error) {
+		lspService := lsp.NewLSPServer(
+			o.logger.With("service", "lsp"),
+			o.cfg.LSP,
+		)
+		lspService.ConfigureHTTP(o.server.HTTP)
+		return lspService, nil
+	})
+
 	mm.RegisterModule(ServerService, func() (services.Service, error) {
 		servicesToWaitFor := func() []services.Service {
 			svs := []services.Service(nil)
@@ -376,7 +387,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			Gateway, UI,
 		},
 		Gateway: {
-			Auth, OpAmp, AgentManager, DeploymentModule, OTLP, Resource,
+			Auth, OpAmp, AgentManager, DeploymentModule, OTLP, Resource, LSP,
 		},
 		ServerService: {},
 
@@ -389,6 +400,7 @@ func (o *OtelFleet) setupModuleManager() error {
 		Resource:         {ServerService, Storage},
 		UI:               {ServerService},
 		OTLP:             {ServerService},
+		LSP:              {ServerService},
 	}
 
 	for mod, targets := range deps {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type * as monacoNs from 'monaco-editor';
 import MonacoEditor, { type OnChange, type OnMount } from '@monaco-editor/react';
 import { Box, Button, Group, TextInput, Paper, SegmentedControl } from '@mantine/core';
 import { useForm } from '@mantine/form';
@@ -12,6 +13,9 @@ import { useMonacoTheme } from '../hooks/useMonacoTheme';
 import { ResourceService } from '../gen/api/pkg/api/resources/v1alpha1/resources_pb';
 import PipelineGraph from '../pipelines/Pipeline';
 import type { EntityType } from './entityTypes';
+import { useCollectorConfigLsp } from '../lsp/useCollectorConfigLsp';
+import { LspStatusBadge } from '../lsp/LspStatusBadge';
+import { DiagnosticsPanel } from '../lsp/DiagnosticsPanel';
 
 type ViewMode = 'editor' | 'graph' | 'split';
 
@@ -26,8 +30,16 @@ export function ResourceEditor({ entityType, entityKey }: ResourceEditorProps) {
   const client = useClient(ResourceService);
   const navigate = useNavigate();
 
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(entityKey ? '' : entityType.defaultContent ?? '');
   const [viewMode, setViewMode] = useState<ViewMode>(entityType.visualize ? 'split' : 'editor');
+
+  const lspEnabled = entityType.slug === 'collectorconfig';
+  const [lspSession, setLspSession] = useState<{
+    monaco: typeof monacoNs;
+    editor: monacoNs.editor.IStandaloneCodeEditor;
+  } | null>(null);
+  const documentUri = `file:///collectorconfig/${entityKey ?? 'new'}.yaml`;
+  const lspStatus = useCollectorConfigLsp(lspSession, documentUri, lspEnabled);
 
   const form = useForm({
     mode: 'controlled',
@@ -55,13 +67,14 @@ export function ResourceEditor({ entityType, entityKey }: ResourceEditorProps) {
     if (value !== undefined) setContent(value);
   };
 
-  const handleEditorMount: OnMount = (editor) => {
-    const node = editor.getContainerDomNode();
+  const handleEditorMount: OnMount = (mountedEditor, monaco) => {
+    if (lspEnabled) setLspSession({ monaco, editor: mountedEditor });
+    const node = mountedEditor.getContainerDomNode();
     const observer = new ResizeObserver(() => {
       const { width, height } = node.getBoundingClientRect();
       if (width === 0 || height === 0) return;
-      editor.layout();
-      editor.setScrollTop(0);
+      mountedEditor.layout();
+      mountedEditor.setScrollTop(0);
       observer.disconnect();
     });
     observer.observe(node);
@@ -122,6 +135,7 @@ export function ResourceEditor({ entityType, entityKey }: ResourceEditorProps) {
             />
           )}
           <Button type="submit" leftSection={<entityType.icon />}>{isEditMode ? `Update ${entityType.label}` : `Save ${entityType.label}`}</Button>
+          {lspEnabled && <LspStatusBadge status={lspStatus} />}
         </Group>
       </form>
 
@@ -165,6 +179,10 @@ export function ResourceEditor({ entityType, entityKey }: ResourceEditorProps) {
           </Paper>
         )}
       </Box>
+
+      {lspEnabled && lspSession && (
+        <DiagnosticsPanel monaco={lspSession.monaco} editor={lspSession.editor} />
+      )}
     </Box>
   );
 }
