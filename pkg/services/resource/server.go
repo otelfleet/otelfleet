@@ -64,5 +64,6 @@ func (s *Server) SupportedResources() []string {
 		protoutil.GetTypeURL(&v1alpha1.Pipeline{}),
 		protoutil.GetTypeURL(&v1alpha1.PipelineCollection{}),
 		protoutil.GetTypeURL(&v1alpha1.CollectorConfig{}),
+		protoutil.GetTypeURL(&v1alpha1.ConfigFilter{}),
 	}
 }

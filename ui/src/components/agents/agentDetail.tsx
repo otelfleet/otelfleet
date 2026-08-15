@@ -11,14 +11,11 @@ import type {
     AnyValue,
     EffectiveConfig,
 } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import { ConfigSource } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
-import type { GetAgentConfigResponse } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
 import {
     Paper,
     Title,
     Text,
     Badge,
-    Button,
     Group,
     Stack,
     Tabs,
@@ -37,10 +34,9 @@ import { Editor } from '../Editor';
 import { useMonacoTheme } from '../../hooks/useMonacoTheme';
 
 /**
- * The assembled agent-detail view: header, config-assignment panel, and the
- * Health / Details / Effective Config tabs. Purely presentational — the
- * page container ([AgentDetailPage]) handles data fetching and the
- * assign/unassign modals.
+ * The assembled agent-detail view: header and the Health / Details /
+ * Effective Config tabs. Purely presentational — the page container
+ * ([AgentDetailPage]) handles data fetching.
  */
 export const AGENT_TABS = ['health', 'details', 'config', 'history'] as const;
 
@@ -53,9 +49,6 @@ export function isAgentTab(value: string | null | undefined): value is AgentTab 
 export function AgentDetailView({
     agent,
     status,
-    assignment,
-    onAssign,
-    onUnassign,
     history = [],
     historyLoading = false,
     tab,
@@ -63,9 +56,6 @@ export function AgentDetailView({
 }: {
     agent: AgentDescription | null;
     status: AgentStatus | null;
-    assignment: GetAgentConfigResponse | null;
-    onAssign: () => void;
-    onUnassign: () => void;
     history?: EffectiveConfig[];
     historyLoading?: boolean;
     tab?: AgentTab;
@@ -74,11 +64,6 @@ export function AgentDetailView({
     return (
         <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
             <AgentHeader agent={agent} status={status} />
-            <ConfigAssignmentSection
-                assignment={assignment}
-                onAssign={onAssign}
-                onUnassign={onUnassign}
-            />
             <Tabs
                 value={tab ?? 'health'}
                 onChange={(value) => onTabChange?.(isAgentTab(value) ? value : 'health')}
@@ -147,75 +132,6 @@ export function AgentHeader({ agent, status }: { agent: AgentDescription | null;
                     <Badge color={configStatus.color} variant="filled" size="lg">
                         Config Sync: {configStatus.label}
                     </Badge>
-                </Group>
-            </Group>
-        </Paper>
-    );
-}
-
-export function ConfigAssignmentSection({
-    assignment,
-    onAssign,
-    onUnassign,
-}: {
-    assignment: GetAgentConfigResponse | null;
-    onAssign: () => void;
-    onUnassign: () => void;
-}) {
-    const formatDate = (timestamp?: { seconds?: bigint; nanos?: number }) => {
-        if (!timestamp?.seconds) return 'N/A';
-        return new Date(Number(timestamp.seconds) * 1000).toLocaleString();
-    };
-
-    const sourceLabel = {
-        [ConfigSource.UNSPECIFIED]: 'Unknown',
-        [ConfigSource.DEFAULT]: 'Default',
-        [ConfigSource.BOOTSTRAP]: 'Bootstrap',
-        [ConfigSource.MANUAL]: 'Manual',
-    }[assignment?.source ?? ConfigSource.UNSPECIFIED];
-
-    const sourceColor = {
-        [ConfigSource.UNSPECIFIED]: 'gray',
-        [ConfigSource.DEFAULT]: 'blue',
-        [ConfigSource.BOOTSTRAP]: 'violet',
-        [ConfigSource.MANUAL]: 'green',
-    }[assignment?.source ?? ConfigSource.UNSPECIFIED];
-
-    return (
-        <Paper p="md" withBorder>
-            <Group justify="space-between" align="flex-start">
-                <Stack gap="xs">
-                    <Title order={4}>Config Assignment</Title>
-                    {assignment?.configId ? (
-                        <>
-                            <Group gap="lg">
-                                <Stack gap={2}>
-                                    <Text size="sm" c="dimmed">Config</Text>
-                                    <Text fw={500}>{assignment.configId}</Text>
-                                </Stack>
-                                <Stack gap={2}>
-                                    <Text size="sm" c="dimmed">Source</Text>
-                                    <Badge color={sourceColor} variant="light">{sourceLabel}</Badge>
-                                </Stack>
-                                <Stack gap={2}>
-                                    <Text size="sm" c="dimmed">Assigned At</Text>
-                                    <Text size="sm">{formatDate(assignment.assignedAt)}</Text>
-                                </Stack>
-                            </Group>
-                        </>
-                    ) : (
-                        <Text c="dimmed">No server-side config assigned - using agent provided config.</Text>
-                    )}
-                </Stack>
-                <Group gap="xs">
-                    <Button variant="light" size="sm" onClick={onAssign}>
-                        {assignment?.configId ? 'Change Config' : 'Assign Config'}
-                    </Button>
-                    {assignment?.configId && (
-                        <Button variant="light" color="red" size="sm" onClick={onUnassign}>
-                            Unassign
-                        </Button>
-                    )}
                 </Group>
             </Group>
         </Paper>

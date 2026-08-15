@@ -1,4 +1,4 @@
-import { Badge, Tooltip, Text, Group } from '@mantine/core';
+import { Badge, Tooltip } from '@mantine/core';
 import {
     AgentState as AgentStateEnum,
     ConfigSyncStatus as ConfigSyncStatusEnum,
@@ -8,8 +8,6 @@ import type {
     ComponentHealth,
     ConfigSyncStatus,
 } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import { ConfigApplicationStatus } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
-import type { ConfigAssignmentInfo } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
 
 export function StatusBadge({ state }: { state: AgentState }) {
     const enumStr = AgentStateEnum[state].replace(/AgentState$/i, "");
@@ -61,26 +59,3 @@ export function ConfigSyncStatusBadge({ status, reason }: { status?: ConfigSyncS
     );
 }
 
-export function AssignedConfigBadge({ assignment }: { assignment?: ConfigAssignmentInfo }) {
-    if (!assignment?.configId) {
-        return <Text size="sm" c="dimmed">(none)</Text>;
-    }
-
-    const statusMap: Record<number, { color: string; label: string }> = {
-        [ConfigApplicationStatus.UNSPECIFIED]: { color: 'gray', label: '' },
-        [ConfigApplicationStatus.PENDING]: { color: 'yellow', label: 'Pending' },
-        [ConfigApplicationStatus.APPLIED]: { color: 'green', label: 'Applied' },
-        [ConfigApplicationStatus.FAILED]: { color: 'red', label: 'Failed' },
-    };
-
-    const { color, label } = statusMap[assignment.status] ?? { color: 'gray', label: '' };
-
-    return (
-        <Tooltip label={assignment.errorMessage} disabled={!assignment.errorMessage}>
-            <Group gap="xs" justify="center">
-                <Text size="sm" fw={500}>{assignment.configId}</Text>
-                {label && <Badge color={color} variant="light" size="xs">{label}</Badge>}
-            </Group>
-        </Tooltip>
-    );
-}

@@ -14,14 +14,8 @@ import type {
     ComponentHealth,
     EffectiveConfig,
 } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import {
-    GetAgentConfigResponseSchema,
-    ConfigSource,
-} from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
-import type { GetAgentConfigResponse } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
 
 // Fixed timestamps so stories render deterministically (no wall-clock).
-const ASSIGNED_AT_SECONDS = 1_704_067_200n; // 2024-01-01T00:00:00Z
 const START_TIME_NANOS = 1_704_067_200_000_000_000n;
 const STATUS_TIME_NANOS = 1_704_070_800_000_000_000n; // +1h
 
@@ -96,17 +90,6 @@ export function mockStatus(overrides?: {
                 },
             }
             : undefined,
-    });
-}
-
-export function mockAssignment(overrides?: {
-    configId?: string;
-    source?: ConfigSource;
-}): GetAgentConfigResponse {
-    return create(GetAgentConfigResponseSchema, {
-        configId: overrides?.configId ?? 'prod-traces',
-        source: overrides?.source ?? ConfigSource.MANUAL,
-        assignedAt: { seconds: ASSIGNED_AT_SECONDS, nanos: 0 },
     });
 }
 

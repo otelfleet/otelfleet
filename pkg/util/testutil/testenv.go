@@ -20,12 +20,12 @@ import (
 	agentsv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
+	resourcesv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/authorization"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
-	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
@@ -62,14 +62,18 @@ type TestEnv struct {
 	// ConnectionStateStore replaces the in-memory AgentTracker
 	ConnectionStateStore types.KeyValue[*agentsv1alpha1.AgentConnectionState]
 
+	// Generic resource storage, shared with the resource server
+	ResourceStorage      schema.SchemaProto
+	CollectorConfigStore types.KeyValue[*resourcesv1alpha1.CollectorConfig]
+
 	// Agent Repository - unified access to agent data
 	AgentRepo agentdomain.Repository
 
 	// Services
 	BootstrapServer *authorization.BootstrapServer
-	ConfigServer    *otelconfig.ConfigServer
-	OpampServer     *opamp.Server
-	AgentServer     *agent.AgentServer
+	// ConfigServer    *otelconfig.ConfigServer
+	OpampServer *opamp.Server
+	AgentServer *agent.AgentServer
 
 	// HTTP
 	HTTPServer    *httptest.Server
@@ -155,6 +159,9 @@ func (e *TestEnv) initStores(logger *slog.Logger, broker types.KVBroker) {
 	e.AgentDeploymentStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.AgentDeploymentStatus](schema.NewStorageSchemaProto(broker.KeyValue("agent-deployments")))
 	e.ConnectionStateStore = storage.NewProtoKVFromSchemaImpl[*agentsv1alpha1.AgentConnectionState](schema.NewStorageSchemaProto(broker.KeyValue("connection-state")))
 
+	e.ResourceStorage = schema.NewStorageSchemaProto(broker.KeyValue("resources"))
+	e.CollectorConfigStore = storage.NewProtoKVFromSchemaImpl[*resourcesv1alpha1.CollectorConfig](e.ResourceStorage)
+
 	// Create the agent repository with all stores
 	e.AgentRepo = agentdomain.NewRepository(
 		logger.With("component", "agent-repository"),
@@ -185,6 +192,8 @@ func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
 		logger.With("service", "opamp"),
 		e.AgentRepo,
 		e.AssignedConfigStore,
+		e.ConfigAssignmentStore,
+		e.ResourceStorage,
 		//FIXME:
 		"",
 		&config.OTLPConfig{},
@@ -221,7 +230,7 @@ func (e *TestEnv) setupHTTPServers(t *testing.T) {
 	// Create HTTP router and register services
 	router := mux.NewRouter()
 	e.BootstrapServer.ConfigureHTTP(router)
-	e.ConfigServer.ConfigureHTTP(router)
+	// e.ConfigServer.ConfigureHTTP(router)
 	e.AgentServer.ConfigureHTTP(router)
 
 	// Create HTTP test server

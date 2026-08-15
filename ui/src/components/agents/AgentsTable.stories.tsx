@@ -8,18 +8,13 @@ import {
     ConfigSyncStatus,
 } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import type { AgentDescriptionAndStatus } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import {
-    ConfigAssignmentInfoSchema,
-    ConfigApplicationStatus,
-} from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
-import type { ConfigAssignmentInfo } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
 import { Table } from '../Table';
 import { buildAgentColumns } from './agentColumns';
 
 /**
  * The agents table as rendered on the `/agents` page: the generic `Table`
  * driven by `buildAgentColumns` (shared with the live page, so this stays in
- * sync). Covers every connection / health / config-sync / assignment state
+ * sync). Covers every connection / health / config-sync state
  * with mock data — no backend required.
  *
  * Selection, column show/hide (the ☰ menu), and the expandable error row are
@@ -69,20 +64,6 @@ function mockAgent(init: {
     });
 }
 
-function mockAssignment(init: {
-    agentId: string;
-    configId: string;
-    status: ConfigApplicationStatus;
-    errorMessage?: string;
-}): ConfigAssignmentInfo {
-    return create(ConfigAssignmentInfoSchema, {
-        agentId: init.agentId,
-        configId: init.configId,
-        status: init.status,
-        errorMessage: init.errorMessage ?? '',
-    });
-}
-
 const AGENTS: AgentDescriptionAndStatus[] = [
     mockAgent({
         id: 'agent-web-01',
@@ -124,26 +105,17 @@ const AGENTS: AgentDescriptionAndStatus[] = [
     }),
 ];
 
-const ASSIGNMENTS = new Map<string, ConfigAssignmentInfo>([
-    ['agent-web-01', mockAssignment({ agentId: 'agent-web-01', configId: 'prod-traces', status: ConfigApplicationStatus.APPLIED })],
-    ['agent-edge-eu', mockAssignment({ agentId: 'agent-edge-eu', configId: 'edge-eu', status: ConfigApplicationStatus.FAILED, errorMessage: 'invalid exporter endpoint' })],
-    ['agent-batch-03', mockAssignment({ agentId: 'agent-batch-03', configId: 'staging-metrics', status: ConfigApplicationStatus.PENDING })],
-    ['agent-apply-04', mockAssignment({ agentId: 'agent-apply-04', configId: 'prod-traces', status: ConfigApplicationStatus.PENDING })],
-    // agent-legacy-09 intentionally has no assignment -> "(none)"
-]);
-
 // --- Interactive wrapper ---------------------------------------------------
 
 interface AgentsTableDemoProps {
     data: AgentDescriptionAndStatus[];
-    assignments: Map<string, ConfigAssignmentInfo>;
     selectable: boolean;
     onDelete: (agentId: string, agentName: string) => void;
 }
 
-function AgentsTableDemo({ data, assignments, selectable, onDelete }: AgentsTableDemoProps) {
+function AgentsTableDemo({ data, selectable, onDelete }: AgentsTableDemoProps) {
     const [selectedKeys, setSelectedKeys] = useState<Set<string | number>>(new Set());
-    const columns = buildAgentColumns({ assignments, onDelete });
+    const columns = buildAgentColumns({ onDelete });
 
     return (
         <Table<AgentDescriptionAndStatus>
@@ -165,11 +137,10 @@ function AgentsTableDemo({ data, assignments, selectable, onDelete }: AgentsTabl
 
 // --- Stories ---------------------------------------------------------------
 
-/** Full table with a mix of connection, health, sync, and assignment states. */
+/** Full table with a mix of connection, health, and sync states. */
 export const Default: Story = {
     args: {
         data: AGENTS,
-        assignments: ASSIGNMENTS,
         onDelete: fn(),
     },
 };
@@ -178,7 +149,6 @@ export const Default: Story = {
 export const NonSelectable: Story = {
     args: {
         data: AGENTS,
-        assignments: ASSIGNMENTS,
         selectable: false,
         onDelete: fn(),
     },
@@ -188,7 +158,6 @@ export const NonSelectable: Story = {
 export const SingleAgent: Story = {
     args: {
         data: [AGENTS[0]],
-        assignments: ASSIGNMENTS,
         onDelete: fn(),
     },
 };
@@ -197,7 +166,6 @@ export const SingleAgent: Story = {
 export const Empty: Story = {
     args: {
         data: [],
-        assignments: new Map(),
         onDelete: fn(),
     },
 };

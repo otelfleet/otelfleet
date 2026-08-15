@@ -13,6 +13,7 @@ import (
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/open-telemetry/opamp-go/server/types"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
+	resourcesv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
@@ -21,6 +22,7 @@ import (
 	stypes "github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/otelfleet/otelfleet/pkg/util"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var _ services_int.OpAmpServerHandler = (*ServerAgentHandler)(nil)
@@ -40,6 +42,10 @@ type ServerAgentHandler struct {
 	agentRepo agentdomain.Repository
 	// Config store for OpAMP-specific config logic
 	assignedConfigStore stypes.KeyValue[*configv1alpha1.Config]
+	collectorConfigs    stypes.KeyValue[*resourcesv1alpha1.CollectorConfig]
+	// TODO : I don't think I want to do it this way.
+	configAssignmentStore stypes.KeyValue[*configv1alpha1.ConfigAssignment]
+	configFilterSync      *ConfigFilterSync
 
 	// unset until we understand who is who
 	agentID     *string
@@ -51,20 +57,26 @@ func NewServerAgentHandler(
 	serverConnID string,
 	agentRepo agentdomain.Repository,
 	assignedConfigStore stypes.KeyValue[*configv1alpha1.Config],
+	collectorConfigs stypes.KeyValue[*resourcesv1alpha1.CollectorConfig],
+	configAssignmentStore stypes.KeyValue[*configv1alpha1.ConfigAssignment],
+	configFilterSync *ConfigFilterSync,
 	logger *slog.Logger,
 	// FIXME: simple example to pass connection settings
 	otlpServerAddr string,
 	otlpConfig *config.OTLPConfig,
 ) *ServerAgentHandler {
 	return &ServerAgentHandler{
-		ctx:                  ctx,
-		serverAssignedConnID: serverConnID,
-		logger:               logger.With("server-conn-id", serverConnID),
-		agentRepo:            agentRepo,
-		instanceUID:          nil,
-		assignedConfigStore:  assignedConfigStore,
-		otlpServerAddr:       otlpServerAddr,
-		otlpConfig:           otlpConfig,
+		ctx:                   ctx,
+		serverAssignedConnID:  serverConnID,
+		logger:                logger.With("server-conn-id", serverConnID),
+		agentRepo:             agentRepo,
+		instanceUID:           nil,
+		assignedConfigStore:   assignedConfigStore,
+		collectorConfigs:      collectorConfigs,
+		configAssignmentStore: configAssignmentStore,
+		configFilterSync:      configFilterSync,
+		otlpServerAddr:        otlpServerAddr,
+		otlpConfig:            otlpConfig,
 	}
 }
 
@@ -102,7 +114,7 @@ func (s *ServerAgentHandler) OnMessage(ctx context.Context, conn types.Connectio
 	// Update connection state and check for sequence gaps
 	needsFullState := s.updateConnectionState(ctx, *s.agentID, message)
 
-	if err := s.persistAgentInformation(ctx, conn, message); err != nil {
+	if err := s.persistAgentInformation(ctx, message); err != nil {
 		return ErrorResponse(message.InstanceUid, NewUnavailableError(err.Error()))
 	}
 
@@ -113,6 +125,10 @@ func (s *ServerAgentHandler) OnMessage(ctx context.Context, conn types.Connectio
 	}
 	resp.ConnectionSettings = connSettings
 
+	if remoteConfig := s.pendingRemoteConfig(ctx, *s.agentID, message); remoteConfig != nil {
+		resp.RemoteConfig = remoteConfig
+	}
+
 	if needsFullState {
 		resp.Flags = uint64(protobufs.ServerToAgentFlags_ServerToAgentFlags_ReportFullState)
 		logger.Info("requesting full state report due to sequence gap")
@@ -120,11 +136,11 @@ func (s *ServerAgentHandler) OnMessage(ctx context.Context, conn types.Connectio
 	return resp
 }
 
-func (s *ServerAgentHandler) persistAgentInformation(ctx context.Context, conn types.Connection, msg *protobufs.AgentToServer) error {
+func (s *ServerAgentHandler) persistAgentInformation(ctx context.Context, msg *protobufs.AgentToServer) error {
 	logger := logutil.FromContext(ctx)
 	errs := []error{}
 	if msg.RemoteConfigStatus != nil {
-		if err := s.handleRemoteConfigStatus(ctx, conn, *s.agentID, msg.RemoteConfigStatus); err != nil {
+		if err := s.handleRemoteConfigStatus(ctx, *s.agentID, msg.RemoteConfigStatus); err != nil {
 			logger.With("err", err).Error("failed to handle remote config status message")
 			// ignore status update from returned errors
 		}
@@ -370,58 +386,148 @@ func (s *ServerAgentHandler) updateConnectionState(ctx context.Context, agentID 
 
 func (s *ServerAgentHandler) handleRemoteConfigStatus(
 	ctx context.Context,
-	conn types.Connection,
 	agentID string,
 	remoteConfigStatus *protobufs.RemoteConfigStatus,
 ) error {
-	logger := logutil.FromContext(ctx)
-
-	// Get the assigned config and calculate its expected hash
-	assignedConfigMap, err := s.constructConfig(ctx, agentID)
-	if err != nil {
-		return fmt.Errorf("failed to construct assigned config: %w", err)
-	}
-	expectedHash := s.calculateHash(assignedConfigMap)
-
-	// Compare agent's reported hash against the assigned config hash
-	incomingHash := remoteConfigStatus.GetLastRemoteConfigHash()
-
-	if bytes.Equal(expectedHash, incomingHash) {
-		logger.Info("agent remote config up-to-date")
-		// Persist the status
-		if err := s.agentRepo.UpdateRemoteConfigStatus(ctx, agentID, remoteConfigStatus); err != nil {
-			return fmt.Errorf("failed to persist remote config status: %w", err)
-		}
-		return nil
-	}
-
-	logger.Info("need to send remote config to agent",
-		"expected_hash", fmt.Sprintf("%x", expectedHash),
-		"agent_hash", fmt.Sprintf("%x", incomingHash))
-
-	if err := s.sendConfig(ctx, conn, agentID); err != nil {
-		return fmt.Errorf("failed to send config to remote: %w", err)
-	}
 	if err := s.agentRepo.UpdateRemoteConfigStatus(ctx, agentID, remoteConfigStatus); err != nil {
 		return fmt.Errorf("failed to persist remote config status: %w", err)
 	}
 	return nil
 }
 
+// pendingRemoteConfig returns the config to push when the agent is not already
+// running the config the server currently resolves for it.
+func (s *ServerAgentHandler) pendingRemoteConfig(ctx context.Context, agentID string, msg *protobufs.AgentToServer) *protobufs.AgentRemoteConfig {
+	logger := logutil.FromContext(ctx)
+	if !agentdomain.Capabilities(msg.GetCapabilities()).HasAcceptsRemoteConfig() {
+		return nil
+	}
+
+	resolved, err := s.constructConfig(ctx, agentID)
+	if err != nil {
+		logger.With("err", err).Error("failed to construct config")
+		return nil
+	}
+	expectedHash := s.calculateHash(resolved.configMap)
+	s.recordAssignment(ctx, agentID, resolved, expectedHash)
+
+	if bytes.Equal(expectedHash, s.appliedConfigHash(ctx, agentID, msg)) {
+		logger.Debug("agent remote config up-to-date")
+		return nil
+	}
+
+	logger.Info("pushing remote config to agent", "expected_hash", fmt.Sprintf("%x", expectedHash))
+	return &protobufs.AgentRemoteConfig{
+		Config:     resolved.configMap,
+		ConfigHash: expectedHash,
+	}
+}
+
+func (s *ServerAgentHandler) appliedConfigHash(ctx context.Context, agentID string, msg *protobufs.AgentToServer) []byte {
+	if msg.GetRemoteConfigStatus() != nil {
+		return msg.GetRemoteConfigStatus().GetLastRemoteConfigHash()
+	}
+
+	agent, err := s.agentRepo.Get(ctx, agentID)
+	if err != nil {
+		logutil.FromContext(ctx).With("err", err).Error("failed to load last reported remote config status")
+		return nil
+	}
+	if agent.Status.RemoteConfigStatus == nil {
+		return nil
+	}
+	return agent.Status.RemoteConfigStatus.LastRemoteConfigHash
+}
+
 func (s *ServerAgentHandler) calculateHash(agentToConfigMap *protobufs.AgentConfigMap) []byte {
 	return util.HashAgentConfigMap(agentToConfigMap)
 }
 
-func (s *ServerAgentHandler) constructConfig(ctx context.Context, agentID string) (*protobufs.AgentConfigMap, error) {
+func (s *ServerAgentHandler) agentLabels(ctx context.Context, agentID string) (AgentLabels, error) {
+	agent, err := s.agentRepo.Get(ctx, agentID)
+	if err != nil {
+		return AgentLabels{}, err
+	}
+	return AgentLabels{
+		Identifying:    toStringLabels(agent.Attributes.Identifying),
+		NonIdentifying: toStringLabels(agent.Attributes.NonIdentifying),
+	}, nil
+}
+
+func toStringLabels(attrs map[string]any) map[string]string {
+	labels := make(map[string]string, len(attrs))
+	for k, v := range attrs {
+		labels[k] = fmt.Sprint(v)
+	}
+	return labels
+}
+
+type resolvedConfig struct {
+	configMap *protobufs.AgentConfigMap
+	configRef string
+	source    configv1alpha1.ConfigSource
+}
+
+func (s *ServerAgentHandler) filteredConfig(ctx context.Context, agentID string) *resolvedConfig {
 	logger := logutil.FromContext(ctx)
+	labels, err := s.agentLabels(ctx, agentID)
+	if err != nil {
+		logger.With("err", err).Error("failed to load agent labels for config filtering")
+		return nil
+	}
+
+	filter := s.configFilterSync.Match(labels)
+	configRef := filter.GetCollectorConfig().GetConfigRef()
+	if configRef == "" {
+		return nil
+	}
+	logger = logger.With("config_ref", configRef)
+
+	collectorConfig, err := s.collectorConfigs.Get(ctx, configRef)
+	if err != nil {
+		logger.With("err", err).Error("config filter references an unreadable collector config")
+		return nil
+	}
+
+	raw := collectorConfig.GetRaw()
+	if raw == nil {
+		// TODO : render CollectorConfig.components into yaml
+		logger.Error("collector config has no raw configuration")
+		return nil
+	}
+
+	logger.Info("agent config selected by config filter")
+	return &resolvedConfig{
+		configRef: configRef,
+		source:    configv1alpha1.ConfigSource_CONFIG_SOURCE_MANUAL,
+		configMap: &protobufs.AgentConfigMap{
+			ConfigMap: map[string]*protobufs.AgentConfigFile{
+				"config.yaml": {
+					ContentType: collectorConfig.GetContentType(),
+					Body:        raw,
+				},
+			},
+		},
+	}
+}
+
+func (s *ServerAgentHandler) constructConfig(ctx context.Context, agentID string) (*resolvedConfig, error) {
+	logger := logutil.FromContext(ctx)
+	if filtered := s.filteredConfig(ctx, agentID); filtered != nil {
+		return filtered, nil
+	}
+
 	assignedConfig, err := s.assignedConfigStore.Get(ctx, agentID)
 	if grpcutil.IsErrorNotFound(err) {
 		logger.Info("no assigned config, falling back to default config")
-		return &protobufs.AgentConfigMap{
-			ConfigMap: map[string]*protobufs.AgentConfigFile{
-				"config.yaml": {
-					ContentType: "text/yaml",
-					Body:        []byte(otelconfig.DefaultOtelConfig),
+		return &resolvedConfig{
+			source: configv1alpha1.ConfigSource_CONFIG_SOURCE_DEFAULT,
+			configMap: &protobufs.AgentConfigMap{
+				ConfigMap: map[string]*protobufs.AgentConfigFile{
+					"config.yaml": {
+						ContentType: "text/yaml",
+						Body:        []byte(otelconfig.DefaultOtelConfig),
+					},
 				},
 			},
 		}, nil
@@ -429,21 +535,50 @@ func (s *ServerAgentHandler) constructConfig(ctx context.Context, agentID string
 		return nil, fmt.Errorf("failed to get assigned config: %w", err)
 	}
 	logger.Info("agent has an assigned config")
-	// Use the same helper as ConfigServer for consistent config map structure
-	return util.ProtoConfigToAgentConfigMap(assignedConfig), nil
+	return &resolvedConfig{
+		configRef: agentID,
+		source:    configv1alpha1.ConfigSource_CONFIG_SOURCE_MANUAL,
+		configMap: util.ProtoConfigToAgentConfigMap(assignedConfig),
+	}, nil
+}
+
+// recordAssignment persists what the server resolved for the agent so config
+// sync status can be computed against it.
+func (s *ServerAgentHandler) recordAssignment(ctx context.Context, agentID string, resolved *resolvedConfig, hash []byte) {
+	logger := logutil.FromContext(ctx)
+	existing, err := s.configAssignmentStore.Get(ctx, agentID)
+	if err != nil && !grpcutil.IsErrorNotFound(err) {
+		logger.With("err", err).Error("failed to read config assignment")
+		return
+	}
+	if existing != nil && bytes.Equal(existing.GetConfigHash(), hash) {
+		return
+	}
+
+	assignment := &configv1alpha1.ConfigAssignment{
+		AgentId:    agentID,
+		ConfigId:   resolved.configRef,
+		Source:     resolved.source,
+		AssignedAt: timestamppb.Now(),
+		ConfigHash: hash,
+	}
+	if err := s.configAssignmentStore.Put(ctx, agentID, assignment); err != nil {
+		logger.With("err", err).Error("failed to persist config assignment")
+	}
 }
 
 func (s *ServerAgentHandler) sendConfig(ctx context.Context, conn types.Connection, agentID string) error {
 	s.logger.Log(ctx, logutil.LevelTrace, "sending config to agent")
-	configMap, err := s.constructConfig(ctx, agentID)
+	resolved, err := s.constructConfig(ctx, agentID)
 	if err != nil {
 		return fmt.Errorf("failed to construct config : %w", err)
 	}
-	hash := s.calculateHash(configMap)
+	hash := s.calculateHash(resolved.configMap)
+	s.recordAssignment(ctx, agentID, resolved, hash)
 
 	return conn.Send(ctx, &protobufs.ServerToAgent{
 		RemoteConfig: &protobufs.AgentRemoteConfig{
-			Config:     configMap,
+			Config:     resolved.configMap,
 			ConfigHash: hash,
 		},
 	})

@@ -169,6 +169,61 @@ func (VersionOrdering) EnumDescriptor() ([]byte, []int) {
 	return file_pkg_api_resources_v1alpha1_resources_proto_rawDescGZIP(), []int{2}
 }
 
+type MatchType int32
+
+const (
+	MatchType_MATCH_TYPE_UNKNOWN MatchType = 0
+	MatchType_MATCH_TYPE_EQ      MatchType = 1
+	MatchType_MATCH_TYPE_NEQ     MatchType = 2
+	MatchType_MATCH_TYPE_RE      MatchType = 3
+	MatchType_MATCH_TYPE_NR      MatchType = 4
+)
+
+// Enum value maps for MatchType.
+var (
+	MatchType_name = map[int32]string{
+		0: "MATCH_TYPE_UNKNOWN",
+		1: "MATCH_TYPE_EQ",
+		2: "MATCH_TYPE_NEQ",
+		3: "MATCH_TYPE_RE",
+		4: "MATCH_TYPE_NR",
+	}
+	MatchType_value = map[string]int32{
+		"MATCH_TYPE_UNKNOWN": 0,
+		"MATCH_TYPE_EQ":      1,
+		"MATCH_TYPE_NEQ":     2,
+		"MATCH_TYPE_RE":      3,
+		"MATCH_TYPE_NR":      4,
+	}
+)
+
+func (x MatchType) Enum() *MatchType {
+	p := new(MatchType)
+	*p = x
+	return p
+}
+
+func (x MatchType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (MatchType) Descriptor() protoreflect.EnumDescriptor {
+	return file_pkg_api_resources_v1alpha1_resources_proto_enumTypes[3].Descriptor()
+}
+
+func (MatchType) Type() protoreflect.EnumType {
+	return &file_pkg_api_resources_v1alpha1_resources_proto_enumTypes[3]
+}
+
+func (x MatchType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use MatchType.Descriptor instead.
+func (MatchType) EnumDescriptor() ([]byte, []int) {
+	return file_pkg_api_resources_v1alpha1_resources_proto_rawDescGZIP(), []int{3}
+}
+
 type GetEntityRequest struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
 	TypeUrl string                 `protobuf:"bytes,1,opt,name=type_url,json=typeUrl,proto3" json:"type_url,omitempty"`
@@ -1893,6 +1948,230 @@ func (x *VersionConstraits) GetMaxVersion() string {
 	return ""
 }
 
+type ConfigFilter struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Default         *bool                  `protobuf:"varint,1,opt,name=default,proto3,oneof" json:"default,omitempty"`
+	Approval        *ApprovalConfig        `protobuf:"bytes,2,opt,name=approval,proto3" json:"approval,omitempty"`
+	Filters         []*LabelFilter         `protobuf:"bytes,3,rep,name=filters,proto3" json:"filters,omitempty"`
+	CollectorConfig *TargetConfig          `protobuf:"bytes,4,opt,name=collector_config,json=collectorConfig,proto3" json:"collector_config,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ConfigFilter) Reset() {
+	*x = ConfigFilter{}
+	mi := &file_pkg_api_resources_v1alpha1_resources_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfigFilter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfigFilter) ProtoMessage() {}
+
+func (x *ConfigFilter) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_resources_v1alpha1_resources_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfigFilter.ProtoReflect.Descriptor instead.
+func (*ConfigFilter) Descriptor() ([]byte, []int) {
+	return file_pkg_api_resources_v1alpha1_resources_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *ConfigFilter) GetDefault() bool {
+	if x != nil && x.Default != nil {
+		return *x.Default
+	}
+	return false
+}
+
+func (x *ConfigFilter) GetApproval() *ApprovalConfig {
+	if x != nil {
+		return x.Approval
+	}
+	return nil
+}
+
+func (x *ConfigFilter) GetFilters() []*LabelFilter {
+	if x != nil {
+		return x.Filters
+	}
+	return nil
+}
+
+func (x *ConfigFilter) GetCollectorConfig() *TargetConfig {
+	if x != nil {
+		return x.CollectorConfig
+	}
+	return nil
+}
+
+type LabelFilter struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Type             MatchType              `protobuf:"varint,1,opt,name=type,proto3,enum=resources.v1alpha1.MatchType" json:"type,omitempty"`
+	OpampIdLabels    map[string]string      `protobuf:"bytes,2,rep,name=opamp_id_labels,json=opampIdLabels,proto3" json:"opamp_id_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	OpampNonIdLabels map[string]string      `protobuf:"bytes,3,rep,name=opamp_non_id_labels,json=opampNonIdLabels,proto3" json:"opamp_non_id_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	OtelfleetLabels  map[string]string      `protobuf:"bytes,4,rep,name=otelfleet_labels,json=otelfleetLabels,proto3" json:"otelfleet_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *LabelFilter) Reset() {
+	*x = LabelFilter{}
+	mi := &file_pkg_api_resources_v1alpha1_resources_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LabelFilter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LabelFilter) ProtoMessage() {}
+
+func (x *LabelFilter) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_resources_v1alpha1_resources_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LabelFilter.ProtoReflect.Descriptor instead.
+func (*LabelFilter) Descriptor() ([]byte, []int) {
+	return file_pkg_api_resources_v1alpha1_resources_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *LabelFilter) GetType() MatchType {
+	if x != nil {
+		return x.Type
+	}
+	return MatchType_MATCH_TYPE_UNKNOWN
+}
+
+func (x *LabelFilter) GetOpampIdLabels() map[string]string {
+	if x != nil {
+		return x.OpampIdLabels
+	}
+	return nil
+}
+
+func (x *LabelFilter) GetOpampNonIdLabels() map[string]string {
+	if x != nil {
+		return x.OpampNonIdLabels
+	}
+	return nil
+}
+
+func (x *LabelFilter) GetOtelfleetLabels() map[string]string {
+	if x != nil {
+		return x.OtelfleetLabels
+	}
+	return nil
+}
+
+type TargetConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ConfigRef     string                 `protobuf:"bytes,1,opt,name=config_ref,json=configRef,proto3" json:"config_ref,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TargetConfig) Reset() {
+	*x = TargetConfig{}
+	mi := &file_pkg_api_resources_v1alpha1_resources_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TargetConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TargetConfig) ProtoMessage() {}
+
+func (x *TargetConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_resources_v1alpha1_resources_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TargetConfig.ProtoReflect.Descriptor instead.
+func (*TargetConfig) Descriptor() ([]byte, []int) {
+	return file_pkg_api_resources_v1alpha1_resources_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *TargetConfig) GetConfigRef() string {
+	if x != nil {
+		return x.ConfigRef
+	}
+	return ""
+}
+
+type ApprovalConfig struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	RequiresApproval *bool                  `protobuf:"varint,1,opt,name=requires_approval,json=requiresApproval,proto3,oneof" json:"requires_approval,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *ApprovalConfig) Reset() {
+	*x = ApprovalConfig{}
+	mi := &file_pkg_api_resources_v1alpha1_resources_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApprovalConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApprovalConfig) ProtoMessage() {}
+
+func (x *ApprovalConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_resources_v1alpha1_resources_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApprovalConfig.ProtoReflect.Descriptor instead.
+func (*ApprovalConfig) Descriptor() ([]byte, []int) {
+	return file_pkg_api_resources_v1alpha1_resources_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *ApprovalConfig) GetRequiresApproval() bool {
+	if x != nil && x.RequiresApproval != nil {
+		return *x.RequiresApproval
+	}
+	return false
+}
+
 var File_pkg_api_resources_v1alpha1_resources_proto protoreflect.FileDescriptor
 
 const file_pkg_api_resources_v1alpha1_resources_proto_rawDesc = "" +
@@ -2019,7 +2298,34 @@ const file_pkg_api_resources_v1alpha1_resources_proto_rawDesc = "" +
 	"\vmax_version\x18\x04 \x01(\tH\x01R\n" +
 	"maxVersion\x88\x01\x01B\x0e\n" +
 	"\f_min_versionB\x0e\n" +
-	"\f_max_version*e\n" +
+	"\f_max_version\"\x81\x02\n" +
+	"\fConfigFilter\x12\x1d\n" +
+	"\adefault\x18\x01 \x01(\bH\x00R\adefault\x88\x01\x01\x12>\n" +
+	"\bapproval\x18\x02 \x01(\v2\".resources.v1alpha1.ApprovalConfigR\bapproval\x129\n" +
+	"\afilters\x18\x03 \x03(\v2\x1f.resources.v1alpha1.LabelFilterR\afilters\x12K\n" +
+	"\x10collector_config\x18\x04 \x01(\v2 .resources.v1alpha1.TargetConfigR\x0fcollectorConfigB\n" +
+	"\n" +
+	"\b_default\"\xae\x04\n" +
+	"\vLabelFilter\x121\n" +
+	"\x04type\x18\x01 \x01(\x0e2\x1d.resources.v1alpha1.MatchTypeR\x04type\x12Z\n" +
+	"\x0fopamp_id_labels\x18\x02 \x03(\v22.resources.v1alpha1.LabelFilter.OpampIdLabelsEntryR\ropampIdLabels\x12d\n" +
+	"\x13opamp_non_id_labels\x18\x03 \x03(\v25.resources.v1alpha1.LabelFilter.OpampNonIdLabelsEntryR\x10opampNonIdLabels\x12_\n" +
+	"\x10otelfleet_labels\x18\x04 \x03(\v24.resources.v1alpha1.LabelFilter.OtelfleetLabelsEntryR\x0fotelfleetLabels\x1a@\n" +
+	"\x12OpampIdLabelsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aC\n" +
+	"\x15OpampNonIdLabelsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aB\n" +
+	"\x14OtelfleetLabelsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"-\n" +
+	"\fTargetConfig\x12\x1d\n" +
+	"\n" +
+	"config_ref\x18\x01 \x01(\tR\tconfigRef\"X\n" +
+	"\x0eApprovalConfig\x120\n" +
+	"\x11requires_approval\x18\x01 \x01(\bH\x00R\x10requiresApproval\x88\x01\x01B\x14\n" +
+	"\x12_requires_approval*e\n" +
 	"\x0eWatchEventType\x12\x1c\n" +
 	"\x18WATCH_EVENT_TYPE_UNKNOWN\x10\x00\x12\x18\n" +
 	"\x14WATCH_EVENT_TYPE_PUT\x10\x01\x12\x1b\n" +
@@ -2031,7 +2337,13 @@ const file_pkg_api_resources_v1alpha1_resources_proto_rawDesc = "" +
 	"\x12PIPELINE_TYPE_LOGS\x10\x03\x12\x19\n" +
 	"\x15PIPELINE_TYPE_PROFILE\x10\x04*.\n" +
 	"\x0fVersionOrdering\x12\x1b\n" +
-	"\x17VERSION_ORDERING_SEMVER\x10\x002\xd9\x04\n" +
+	"\x17VERSION_ORDERING_SEMVER\x10\x00*p\n" +
+	"\tMatchType\x12\x16\n" +
+	"\x12MATCH_TYPE_UNKNOWN\x10\x00\x12\x11\n" +
+	"\rMATCH_TYPE_EQ\x10\x01\x12\x12\n" +
+	"\x0eMATCH_TYPE_NEQ\x10\x02\x12\x11\n" +
+	"\rMATCH_TYPE_RE\x10\x03\x12\x11\n" +
+	"\rMATCH_TYPE_NR\x10\x042\xd9\x04\n" +
 	"\x0fResourceService\x12Z\n" +
 	"\tGetEntity\x12$.resources.v1alpha1.GetEntityRequest\x1a%.resources.v1alpha1.GetEntityResponse\"\x00\x12Z\n" +
 	"\tPutEntity\x12$.resources.v1alpha1.PutEntityRequest\x1a%.resources.v1alpha1.PutEntityResponse\"\x00\x12c\n" +
@@ -2054,101 +2366,116 @@ func file_pkg_api_resources_v1alpha1_resources_proto_rawDescGZIP() []byte {
 	return file_pkg_api_resources_v1alpha1_resources_proto_rawDescData
 }
 
-var file_pkg_api_resources_v1alpha1_resources_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_pkg_api_resources_v1alpha1_resources_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
+var file_pkg_api_resources_v1alpha1_resources_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_pkg_api_resources_v1alpha1_resources_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_pkg_api_resources_v1alpha1_resources_proto_goTypes = []any{
 	(WatchEventType)(0),           // 0: resources.v1alpha1.WatchEventType
 	(PipelineType)(0),             // 1: resources.v1alpha1.PipelineType
 	(VersionOrdering)(0),          // 2: resources.v1alpha1.VersionOrdering
-	(*GetEntityRequest)(nil),      // 3: resources.v1alpha1.GetEntityRequest
-	(*GetEntityResponse)(nil),     // 4: resources.v1alpha1.GetEntityResponse
-	(*PutEntityRequest)(nil),      // 5: resources.v1alpha1.PutEntityRequest
-	(*PutEntityResponse)(nil),     // 6: resources.v1alpha1.PutEntityResponse
-	(*DeleteEntityRequest)(nil),   // 7: resources.v1alpha1.DeleteEntityRequest
-	(*DeleteEntityResponse)(nil),  // 8: resources.v1alpha1.DeleteEntityResponse
-	(*ListEntityRequest)(nil),     // 9: resources.v1alpha1.ListEntityRequest
-	(*ListEntityResponse)(nil),    // 10: resources.v1alpha1.ListEntityResponse
-	(*WatchEntityRequest)(nil),    // 11: resources.v1alpha1.WatchEntityRequest
-	(*WatchEntityResponse)(nil),   // 12: resources.v1alpha1.WatchEntityResponse
-	(*HistoryEntityRequest)(nil),  // 13: resources.v1alpha1.HistoryEntityRequest
-	(*HistoryEntityResponse)(nil), // 14: resources.v1alpha1.HistoryEntityResponse
-	(*Reference)(nil),             // 15: resources.v1alpha1.Reference
-	(*ResourceEntity)(nil),        // 16: resources.v1alpha1.ResourceEntity
-	(*CollectorConfig)(nil),       // 17: resources.v1alpha1.CollectorConfig
-	(*CollectorComponents)(nil),   // 18: resources.v1alpha1.CollectorComponents
-	(*Receiver)(nil),              // 19: resources.v1alpha1.Receiver
-	(*ReceiverCollection)(nil),    // 20: resources.v1alpha1.ReceiverCollection
-	(*Processor)(nil),             // 21: resources.v1alpha1.Processor
-	(*ProcessorCollection)(nil),   // 22: resources.v1alpha1.ProcessorCollection
-	(*Exporter)(nil),              // 23: resources.v1alpha1.Exporter
-	(*ExporterCollection)(nil),    // 24: resources.v1alpha1.ExporterCollection
-	(*Connector)(nil),             // 25: resources.v1alpha1.Connector
-	(*ConnectorCollection)(nil),   // 26: resources.v1alpha1.ConnectorCollection
-	(*Extension)(nil),             // 27: resources.v1alpha1.Extension
-	(*ExtensionCollection)(nil),   // 28: resources.v1alpha1.ExtensionCollection
-	(*Pipeline)(nil),              // 29: resources.v1alpha1.Pipeline
-	(*PipelineCollection)(nil),    // 30: resources.v1alpha1.PipelineCollection
-	(*ComponentDefinition)(nil),   // 31: resources.v1alpha1.ComponentDefinition
-	(*CompatibilityMatrix)(nil),   // 32: resources.v1alpha1.CompatibilityMatrix
-	(*VersionConstraits)(nil),     // 33: resources.v1alpha1.VersionConstraits
-	(*anypb.Any)(nil),             // 34: google.protobuf.Any
+	(MatchType)(0),                // 3: resources.v1alpha1.MatchType
+	(*GetEntityRequest)(nil),      // 4: resources.v1alpha1.GetEntityRequest
+	(*GetEntityResponse)(nil),     // 5: resources.v1alpha1.GetEntityResponse
+	(*PutEntityRequest)(nil),      // 6: resources.v1alpha1.PutEntityRequest
+	(*PutEntityResponse)(nil),     // 7: resources.v1alpha1.PutEntityResponse
+	(*DeleteEntityRequest)(nil),   // 8: resources.v1alpha1.DeleteEntityRequest
+	(*DeleteEntityResponse)(nil),  // 9: resources.v1alpha1.DeleteEntityResponse
+	(*ListEntityRequest)(nil),     // 10: resources.v1alpha1.ListEntityRequest
+	(*ListEntityResponse)(nil),    // 11: resources.v1alpha1.ListEntityResponse
+	(*WatchEntityRequest)(nil),    // 12: resources.v1alpha1.WatchEntityRequest
+	(*WatchEntityResponse)(nil),   // 13: resources.v1alpha1.WatchEntityResponse
+	(*HistoryEntityRequest)(nil),  // 14: resources.v1alpha1.HistoryEntityRequest
+	(*HistoryEntityResponse)(nil), // 15: resources.v1alpha1.HistoryEntityResponse
+	(*Reference)(nil),             // 16: resources.v1alpha1.Reference
+	(*ResourceEntity)(nil),        // 17: resources.v1alpha1.ResourceEntity
+	(*CollectorConfig)(nil),       // 18: resources.v1alpha1.CollectorConfig
+	(*CollectorComponents)(nil),   // 19: resources.v1alpha1.CollectorComponents
+	(*Receiver)(nil),              // 20: resources.v1alpha1.Receiver
+	(*ReceiverCollection)(nil),    // 21: resources.v1alpha1.ReceiverCollection
+	(*Processor)(nil),             // 22: resources.v1alpha1.Processor
+	(*ProcessorCollection)(nil),   // 23: resources.v1alpha1.ProcessorCollection
+	(*Exporter)(nil),              // 24: resources.v1alpha1.Exporter
+	(*ExporterCollection)(nil),    // 25: resources.v1alpha1.ExporterCollection
+	(*Connector)(nil),             // 26: resources.v1alpha1.Connector
+	(*ConnectorCollection)(nil),   // 27: resources.v1alpha1.ConnectorCollection
+	(*Extension)(nil),             // 28: resources.v1alpha1.Extension
+	(*ExtensionCollection)(nil),   // 29: resources.v1alpha1.ExtensionCollection
+	(*Pipeline)(nil),              // 30: resources.v1alpha1.Pipeline
+	(*PipelineCollection)(nil),    // 31: resources.v1alpha1.PipelineCollection
+	(*ComponentDefinition)(nil),   // 32: resources.v1alpha1.ComponentDefinition
+	(*CompatibilityMatrix)(nil),   // 33: resources.v1alpha1.CompatibilityMatrix
+	(*VersionConstraits)(nil),     // 34: resources.v1alpha1.VersionConstraits
+	(*ConfigFilter)(nil),          // 35: resources.v1alpha1.ConfigFilter
+	(*LabelFilter)(nil),           // 36: resources.v1alpha1.LabelFilter
+	(*TargetConfig)(nil),          // 37: resources.v1alpha1.TargetConfig
+	(*ApprovalConfig)(nil),        // 38: resources.v1alpha1.ApprovalConfig
+	nil,                           // 39: resources.v1alpha1.LabelFilter.OpampIdLabelsEntry
+	nil,                           // 40: resources.v1alpha1.LabelFilter.OpampNonIdLabelsEntry
+	nil,                           // 41: resources.v1alpha1.LabelFilter.OtelfleetLabelsEntry
+	(*anypb.Any)(nil),             // 42: google.protobuf.Any
 }
 var file_pkg_api_resources_v1alpha1_resources_proto_depIdxs = []int32{
-	16, // 0: resources.v1alpha1.GetEntityResponse.entity:type_name -> resources.v1alpha1.ResourceEntity
-	16, // 1: resources.v1alpha1.PutEntityRequest.entity:type_name -> resources.v1alpha1.ResourceEntity
-	16, // 2: resources.v1alpha1.ListEntityResponse.entities:type_name -> resources.v1alpha1.ResourceEntity
+	17, // 0: resources.v1alpha1.GetEntityResponse.entity:type_name -> resources.v1alpha1.ResourceEntity
+	17, // 1: resources.v1alpha1.PutEntityRequest.entity:type_name -> resources.v1alpha1.ResourceEntity
+	17, // 2: resources.v1alpha1.ListEntityResponse.entities:type_name -> resources.v1alpha1.ResourceEntity
 	0,  // 3: resources.v1alpha1.WatchEntityResponse.type:type_name -> resources.v1alpha1.WatchEventType
-	16, // 4: resources.v1alpha1.WatchEntityResponse.current:type_name -> resources.v1alpha1.ResourceEntity
-	16, // 5: resources.v1alpha1.WatchEntityResponse.previous:type_name -> resources.v1alpha1.ResourceEntity
-	16, // 6: resources.v1alpha1.HistoryEntityResponse.entities:type_name -> resources.v1alpha1.ResourceEntity
-	34, // 7: resources.v1alpha1.ResourceEntity.obj:type_name -> google.protobuf.Any
-	32, // 8: resources.v1alpha1.CollectorConfig.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
-	18, // 9: resources.v1alpha1.CollectorConfig.components:type_name -> resources.v1alpha1.CollectorComponents
-	20, // 10: resources.v1alpha1.CollectorComponents.receivers:type_name -> resources.v1alpha1.ReceiverCollection
-	22, // 11: resources.v1alpha1.CollectorComponents.processors:type_name -> resources.v1alpha1.ProcessorCollection
-	24, // 12: resources.v1alpha1.CollectorComponents.exporters:type_name -> resources.v1alpha1.ExporterCollection
-	26, // 13: resources.v1alpha1.CollectorComponents.connectors:type_name -> resources.v1alpha1.ConnectorCollection
-	28, // 14: resources.v1alpha1.CollectorComponents.extensions:type_name -> resources.v1alpha1.ExtensionCollection
-	30, // 15: resources.v1alpha1.CollectorComponents.pipelines:type_name -> resources.v1alpha1.PipelineCollection
-	32, // 16: resources.v1alpha1.Receiver.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
-	31, // 17: resources.v1alpha1.Receiver.value:type_name -> resources.v1alpha1.ComponentDefinition
-	19, // 18: resources.v1alpha1.ReceiverCollection.receivers:type_name -> resources.v1alpha1.Receiver
-	31, // 19: resources.v1alpha1.ReceiverCollection.value:type_name -> resources.v1alpha1.ComponentDefinition
-	32, // 20: resources.v1alpha1.Processor.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
-	31, // 21: resources.v1alpha1.Processor.value:type_name -> resources.v1alpha1.ComponentDefinition
-	21, // 22: resources.v1alpha1.ProcessorCollection.processors:type_name -> resources.v1alpha1.Processor
-	32, // 23: resources.v1alpha1.Exporter.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
-	31, // 24: resources.v1alpha1.Exporter.value:type_name -> resources.v1alpha1.ComponentDefinition
-	23, // 25: resources.v1alpha1.ExporterCollection.exporters:type_name -> resources.v1alpha1.Exporter
-	32, // 26: resources.v1alpha1.Connector.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
-	31, // 27: resources.v1alpha1.Connector.value:type_name -> resources.v1alpha1.ComponentDefinition
-	25, // 28: resources.v1alpha1.ConnectorCollection.connectors:type_name -> resources.v1alpha1.Connector
-	32, // 29: resources.v1alpha1.Extension.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
-	31, // 30: resources.v1alpha1.Extension.value:type_name -> resources.v1alpha1.ComponentDefinition
-	27, // 31: resources.v1alpha1.ExtensionCollection.extensions:type_name -> resources.v1alpha1.Extension
+	17, // 4: resources.v1alpha1.WatchEntityResponse.current:type_name -> resources.v1alpha1.ResourceEntity
+	17, // 5: resources.v1alpha1.WatchEntityResponse.previous:type_name -> resources.v1alpha1.ResourceEntity
+	17, // 6: resources.v1alpha1.HistoryEntityResponse.entities:type_name -> resources.v1alpha1.ResourceEntity
+	42, // 7: resources.v1alpha1.ResourceEntity.obj:type_name -> google.protobuf.Any
+	33, // 8: resources.v1alpha1.CollectorConfig.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
+	19, // 9: resources.v1alpha1.CollectorConfig.components:type_name -> resources.v1alpha1.CollectorComponents
+	21, // 10: resources.v1alpha1.CollectorComponents.receivers:type_name -> resources.v1alpha1.ReceiverCollection
+	23, // 11: resources.v1alpha1.CollectorComponents.processors:type_name -> resources.v1alpha1.ProcessorCollection
+	25, // 12: resources.v1alpha1.CollectorComponents.exporters:type_name -> resources.v1alpha1.ExporterCollection
+	27, // 13: resources.v1alpha1.CollectorComponents.connectors:type_name -> resources.v1alpha1.ConnectorCollection
+	29, // 14: resources.v1alpha1.CollectorComponents.extensions:type_name -> resources.v1alpha1.ExtensionCollection
+	31, // 15: resources.v1alpha1.CollectorComponents.pipelines:type_name -> resources.v1alpha1.PipelineCollection
+	33, // 16: resources.v1alpha1.Receiver.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
+	32, // 17: resources.v1alpha1.Receiver.value:type_name -> resources.v1alpha1.ComponentDefinition
+	20, // 18: resources.v1alpha1.ReceiverCollection.receivers:type_name -> resources.v1alpha1.Receiver
+	32, // 19: resources.v1alpha1.ReceiverCollection.value:type_name -> resources.v1alpha1.ComponentDefinition
+	33, // 20: resources.v1alpha1.Processor.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
+	32, // 21: resources.v1alpha1.Processor.value:type_name -> resources.v1alpha1.ComponentDefinition
+	22, // 22: resources.v1alpha1.ProcessorCollection.processors:type_name -> resources.v1alpha1.Processor
+	33, // 23: resources.v1alpha1.Exporter.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
+	32, // 24: resources.v1alpha1.Exporter.value:type_name -> resources.v1alpha1.ComponentDefinition
+	24, // 25: resources.v1alpha1.ExporterCollection.exporters:type_name -> resources.v1alpha1.Exporter
+	33, // 26: resources.v1alpha1.Connector.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
+	32, // 27: resources.v1alpha1.Connector.value:type_name -> resources.v1alpha1.ComponentDefinition
+	26, // 28: resources.v1alpha1.ConnectorCollection.connectors:type_name -> resources.v1alpha1.Connector
+	33, // 29: resources.v1alpha1.Extension.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
+	32, // 30: resources.v1alpha1.Extension.value:type_name -> resources.v1alpha1.ComponentDefinition
+	28, // 31: resources.v1alpha1.ExtensionCollection.extensions:type_name -> resources.v1alpha1.Extension
 	1,  // 32: resources.v1alpha1.Pipeline.type:type_name -> resources.v1alpha1.PipelineType
-	32, // 33: resources.v1alpha1.Pipeline.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
-	31, // 34: resources.v1alpha1.Pipeline.value:type_name -> resources.v1alpha1.ComponentDefinition
-	29, // 35: resources.v1alpha1.PipelineCollection.pipelines:type_name -> resources.v1alpha1.Pipeline
-	33, // 36: resources.v1alpha1.CompatibilityMatrix.constraints:type_name -> resources.v1alpha1.VersionConstraits
+	33, // 33: resources.v1alpha1.Pipeline.compat:type_name -> resources.v1alpha1.CompatibilityMatrix
+	32, // 34: resources.v1alpha1.Pipeline.value:type_name -> resources.v1alpha1.ComponentDefinition
+	30, // 35: resources.v1alpha1.PipelineCollection.pipelines:type_name -> resources.v1alpha1.Pipeline
+	34, // 36: resources.v1alpha1.CompatibilityMatrix.constraints:type_name -> resources.v1alpha1.VersionConstraits
 	2,  // 37: resources.v1alpha1.VersionConstraits.ordering:type_name -> resources.v1alpha1.VersionOrdering
-	3,  // 38: resources.v1alpha1.ResourceService.GetEntity:input_type -> resources.v1alpha1.GetEntityRequest
-	5,  // 39: resources.v1alpha1.ResourceService.PutEntity:input_type -> resources.v1alpha1.PutEntityRequest
-	7,  // 40: resources.v1alpha1.ResourceService.DeleteEntity:input_type -> resources.v1alpha1.DeleteEntityRequest
-	9,  // 41: resources.v1alpha1.ResourceService.ListEntity:input_type -> resources.v1alpha1.ListEntityRequest
-	11, // 42: resources.v1alpha1.ResourceService.WatchEntity:input_type -> resources.v1alpha1.WatchEntityRequest
-	13, // 43: resources.v1alpha1.ResourceService.HistoryEntity:input_type -> resources.v1alpha1.HistoryEntityRequest
-	4,  // 44: resources.v1alpha1.ResourceService.GetEntity:output_type -> resources.v1alpha1.GetEntityResponse
-	6,  // 45: resources.v1alpha1.ResourceService.PutEntity:output_type -> resources.v1alpha1.PutEntityResponse
-	8,  // 46: resources.v1alpha1.ResourceService.DeleteEntity:output_type -> resources.v1alpha1.DeleteEntityResponse
-	10, // 47: resources.v1alpha1.ResourceService.ListEntity:output_type -> resources.v1alpha1.ListEntityResponse
-	12, // 48: resources.v1alpha1.ResourceService.WatchEntity:output_type -> resources.v1alpha1.WatchEntityResponse
-	14, // 49: resources.v1alpha1.ResourceService.HistoryEntity:output_type -> resources.v1alpha1.HistoryEntityResponse
-	44, // [44:50] is the sub-list for method output_type
-	38, // [38:44] is the sub-list for method input_type
-	38, // [38:38] is the sub-list for extension type_name
-	38, // [38:38] is the sub-list for extension extendee
-	0,  // [0:38] is the sub-list for field type_name
+	38, // 38: resources.v1alpha1.ConfigFilter.approval:type_name -> resources.v1alpha1.ApprovalConfig
+	36, // 39: resources.v1alpha1.ConfigFilter.filters:type_name -> resources.v1alpha1.LabelFilter
+	37, // 40: resources.v1alpha1.ConfigFilter.collector_config:type_name -> resources.v1alpha1.TargetConfig
+	3,  // 41: resources.v1alpha1.LabelFilter.type:type_name -> resources.v1alpha1.MatchType
+	39, // 42: resources.v1alpha1.LabelFilter.opamp_id_labels:type_name -> resources.v1alpha1.LabelFilter.OpampIdLabelsEntry
+	40, // 43: resources.v1alpha1.LabelFilter.opamp_non_id_labels:type_name -> resources.v1alpha1.LabelFilter.OpampNonIdLabelsEntry
+	41, // 44: resources.v1alpha1.LabelFilter.otelfleet_labels:type_name -> resources.v1alpha1.LabelFilter.OtelfleetLabelsEntry
+	4,  // 45: resources.v1alpha1.ResourceService.GetEntity:input_type -> resources.v1alpha1.GetEntityRequest
+	6,  // 46: resources.v1alpha1.ResourceService.PutEntity:input_type -> resources.v1alpha1.PutEntityRequest
+	8,  // 47: resources.v1alpha1.ResourceService.DeleteEntity:input_type -> resources.v1alpha1.DeleteEntityRequest
+	10, // 48: resources.v1alpha1.ResourceService.ListEntity:input_type -> resources.v1alpha1.ListEntityRequest
+	12, // 49: resources.v1alpha1.ResourceService.WatchEntity:input_type -> resources.v1alpha1.WatchEntityRequest
+	14, // 50: resources.v1alpha1.ResourceService.HistoryEntity:input_type -> resources.v1alpha1.HistoryEntityRequest
+	5,  // 51: resources.v1alpha1.ResourceService.GetEntity:output_type -> resources.v1alpha1.GetEntityResponse
+	7,  // 52: resources.v1alpha1.ResourceService.PutEntity:output_type -> resources.v1alpha1.PutEntityResponse
+	9,  // 53: resources.v1alpha1.ResourceService.DeleteEntity:output_type -> resources.v1alpha1.DeleteEntityResponse
+	11, // 54: resources.v1alpha1.ResourceService.ListEntity:output_type -> resources.v1alpha1.ListEntityResponse
+	13, // 55: resources.v1alpha1.ResourceService.WatchEntity:output_type -> resources.v1alpha1.WatchEntityResponse
+	15, // 56: resources.v1alpha1.ResourceService.HistoryEntity:output_type -> resources.v1alpha1.HistoryEntityResponse
+	51, // [51:57] is the sub-list for method output_type
+	45, // [45:51] is the sub-list for method input_type
+	45, // [45:45] is the sub-list for extension type_name
+	45, // [45:45] is the sub-list for extension extendee
+	0,  // [0:45] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_resources_v1alpha1_resources_proto_init() }
@@ -2168,13 +2495,15 @@ func file_pkg_api_resources_v1alpha1_resources_proto_init() {
 		(*ComponentDefinition_Ref)(nil),
 	}
 	file_pkg_api_resources_v1alpha1_resources_proto_msgTypes[30].OneofWrappers = []any{}
+	file_pkg_api_resources_v1alpha1_resources_proto_msgTypes[31].OneofWrappers = []any{}
+	file_pkg_api_resources_v1alpha1_resources_proto_msgTypes[34].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_resources_v1alpha1_resources_proto_rawDesc), len(file_pkg_api_resources_v1alpha1_resources_proto_rawDesc)),
-			NumEnums:      3,
-			NumMessages:   31,
+			NumEnums:      4,
+			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

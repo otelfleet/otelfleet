@@ -239,6 +239,7 @@ const Base: FC = () => {
                             onClick={() => setActive(active === 'collectors' ? null : 'collectors')}
                         >
                             <NavLink component={Link} to="/deployments" label="Deployments" />
+                            <NavLink component={Link} to="/configfilter" label="Config Assignment"></NavLink>
                         </NavLink>
                     </Stack>
                 </AppShell.Navbar>

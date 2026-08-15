@@ -216,3 +216,36 @@ message VersionConstraits {
     optional string min_version = 3;
     optional string max_version = 4;
 }
+
+
+// ConfigFilters are used to associate particular configurations to deployed collectors 
+
+message ConfigFilter {
+  optional bool default = 1;
+  ApprovalConfig approval = 2;
+  repeated LabelFilter filters = 3;
+  TargetConfig collector_config = 4;
+}
+
+message LabelFilter {
+  MatchType type = 1;
+  map<string, string> opamp_id_labels = 2;
+  map<string, string> opamp_non_id_labels = 3;
+  map<string, string> otelfleet_labels = 4;
+}
+
+enum MatchType {
+  MATCH_TYPE_UNKNOWN = 0;
+  MATCH_TYPE_EQ = 1;
+  MATCH_TYPE_NEQ = 2;
+  MATCH_TYPE_RE = 3;
+  MATCH_TYPE_NR = 4;
+}
+
+message TargetConfig {
+  string config_ref = 1;
+}
+
+message ApprovalConfig {
+  optional bool requires_approval = 1;
+}

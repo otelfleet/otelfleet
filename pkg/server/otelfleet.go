@@ -32,7 +32,6 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/authorization"
 	"github.com/otelfleet/otelfleet/pkg/services/lsp"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
-	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	"github.com/otelfleet/otelfleet/pkg/services/otlp"
 	"github.com/otelfleet/otelfleet/pkg/services/resource"
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
@@ -108,8 +107,6 @@ type OtelFleet struct {
 
 	// store for raw configs
 	configStore types.KeyValue[*configv1alpha1.Config]
-	// store for config filters
-	configFilterStore types.KeyValue[*configv1alpha1.ConfigFilter]
 	// store for default configs
 	defaultConfigStore types.KeyValue[*configv1alpha1.Config]
 	// store for bootstrap configs
@@ -132,8 +129,7 @@ type OtelFleet struct {
 	// Agent repository - unified access to agent data
 	agentRepo agentdomain.Repository
 
-	opampServer  *opamp.Server
-	configServer *otelconfig.ConfigServer
+	opampServer *opamp.Server
 
 	serviceMap map[string]services.Service
 	server     *server.Server
@@ -262,25 +258,27 @@ func (o *OtelFleet) setupModuleManager() error {
 		return bootstrapSvc, nil
 	})
 
-	mm.RegisterModule(ConfigOTEL, func() (services.Service, error) {
-		cfgServer, err := otelconfig.NewConfigServer(
-			o.logger.With("service", ConfigOTEL),
-			o.configFilterStore,
-		)
-		if err != nil {
-			return nil, err
-		}
-		cfgServer.ConfigureHTTP(o.server.HTTP)
-		o.configServer = cfgServer
+	// mm.RegisterModule(ConfigOTEL, func() (services.Service, error) {
+	// 	cfgServer, err := otelconfig.NewConfigServer(
+	// 		o.logger.With("service", ConfigOTEL),
+	// 		o.configFilterStore,
+	// 	)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	cfgServer.ConfigureHTTP(o.server.HTTP)
+	// 	o.configServer = cfgServer
 
-		return cfgServer, nil
-	})
+	// 	return cfgServer, nil
+	// })
 
 	mm.RegisterModule(OpAmp, func() (services.Service, error) {
 		srv := opamp.NewServer(
 			o.logger.With("service", OpAmp),
 			o.agentRepo,
 			o.assignmentConfigStore,
+			o.configAssignmentStore,
+			o.store.Schema(),
 			o.server.HTTPListenAddr().String(),
 			o.cfg.OTLP,
 		)
@@ -390,13 +388,13 @@ func (o *OtelFleet) setupModuleManager() error {
 
 		Storage:      {ServerService},
 		AgentManager: {ServerService, OpAmp},
-		OpAmp:        {ServerService, ConfigOTEL, Storage},
+		OpAmp:        {ServerService, Storage},
 		Auth:         {ServerService, Storage},
-		ConfigOTEL:   {ServerService, Storage},
-		Resource:     {ServerService, Storage},
-		UI:           {ServerService},
-		OTLP:         {ServerService},
-		LSP:          {ServerService},
+		// ConfigOTEL:   {ServerService, Storage},
+		Resource: {ServerService, Storage},
+		UI:       {ServerService},
+		OTLP:     {ServerService},
+		LSP:      {ServerService},
 		// DeploymentModule: {ServerService, ConfigOTEL, Storage},
 	}
 

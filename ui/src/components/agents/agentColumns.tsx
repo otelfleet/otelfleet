@@ -2,18 +2,14 @@ import { Button, Group, ActionIcon, Text } from '@mantine/core';
 import { Link } from '@tanstack/react-router';
 import { TrashIcon } from '@radix-ui/react-icons';
 import type { AgentDescriptionAndStatus } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import type { ConfigAssignmentInfo } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
 import type { ColumnConfig } from '../Table';
 import {
     StatusBadge,
     HealthBadge,
     ConfigSyncStatusBadge,
-    AssignedConfigBadge,
 } from './agentTable';
 
 export interface BuildAgentColumnsOptions {
-    /** Config assignment info keyed by agent id, used for the "Assigned Config" column. */
-    assignments: Map<string, ConfigAssignmentInfo>;
     /** Invoked when the row's delete action is triggered. */
     onDelete: (agentId: string, agentName: string) => void;
 }
@@ -23,7 +19,6 @@ export interface BuildAgentColumnsOptions {
  * live agents page and Storybook so both render identical columns.
  */
 export function buildAgentColumns({
-    assignments,
     onDelete,
 }: BuildAgentColumnsOptions): ColumnConfig<AgentDescriptionAndStatus>[] {
     return [
@@ -60,15 +55,6 @@ export function buildAgentColumns({
                     status={row.status?.configSyncStatus}
                     reason={row.status?.configSyncReason}
                 />
-            }
-        },
-        {
-            key: 'assignedConfig',
-            label: 'Assigned Config',
-            visible: true,
-            render: (_: unknown, row: AgentDescriptionAndStatus) => {
-                const assignment = assignments.get(row.agent?.id ?? '');
-                return <AssignedConfigBadge assignment={assignment} />
             }
         },
         {

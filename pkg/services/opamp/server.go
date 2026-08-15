@@ -14,9 +14,12 @@ import (
 	"github.com/open-telemetry/opamp-go/server/types"
 	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
+	resourcesv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
+	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	stypes "github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -43,6 +46,10 @@ type Server struct {
 	// all active connection handlers
 	handlers []*ServerAgentHandler
 
+	collectorConfigs      stypes.KeyValue[*resourcesv1alpha1.CollectorConfig]
+	configAssignmentStore stypes.KeyValue[*configv1alpha1.ConfigAssignment]
+	configFilterSync      *ConfigFilterSync
+
 	services.Service
 
 	otlpConfig *config.OTLPConfig
@@ -52,19 +59,28 @@ func NewServer(
 	l *slog.Logger,
 	agentRepo agentdomain.Repository,
 	assignedConfigStore stypes.KeyValue[*configv1alpha1.Config],
+	configAssignmentStore stypes.KeyValue[*configv1alpha1.ConfigAssignment],
+	resourceStorage schema.SchemaProto,
 	otlpServerAddr string,
 	otlpConfig *config.OTLPConfig,
 ) *Server {
 	opampSvr := server.New(logutil.NewOpAMPLogger(l))
 	s := &Server{
-		logger:              l,
-		opampSrv:            opampSvr,
-		agentRepo:           agentRepo,
-		addrToId:            map[string]string{},
-		idToConn:            map[string]types.Connection{},
-		assignedConfigStore: assignedConfigStore,
-		otlpServerAddr:      otlpServerAddr,
-		otlpConfig:          otlpConfig,
+		logger:                l,
+		opampSrv:              opampSvr,
+		agentRepo:             agentRepo,
+		addrToId:              map[string]string{},
+		idToConn:              map[string]types.Connection{},
+		assignedConfigStore:   assignedConfigStore,
+		configAssignmentStore: configAssignmentStore,
+		otlpServerAddr:        otlpServerAddr,
+		otlpConfig:            otlpConfig,
+		collectorConfigs:      storage.NewProtoKVFromSchemaImpl[*resourcesv1alpha1.CollectorConfig](resourceStorage),
+		configFilterSync: NewConfigFilterSync(ConfigFilterSyncOptions{
+			Logger:   l.With("component", "config-filter-sync"),
+			Storage:  resourceStorage,
+			Interval: defaultConfigFilterSyncInterval,
+		}),
 	}
 
 	s.Service = services.NewBasicService(s.start, s.running, s.stop)
@@ -72,11 +88,14 @@ func NewServer(
 }
 
 func (s *Server) running(ctx context.Context) error {
-	<-ctx.Done()
-	return nil
+	return s.configFilterSync.running(ctx)
 }
 
 func (s *Server) start(ctx context.Context) error {
+	if err := s.configFilterSync.start(ctx); err != nil {
+		return fmt.Errorf("failed to start config filter sync: %w", err)
+	}
+
 	addr := "127.0.0.1:4320"
 	s.logger.With("addr", addr).Info("starting opamp server")
 	settings := server.StartSettings{
@@ -99,6 +118,7 @@ func (s *Server) start(ctx context.Context) error {
 func (s *Server) stop(failureCase error) error {
 	ctxca, ca := context.WithTimeout(context.TODO(), time.Second)
 	defer ca()
+	s.configFilterSync.stopping()
 	return s.opampSrv.Stop(ctxca)
 }
 
@@ -111,7 +131,7 @@ func (s *Server) OnConnecting(request *http.Request) types.ConnectionResponse {
 	s.logger.With("server-conn-id", serverConnID).With("remote-addr", request.RemoteAddr).Info("assigned connection ID")
 
 	if accept {
-		handler := NewServerAgentHandler(context.TODO(), serverConnID, s.agentRepo, s.assignedConfigStore, s.logger, s.otlpServerAddr, s.otlpConfig)
+		handler := NewServerAgentHandler(context.TODO(), serverConnID, s.agentRepo, s.assignedConfigStore, s.collectorConfigs, s.configAssignmentStore, s.configFilterSync, s.logger, s.otlpServerAddr, s.otlpConfig)
 		return types.ConnectionResponse{
 			Accept: accept,
 			ConnectionCallbacks: types.ConnectionCallbacks{

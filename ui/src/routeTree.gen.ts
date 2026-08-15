@@ -13,11 +13,13 @@ import { Route as TokensRouteImport } from './routes/tokens'
 import { Route as EditorRouteImport } from './routes/editor'
 import { Route as DeploymentsRouteImport } from './routes/deployments'
 import { Route as ConfigsRouteImport } from './routes/configs'
+import { Route as ConfigfilterRouteImport } from './routes/configfilter'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TokensTokenIdRouteImport } from './routes/tokens.$tokenId'
 import { Route as ResourcesTypeRouteImport } from './routes/resources.$type'
 import { Route as DeploymentsAgentIdRouteImport } from './routes/deployments.$agentId'
+import { Route as ConfigfilterEditorRouteImport } from './routes/configfilter_.editor'
 import { Route as ResourcesTypeEditorRouteImport } from './routes/resources.$type_.editor'
 
 const TokensRoute = TokensRouteImport.update({
@@ -38,6 +40,11 @@ const DeploymentsRoute = DeploymentsRouteImport.update({
 const ConfigsRoute = ConfigsRouteImport.update({
   id: '/configs',
   path: '/configs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfigfilterRoute = ConfigfilterRouteImport.update({
+  id: '/configfilter',
+  path: '/configfilter',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -65,6 +72,11 @@ const DeploymentsAgentIdRoute = DeploymentsAgentIdRouteImport.update({
   path: '/$agentId',
   getParentRoute: () => DeploymentsRoute,
 } as any)
+const ConfigfilterEditorRoute = ConfigfilterEditorRouteImport.update({
+  id: '/configfilter_/editor',
+  path: '/configfilter/editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResourcesTypeEditorRoute = ResourcesTypeEditorRouteImport.update({
   id: '/resources/$type_/editor',
   path: '/resources/$type/editor',
@@ -74,10 +86,12 @@ const ResourcesTypeEditorRoute = ResourcesTypeEditorRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/configfilter': typeof ConfigfilterRoute
   '/configs': typeof ConfigsRoute
   '/deployments': typeof DeploymentsRouteWithChildren
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
+  '/configfilter/editor': typeof ConfigfilterEditorRoute
   '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
@@ -86,10 +100,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/configfilter': typeof ConfigfilterRoute
   '/configs': typeof ConfigsRoute
   '/deployments': typeof DeploymentsRouteWithChildren
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
+  '/configfilter/editor': typeof ConfigfilterEditorRoute
   '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
@@ -99,10 +115,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/configfilter': typeof ConfigfilterRoute
   '/configs': typeof ConfigsRoute
   '/deployments': typeof DeploymentsRouteWithChildren
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
+  '/configfilter_/editor': typeof ConfigfilterEditorRoute
   '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
@@ -113,10 +131,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/configfilter'
     | '/configs'
     | '/deployments'
     | '/editor'
     | '/tokens'
+    | '/configfilter/editor'
     | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
@@ -125,10 +145,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/configfilter'
     | '/configs'
     | '/deployments'
     | '/editor'
     | '/tokens'
+    | '/configfilter/editor'
     | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
@@ -137,10 +159,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/configfilter'
     | '/configs'
     | '/deployments'
     | '/editor'
     | '/tokens'
+    | '/configfilter_/editor'
     | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
@@ -150,10 +174,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  ConfigfilterRoute: typeof ConfigfilterRoute
   ConfigsRoute: typeof ConfigsRoute
   DeploymentsRoute: typeof DeploymentsRouteWithChildren
   EditorRoute: typeof EditorRoute
   TokensRoute: typeof TokensRouteWithChildren
+  ConfigfilterEditorRoute: typeof ConfigfilterEditorRoute
   ResourcesTypeRoute: typeof ResourcesTypeRoute
   ResourcesTypeEditorRoute: typeof ResourcesTypeEditorRoute
 }
@@ -186,6 +212,13 @@ declare module '@tanstack/react-router' {
       path: '/configs'
       fullPath: '/configs'
       preLoaderRoute: typeof ConfigsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configfilter': {
+      id: '/configfilter'
+      path: '/configfilter'
+      fullPath: '/configfilter'
+      preLoaderRoute: typeof ConfigfilterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -223,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeploymentsAgentIdRouteImport
       parentRoute: typeof DeploymentsRoute
     }
+    '/configfilter_/editor': {
+      id: '/configfilter_/editor'
+      path: '/configfilter/editor'
+      fullPath: '/configfilter/editor'
+      preLoaderRoute: typeof ConfigfilterEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/resources/$type_/editor': {
       id: '/resources/$type_/editor'
       path: '/resources/$type/editor'
@@ -259,10 +299,12 @@ const TokensRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  ConfigfilterRoute: ConfigfilterRoute,
   ConfigsRoute: ConfigsRoute,
   DeploymentsRoute: DeploymentsRouteWithChildren,
   EditorRoute: EditorRoute,
   TokensRoute: TokensRouteWithChildren,
+  ConfigfilterEditorRoute: ConfigfilterEditorRoute,
   ResourcesTypeRoute: ResourcesTypeRoute,
   ResourcesTypeEditorRoute: ResourcesTypeEditorRoute,
 }

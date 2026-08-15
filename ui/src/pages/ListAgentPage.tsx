@@ -1,11 +1,9 @@
 import { AgentService } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import type { AgentDescriptionAndStatus } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import { ConfigService } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
-import type { ConfigReference, ConfigAssignmentInfo } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
 import { useClient } from '../api';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { notifyGRPCError } from '../api/notifications';
-import { Text, Button, Group, Modal, Select, Stack, Paper } from '@mantine/core';
+import { Text, Button, Group, Modal, Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { CheckCircledIcon } from '@radix-ui/react-icons';
@@ -14,15 +12,8 @@ import { buildAgentColumns } from '../components/agents/agentColumns'
 
 export const AgentPage = () => {
     const agentClient = useClient(AgentService);
-    const configClient = useClient(ConfigService);
 
     const [agentsState, setAgentsState] = useState<AgentDescriptionAndStatus[]>([]);
-    const [assignments, setAssignments] = useState<Map<string, ConfigAssignmentInfo>>(new Map());
-    const [availableConfigs, setAvailableConfigs] = useState<ConfigReference[]>([]);
-    const [selectedAgents, setSelectedAgents] = useState<Set<string | number>>(new Set());
-    const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
-    const [assignModalOpened, { open: openAssignModal, close: closeAssignModal }] = useDisclosure(false);
-    const [assigning, setAssigning] = useState(false);
     const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
     const [agentToDelete, setAgentToDelete] = useState<{ id: string; name: string } | null>(null);
     const [deleting, setDeleting] = useState(false);
@@ -38,51 +29,6 @@ export const AgentPage = () => {
         }
     }, [agentClient]);
 
-    const fetchAssignments = useCallback(async () => {
-        try {
-            const response = await configClient.listConfigAssignments({});
-            const map = new Map<string, ConfigAssignmentInfo>();
-            for (const a of response.assignments) {
-                map.set(a.agentId, a);
-            }
-            setAssignments(map);
-        } catch (error) {
-            notifyGRPCError("Failed to load config assignments", error);
-        }
-    }, [configClient]);
-
-    const fetchAvailableConfigs = useCallback(async () => {
-        try {
-            const response = await configClient.listConfigs({});
-            setAvailableConfigs(response.configs);
-        } catch (error) {
-            notifyGRPCError("Failed to load configs", error);
-        }
-    }, [configClient]);
-
-    const handleBatchAssign = useCallback(async () => {
-        if (!selectedConfig || selectedAgents.size === 0) return;
-        setAssigning(true);
-        try {
-            const agentIds = Array.from(selectedAgents) as string[];
-            const response = await configClient.batchAssignConfig({ agentIds, configId: selectedConfig });
-            notifications.show({
-                title: 'Batch Assignment Complete',
-                message: `${response.successful} succeeded, ${response.failed} failed`,
-                color: response.failed > 0 ? 'yellow' : 'green',
-                icon: <CheckCircledIcon />,
-            });
-            fetchAssignments();
-            setSelectedAgents(new Set());
-        } catch (error) {
-            notifyGRPCError("Failed to batch assign config", error);
-        } finally {
-            setAssigning(false);
-            closeAssignModal();
-            setSelectedConfig(null);
-        }
-    }, [selectedConfig, selectedAgents, configClient, fetchAssignments, closeAssignModal]);
-
     const handleDeleteAgent = useCallback(async () => {
         if (!agentToDelete) return;
         setDeleting(true);
@@ -95,7 +41,6 @@ export const AgentPage = () => {
                 icon: <CheckCircledIcon />,
             });
             handleListAgents();
-            fetchAssignments();
         } catch (error) {
             notifyGRPCError("Failed to delete agent", error);
         } finally {
@@ -103,7 +48,7 @@ export const AgentPage = () => {
             closeDeleteModal();
             setAgentToDelete(null);
         }
-    }, [agentClient, agentToDelete, handleListAgents, fetchAssignments, closeDeleteModal]);
+    }, [agentClient, agentToDelete, handleListAgents, closeDeleteModal]);
 
     const confirmDelete = useCallback((agentId: string, agentName: string) => {
         setAgentToDelete({ id: agentId, name: agentName });
@@ -112,48 +57,20 @@ export const AgentPage = () => {
 
     useEffect(() => {
         handleListAgents();
-        fetchAssignments();
-    }, [handleListAgents, fetchAssignments]);
-
-    useEffect(() => {
-        if (assignModalOpened) {
-            fetchAvailableConfigs();
-        }
-    }, [assignModalOpened, fetchAvailableConfigs]);
+    }, [handleListAgents]);
 
     const agentColumns = useMemo(
-        () => buildAgentColumns({ assignments, onDelete: confirmDelete }),
-        [assignments, confirmDelete]
+        () => buildAgentColumns({ onDelete: confirmDelete }),
+        [confirmDelete]
     );
 
     return (
         <>
-            {selectedAgents.size > 0 && (
-                <Paper p="sm" mb="md" withBorder>
-                    <Group justify="space-between">
-                        <Text size="sm" fw={500}>
-                            {selectedAgents.size} agent{selectedAgents.size > 1 ? 's' : ''} selected
-                        </Text>
-                        <Group gap="xs">
-                            <Button size="xs" variant="light" onClick={openAssignModal}>
-                                Assign Config
-                            </Button>
-                            <Button size="xs" variant="subtle" onClick={() => setSelectedAgents(new Set())}>
-                                Clear Selection
-                            </Button>
-                        </Group>
-                    </Group>
-                </Paper>
-            )}
-
             <Table<AgentDescriptionAndStatus>
                 title="OpenTelemetry Collector agents"
                 data={agentsState}
                 columns={agentColumns}
                 rowKey={(row) => row.agent?.id ?? ''}
-                selectable
-                selectedKeys={selectedAgents}
-                onSelectionChange={setSelectedAgents}
                 expandedContent={(row) => {
                     const error = row.status?.health?.lastError;
                     if (!error) return null;
@@ -164,29 +81,6 @@ export const AgentPage = () => {
                     );
                 }}
             />
-
-            {/* Batch Assign Config Modal */}
-            <Modal opened={assignModalOpened} onClose={closeAssignModal} title="Assign Config to Selected Agents">
-                <Stack gap="md">
-                    <Text size="sm">
-                        Assign a configuration to {selectedAgents.size} selected agent{selectedAgents.size > 1 ? 's' : ''}.
-                    </Text>
-                    <Select
-                        label="Select Config"
-                        placeholder="Choose a configuration"
-                        data={availableConfigs.map(c => ({ value: c.id, label: c.id }))}
-                        value={selectedConfig}
-                        onChange={setSelectedConfig}
-                        searchable
-                    />
-                    <Group justify="flex-end" mt="md">
-                        <Button variant="default" onClick={closeAssignModal}>Cancel</Button>
-                        <Button onClick={handleBatchAssign} loading={assigning} disabled={!selectedConfig}>
-                            Assign to {selectedAgents.size} Agent{selectedAgents.size > 1 ? 's' : ''}
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
 
             {/* Delete Agent Confirmation Modal */}
             <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Agent" centered>
