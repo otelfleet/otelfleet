@@ -79,7 +79,7 @@ export function buildAgentColumns({
                 if (!row.agent?.id) return null;
                 return (
                     <Group gap="xs" justify="center">
-                        <Link to="/agents/$agentId" params={{ agentId: row.agent.id }}>
+                        <Link to="/deployments/$agentId" params={{ agentId: row.agent.id }}>
                             <Button size="xs" variant="light">
                                 Details
                             </Button>

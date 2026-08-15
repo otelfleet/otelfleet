@@ -11,14 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TokensRouteImport } from './routes/tokens'
 import { Route as EditorRouteImport } from './routes/editor'
+import { Route as DeploymentsRouteImport } from './routes/deployments'
 import { Route as ConfigsRouteImport } from './routes/configs'
-import { Route as AssignmentsRouteImport } from './routes/assignments'
-import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TokensTokenIdRouteImport } from './routes/tokens.$tokenId'
 import { Route as ResourcesTypeRouteImport } from './routes/resources.$type'
-import { Route as AgentsAgentIdRouteImport } from './routes/agents.$agentId'
+import { Route as DeploymentsAgentIdRouteImport } from './routes/deployments.$agentId'
 import { Route as ResourcesTypeEditorRouteImport } from './routes/resources.$type_.editor'
 
 const TokensRoute = TokensRouteImport.update({
@@ -31,19 +30,14 @@ const EditorRoute = EditorRouteImport.update({
   path: '/editor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeploymentsRoute = DeploymentsRouteImport.update({
+  id: '/deployments',
+  path: '/deployments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfigsRoute = ConfigsRouteImport.update({
   id: '/configs',
   path: '/configs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AssignmentsRoute = AssignmentsRouteImport.update({
-  id: '/assignments',
-  path: '/assignments',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AgentsRoute = AgentsRouteImport.update({
-  id: '/agents',
-  path: '/agents',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -66,10 +60,10 @@ const ResourcesTypeRoute = ResourcesTypeRouteImport.update({
   path: '/resources/$type',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AgentsAgentIdRoute = AgentsAgentIdRouteImport.update({
+const DeploymentsAgentIdRoute = DeploymentsAgentIdRouteImport.update({
   id: '/$agentId',
   path: '/$agentId',
-  getParentRoute: () => AgentsRoute,
+  getParentRoute: () => DeploymentsRoute,
 } as any)
 const ResourcesTypeEditorRoute = ResourcesTypeEditorRouteImport.update({
   id: '/resources/$type_/editor',
@@ -80,12 +74,11 @@ const ResourcesTypeEditorRoute = ResourcesTypeEditorRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/agents': typeof AgentsRouteWithChildren
-  '/assignments': typeof AssignmentsRoute
   '/configs': typeof ConfigsRoute
+  '/deployments': typeof DeploymentsRouteWithChildren
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
-  '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
   '/resources/$type/editor': typeof ResourcesTypeEditorRoute
@@ -93,12 +86,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/agents': typeof AgentsRouteWithChildren
-  '/assignments': typeof AssignmentsRoute
   '/configs': typeof ConfigsRoute
+  '/deployments': typeof DeploymentsRouteWithChildren
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
-  '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
   '/resources/$type/editor': typeof ResourcesTypeEditorRoute
@@ -107,12 +99,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/agents': typeof AgentsRouteWithChildren
-  '/assignments': typeof AssignmentsRoute
   '/configs': typeof ConfigsRoute
+  '/deployments': typeof DeploymentsRouteWithChildren
   '/editor': typeof EditorRoute
   '/tokens': typeof TokensRouteWithChildren
-  '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
   '/resources/$type_/editor': typeof ResourcesTypeEditorRoute
@@ -122,12 +113,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
-    | '/agents'
-    | '/assignments'
     | '/configs'
+    | '/deployments'
     | '/editor'
     | '/tokens'
-    | '/agents/$agentId'
+    | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
     | '/resources/$type/editor'
@@ -135,12 +125,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
-    | '/agents'
-    | '/assignments'
     | '/configs'
+    | '/deployments'
     | '/editor'
     | '/tokens'
-    | '/agents/$agentId'
+    | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
     | '/resources/$type/editor'
@@ -148,12 +137,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
-    | '/agents'
-    | '/assignments'
     | '/configs'
+    | '/deployments'
     | '/editor'
     | '/tokens'
-    | '/agents/$agentId'
+    | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
     | '/resources/$type_/editor'
@@ -162,9 +150,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  AgentsRoute: typeof AgentsRouteWithChildren
-  AssignmentsRoute: typeof AssignmentsRoute
   ConfigsRoute: typeof ConfigsRoute
+  DeploymentsRoute: typeof DeploymentsRouteWithChildren
   EditorRoute: typeof EditorRoute
   TokensRoute: typeof TokensRouteWithChildren
   ResourcesTypeRoute: typeof ResourcesTypeRoute
@@ -187,25 +174,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EditorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/deployments': {
+      id: '/deployments'
+      path: '/deployments'
+      fullPath: '/deployments'
+      preLoaderRoute: typeof DeploymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/configs': {
       id: '/configs'
       path: '/configs'
       fullPath: '/configs'
       preLoaderRoute: typeof ConfigsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/assignments': {
-      id: '/assignments'
-      path: '/assignments'
-      fullPath: '/assignments'
-      preLoaderRoute: typeof AssignmentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/agents': {
-      id: '/agents'
-      path: '/agents'
-      fullPath: '/agents'
-      preLoaderRoute: typeof AgentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -236,12 +216,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResourcesTypeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/agents/$agentId': {
-      id: '/agents/$agentId'
+    '/deployments/$agentId': {
+      id: '/deployments/$agentId'
       path: '/$agentId'
-      fullPath: '/agents/$agentId'
-      preLoaderRoute: typeof AgentsAgentIdRouteImport
-      parentRoute: typeof AgentsRoute
+      fullPath: '/deployments/$agentId'
+      preLoaderRoute: typeof DeploymentsAgentIdRouteImport
+      parentRoute: typeof DeploymentsRoute
     }
     '/resources/$type_/editor': {
       id: '/resources/$type_/editor'
@@ -253,16 +233,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AgentsRouteChildren {
-  AgentsAgentIdRoute: typeof AgentsAgentIdRoute
+interface DeploymentsRouteChildren {
+  DeploymentsAgentIdRoute: typeof DeploymentsAgentIdRoute
 }
 
-const AgentsRouteChildren: AgentsRouteChildren = {
-  AgentsAgentIdRoute: AgentsAgentIdRoute,
+const DeploymentsRouteChildren: DeploymentsRouteChildren = {
+  DeploymentsAgentIdRoute: DeploymentsAgentIdRoute,
 }
 
-const AgentsRouteWithChildren =
-  AgentsRoute._addFileChildren(AgentsRouteChildren)
+const DeploymentsRouteWithChildren = DeploymentsRoute._addFileChildren(
+  DeploymentsRouteChildren,
+)
 
 interface TokensRouteChildren {
   TokensTokenIdRoute: typeof TokensTokenIdRoute
@@ -278,9 +259,8 @@ const TokensRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  AgentsRoute: AgentsRouteWithChildren,
-  AssignmentsRoute: AssignmentsRoute,
   ConfigsRoute: ConfigsRoute,
+  DeploymentsRoute: DeploymentsRouteWithChildren,
   EditorRoute: EditorRoute,
   TokensRoute: TokensRouteWithChildren,
   ResourcesTypeRoute: ResourcesTypeRoute,

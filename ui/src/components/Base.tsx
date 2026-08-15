@@ -182,13 +182,13 @@ const Base: FC = () => {
                 <AppShell.Navbar>
                     <Stack gap="xs">
                         <NavLink
-                            label="Tokens"
-                            description="Manage API tokens"
-                            opened={active === 'tokens'}
-                            active={active === 'tokens'}
-                            onClick={() => setActive(active === 'tokens' ? null : 'tokens')}
+                            label="Management"
+                            description="Fleet & Authorization"
+                            opened={active === 'mgmt'}
+                            active={active === 'mgmt'}
+                            onClick={() => setActive(active === 'mgmt' ? null : 'mgmt')}
                         >
-                            <NavLink component={Link} to="/tokens" label="All tokens" />
+                            <NavLink component={Link} to="/tokens" label="API tokens" />
                         </NavLink>
 
                         <NavLink
@@ -232,23 +232,13 @@ const Base: FC = () => {
                         </NavLink>
 
                         <NavLink
-                            label="Agents"
+                            label="Collectors"
                             description="Deployed collectors"
-                            opened={active === 'agents'}
-                            active={active === 'agents'}
-                            onClick={() => setActive(active === 'agents' ? null : 'agents')}
+                            opened={active === 'collectors'}
+                            active={active === 'collectors'}
+                            onClick={() => setActive(active === 'collectors' ? null : 'collectors')}
                         >
-                            <NavLink component={Link} to="/agents" label="All agents" />
-                        </NavLink>
-
-                        <NavLink
-                            label="Assignments"
-                            description="Config assignments"
-                            opened={active === 'assignments'}
-                            active={active === 'assignments'}
-                            onClick={() => setActive(active === 'assignments' ? null : 'assignments')}
-                        >
-                            <NavLink component={Link} to="/assignments" label="All assignments" />
+                            <NavLink component={Link} to="/deployments" label="Deployments" />
                         </NavLink>
                     </Stack>
                 </AppShell.Navbar>
