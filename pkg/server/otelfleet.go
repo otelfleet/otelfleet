@@ -30,7 +30,6 @@ import (
 	logutil "github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/services/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/authorization"
-	"github.com/otelfleet/otelfleet/pkg/services/deployment"
 	"github.com/otelfleet/otelfleet/pkg/services/lsp"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
@@ -69,15 +68,15 @@ type logger struct {
 
 // The various modules that make up OtelFleet
 const (
-	All              = "all"
-	Storage          = "storage"
-	Auth             = "authorization"
-	ServerService    = "server"
-	OpAmp            = "opamp"
-	ConfigOTEL       = "config-otel"
-	AgentManager     = "agent-manager"
-	DeploymentModule = "deployment"
-	LSP              = "lsp"
+	All           = "all"
+	Storage       = "storage"
+	Auth          = "authorization"
+	ServerService = "server"
+	OpAmp         = "opamp"
+	ConfigOTEL    = "config-otel"
+	AgentManager  = "agent-manager"
+	// DeploymentModule = "deployment"
+	LSP = "lsp"
 	// UI serves the web UI. Attached to the all-in-one target only.
 	UI = "ui"
 	// Embedded OTLP service
@@ -109,6 +108,8 @@ type OtelFleet struct {
 
 	// store for raw configs
 	configStore types.KeyValue[*configv1alpha1.Config]
+	// store for config filters
+	configFilterStore types.KeyValue[*configv1alpha1.ConfigFilter]
 	// store for default configs
 	defaultConfigStore types.KeyValue[*configv1alpha1.Config]
 	// store for bootstrap configs
@@ -131,9 +132,8 @@ type OtelFleet struct {
 	// Agent repository - unified access to agent data
 	agentRepo agentdomain.Repository
 
-	opampServer          *opamp.Server
-	configServer         *otelconfig.ConfigServer
-	deploymentController *deployment.Controller
+	opampServer  *opamp.Server
+	configServer *otelconfig.ConfigServer
 
 	serviceMap map[string]services.Service
 	server     *server.Server
@@ -263,16 +263,13 @@ func (o *OtelFleet) setupModuleManager() error {
 	})
 
 	mm.RegisterModule(ConfigOTEL, func() (services.Service, error) {
-		cfgServer := otelconfig.NewConfigServer(
+		cfgServer, err := otelconfig.NewConfigServer(
 			o.logger.With("service", ConfigOTEL),
-			o.configStore,
-			o.defaultConfigStore,
-			o.assignmentConfigStore,
-			o.configAssignmentStore,
-			o.agentRepo,
-			o.agentEffectiveConfig,
-			o.agentRemoteConfigStore,
+			o.configFilterStore,
 		)
+		if err != nil {
+			return nil, err
+		}
 		cfgServer.ConfigureHTTP(o.server.HTTP)
 		o.configServer = cfgServer
 
@@ -289,9 +286,9 @@ func (o *OtelFleet) setupModuleManager() error {
 		)
 		o.opampServer = srv
 		// Wire up the config change notifier so ConfigServer can push configs to agents
-		if o.configServer != nil {
-			o.configServer.SetNotifier(srv)
-		}
+		// if o.configServer != nil {
+		// 	o.configServer.SetNotifier(srv)
+		// }
 		return srv, nil
 	})
 
@@ -304,22 +301,22 @@ func (o *OtelFleet) setupModuleManager() error {
 		return srv, nil
 	})
 
-	mm.RegisterModule(DeploymentModule, func() (services.Service, error) {
-		ctrl := deployment.NewController(
-			o.logger.With("service", DeploymentModule),
-			o.deploymentStore,
-			o.agentDeploymentStore,
-			o.configStore,
-			o.agentRepo,
-		)
-		o.deploymentController = ctrl
-		// Wire up the config assigner so the deployment controller can assign configs
-		if o.configServer != nil {
-			ctrl.SetConfigAssigner(o.configServer)
-			o.configServer.SetDeploymentController(ctrl)
-		}
-		return ctrl, nil
-	})
+	// mm.RegisterModule(DeploymentModule, func() (services.Service, error) {
+	// ctrl := deployment.NewController(
+	// 	o.logger.With("service", DeploymentModule),
+	// 	o.deploymentStore,
+	// 	o.agentDeploymentStore,
+	// 	o.configStore,
+	// 	o.agentRepo,
+	// )
+	// o.deploymentController = ctrl
+	// // Wire up the config assigner so the deployment controller can assign configs
+	// if o.configServer != nil {
+	// 	ctrl.SetConfigAssigner(o.configServer)
+	// 	o.configServer.SetDeploymentController(ctrl)
+	// }
+	// return ctrl, nil
+	// })
 
 	mm.RegisterModule(UI, func() (services.Service, error) {
 		uiSvc, err := ui.NewUIService(
@@ -387,20 +384,20 @@ func (o *OtelFleet) setupModuleManager() error {
 			Gateway, UI,
 		},
 		Gateway: {
-			Auth, OpAmp, AgentManager, DeploymentModule, OTLP, Resource, LSP,
+			Auth, OpAmp, AgentManager, OTLP, Resource, LSP,
 		},
 		ServerService: {},
 
-		Storage:          {ServerService},
-		AgentManager:     {ServerService, OpAmp},
-		OpAmp:            {ServerService, ConfigOTEL, Storage},
-		Auth:             {ServerService, Storage},
-		ConfigOTEL:       {ServerService, Storage},
-		DeploymentModule: {ServerService, ConfigOTEL, Storage},
-		Resource:         {ServerService, Storage},
-		UI:               {ServerService},
-		OTLP:             {ServerService},
-		LSP:              {ServerService},
+		Storage:      {ServerService},
+		AgentManager: {ServerService, OpAmp},
+		OpAmp:        {ServerService, ConfigOTEL, Storage},
+		Auth:         {ServerService, Storage},
+		ConfigOTEL:   {ServerService, Storage},
+		Resource:     {ServerService, Storage},
+		UI:           {ServerService},
+		OTLP:         {ServerService},
+		LSP:          {ServerService},
+		// DeploymentModule: {ServerService, ConfigOTEL, Storage},
 	}
 
 	for mod, targets := range deps {

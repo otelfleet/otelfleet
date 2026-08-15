@@ -24,7 +24,6 @@ import (
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/authorization"
-	"github.com/otelfleet/otelfleet/pkg/services/deployment"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	"github.com/otelfleet/otelfleet/pkg/storage"
@@ -67,11 +66,10 @@ type TestEnv struct {
 	AgentRepo agentdomain.Repository
 
 	// Services
-	BootstrapServer      *authorization.BootstrapServer
-	ConfigServer         *otelconfig.ConfigServer
-	OpampServer          *opamp.Server
-	AgentServer          *agent.AgentServer
-	DeploymentController *deployment.Controller
+	BootstrapServer *authorization.BootstrapServer
+	ConfigServer    *otelconfig.ConfigServer
+	OpampServer     *opamp.Server
+	AgentServer     *agent.AgentServer
 
 	// HTTP
 	HTTPServer    *httptest.Server
@@ -182,18 +180,6 @@ func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
 		e.AssignedConfigStore,
 	)
 
-	// ConfigServer
-	e.ConfigServer = otelconfig.NewConfigServer(
-		logger.With("service", "config"),
-		e.ConfigStore,
-		e.DefaultConfigStore,
-		e.AssignedConfigStore,
-		e.ConfigAssignmentStore,
-		e.AgentRepo,
-		e.EffectiveConfigStore,
-		e.RemoteStatusStore,
-	)
-
 	// OpampServer - uses repository for agent data access
 	e.OpampServer = opamp.NewServer(
 		logger.With("service", "opamp"),
@@ -211,24 +197,24 @@ func (e *TestEnv) initServices(logger *slog.Logger, privateKey crypto.Signer) {
 	)
 
 	// DeploymentController
-	e.DeploymentController = deployment.NewController(
-		logger.With("service", "deployment"),
-		e.DeploymentStore,
-		e.AgentDeploymentStore,
-		e.ConfigStore,
-		e.AgentRepo,
-	)
+	// e.DeploymentController = deployment.NewController(
+	// 	logger.With("service", "deployment"),
+	// 	e.DeploymentStore,
+	// 	e.AgentDeploymentStore,
+	// 	e.ConfigStore,
+	// 	e.AgentRepo,
+	// )
 }
 
 func (e *TestEnv) wireServices() {
-	// ConfigServer notifies OpampServer of config changes
-	e.ConfigServer.SetNotifier(e.OpampServer)
+	// // ConfigServer notifies OpampServer of config changes
+	// e.ConfigServer.SetNotifier(e.OpampServer)
 
-	// ConfigServer uses DeploymentController for rolling deployments
-	e.ConfigServer.SetDeploymentController(e.DeploymentController)
+	// // ConfigServer uses DeploymentController for rolling deployments
+	// e.ConfigServer.SetDeploymentController(e.DeploymentController)
 
-	// DeploymentController uses ConfigServer for assigning configs
-	e.DeploymentController.SetConfigAssigner(e.ConfigServer)
+	// // DeploymentController uses ConfigServer for assigning configs
+	// e.DeploymentController.SetConfigAssigner(e.ConfigServer)
 }
 
 func (e *TestEnv) setupHTTPServers(t *testing.T) {

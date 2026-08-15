@@ -15,6 +15,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/grafana/dskit v0.0.0-20251128171051-c8889cbcbd96
 	github.com/lestrrat-go/jwx v1.2.31
 	github.com/lmittmann/tint v1.1.2
@@ -23,7 +24,6 @@ require (
 	github.com/open-telemetry/opamp-go v0.23.0
 	github.com/otelfleet/otelcol-lsp v0.1.1-0.20260724160308-01cac2eaf156
 	github.com/rs/cors v1.11.1
-	github.com/samber/lo v1.52.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.62.0
@@ -75,7 +75,6 @@ require (
 	github.com/gogo/status v1.1.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grafana/otel-profiling-go v0.5.1 // indirect
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.9 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.1 // indirect

@@ -8,35 +8,53 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1";
 
 service ConfigService {
-  // Config CRUD
-  rpc ValidConfig(ValidateConfigRequest) returns (google.protobuf.Empty);
-  rpc PutConfig(PutConfigRequest) returns (google.protobuf.Empty);
-  rpc GetConfig(ConfigReference) returns (Config);
-  rpc DeleteConfig(ConfigReference) returns (google.protobuf.Empty);
-  rpc ListConfigs(google.protobuf.Empty) returns (ListConfigReponse);
-  rpc GetDefaultConfig(google.protobuf.Empty) returns (Config);
-  rpc SetDefaultConfig(PutConfigRequest) returns (google.protobuf.Empty);
+  rpc PutConfigFilter(PutConfigFilterRequest) returns (google.protobuf.Empty);
+  rpc GetConfigFilter(ConfigFilterReference) returns (ConfigFilter);
+  rpc DeleteConfigFilter(ConfigFilterReference) returns (google.protobuf.Empty);
+  rpc ListConfigFilters(google.protobuf.Empty) returns (ListConfigFiltersResponse);
+}
 
-  // Phase 1: Manual Config Assignment
-  rpc AssignConfig(AssignConfigRequest) returns (AssignConfigResponse);
-  rpc GetAgentConfig(GetAgentConfigRequest) returns (GetAgentConfigResponse);
-  rpc UnassignConfig(UnassignConfigRequest) returns (UnassignConfigResponse);
+message ConfigFilterReference {
+  string id = 1;
+}
 
-  // Phase 2: Config Assignment Queries and Status
-  rpc ListConfigAssignments(ListConfigAssignmentsRequest) returns (ListConfigAssignmentsResponse);
-  rpc GetConfigStatus(GetConfigStatusRequest) returns (GetConfigStatusResponse);
+message PutConfigFilterRequest {
+  ConfigFilterReference ref = 1;
+  ConfigFilter filter = 2;
+}
 
-  // Phase 3: Batch Assignment
-  rpc BatchAssignConfig(BatchAssignConfigRequest) returns (BatchAssignConfigResponse);
-  rpc AssignConfigByLabels(AssignConfigByLabelsRequest) returns (AssignConfigByLabelsResponse);
+message ListConfigFiltersResponse {
+  repeated ConfigFilterReference filters = 1;
+}
 
-  // Phase 4: Rolling Deployment
-  rpc StartRollingDeployment(RollingDeploymentRequest) returns (RollingDeploymentResponse);
-  rpc GetDeploymentStatus(GetDeploymentStatusRequest) returns (GetDeploymentStatusResponse);
-  rpc PauseDeployment(PauseDeploymentRequest) returns (DeploymentActionResponse);
-  rpc ResumeDeployment(ResumeDeploymentRequest) returns (DeploymentActionResponse);
-  rpc CancelDeployment(CancelDeploymentRequest) returns (DeploymentActionResponse);
-  rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
+message ConfigFilter {
+  optional bool default = 1;
+  ApprovalConfig approval = 2;
+  repeated LabelFilter filters = 3;
+  TargetConfig collector_config = 4;
+}
+
+message LabelFilter {
+  MatchType type = 1;
+  map<string, string> opamp_id_labels = 2;
+  map<string, string> opamp_non_id_labels = 3;
+  map<string, string> otelfleet_labels = 4;
+}
+
+enum MatchType {
+  MATCH_TYPE_UNKNOWN = 0;
+  MATCH_TYPE_EQ = 1;
+  MATCH_TYPE_NEQ = 2;
+  MATCH_TYPE_RE = 3;
+  MATCH_TYPE_NR = 4;
+}
+
+message TargetConfig {
+  string config_ref = 1;
+}
+
+message ApprovalConfig {
+  optional bool requires_approval = 1;
 }
 
 message PutConfigRequest {

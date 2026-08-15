@@ -23,6 +23,61 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type MatchType int32
+
+const (
+	MatchType_MATCH_TYPE_UNKNOWN MatchType = 0
+	MatchType_MATCH_TYPE_EQ      MatchType = 1
+	MatchType_MATCH_TYPE_NEQ     MatchType = 2
+	MatchType_MATCH_TYPE_RE      MatchType = 3
+	MatchType_MATCH_TYPE_NR      MatchType = 4
+)
+
+// Enum value maps for MatchType.
+var (
+	MatchType_name = map[int32]string{
+		0: "MATCH_TYPE_UNKNOWN",
+		1: "MATCH_TYPE_EQ",
+		2: "MATCH_TYPE_NEQ",
+		3: "MATCH_TYPE_RE",
+		4: "MATCH_TYPE_NR",
+	}
+	MatchType_value = map[string]int32{
+		"MATCH_TYPE_UNKNOWN": 0,
+		"MATCH_TYPE_EQ":      1,
+		"MATCH_TYPE_NEQ":     2,
+		"MATCH_TYPE_RE":      3,
+		"MATCH_TYPE_NR":      4,
+	}
+)
+
+func (x MatchType) Enum() *MatchType {
+	p := new(MatchType)
+	*p = x
+	return p
+}
+
+func (x MatchType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (MatchType) Descriptor() protoreflect.EnumDescriptor {
+	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[0].Descriptor()
+}
+
+func (MatchType) Type() protoreflect.EnumType {
+	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[0]
+}
+
+func (x MatchType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use MatchType.Descriptor instead.
+func (MatchType) EnumDescriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{0}
+}
+
 // ConfigSource indicates how a config was assigned to an agent
 type ConfigSource int32
 
@@ -60,11 +115,11 @@ func (x ConfigSource) String() string {
 }
 
 func (ConfigSource) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[0].Descriptor()
+	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[1].Descriptor()
 }
 
 func (ConfigSource) Type() protoreflect.EnumType {
-	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[0]
+	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[1]
 }
 
 func (x ConfigSource) Number() protoreflect.EnumNumber {
@@ -73,7 +128,7 @@ func (x ConfigSource) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ConfigSource.Descriptor instead.
 func (ConfigSource) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{0}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{1}
 }
 
 // ConfigApplicationStatus indicates whether the agent has applied the config
@@ -113,11 +168,11 @@ func (x ConfigApplicationStatus) String() string {
 }
 
 func (ConfigApplicationStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[1].Descriptor()
+	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[2].Descriptor()
 }
 
 func (ConfigApplicationStatus) Type() protoreflect.EnumType {
-	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[1]
+	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[2]
 }
 
 func (x ConfigApplicationStatus) Number() protoreflect.EnumNumber {
@@ -126,7 +181,7 @@ func (x ConfigApplicationStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ConfigApplicationStatus.Descriptor instead.
 func (ConfigApplicationStatus) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{1}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{2}
 }
 
 // DeploymentState represents the overall state of a deployment
@@ -175,11 +230,11 @@ func (x DeploymentState) String() string {
 }
 
 func (DeploymentState) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[2].Descriptor()
+	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[3].Descriptor()
 }
 
 func (DeploymentState) Type() protoreflect.EnumType {
-	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[2]
+	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[3]
 }
 
 func (x DeploymentState) Number() protoreflect.EnumNumber {
@@ -188,7 +243,7 @@ func (x DeploymentState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DeploymentState.Descriptor instead.
 func (DeploymentState) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{2}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{3}
 }
 
 // AgentDeploymentState represents the state of deployment for a single agent
@@ -231,11 +286,11 @@ func (x AgentDeploymentState) String() string {
 }
 
 func (AgentDeploymentState) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[3].Descriptor()
+	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[4].Descriptor()
 }
 
 func (AgentDeploymentState) Type() protoreflect.EnumType {
-	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[3]
+	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[4]
 }
 
 func (x AgentDeploymentState) Number() protoreflect.EnumNumber {
@@ -244,7 +299,371 @@ func (x AgentDeploymentState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use AgentDeploymentState.Descriptor instead.
 func (AgentDeploymentState) EnumDescriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{4}
+}
+
+type ConfigFilterReference struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConfigFilterReference) Reset() {
+	*x = ConfigFilterReference{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfigFilterReference) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfigFilterReference) ProtoMessage() {}
+
+func (x *ConfigFilterReference) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfigFilterReference.ProtoReflect.Descriptor instead.
+func (*ConfigFilterReference) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *ConfigFilterReference) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type PutConfigFilterRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ref           *ConfigFilterReference `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
+	Filter        *ConfigFilter          `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PutConfigFilterRequest) Reset() {
+	*x = PutConfigFilterRequest{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PutConfigFilterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PutConfigFilterRequest) ProtoMessage() {}
+
+func (x *PutConfigFilterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PutConfigFilterRequest.ProtoReflect.Descriptor instead.
+func (*PutConfigFilterRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *PutConfigFilterRequest) GetRef() *ConfigFilterReference {
+	if x != nil {
+		return x.Ref
+	}
+	return nil
+}
+
+func (x *PutConfigFilterRequest) GetFilter() *ConfigFilter {
+	if x != nil {
+		return x.Filter
+	}
+	return nil
+}
+
+type ListConfigFiltersResponse struct {
+	state         protoimpl.MessageState   `protogen:"open.v1"`
+	Filters       []*ConfigFilterReference `protobuf:"bytes,1,rep,name=filters,proto3" json:"filters,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListConfigFiltersResponse) Reset() {
+	*x = ListConfigFiltersResponse{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListConfigFiltersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListConfigFiltersResponse) ProtoMessage() {}
+
+func (x *ListConfigFiltersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListConfigFiltersResponse.ProtoReflect.Descriptor instead.
+func (*ListConfigFiltersResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ListConfigFiltersResponse) GetFilters() []*ConfigFilterReference {
+	if x != nil {
+		return x.Filters
+	}
+	return nil
+}
+
+type ConfigFilter struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Default         *bool                  `protobuf:"varint,1,opt,name=default,proto3,oneof" json:"default,omitempty"`
+	Approval        *ApprovalConfig        `protobuf:"bytes,2,opt,name=approval,proto3" json:"approval,omitempty"`
+	Filters         []*LabelFilter         `protobuf:"bytes,3,rep,name=filters,proto3" json:"filters,omitempty"`
+	CollectorConfig *TargetConfig          `protobuf:"bytes,4,opt,name=collector_config,json=collectorConfig,proto3" json:"collector_config,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ConfigFilter) Reset() {
+	*x = ConfigFilter{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfigFilter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfigFilter) ProtoMessage() {}
+
+func (x *ConfigFilter) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfigFilter.ProtoReflect.Descriptor instead.
+func (*ConfigFilter) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ConfigFilter) GetDefault() bool {
+	if x != nil && x.Default != nil {
+		return *x.Default
+	}
+	return false
+}
+
+func (x *ConfigFilter) GetApproval() *ApprovalConfig {
+	if x != nil {
+		return x.Approval
+	}
+	return nil
+}
+
+func (x *ConfigFilter) GetFilters() []*LabelFilter {
+	if x != nil {
+		return x.Filters
+	}
+	return nil
+}
+
+func (x *ConfigFilter) GetCollectorConfig() *TargetConfig {
+	if x != nil {
+		return x.CollectorConfig
+	}
+	return nil
+}
+
+type LabelFilter struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Type             MatchType              `protobuf:"varint,1,opt,name=type,proto3,enum=config.v1alpha1.MatchType" json:"type,omitempty"`
+	OpampIdLabels    map[string]string      `protobuf:"bytes,2,rep,name=opamp_id_labels,json=opampIdLabels,proto3" json:"opamp_id_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	OpampNonIdLabels map[string]string      `protobuf:"bytes,3,rep,name=opamp_non_id_labels,json=opampNonIdLabels,proto3" json:"opamp_non_id_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	OtelfleetLabels  map[string]string      `protobuf:"bytes,4,rep,name=otelfleet_labels,json=otelfleetLabels,proto3" json:"otelfleet_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *LabelFilter) Reset() {
+	*x = LabelFilter{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LabelFilter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LabelFilter) ProtoMessage() {}
+
+func (x *LabelFilter) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LabelFilter.ProtoReflect.Descriptor instead.
+func (*LabelFilter) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *LabelFilter) GetType() MatchType {
+	if x != nil {
+		return x.Type
+	}
+	return MatchType_MATCH_TYPE_UNKNOWN
+}
+
+func (x *LabelFilter) GetOpampIdLabels() map[string]string {
+	if x != nil {
+		return x.OpampIdLabels
+	}
+	return nil
+}
+
+func (x *LabelFilter) GetOpampNonIdLabels() map[string]string {
+	if x != nil {
+		return x.OpampNonIdLabels
+	}
+	return nil
+}
+
+func (x *LabelFilter) GetOtelfleetLabels() map[string]string {
+	if x != nil {
+		return x.OtelfleetLabels
+	}
+	return nil
+}
+
+type TargetConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ConfigRef     string                 `protobuf:"bytes,1,opt,name=config_ref,json=configRef,proto3" json:"config_ref,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TargetConfig) Reset() {
+	*x = TargetConfig{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TargetConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TargetConfig) ProtoMessage() {}
+
+func (x *TargetConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TargetConfig.ProtoReflect.Descriptor instead.
+func (*TargetConfig) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *TargetConfig) GetConfigRef() string {
+	if x != nil {
+		return x.ConfigRef
+	}
+	return ""
+}
+
+type ApprovalConfig struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	RequiresApproval *bool                  `protobuf:"varint,1,opt,name=requires_approval,json=requiresApproval,proto3,oneof" json:"requires_approval,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *ApprovalConfig) Reset() {
+	*x = ApprovalConfig{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApprovalConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApprovalConfig) ProtoMessage() {}
+
+func (x *ApprovalConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApprovalConfig.ProtoReflect.Descriptor instead.
+func (*ApprovalConfig) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ApprovalConfig) GetRequiresApproval() bool {
+	if x != nil && x.RequiresApproval != nil {
+		return *x.RequiresApproval
+	}
+	return false
 }
 
 type PutConfigRequest struct {
@@ -257,7 +676,7 @@ type PutConfigRequest struct {
 
 func (x *PutConfigRequest) Reset() {
 	*x = PutConfigRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -269,7 +688,7 @@ func (x *PutConfigRequest) String() string {
 func (*PutConfigRequest) ProtoMessage() {}
 
 func (x *PutConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -282,7 +701,7 @@ func (x *PutConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutConfigRequest.ProtoReflect.Descriptor instead.
 func (*PutConfigRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{0}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *PutConfigRequest) GetRef() *ConfigReference {
@@ -308,7 +727,7 @@ type ValidateConfigRequest struct {
 
 func (x *ValidateConfigRequest) Reset() {
 	*x = ValidateConfigRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -320,7 +739,7 @@ func (x *ValidateConfigRequest) String() string {
 func (*ValidateConfigRequest) ProtoMessage() {}
 
 func (x *ValidateConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -333,7 +752,7 @@ func (x *ValidateConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateConfigRequest.ProtoReflect.Descriptor instead.
 func (*ValidateConfigRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{1}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ValidateConfigRequest) GetConfig() *Config {
@@ -352,7 +771,7 @@ type ListConfigReponse struct {
 
 func (x *ListConfigReponse) Reset() {
 	*x = ListConfigReponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[2]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -364,7 +783,7 @@ func (x *ListConfigReponse) String() string {
 func (*ListConfigReponse) ProtoMessage() {}
 
 func (x *ListConfigReponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[2]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -377,7 +796,7 @@ func (x *ListConfigReponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListConfigReponse.ProtoReflect.Descriptor instead.
 func (*ListConfigReponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{2}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ListConfigReponse) GetConfigs() []*ConfigReference {
@@ -396,7 +815,7 @@ type ConfigReference struct {
 
 func (x *ConfigReference) Reset() {
 	*x = ConfigReference{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[3]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -408,7 +827,7 @@ func (x *ConfigReference) String() string {
 func (*ConfigReference) ProtoMessage() {}
 
 func (x *ConfigReference) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[3]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -421,7 +840,7 @@ func (x *ConfigReference) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigReference.ProtoReflect.Descriptor instead.
 func (*ConfigReference) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{3}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ConfigReference) GetId() string {
@@ -440,7 +859,7 @@ type Config struct {
 
 func (x *Config) Reset() {
 	*x = Config{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[4]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -452,7 +871,7 @@ func (x *Config) String() string {
 func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[4]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -465,7 +884,7 @@ func (x *Config) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Config.ProtoReflect.Descriptor instead.
 func (*Config) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{4}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Config) GetConfig() []byte {
@@ -485,7 +904,7 @@ type ConfigRange struct {
 
 func (x *ConfigRange) Reset() {
 	*x = ConfigRange{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[5]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -497,7 +916,7 @@ func (x *ConfigRange) String() string {
 func (*ConfigRange) ProtoMessage() {}
 
 func (x *ConfigRange) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[5]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -510,7 +929,7 @@ func (x *ConfigRange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigRange.ProtoReflect.Descriptor instead.
 func (*ConfigRange) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{5}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ConfigRange) GetStartVersion() string {
@@ -536,7 +955,7 @@ type Labels struct {
 
 func (x *Labels) Reset() {
 	*x = Labels{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[6]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -548,7 +967,7 @@ func (x *Labels) String() string {
 func (*Labels) ProtoMessage() {}
 
 func (x *Labels) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[6]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -561,7 +980,7 @@ func (x *Labels) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Labels.ProtoReflect.Descriptor instead.
 func (*Labels) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{6}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Labels) GetLabels() map[string]string {
@@ -579,7 +998,7 @@ type Matcher struct {
 
 func (x *Matcher) Reset() {
 	*x = Matcher{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[7]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -591,7 +1010,7 @@ func (x *Matcher) String() string {
 func (*Matcher) ProtoMessage() {}
 
 func (x *Matcher) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[7]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -604,7 +1023,7 @@ func (x *Matcher) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Matcher.ProtoReflect.Descriptor instead.
 func (*Matcher) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{7}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{14}
 }
 
 // ConfigAssignment tracks metadata about a config assignment to an agent
@@ -621,7 +1040,7 @@ type ConfigAssignment struct {
 
 func (x *ConfigAssignment) Reset() {
 	*x = ConfigAssignment{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[8]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -633,7 +1052,7 @@ func (x *ConfigAssignment) String() string {
 func (*ConfigAssignment) ProtoMessage() {}
 
 func (x *ConfigAssignment) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[8]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -646,7 +1065,7 @@ func (x *ConfigAssignment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigAssignment.ProtoReflect.Descriptor instead.
 func (*ConfigAssignment) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{8}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ConfigAssignment) GetAgentId() string {
@@ -694,7 +1113,7 @@ type AssignConfigRequest struct {
 
 func (x *AssignConfigRequest) Reset() {
 	*x = AssignConfigRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[9]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -706,7 +1125,7 @@ func (x *AssignConfigRequest) String() string {
 func (*AssignConfigRequest) ProtoMessage() {}
 
 func (x *AssignConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[9]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -719,7 +1138,7 @@ func (x *AssignConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignConfigRequest.ProtoReflect.Descriptor instead.
 func (*AssignConfigRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{9}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *AssignConfigRequest) GetAgentId() string {
@@ -746,7 +1165,7 @@ type AssignConfigResponse struct {
 
 func (x *AssignConfigResponse) Reset() {
 	*x = AssignConfigResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[10]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -758,7 +1177,7 @@ func (x *AssignConfigResponse) String() string {
 func (*AssignConfigResponse) ProtoMessage() {}
 
 func (x *AssignConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[10]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -771,7 +1190,7 @@ func (x *AssignConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignConfigResponse.ProtoReflect.Descriptor instead.
 func (*AssignConfigResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{10}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *AssignConfigResponse) GetSuccess() bool {
@@ -797,7 +1216,7 @@ type GetAgentConfigRequest struct {
 
 func (x *GetAgentConfigRequest) Reset() {
 	*x = GetAgentConfigRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[11]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -809,7 +1228,7 @@ func (x *GetAgentConfigRequest) String() string {
 func (*GetAgentConfigRequest) ProtoMessage() {}
 
 func (x *GetAgentConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[11]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -822,7 +1241,7 @@ func (x *GetAgentConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAgentConfigRequest.ProtoReflect.Descriptor instead.
 func (*GetAgentConfigRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{11}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetAgentConfigRequest) GetAgentId() string {
@@ -843,7 +1262,7 @@ type GetAgentConfigResponse struct {
 
 func (x *GetAgentConfigResponse) Reset() {
 	*x = GetAgentConfigResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[12]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -855,7 +1274,7 @@ func (x *GetAgentConfigResponse) String() string {
 func (*GetAgentConfigResponse) ProtoMessage() {}
 
 func (x *GetAgentConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[12]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -868,7 +1287,7 @@ func (x *GetAgentConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAgentConfigResponse.ProtoReflect.Descriptor instead.
 func (*GetAgentConfigResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{12}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetAgentConfigResponse) GetConfigId() string {
@@ -901,7 +1320,7 @@ type UnassignConfigRequest struct {
 
 func (x *UnassignConfigRequest) Reset() {
 	*x = UnassignConfigRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[13]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -913,7 +1332,7 @@ func (x *UnassignConfigRequest) String() string {
 func (*UnassignConfigRequest) ProtoMessage() {}
 
 func (x *UnassignConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[13]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -926,7 +1345,7 @@ func (x *UnassignConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnassignConfigRequest.ProtoReflect.Descriptor instead.
 func (*UnassignConfigRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{13}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *UnassignConfigRequest) GetAgentId() string {
@@ -945,7 +1364,7 @@ type UnassignConfigResponse struct {
 
 func (x *UnassignConfigResponse) Reset() {
 	*x = UnassignConfigResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[14]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -957,7 +1376,7 @@ func (x *UnassignConfigResponse) String() string {
 func (*UnassignConfigResponse) ProtoMessage() {}
 
 func (x *UnassignConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[14]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -970,7 +1389,7 @@ func (x *UnassignConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnassignConfigResponse.ProtoReflect.Descriptor instead.
 func (*UnassignConfigResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{14}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *UnassignConfigResponse) GetSuccess() bool {
@@ -989,7 +1408,7 @@ type ListConfigAssignmentsRequest struct {
 
 func (x *ListConfigAssignmentsRequest) Reset() {
 	*x = ListConfigAssignmentsRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[15]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1001,7 +1420,7 @@ func (x *ListConfigAssignmentsRequest) String() string {
 func (*ListConfigAssignmentsRequest) ProtoMessage() {}
 
 func (x *ListConfigAssignmentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[15]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1014,7 +1433,7 @@ func (x *ListConfigAssignmentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListConfigAssignmentsRequest.ProtoReflect.Descriptor instead.
 func (*ListConfigAssignmentsRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{15}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ListConfigAssignmentsRequest) GetConfigId() string {
@@ -1038,7 +1457,7 @@ type ConfigAssignmentInfo struct {
 
 func (x *ConfigAssignmentInfo) Reset() {
 	*x = ConfigAssignmentInfo{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[16]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1050,7 +1469,7 @@ func (x *ConfigAssignmentInfo) String() string {
 func (*ConfigAssignmentInfo) ProtoMessage() {}
 
 func (x *ConfigAssignmentInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[16]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1063,7 +1482,7 @@ func (x *ConfigAssignmentInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigAssignmentInfo.ProtoReflect.Descriptor instead.
 func (*ConfigAssignmentInfo) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{16}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ConfigAssignmentInfo) GetAgentId() string {
@@ -1117,7 +1536,7 @@ type ListConfigAssignmentsResponse struct {
 
 func (x *ListConfigAssignmentsResponse) Reset() {
 	*x = ListConfigAssignmentsResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[17]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1129,7 +1548,7 @@ func (x *ListConfigAssignmentsResponse) String() string {
 func (*ListConfigAssignmentsResponse) ProtoMessage() {}
 
 func (x *ListConfigAssignmentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[17]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1142,7 +1561,7 @@ func (x *ListConfigAssignmentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListConfigAssignmentsResponse.ProtoReflect.Descriptor instead.
 func (*ListConfigAssignmentsResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{17}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ListConfigAssignmentsResponse) GetAssignments() []*ConfigAssignmentInfo {
@@ -1161,7 +1580,7 @@ type GetConfigStatusRequest struct {
 
 func (x *GetConfigStatusRequest) Reset() {
 	*x = GetConfigStatusRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[18]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1173,7 +1592,7 @@ func (x *GetConfigStatusRequest) String() string {
 func (*GetConfigStatusRequest) ProtoMessage() {}
 
 func (x *GetConfigStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[18]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1186,7 +1605,7 @@ func (x *GetConfigStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConfigStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetConfigStatusRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{18}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetConfigStatusRequest) GetAgentId() string {
@@ -1208,7 +1627,7 @@ type GetConfigStatusResponse struct {
 
 func (x *GetConfigStatusResponse) Reset() {
 	*x = GetConfigStatusResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[19]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1220,7 +1639,7 @@ func (x *GetConfigStatusResponse) String() string {
 func (*GetConfigStatusResponse) ProtoMessage() {}
 
 func (x *GetConfigStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[19]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1233,7 +1652,7 @@ func (x *GetConfigStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConfigStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetConfigStatusResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{19}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *GetConfigStatusResponse) GetAssignment() *ConfigAssignmentInfo {
@@ -1274,7 +1693,7 @@ type BatchAssignConfigRequest struct {
 
 func (x *BatchAssignConfigRequest) Reset() {
 	*x = BatchAssignConfigRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[20]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1286,7 +1705,7 @@ func (x *BatchAssignConfigRequest) String() string {
 func (*BatchAssignConfigRequest) ProtoMessage() {}
 
 func (x *BatchAssignConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[20]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1299,7 +1718,7 @@ func (x *BatchAssignConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchAssignConfigRequest.ProtoReflect.Descriptor instead.
 func (*BatchAssignConfigRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{20}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *BatchAssignConfigRequest) GetAgentIds() []string {
@@ -1328,7 +1747,7 @@ type BatchAssignConfigResponse struct {
 
 func (x *BatchAssignConfigResponse) Reset() {
 	*x = BatchAssignConfigResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[21]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1340,7 +1759,7 @@ func (x *BatchAssignConfigResponse) String() string {
 func (*BatchAssignConfigResponse) ProtoMessage() {}
 
 func (x *BatchAssignConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[21]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1353,7 +1772,7 @@ func (x *BatchAssignConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchAssignConfigResponse.ProtoReflect.Descriptor instead.
 func (*BatchAssignConfigResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{21}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *BatchAssignConfigResponse) GetSuccessful() int32 {
@@ -1394,7 +1813,7 @@ type AssignConfigByLabelsRequest struct {
 
 func (x *AssignConfigByLabelsRequest) Reset() {
 	*x = AssignConfigByLabelsRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[22]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1406,7 +1825,7 @@ func (x *AssignConfigByLabelsRequest) String() string {
 func (*AssignConfigByLabelsRequest) ProtoMessage() {}
 
 func (x *AssignConfigByLabelsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[22]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1419,7 +1838,7 @@ func (x *AssignConfigByLabelsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignConfigByLabelsRequest.ProtoReflect.Descriptor instead.
 func (*AssignConfigByLabelsRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{22}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *AssignConfigByLabelsRequest) GetLabels() map[string]string {
@@ -1447,7 +1866,7 @@ type AssignConfigByLabelsResponse struct {
 
 func (x *AssignConfigByLabelsResponse) Reset() {
 	*x = AssignConfigByLabelsResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[23]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1459,7 +1878,7 @@ func (x *AssignConfigByLabelsResponse) String() string {
 func (*AssignConfigByLabelsResponse) ProtoMessage() {}
 
 func (x *AssignConfigByLabelsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[23]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1472,7 +1891,7 @@ func (x *AssignConfigByLabelsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignConfigByLabelsResponse.ProtoReflect.Descriptor instead.
 func (*AssignConfigByLabelsResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{23}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *AssignConfigByLabelsResponse) GetMatchedAgentIds() []string {
@@ -1510,7 +1929,7 @@ type RollingDeploymentRequest struct {
 
 func (x *RollingDeploymentRequest) Reset() {
 	*x = RollingDeploymentRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[24]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1522,7 +1941,7 @@ func (x *RollingDeploymentRequest) String() string {
 func (*RollingDeploymentRequest) ProtoMessage() {}
 
 func (x *RollingDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[24]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1535,7 +1954,7 @@ func (x *RollingDeploymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RollingDeploymentRequest.ProtoReflect.Descriptor instead.
 func (*RollingDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{24}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *RollingDeploymentRequest) GetConfigId() string {
@@ -1589,7 +2008,7 @@ type RollingDeploymentResponse struct {
 
 func (x *RollingDeploymentResponse) Reset() {
 	*x = RollingDeploymentResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[25]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1601,7 +2020,7 @@ func (x *RollingDeploymentResponse) String() string {
 func (*RollingDeploymentResponse) ProtoMessage() {}
 
 func (x *RollingDeploymentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[25]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1614,7 +2033,7 @@ func (x *RollingDeploymentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RollingDeploymentResponse.ProtoReflect.Descriptor instead.
 func (*RollingDeploymentResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{25}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *RollingDeploymentResponse) GetDeploymentId() string {
@@ -1636,7 +2055,7 @@ type AgentDeploymentStatus struct {
 
 func (x *AgentDeploymentStatus) Reset() {
 	*x = AgentDeploymentStatus{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[26]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1648,7 +2067,7 @@ func (x *AgentDeploymentStatus) String() string {
 func (*AgentDeploymentStatus) ProtoMessage() {}
 
 func (x *AgentDeploymentStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[26]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1661,7 +2080,7 @@ func (x *AgentDeploymentStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentDeploymentStatus.ProtoReflect.Descriptor instead.
 func (*AgentDeploymentStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{26}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *AgentDeploymentStatus) GetAgentId() string {
@@ -1711,7 +2130,7 @@ type DeploymentStatus struct {
 
 func (x *DeploymentStatus) Reset() {
 	*x = DeploymentStatus{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[27]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1723,7 +2142,7 @@ func (x *DeploymentStatus) String() string {
 func (*DeploymentStatus) ProtoMessage() {}
 
 func (x *DeploymentStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[27]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1736,7 +2155,7 @@ func (x *DeploymentStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeploymentStatus.ProtoReflect.Descriptor instead.
 func (*DeploymentStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{27}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *DeploymentStatus) GetDeploymentId() string {
@@ -1825,7 +2244,7 @@ type GetDeploymentStatusRequest struct {
 
 func (x *GetDeploymentStatusRequest) Reset() {
 	*x = GetDeploymentStatusRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[28]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1837,7 +2256,7 @@ func (x *GetDeploymentStatusRequest) String() string {
 func (*GetDeploymentStatusRequest) ProtoMessage() {}
 
 func (x *GetDeploymentStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[28]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1850,7 +2269,7 @@ func (x *GetDeploymentStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDeploymentStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetDeploymentStatusRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{28}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *GetDeploymentStatusRequest) GetDeploymentId() string {
@@ -1869,7 +2288,7 @@ type GetDeploymentStatusResponse struct {
 
 func (x *GetDeploymentStatusResponse) Reset() {
 	*x = GetDeploymentStatusResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[29]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1881,7 +2300,7 @@ func (x *GetDeploymentStatusResponse) String() string {
 func (*GetDeploymentStatusResponse) ProtoMessage() {}
 
 func (x *GetDeploymentStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[29]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1894,7 +2313,7 @@ func (x *GetDeploymentStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDeploymentStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetDeploymentStatusResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{29}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *GetDeploymentStatusResponse) GetStatus() *DeploymentStatus {
@@ -1913,7 +2332,7 @@ type PauseDeploymentRequest struct {
 
 func (x *PauseDeploymentRequest) Reset() {
 	*x = PauseDeploymentRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[30]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1925,7 +2344,7 @@ func (x *PauseDeploymentRequest) String() string {
 func (*PauseDeploymentRequest) ProtoMessage() {}
 
 func (x *PauseDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[30]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1938,7 +2357,7 @@ func (x *PauseDeploymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PauseDeploymentRequest.ProtoReflect.Descriptor instead.
 func (*PauseDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{30}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *PauseDeploymentRequest) GetDeploymentId() string {
@@ -1957,7 +2376,7 @@ type ResumeDeploymentRequest struct {
 
 func (x *ResumeDeploymentRequest) Reset() {
 	*x = ResumeDeploymentRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[31]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1969,7 +2388,7 @@ func (x *ResumeDeploymentRequest) String() string {
 func (*ResumeDeploymentRequest) ProtoMessage() {}
 
 func (x *ResumeDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[31]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1982,7 +2401,7 @@ func (x *ResumeDeploymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResumeDeploymentRequest.ProtoReflect.Descriptor instead.
 func (*ResumeDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{31}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *ResumeDeploymentRequest) GetDeploymentId() string {
@@ -2001,7 +2420,7 @@ type CancelDeploymentRequest struct {
 
 func (x *CancelDeploymentRequest) Reset() {
 	*x = CancelDeploymentRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[32]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2013,7 +2432,7 @@ func (x *CancelDeploymentRequest) String() string {
 func (*CancelDeploymentRequest) ProtoMessage() {}
 
 func (x *CancelDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[32]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2026,7 +2445,7 @@ func (x *CancelDeploymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelDeploymentRequest.ProtoReflect.Descriptor instead.
 func (*CancelDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{32}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *CancelDeploymentRequest) GetDeploymentId() string {
@@ -2046,7 +2465,7 @@ type DeploymentActionResponse struct {
 
 func (x *DeploymentActionResponse) Reset() {
 	*x = DeploymentActionResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[33]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2058,7 +2477,7 @@ func (x *DeploymentActionResponse) String() string {
 func (*DeploymentActionResponse) ProtoMessage() {}
 
 func (x *DeploymentActionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[33]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2071,7 +2490,7 @@ func (x *DeploymentActionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeploymentActionResponse.ProtoReflect.Descriptor instead.
 func (*DeploymentActionResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{33}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *DeploymentActionResponse) GetSuccess() bool {
@@ -2097,7 +2516,7 @@ type ListDeploymentsRequest struct {
 
 func (x *ListDeploymentsRequest) Reset() {
 	*x = ListDeploymentsRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[34]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2109,7 +2528,7 @@ func (x *ListDeploymentsRequest) String() string {
 func (*ListDeploymentsRequest) ProtoMessage() {}
 
 func (x *ListDeploymentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[34]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2122,7 +2541,7 @@ func (x *ListDeploymentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDeploymentsRequest.ProtoReflect.Descriptor instead.
 func (*ListDeploymentsRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{34}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *ListDeploymentsRequest) GetStateFilter() DeploymentState {
@@ -2141,7 +2560,7 @@ type ListDeploymentsResponse struct {
 
 func (x *ListDeploymentsResponse) Reset() {
 	*x = ListDeploymentsResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[35]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2153,7 +2572,7 @@ func (x *ListDeploymentsResponse) String() string {
 func (*ListDeploymentsResponse) ProtoMessage() {}
 
 func (x *ListDeploymentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[35]
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2166,7 +2585,7 @@ func (x *ListDeploymentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDeploymentsResponse.ProtoReflect.Descriptor instead.
 func (*ListDeploymentsResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{35}
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ListDeploymentsResponse) GetDeployments() []*DeploymentStatus {
@@ -2180,7 +2599,41 @@ var File_pkg_api_config_v1alpha1_config_proto protoreflect.FileDescriptor
 
 const file_pkg_api_config_v1alpha1_config_proto_rawDesc = "" +
 	"\n" +
-	"$pkg/api/config/v1alpha1/config.proto\x12\x0fconfig.v1alpha1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"w\n" +
+	"$pkg/api/config/v1alpha1/config.proto\x12\x0fconfig.v1alpha1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"'\n" +
+	"\x15ConfigFilterReference\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"\x89\x01\n" +
+	"\x16PutConfigFilterRequest\x128\n" +
+	"\x03ref\x18\x01 \x01(\v2&.config.v1alpha1.ConfigFilterReferenceR\x03ref\x125\n" +
+	"\x06filter\x18\x02 \x01(\v2\x1d.config.v1alpha1.ConfigFilterR\x06filter\"]\n" +
+	"\x19ListConfigFiltersResponse\x12@\n" +
+	"\afilters\x18\x01 \x03(\v2&.config.v1alpha1.ConfigFilterReferenceR\afilters\"\xf8\x01\n" +
+	"\fConfigFilter\x12\x1d\n" +
+	"\adefault\x18\x01 \x01(\bH\x00R\adefault\x88\x01\x01\x12;\n" +
+	"\bapproval\x18\x02 \x01(\v2\x1f.config.v1alpha1.ApprovalConfigR\bapproval\x126\n" +
+	"\afilters\x18\x03 \x03(\v2\x1c.config.v1alpha1.LabelFilterR\afilters\x12H\n" +
+	"\x10collector_config\x18\x04 \x01(\v2\x1d.config.v1alpha1.TargetConfigR\x0fcollectorConfigB\n" +
+	"\n" +
+	"\b_default\"\xa2\x04\n" +
+	"\vLabelFilter\x12.\n" +
+	"\x04type\x18\x01 \x01(\x0e2\x1a.config.v1alpha1.MatchTypeR\x04type\x12W\n" +
+	"\x0fopamp_id_labels\x18\x02 \x03(\v2/.config.v1alpha1.LabelFilter.OpampIdLabelsEntryR\ropampIdLabels\x12a\n" +
+	"\x13opamp_non_id_labels\x18\x03 \x03(\v22.config.v1alpha1.LabelFilter.OpampNonIdLabelsEntryR\x10opampNonIdLabels\x12\\\n" +
+	"\x10otelfleet_labels\x18\x04 \x03(\v21.config.v1alpha1.LabelFilter.OtelfleetLabelsEntryR\x0fotelfleetLabels\x1a@\n" +
+	"\x12OpampIdLabelsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aC\n" +
+	"\x15OpampNonIdLabelsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aB\n" +
+	"\x14OtelfleetLabelsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"-\n" +
+	"\fTargetConfig\x12\x1d\n" +
+	"\n" +
+	"config_ref\x18\x01 \x01(\tR\tconfigRef\"X\n" +
+	"\x0eApprovalConfig\x120\n" +
+	"\x11requires_approval\x18\x01 \x01(\bH\x00R\x10requiresApproval\x88\x01\x01B\x14\n" +
+	"\x12_requires_approval\"w\n" +
 	"\x10PutConfigRequest\x122\n" +
 	"\x03ref\x18\x01 \x01(\v2 .config.v1alpha1.ConfigReferenceR\x03ref\x12/\n" +
 	"\x06config\x18\x02 \x01(\v2\x17.config.v1alpha1.ConfigR\x06config\"H\n" +
@@ -2323,7 +2776,13 @@ const file_pkg_api_config_v1alpha1_config_proto_rawDesc = "" +
 	"\fstate_filter\x18\x01 \x01(\x0e2 .config.v1alpha1.DeploymentStateH\x00R\vstateFilter\x88\x01\x01B\x0f\n" +
 	"\r_state_filter\"^\n" +
 	"\x17ListDeploymentsResponse\x12C\n" +
-	"\vdeployments\x18\x01 \x03(\v2!.config.v1alpha1.DeploymentStatusR\vdeployments*\x7f\n" +
+	"\vdeployments\x18\x01 \x03(\v2!.config.v1alpha1.DeploymentStatusR\vdeployments*p\n" +
+	"\tMatchType\x12\x16\n" +
+	"\x12MATCH_TYPE_UNKNOWN\x10\x00\x12\x11\n" +
+	"\rMATCH_TYPE_EQ\x10\x01\x12\x12\n" +
+	"\x0eMATCH_TYPE_NEQ\x10\x02\x12\x11\n" +
+	"\rMATCH_TYPE_RE\x10\x03\x12\x11\n" +
+	"\rMATCH_TYPE_NR\x10\x04*\x7f\n" +
 	"\fConfigSource\x12\x1d\n" +
 	"\x19CONFIG_SOURCE_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15CONFIG_SOURCE_DEFAULT\x10\x01\x12\x1b\n" +
@@ -2347,28 +2806,12 @@ const file_pkg_api_config_v1alpha1_config_proto_rawDesc = "" +
 	"\x1eAGENT_DEPLOYMENT_STATE_PENDING\x10\x01\x12#\n" +
 	"\x1fAGENT_DEPLOYMENT_STATE_APPLYING\x10\x02\x12\"\n" +
 	"\x1eAGENT_DEPLOYMENT_STATE_APPLIED\x10\x03\x12!\n" +
-	"\x1dAGENT_DEPLOYMENT_STATE_FAILED\x10\x042\xfb\x0e\n" +
-	"\rConfigService\x12M\n" +
-	"\vValidConfig\x12&.config.v1alpha1.ValidateConfigRequest\x1a\x16.google.protobuf.Empty\x12F\n" +
-	"\tPutConfig\x12!.config.v1alpha1.PutConfigRequest\x1a\x16.google.protobuf.Empty\x12F\n" +
-	"\tGetConfig\x12 .config.v1alpha1.ConfigReference\x1a\x17.config.v1alpha1.Config\x12H\n" +
-	"\fDeleteConfig\x12 .config.v1alpha1.ConfigReference\x1a\x16.google.protobuf.Empty\x12I\n" +
-	"\vListConfigs\x12\x16.google.protobuf.Empty\x1a\".config.v1alpha1.ListConfigReponse\x12C\n" +
-	"\x10GetDefaultConfig\x12\x16.google.protobuf.Empty\x1a\x17.config.v1alpha1.Config\x12M\n" +
-	"\x10SetDefaultConfig\x12!.config.v1alpha1.PutConfigRequest\x1a\x16.google.protobuf.Empty\x12[\n" +
-	"\fAssignConfig\x12$.config.v1alpha1.AssignConfigRequest\x1a%.config.v1alpha1.AssignConfigResponse\x12a\n" +
-	"\x0eGetAgentConfig\x12&.config.v1alpha1.GetAgentConfigRequest\x1a'.config.v1alpha1.GetAgentConfigResponse\x12a\n" +
-	"\x0eUnassignConfig\x12&.config.v1alpha1.UnassignConfigRequest\x1a'.config.v1alpha1.UnassignConfigResponse\x12v\n" +
-	"\x15ListConfigAssignments\x12-.config.v1alpha1.ListConfigAssignmentsRequest\x1a..config.v1alpha1.ListConfigAssignmentsResponse\x12d\n" +
-	"\x0fGetConfigStatus\x12'.config.v1alpha1.GetConfigStatusRequest\x1a(.config.v1alpha1.GetConfigStatusResponse\x12j\n" +
-	"\x11BatchAssignConfig\x12).config.v1alpha1.BatchAssignConfigRequest\x1a*.config.v1alpha1.BatchAssignConfigResponse\x12s\n" +
-	"\x14AssignConfigByLabels\x12,.config.v1alpha1.AssignConfigByLabelsRequest\x1a-.config.v1alpha1.AssignConfigByLabelsResponse\x12o\n" +
-	"\x16StartRollingDeployment\x12).config.v1alpha1.RollingDeploymentRequest\x1a*.config.v1alpha1.RollingDeploymentResponse\x12p\n" +
-	"\x13GetDeploymentStatus\x12+.config.v1alpha1.GetDeploymentStatusRequest\x1a,.config.v1alpha1.GetDeploymentStatusResponse\x12e\n" +
-	"\x0fPauseDeployment\x12'.config.v1alpha1.PauseDeploymentRequest\x1a).config.v1alpha1.DeploymentActionResponse\x12g\n" +
-	"\x10ResumeDeployment\x12(.config.v1alpha1.ResumeDeploymentRequest\x1a).config.v1alpha1.DeploymentActionResponse\x12g\n" +
-	"\x10CancelDeployment\x12(.config.v1alpha1.CancelDeploymentRequest\x1a).config.v1alpha1.DeploymentActionResponse\x12d\n" +
-	"\x0fListDeployments\x12'.config.v1alpha1.ListDeploymentsRequest\x1a(.config.v1alpha1.ListDeploymentsResponseB8Z6github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1b\x06proto3"
+	"\x1dAGENT_DEPLOYMENT_STATE_FAILED\x10\x042\xec\x02\n" +
+	"\rConfigService\x12R\n" +
+	"\x0fPutConfigFilter\x12'.config.v1alpha1.PutConfigFilterRequest\x1a\x16.google.protobuf.Empty\x12X\n" +
+	"\x0fGetConfigFilter\x12&.config.v1alpha1.ConfigFilterReference\x1a\x1d.config.v1alpha1.ConfigFilter\x12T\n" +
+	"\x12DeleteConfigFilter\x12&.config.v1alpha1.ConfigFilterReference\x1a\x16.google.protobuf.Empty\x12W\n" +
+	"\x11ListConfigFilters\x12\x16.google.protobuf.Empty\x1a*.config.v1alpha1.ListConfigFiltersResponseB8Z6github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1b\x06proto3"
 
 var (
 	file_pkg_api_config_v1alpha1_config_proto_rawDescOnce sync.Once
@@ -2382,126 +2825,115 @@ func file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP() []byte {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescData
 }
 
-var file_pkg_api_config_v1alpha1_config_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_pkg_api_config_v1alpha1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
+var file_pkg_api_config_v1alpha1_config_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_pkg_api_config_v1alpha1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 49)
 var file_pkg_api_config_v1alpha1_config_proto_goTypes = []any{
-	(ConfigSource)(0),                     // 0: config.v1alpha1.ConfigSource
-	(ConfigApplicationStatus)(0),          // 1: config.v1alpha1.ConfigApplicationStatus
-	(DeploymentState)(0),                  // 2: config.v1alpha1.DeploymentState
-	(AgentDeploymentState)(0),             // 3: config.v1alpha1.AgentDeploymentState
-	(*PutConfigRequest)(nil),              // 4: config.v1alpha1.PutConfigRequest
-	(*ValidateConfigRequest)(nil),         // 5: config.v1alpha1.ValidateConfigRequest
-	(*ListConfigReponse)(nil),             // 6: config.v1alpha1.ListConfigReponse
-	(*ConfigReference)(nil),               // 7: config.v1alpha1.ConfigReference
-	(*Config)(nil),                        // 8: config.v1alpha1.Config
-	(*ConfigRange)(nil),                   // 9: config.v1alpha1.ConfigRange
-	(*Labels)(nil),                        // 10: config.v1alpha1.Labels
-	(*Matcher)(nil),                       // 11: config.v1alpha1.Matcher
-	(*ConfigAssignment)(nil),              // 12: config.v1alpha1.ConfigAssignment
-	(*AssignConfigRequest)(nil),           // 13: config.v1alpha1.AssignConfigRequest
-	(*AssignConfigResponse)(nil),          // 14: config.v1alpha1.AssignConfigResponse
-	(*GetAgentConfigRequest)(nil),         // 15: config.v1alpha1.GetAgentConfigRequest
-	(*GetAgentConfigResponse)(nil),        // 16: config.v1alpha1.GetAgentConfigResponse
-	(*UnassignConfigRequest)(nil),         // 17: config.v1alpha1.UnassignConfigRequest
-	(*UnassignConfigResponse)(nil),        // 18: config.v1alpha1.UnassignConfigResponse
-	(*ListConfigAssignmentsRequest)(nil),  // 19: config.v1alpha1.ListConfigAssignmentsRequest
-	(*ConfigAssignmentInfo)(nil),          // 20: config.v1alpha1.ConfigAssignmentInfo
-	(*ListConfigAssignmentsResponse)(nil), // 21: config.v1alpha1.ListConfigAssignmentsResponse
-	(*GetConfigStatusRequest)(nil),        // 22: config.v1alpha1.GetConfigStatusRequest
-	(*GetConfigStatusResponse)(nil),       // 23: config.v1alpha1.GetConfigStatusResponse
-	(*BatchAssignConfigRequest)(nil),      // 24: config.v1alpha1.BatchAssignConfigRequest
-	(*BatchAssignConfigResponse)(nil),     // 25: config.v1alpha1.BatchAssignConfigResponse
-	(*AssignConfigByLabelsRequest)(nil),   // 26: config.v1alpha1.AssignConfigByLabelsRequest
-	(*AssignConfigByLabelsResponse)(nil),  // 27: config.v1alpha1.AssignConfigByLabelsResponse
-	(*RollingDeploymentRequest)(nil),      // 28: config.v1alpha1.RollingDeploymentRequest
-	(*RollingDeploymentResponse)(nil),     // 29: config.v1alpha1.RollingDeploymentResponse
-	(*AgentDeploymentStatus)(nil),         // 30: config.v1alpha1.AgentDeploymentStatus
-	(*DeploymentStatus)(nil),              // 31: config.v1alpha1.DeploymentStatus
-	(*GetDeploymentStatusRequest)(nil),    // 32: config.v1alpha1.GetDeploymentStatusRequest
-	(*GetDeploymentStatusResponse)(nil),   // 33: config.v1alpha1.GetDeploymentStatusResponse
-	(*PauseDeploymentRequest)(nil),        // 34: config.v1alpha1.PauseDeploymentRequest
-	(*ResumeDeploymentRequest)(nil),       // 35: config.v1alpha1.ResumeDeploymentRequest
-	(*CancelDeploymentRequest)(nil),       // 36: config.v1alpha1.CancelDeploymentRequest
-	(*DeploymentActionResponse)(nil),      // 37: config.v1alpha1.DeploymentActionResponse
-	(*ListDeploymentsRequest)(nil),        // 38: config.v1alpha1.ListDeploymentsRequest
-	(*ListDeploymentsResponse)(nil),       // 39: config.v1alpha1.ListDeploymentsResponse
-	nil,                                   // 40: config.v1alpha1.Labels.LabelsEntry
-	nil,                                   // 41: config.v1alpha1.AssignConfigByLabelsRequest.LabelsEntry
-	nil,                                   // 42: config.v1alpha1.RollingDeploymentRequest.AgentLabelsEntry
-	(*timestamppb.Timestamp)(nil),         // 43: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),                 // 44: google.protobuf.Empty
+	(MatchType)(0),                        // 0: config.v1alpha1.MatchType
+	(ConfigSource)(0),                     // 1: config.v1alpha1.ConfigSource
+	(ConfigApplicationStatus)(0),          // 2: config.v1alpha1.ConfigApplicationStatus
+	(DeploymentState)(0),                  // 3: config.v1alpha1.DeploymentState
+	(AgentDeploymentState)(0),             // 4: config.v1alpha1.AgentDeploymentState
+	(*ConfigFilterReference)(nil),         // 5: config.v1alpha1.ConfigFilterReference
+	(*PutConfigFilterRequest)(nil),        // 6: config.v1alpha1.PutConfigFilterRequest
+	(*ListConfigFiltersResponse)(nil),     // 7: config.v1alpha1.ListConfigFiltersResponse
+	(*ConfigFilter)(nil),                  // 8: config.v1alpha1.ConfigFilter
+	(*LabelFilter)(nil),                   // 9: config.v1alpha1.LabelFilter
+	(*TargetConfig)(nil),                  // 10: config.v1alpha1.TargetConfig
+	(*ApprovalConfig)(nil),                // 11: config.v1alpha1.ApprovalConfig
+	(*PutConfigRequest)(nil),              // 12: config.v1alpha1.PutConfigRequest
+	(*ValidateConfigRequest)(nil),         // 13: config.v1alpha1.ValidateConfigRequest
+	(*ListConfigReponse)(nil),             // 14: config.v1alpha1.ListConfigReponse
+	(*ConfigReference)(nil),               // 15: config.v1alpha1.ConfigReference
+	(*Config)(nil),                        // 16: config.v1alpha1.Config
+	(*ConfigRange)(nil),                   // 17: config.v1alpha1.ConfigRange
+	(*Labels)(nil),                        // 18: config.v1alpha1.Labels
+	(*Matcher)(nil),                       // 19: config.v1alpha1.Matcher
+	(*ConfigAssignment)(nil),              // 20: config.v1alpha1.ConfigAssignment
+	(*AssignConfigRequest)(nil),           // 21: config.v1alpha1.AssignConfigRequest
+	(*AssignConfigResponse)(nil),          // 22: config.v1alpha1.AssignConfigResponse
+	(*GetAgentConfigRequest)(nil),         // 23: config.v1alpha1.GetAgentConfigRequest
+	(*GetAgentConfigResponse)(nil),        // 24: config.v1alpha1.GetAgentConfigResponse
+	(*UnassignConfigRequest)(nil),         // 25: config.v1alpha1.UnassignConfigRequest
+	(*UnassignConfigResponse)(nil),        // 26: config.v1alpha1.UnassignConfigResponse
+	(*ListConfigAssignmentsRequest)(nil),  // 27: config.v1alpha1.ListConfigAssignmentsRequest
+	(*ConfigAssignmentInfo)(nil),          // 28: config.v1alpha1.ConfigAssignmentInfo
+	(*ListConfigAssignmentsResponse)(nil), // 29: config.v1alpha1.ListConfigAssignmentsResponse
+	(*GetConfigStatusRequest)(nil),        // 30: config.v1alpha1.GetConfigStatusRequest
+	(*GetConfigStatusResponse)(nil),       // 31: config.v1alpha1.GetConfigStatusResponse
+	(*BatchAssignConfigRequest)(nil),      // 32: config.v1alpha1.BatchAssignConfigRequest
+	(*BatchAssignConfigResponse)(nil),     // 33: config.v1alpha1.BatchAssignConfigResponse
+	(*AssignConfigByLabelsRequest)(nil),   // 34: config.v1alpha1.AssignConfigByLabelsRequest
+	(*AssignConfigByLabelsResponse)(nil),  // 35: config.v1alpha1.AssignConfigByLabelsResponse
+	(*RollingDeploymentRequest)(nil),      // 36: config.v1alpha1.RollingDeploymentRequest
+	(*RollingDeploymentResponse)(nil),     // 37: config.v1alpha1.RollingDeploymentResponse
+	(*AgentDeploymentStatus)(nil),         // 38: config.v1alpha1.AgentDeploymentStatus
+	(*DeploymentStatus)(nil),              // 39: config.v1alpha1.DeploymentStatus
+	(*GetDeploymentStatusRequest)(nil),    // 40: config.v1alpha1.GetDeploymentStatusRequest
+	(*GetDeploymentStatusResponse)(nil),   // 41: config.v1alpha1.GetDeploymentStatusResponse
+	(*PauseDeploymentRequest)(nil),        // 42: config.v1alpha1.PauseDeploymentRequest
+	(*ResumeDeploymentRequest)(nil),       // 43: config.v1alpha1.ResumeDeploymentRequest
+	(*CancelDeploymentRequest)(nil),       // 44: config.v1alpha1.CancelDeploymentRequest
+	(*DeploymentActionResponse)(nil),      // 45: config.v1alpha1.DeploymentActionResponse
+	(*ListDeploymentsRequest)(nil),        // 46: config.v1alpha1.ListDeploymentsRequest
+	(*ListDeploymentsResponse)(nil),       // 47: config.v1alpha1.ListDeploymentsResponse
+	nil,                                   // 48: config.v1alpha1.LabelFilter.OpampIdLabelsEntry
+	nil,                                   // 49: config.v1alpha1.LabelFilter.OpampNonIdLabelsEntry
+	nil,                                   // 50: config.v1alpha1.LabelFilter.OtelfleetLabelsEntry
+	nil,                                   // 51: config.v1alpha1.Labels.LabelsEntry
+	nil,                                   // 52: config.v1alpha1.AssignConfigByLabelsRequest.LabelsEntry
+	nil,                                   // 53: config.v1alpha1.RollingDeploymentRequest.AgentLabelsEntry
+	(*timestamppb.Timestamp)(nil),         // 54: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                 // 55: google.protobuf.Empty
 }
 var file_pkg_api_config_v1alpha1_config_proto_depIdxs = []int32{
-	7,  // 0: config.v1alpha1.PutConfigRequest.ref:type_name -> config.v1alpha1.ConfigReference
-	8,  // 1: config.v1alpha1.PutConfigRequest.config:type_name -> config.v1alpha1.Config
-	8,  // 2: config.v1alpha1.ValidateConfigRequest.config:type_name -> config.v1alpha1.Config
-	7,  // 3: config.v1alpha1.ListConfigReponse.configs:type_name -> config.v1alpha1.ConfigReference
-	40, // 4: config.v1alpha1.Labels.labels:type_name -> config.v1alpha1.Labels.LabelsEntry
-	0,  // 5: config.v1alpha1.ConfigAssignment.source:type_name -> config.v1alpha1.ConfigSource
-	43, // 6: config.v1alpha1.ConfigAssignment.assigned_at:type_name -> google.protobuf.Timestamp
-	0,  // 7: config.v1alpha1.GetAgentConfigResponse.source:type_name -> config.v1alpha1.ConfigSource
-	43, // 8: config.v1alpha1.GetAgentConfigResponse.assigned_at:type_name -> google.protobuf.Timestamp
-	0,  // 9: config.v1alpha1.ConfigAssignmentInfo.source:type_name -> config.v1alpha1.ConfigSource
-	43, // 10: config.v1alpha1.ConfigAssignmentInfo.assigned_at:type_name -> google.protobuf.Timestamp
-	1,  // 11: config.v1alpha1.ConfigAssignmentInfo.status:type_name -> config.v1alpha1.ConfigApplicationStatus
-	20, // 12: config.v1alpha1.ListConfigAssignmentsResponse.assignments:type_name -> config.v1alpha1.ConfigAssignmentInfo
-	20, // 13: config.v1alpha1.GetConfigStatusResponse.assignment:type_name -> config.v1alpha1.ConfigAssignmentInfo
-	41, // 14: config.v1alpha1.AssignConfigByLabelsRequest.labels:type_name -> config.v1alpha1.AssignConfigByLabelsRequest.LabelsEntry
-	42, // 15: config.v1alpha1.RollingDeploymentRequest.agent_labels:type_name -> config.v1alpha1.RollingDeploymentRequest.AgentLabelsEntry
-	3,  // 16: config.v1alpha1.AgentDeploymentStatus.state:type_name -> config.v1alpha1.AgentDeploymentState
-	43, // 17: config.v1alpha1.AgentDeploymentStatus.applied_at:type_name -> google.protobuf.Timestamp
-	2,  // 18: config.v1alpha1.DeploymentStatus.state:type_name -> config.v1alpha1.DeploymentState
-	30, // 19: config.v1alpha1.DeploymentStatus.agent_statuses:type_name -> config.v1alpha1.AgentDeploymentStatus
-	43, // 20: config.v1alpha1.DeploymentStatus.started_at:type_name -> google.protobuf.Timestamp
-	43, // 21: config.v1alpha1.DeploymentStatus.completed_at:type_name -> google.protobuf.Timestamp
-	31, // 22: config.v1alpha1.GetDeploymentStatusResponse.status:type_name -> config.v1alpha1.DeploymentStatus
-	2,  // 23: config.v1alpha1.ListDeploymentsRequest.state_filter:type_name -> config.v1alpha1.DeploymentState
-	31, // 24: config.v1alpha1.ListDeploymentsResponse.deployments:type_name -> config.v1alpha1.DeploymentStatus
-	5,  // 25: config.v1alpha1.ConfigService.ValidConfig:input_type -> config.v1alpha1.ValidateConfigRequest
-	4,  // 26: config.v1alpha1.ConfigService.PutConfig:input_type -> config.v1alpha1.PutConfigRequest
-	7,  // 27: config.v1alpha1.ConfigService.GetConfig:input_type -> config.v1alpha1.ConfigReference
-	7,  // 28: config.v1alpha1.ConfigService.DeleteConfig:input_type -> config.v1alpha1.ConfigReference
-	44, // 29: config.v1alpha1.ConfigService.ListConfigs:input_type -> google.protobuf.Empty
-	44, // 30: config.v1alpha1.ConfigService.GetDefaultConfig:input_type -> google.protobuf.Empty
-	4,  // 31: config.v1alpha1.ConfigService.SetDefaultConfig:input_type -> config.v1alpha1.PutConfigRequest
-	13, // 32: config.v1alpha1.ConfigService.AssignConfig:input_type -> config.v1alpha1.AssignConfigRequest
-	15, // 33: config.v1alpha1.ConfigService.GetAgentConfig:input_type -> config.v1alpha1.GetAgentConfigRequest
-	17, // 34: config.v1alpha1.ConfigService.UnassignConfig:input_type -> config.v1alpha1.UnassignConfigRequest
-	19, // 35: config.v1alpha1.ConfigService.ListConfigAssignments:input_type -> config.v1alpha1.ListConfigAssignmentsRequest
-	22, // 36: config.v1alpha1.ConfigService.GetConfigStatus:input_type -> config.v1alpha1.GetConfigStatusRequest
-	24, // 37: config.v1alpha1.ConfigService.BatchAssignConfig:input_type -> config.v1alpha1.BatchAssignConfigRequest
-	26, // 38: config.v1alpha1.ConfigService.AssignConfigByLabels:input_type -> config.v1alpha1.AssignConfigByLabelsRequest
-	28, // 39: config.v1alpha1.ConfigService.StartRollingDeployment:input_type -> config.v1alpha1.RollingDeploymentRequest
-	32, // 40: config.v1alpha1.ConfigService.GetDeploymentStatus:input_type -> config.v1alpha1.GetDeploymentStatusRequest
-	34, // 41: config.v1alpha1.ConfigService.PauseDeployment:input_type -> config.v1alpha1.PauseDeploymentRequest
-	35, // 42: config.v1alpha1.ConfigService.ResumeDeployment:input_type -> config.v1alpha1.ResumeDeploymentRequest
-	36, // 43: config.v1alpha1.ConfigService.CancelDeployment:input_type -> config.v1alpha1.CancelDeploymentRequest
-	38, // 44: config.v1alpha1.ConfigService.ListDeployments:input_type -> config.v1alpha1.ListDeploymentsRequest
-	44, // 45: config.v1alpha1.ConfigService.ValidConfig:output_type -> google.protobuf.Empty
-	44, // 46: config.v1alpha1.ConfigService.PutConfig:output_type -> google.protobuf.Empty
-	8,  // 47: config.v1alpha1.ConfigService.GetConfig:output_type -> config.v1alpha1.Config
-	44, // 48: config.v1alpha1.ConfigService.DeleteConfig:output_type -> google.protobuf.Empty
-	6,  // 49: config.v1alpha1.ConfigService.ListConfigs:output_type -> config.v1alpha1.ListConfigReponse
-	8,  // 50: config.v1alpha1.ConfigService.GetDefaultConfig:output_type -> config.v1alpha1.Config
-	44, // 51: config.v1alpha1.ConfigService.SetDefaultConfig:output_type -> google.protobuf.Empty
-	14, // 52: config.v1alpha1.ConfigService.AssignConfig:output_type -> config.v1alpha1.AssignConfigResponse
-	16, // 53: config.v1alpha1.ConfigService.GetAgentConfig:output_type -> config.v1alpha1.GetAgentConfigResponse
-	18, // 54: config.v1alpha1.ConfigService.UnassignConfig:output_type -> config.v1alpha1.UnassignConfigResponse
-	21, // 55: config.v1alpha1.ConfigService.ListConfigAssignments:output_type -> config.v1alpha1.ListConfigAssignmentsResponse
-	23, // 56: config.v1alpha1.ConfigService.GetConfigStatus:output_type -> config.v1alpha1.GetConfigStatusResponse
-	25, // 57: config.v1alpha1.ConfigService.BatchAssignConfig:output_type -> config.v1alpha1.BatchAssignConfigResponse
-	27, // 58: config.v1alpha1.ConfigService.AssignConfigByLabels:output_type -> config.v1alpha1.AssignConfigByLabelsResponse
-	29, // 59: config.v1alpha1.ConfigService.StartRollingDeployment:output_type -> config.v1alpha1.RollingDeploymentResponse
-	33, // 60: config.v1alpha1.ConfigService.GetDeploymentStatus:output_type -> config.v1alpha1.GetDeploymentStatusResponse
-	37, // 61: config.v1alpha1.ConfigService.PauseDeployment:output_type -> config.v1alpha1.DeploymentActionResponse
-	37, // 62: config.v1alpha1.ConfigService.ResumeDeployment:output_type -> config.v1alpha1.DeploymentActionResponse
-	37, // 63: config.v1alpha1.ConfigService.CancelDeployment:output_type -> config.v1alpha1.DeploymentActionResponse
-	39, // 64: config.v1alpha1.ConfigService.ListDeployments:output_type -> config.v1alpha1.ListDeploymentsResponse
-	45, // [45:65] is the sub-list for method output_type
-	25, // [25:45] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	5,  // 0: config.v1alpha1.PutConfigFilterRequest.ref:type_name -> config.v1alpha1.ConfigFilterReference
+	8,  // 1: config.v1alpha1.PutConfigFilterRequest.filter:type_name -> config.v1alpha1.ConfigFilter
+	5,  // 2: config.v1alpha1.ListConfigFiltersResponse.filters:type_name -> config.v1alpha1.ConfigFilterReference
+	11, // 3: config.v1alpha1.ConfigFilter.approval:type_name -> config.v1alpha1.ApprovalConfig
+	9,  // 4: config.v1alpha1.ConfigFilter.filters:type_name -> config.v1alpha1.LabelFilter
+	10, // 5: config.v1alpha1.ConfigFilter.collector_config:type_name -> config.v1alpha1.TargetConfig
+	0,  // 6: config.v1alpha1.LabelFilter.type:type_name -> config.v1alpha1.MatchType
+	48, // 7: config.v1alpha1.LabelFilter.opamp_id_labels:type_name -> config.v1alpha1.LabelFilter.OpampIdLabelsEntry
+	49, // 8: config.v1alpha1.LabelFilter.opamp_non_id_labels:type_name -> config.v1alpha1.LabelFilter.OpampNonIdLabelsEntry
+	50, // 9: config.v1alpha1.LabelFilter.otelfleet_labels:type_name -> config.v1alpha1.LabelFilter.OtelfleetLabelsEntry
+	15, // 10: config.v1alpha1.PutConfigRequest.ref:type_name -> config.v1alpha1.ConfigReference
+	16, // 11: config.v1alpha1.PutConfigRequest.config:type_name -> config.v1alpha1.Config
+	16, // 12: config.v1alpha1.ValidateConfigRequest.config:type_name -> config.v1alpha1.Config
+	15, // 13: config.v1alpha1.ListConfigReponse.configs:type_name -> config.v1alpha1.ConfigReference
+	51, // 14: config.v1alpha1.Labels.labels:type_name -> config.v1alpha1.Labels.LabelsEntry
+	1,  // 15: config.v1alpha1.ConfigAssignment.source:type_name -> config.v1alpha1.ConfigSource
+	54, // 16: config.v1alpha1.ConfigAssignment.assigned_at:type_name -> google.protobuf.Timestamp
+	1,  // 17: config.v1alpha1.GetAgentConfigResponse.source:type_name -> config.v1alpha1.ConfigSource
+	54, // 18: config.v1alpha1.GetAgentConfigResponse.assigned_at:type_name -> google.protobuf.Timestamp
+	1,  // 19: config.v1alpha1.ConfigAssignmentInfo.source:type_name -> config.v1alpha1.ConfigSource
+	54, // 20: config.v1alpha1.ConfigAssignmentInfo.assigned_at:type_name -> google.protobuf.Timestamp
+	2,  // 21: config.v1alpha1.ConfigAssignmentInfo.status:type_name -> config.v1alpha1.ConfigApplicationStatus
+	28, // 22: config.v1alpha1.ListConfigAssignmentsResponse.assignments:type_name -> config.v1alpha1.ConfigAssignmentInfo
+	28, // 23: config.v1alpha1.GetConfigStatusResponse.assignment:type_name -> config.v1alpha1.ConfigAssignmentInfo
+	52, // 24: config.v1alpha1.AssignConfigByLabelsRequest.labels:type_name -> config.v1alpha1.AssignConfigByLabelsRequest.LabelsEntry
+	53, // 25: config.v1alpha1.RollingDeploymentRequest.agent_labels:type_name -> config.v1alpha1.RollingDeploymentRequest.AgentLabelsEntry
+	4,  // 26: config.v1alpha1.AgentDeploymentStatus.state:type_name -> config.v1alpha1.AgentDeploymentState
+	54, // 27: config.v1alpha1.AgentDeploymentStatus.applied_at:type_name -> google.protobuf.Timestamp
+	3,  // 28: config.v1alpha1.DeploymentStatus.state:type_name -> config.v1alpha1.DeploymentState
+	38, // 29: config.v1alpha1.DeploymentStatus.agent_statuses:type_name -> config.v1alpha1.AgentDeploymentStatus
+	54, // 30: config.v1alpha1.DeploymentStatus.started_at:type_name -> google.protobuf.Timestamp
+	54, // 31: config.v1alpha1.DeploymentStatus.completed_at:type_name -> google.protobuf.Timestamp
+	39, // 32: config.v1alpha1.GetDeploymentStatusResponse.status:type_name -> config.v1alpha1.DeploymentStatus
+	3,  // 33: config.v1alpha1.ListDeploymentsRequest.state_filter:type_name -> config.v1alpha1.DeploymentState
+	39, // 34: config.v1alpha1.ListDeploymentsResponse.deployments:type_name -> config.v1alpha1.DeploymentStatus
+	6,  // 35: config.v1alpha1.ConfigService.PutConfigFilter:input_type -> config.v1alpha1.PutConfigFilterRequest
+	5,  // 36: config.v1alpha1.ConfigService.GetConfigFilter:input_type -> config.v1alpha1.ConfigFilterReference
+	5,  // 37: config.v1alpha1.ConfigService.DeleteConfigFilter:input_type -> config.v1alpha1.ConfigFilterReference
+	55, // 38: config.v1alpha1.ConfigService.ListConfigFilters:input_type -> google.protobuf.Empty
+	55, // 39: config.v1alpha1.ConfigService.PutConfigFilter:output_type -> google.protobuf.Empty
+	8,  // 40: config.v1alpha1.ConfigService.GetConfigFilter:output_type -> config.v1alpha1.ConfigFilter
+	55, // 41: config.v1alpha1.ConfigService.DeleteConfigFilter:output_type -> google.protobuf.Empty
+	7,  // 42: config.v1alpha1.ConfigService.ListConfigFilters:output_type -> config.v1alpha1.ListConfigFiltersResponse
+	39, // [39:43] is the sub-list for method output_type
+	35, // [35:39] is the sub-list for method input_type
+	35, // [35:35] is the sub-list for extension type_name
+	35, // [35:35] is the sub-list for extension extendee
+	0,  // [0:35] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_config_v1alpha1_config_proto_init() }
@@ -2509,15 +2941,17 @@ func file_pkg_api_config_v1alpha1_config_proto_init() {
 	if File_pkg_api_config_v1alpha1_config_proto != nil {
 		return
 	}
-	file_pkg_api_config_v1alpha1_config_proto_msgTypes[15].OneofWrappers = []any{}
-	file_pkg_api_config_v1alpha1_config_proto_msgTypes[34].OneofWrappers = []any{}
+	file_pkg_api_config_v1alpha1_config_proto_msgTypes[3].OneofWrappers = []any{}
+	file_pkg_api_config_v1alpha1_config_proto_msgTypes[6].OneofWrappers = []any{}
+	file_pkg_api_config_v1alpha1_config_proto_msgTypes[22].OneofWrappers = []any{}
+	file_pkg_api_config_v1alpha1_config_proto_msgTypes[41].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_config_v1alpha1_config_proto_rawDesc), len(file_pkg_api_config_v1alpha1_config_proto_rawDesc)),
-			NumEnums:      4,
-			NumMessages:   39,
+			NumEnums:      5,
+			NumMessages:   49,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

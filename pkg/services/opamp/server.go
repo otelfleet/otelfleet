@@ -17,7 +17,6 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/config"
 	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
-	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	stypes "github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -215,9 +214,6 @@ func (s *Server) NotifyConfigChange(agentID string) {
 		}
 	}
 }
-
-// Ensure Server implements ConfigChangeNotifier
-var _ otelconfig.ConfigChangeNotifier = (*Server)(nil)
 
 // GetConnectionState is needed for tests or external access to connection state.
 func (s *Server) GetConnectionState(ctx context.Context, agentID string) (*v1alpha1.AgentConnectionState, error) {

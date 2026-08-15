@@ -12,7 +12,161 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file pkg/api/config/v1alpha1/config.proto.
  */
 export const file_pkg_api_config_v1alpha1_config: GenFile = /*@__PURE__*/
-  fileDesc("CiRwa2cvYXBpL2NvbmZpZy92MWFscGhhMS9jb25maWcucHJvdG8SD2NvbmZpZy52MWFscGhhMSJqChBQdXRDb25maWdSZXF1ZXN0Ei0KA3JlZhgBIAEoCzIgLmNvbmZpZy52MWFscGhhMS5Db25maWdSZWZlcmVuY2USJwoGY29uZmlnGAIgASgLMhcuY29uZmlnLnYxYWxwaGExLkNvbmZpZyJAChVWYWxpZGF0ZUNvbmZpZ1JlcXVlc3QSJwoGY29uZmlnGAEgASgLMhcuY29uZmlnLnYxYWxwaGExLkNvbmZpZyJGChFMaXN0Q29uZmlnUmVwb25zZRIxCgdjb25maWdzGAEgAygLMiAuY29uZmlnLnYxYWxwaGExLkNvbmZpZ1JlZmVyZW5jZSIdCg9Db25maWdSZWZlcmVuY2USCgoCaWQYASABKAkiGAoGQ29uZmlnEg4KBmNvbmZpZxgBIAEoDCI3CgtDb25maWdSYW5nZRIUCgxzdGFydFZlcnNpb24YASABKAkSEgoKZW5kVmVyc2lvbhgCIAEoCSJsCgZMYWJlbHMSMwoGbGFiZWxzGAEgAygLMiMuY29uZmlnLnYxYWxwaGExLkxhYmVscy5MYWJlbHNFbnRyeRotCgtMYWJlbHNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIgkKB01hdGNoZXIirAEKEENvbmZpZ0Fzc2lnbm1lbnQSEAoIYWdlbnRfaWQYASABKAkSEQoJY29uZmlnX2lkGAIgASgJEi0KBnNvdXJjZRgDIAEoDjIdLmNvbmZpZy52MWFscGhhMS5Db25maWdTb3VyY2USLwoLYXNzaWduZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhMKC2NvbmZpZ19oYXNoGAUgASgMIjoKE0Fzc2lnbkNvbmZpZ1JlcXVlc3QSEAoIYWdlbnRfaWQYASABKAkSEQoJY29uZmlnX2lkGAIgASgJIjgKFEFzc2lnbkNvbmZpZ1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIpChVHZXRBZ2VudENvbmZpZ1JlcXVlc3QSEAoIYWdlbnRfaWQYASABKAkiiwEKFkdldEFnZW50Q29uZmlnUmVzcG9uc2USEQoJY29uZmlnX2lkGAEgASgJEi0KBnNvdXJjZRgCIAEoDjIdLmNvbmZpZy52MWFscGhhMS5Db25maWdTb3VyY2USLwoLYXNzaWduZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIikKFVVuYXNzaWduQ29uZmlnUmVxdWVzdBIQCghhZ2VudF9pZBgBIAEoCSIpChZVbmFzc2lnbkNvbmZpZ1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiRAocTGlzdENvbmZpZ0Fzc2lnbm1lbnRzUmVxdWVzdBIWCgljb25maWdfaWQYASABKAlIAIgBAUIMCgpfY29uZmlnX2lkIuwBChRDb25maWdBc3NpZ25tZW50SW5mbxIQCghhZ2VudF9pZBgBIAEoCRIRCgljb25maWdfaWQYAiABKAkSLQoGc291cmNlGAMgASgOMh0uY29uZmlnLnYxYWxwaGExLkNvbmZpZ1NvdXJjZRIvCgthc3NpZ25lZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASOAoGc3RhdHVzGAUgASgOMiguY29uZmlnLnYxYWxwaGExLkNvbmZpZ0FwcGxpY2F0aW9uU3RhdHVzEhUKDWVycm9yX21lc3NhZ2UYBiABKAkiWwodTGlzdENvbmZpZ0Fzc2lnbm1lbnRzUmVzcG9uc2USOgoLYXNzaWdubWVudHMYASADKAsyJS5jb25maWcudjFhbHBoYTEuQ29uZmlnQXNzaWdubWVudEluZm8iKgoWR2V0Q29uZmlnU3RhdHVzUmVxdWVzdBIQCghhZ2VudF9pZBgBIAEoCSKiAQoXR2V0Q29uZmlnU3RhdHVzUmVzcG9uc2USOQoKYXNzaWdubWVudBgBIAEoCzIlLmNvbmZpZy52MWFscGhhMS5Db25maWdBc3NpZ25tZW50SW5mbxIdChVlZmZlY3RpdmVfY29uZmlnX2hhc2gYAiABKAwSHAoUYXNzaWduZWRfY29uZmlnX2hhc2gYAyABKAwSDwoHaW5fc3luYxgEIAEoCCJAChhCYXRjaEFzc2lnbkNvbmZpZ1JlcXVlc3QSEQoJYWdlbnRfaWRzGAEgAygJEhEKCWNvbmZpZ19pZBgCIAEoCSJxChlCYXRjaEFzc2lnbkNvbmZpZ1Jlc3BvbnNlEhIKCnN1Y2Nlc3NmdWwYASABKAUSDgoGZmFpbGVkGAIgASgFEhgKEGZhaWxlZF9hZ2VudF9pZHMYAyADKAkSFgoOZXJyb3JfbWVzc2FnZXMYBCADKAkiqQEKG0Fzc2lnbkNvbmZpZ0J5TGFiZWxzUmVxdWVzdBJICgZsYWJlbHMYASADKAsyOC5jb25maWcudjFhbHBoYTEuQXNzaWduQ29uZmlnQnlMYWJlbHNSZXF1ZXN0LkxhYmVsc0VudHJ5EhEKCWNvbmZpZ19pZBgCIAEoCRotCgtMYWJlbHNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIl0KHEFzc2lnbkNvbmZpZ0J5TGFiZWxzUmVzcG9uc2USGQoRbWF0Y2hlZF9hZ2VudF9pZHMYASADKAkSEgoKc3VjY2Vzc2Z1bBgCIAEoBRIOCgZmYWlsZWQYAyABKAUijQIKGFJvbGxpbmdEZXBsb3ltZW50UmVxdWVzdBIRCgljb25maWdfaWQYASABKAkSEQoJYWdlbnRfaWRzGAIgAygJElAKDGFnZW50X2xhYmVscxgDIAMoCzI6LmNvbmZpZy52MWFscGhhMS5Sb2xsaW5nRGVwbG95bWVudFJlcXVlc3QuQWdlbnRMYWJlbHNFbnRyeRISCgpiYXRjaF9zaXplGAQgASgFEhsKE2JhdGNoX2RlbGF5X3NlY29uZHMYBSABKAUSFAoMbWF4X2ZhaWx1cmVzGAYgASgFGjIKEEFnZW50TGFiZWxzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASIyChlSb2xsaW5nRGVwbG95bWVudFJlc3BvbnNlEhUKDWRlcGxveW1lbnRfaWQYASABKAkipgEKFUFnZW50RGVwbG95bWVudFN0YXR1cxIQCghhZ2VudF9pZBgBIAEoCRI0CgVzdGF0ZRgCIAEoDjIlLmNvbmZpZy52MWFscGhhMS5BZ2VudERlcGxveW1lbnRTdGF0ZRIVCg1lcnJvcl9tZXNzYWdlGAMgASgJEi4KCmFwcGxpZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIoUDChBEZXBsb3ltZW50U3RhdHVzEhUKDWRlcGxveW1lbnRfaWQYASABKAkSEQoJY29uZmlnX2lkGAIgASgJEi8KBXN0YXRlGAMgASgOMiAuY29uZmlnLnYxYWxwaGExLkRlcGxveW1lbnRTdGF0ZRIUCgx0b3RhbF9hZ2VudHMYBCABKAUSGAoQY29tcGxldGVkX2FnZW50cxgFIAEoBRIVCg1mYWlsZWRfYWdlbnRzGAYgASgFEhYKDnBlbmRpbmdfYWdlbnRzGAcgASgFEhUKDWN1cnJlbnRfYmF0Y2gYCCABKAUSPgoOYWdlbnRfc3RhdHVzZXMYCSADKAsyJi5jb25maWcudjFhbHBoYTEuQWdlbnREZXBsb3ltZW50U3RhdHVzEi4KCnN0YXJ0ZWRfYXQYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjAKDGNvbXBsZXRlZF9hdBgLIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiMwoaR2V0RGVwbG95bWVudFN0YXR1c1JlcXVlc3QSFQoNZGVwbG95bWVudF9pZBgBIAEoCSJQChtHZXREZXBsb3ltZW50U3RhdHVzUmVzcG9uc2USMQoGc3RhdHVzGAEgASgLMiEuY29uZmlnLnYxYWxwaGExLkRlcGxveW1lbnRTdGF0dXMiLwoWUGF1c2VEZXBsb3ltZW50UmVxdWVzdBIVCg1kZXBsb3ltZW50X2lkGAEgASgJIjAKF1Jlc3VtZURlcGxveW1lbnRSZXF1ZXN0EhUKDWRlcGxveW1lbnRfaWQYASABKAkiMAoXQ2FuY2VsRGVwbG95bWVudFJlcXVlc3QSFQoNZGVwbG95bWVudF9pZBgBIAEoCSI8ChhEZXBsb3ltZW50QWN0aW9uUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJImYKFkxpc3REZXBsb3ltZW50c1JlcXVlc3QSOwoMc3RhdGVfZmlsdGVyGAEgASgOMiAuY29uZmlnLnYxYWxwaGExLkRlcGxveW1lbnRTdGF0ZUgAiAEBQg8KDV9zdGF0ZV9maWx0ZXIiUQoXTGlzdERlcGxveW1lbnRzUmVzcG9uc2USNgoLZGVwbG95bWVudHMYASADKAsyIS5jb25maWcudjFhbHBoYTEuRGVwbG95bWVudFN0YXR1cyp/CgxDb25maWdTb3VyY2USHQoZQ09ORklHX1NPVVJDRV9VTlNQRUNJRklFRBAAEhkKFUNPTkZJR19TT1VSQ0VfREVGQVVMVBABEhsKF0NPTkZJR19TT1VSQ0VfQk9PVFNUUkFQEAISGAoUQ09ORklHX1NPVVJDRV9NQU5VQUwQAyq4AQoXQ29uZmlnQXBwbGljYXRpb25TdGF0dXMSKQolQ09ORklHX0FQUExJQ0FUSU9OX1NUQVRVU19VTlNQRUNJRklFRBAAEiUKIUNPTkZJR19BUFBMSUNBVElPTl9TVEFUVVNfUEVORElORxABEiUKIUNPTkZJR19BUFBMSUNBVElPTl9TVEFUVVNfQVBQTElFRBACEiQKIENPTkZJR19BUFBMSUNBVElPTl9TVEFUVVNfRkFJTEVEEAMq7QEKD0RlcGxveW1lbnRTdGF0ZRIgChxERVBMT1lNRU5UX1NUQVRFX1VOU1BFQ0lGSUVEEAASHAoYREVQTE9ZTUVOVF9TVEFURV9QRU5ESU5HEAESIAocREVQTE9ZTUVOVF9TVEFURV9JTl9QUk9HUkVTUxACEhsKF0RFUExPWU1FTlRfU1RBVEVfUEFVU0VEEAMSHgoaREVQTE9ZTUVOVF9TVEFURV9DT01QTEVURUQQBBIbChdERVBMT1lNRU5UX1NUQVRFX0ZBSUxFRBAFEh4KGkRFUExPWU1FTlRfU1RBVEVfQ0FOQ0VMTEVEEAYqzgEKFEFnZW50RGVwbG95bWVudFN0YXRlEiYKIkFHRU5UX0RFUExPWU1FTlRfU1RBVEVfVU5TUEVDSUZJRUQQABIiCh5BR0VOVF9ERVBMT1lNRU5UX1NUQVRFX1BFTkRJTkcQARIjCh9BR0VOVF9ERVBMT1lNRU5UX1NUQVRFX0FQUExZSU5HEAISIgoeQUdFTlRfREVQTE9ZTUVOVF9TVEFURV9BUFBMSUVEEAMSIQodQUdFTlRfREVQTE9ZTUVOVF9TVEFURV9GQUlMRUQQBDL7DgoNQ29uZmlnU2VydmljZRJNCgtWYWxpZENvbmZpZxImLmNvbmZpZy52MWFscGhhMS5WYWxpZGF0ZUNvbmZpZ1JlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkSRgoJUHV0Q29uZmlnEiEuY29uZmlnLnYxYWxwaGExLlB1dENvbmZpZ1JlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkSRgoJR2V0Q29uZmlnEiAuY29uZmlnLnYxYWxwaGExLkNvbmZpZ1JlZmVyZW5jZRoXLmNvbmZpZy52MWFscGhhMS5Db25maWcSSAoMRGVsZXRlQ29uZmlnEiAuY29uZmlnLnYxYWxwaGExLkNvbmZpZ1JlZmVyZW5jZRoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRJJCgtMaXN0Q29uZmlncxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoiLmNvbmZpZy52MWFscGhhMS5MaXN0Q29uZmlnUmVwb25zZRJDChBHZXREZWZhdWx0Q29uZmlnEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhcuY29uZmlnLnYxYWxwaGExLkNvbmZpZxJNChBTZXREZWZhdWx0Q29uZmlnEiEuY29uZmlnLnYxYWxwaGExLlB1dENvbmZpZ1JlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkSWwoMQXNzaWduQ29uZmlnEiQuY29uZmlnLnYxYWxwaGExLkFzc2lnbkNvbmZpZ1JlcXVlc3QaJS5jb25maWcudjFhbHBoYTEuQXNzaWduQ29uZmlnUmVzcG9uc2USYQoOR2V0QWdlbnRDb25maWcSJi5jb25maWcudjFhbHBoYTEuR2V0QWdlbnRDb25maWdSZXF1ZXN0GicuY29uZmlnLnYxYWxwaGExLkdldEFnZW50Q29uZmlnUmVzcG9uc2USYQoOVW5hc3NpZ25Db25maWcSJi5jb25maWcudjFhbHBoYTEuVW5hc3NpZ25Db25maWdSZXF1ZXN0GicuY29uZmlnLnYxYWxwaGExLlVuYXNzaWduQ29uZmlnUmVzcG9uc2USdgoVTGlzdENvbmZpZ0Fzc2lnbm1lbnRzEi0uY29uZmlnLnYxYWxwaGExLkxpc3RDb25maWdBc3NpZ25tZW50c1JlcXVlc3QaLi5jb25maWcudjFhbHBoYTEuTGlzdENvbmZpZ0Fzc2lnbm1lbnRzUmVzcG9uc2USZAoPR2V0Q29uZmlnU3RhdHVzEicuY29uZmlnLnYxYWxwaGExLkdldENvbmZpZ1N0YXR1c1JlcXVlc3QaKC5jb25maWcudjFhbHBoYTEuR2V0Q29uZmlnU3RhdHVzUmVzcG9uc2USagoRQmF0Y2hBc3NpZ25Db25maWcSKS5jb25maWcudjFhbHBoYTEuQmF0Y2hBc3NpZ25Db25maWdSZXF1ZXN0GiouY29uZmlnLnYxYWxwaGExLkJhdGNoQXNzaWduQ29uZmlnUmVzcG9uc2UScwoUQXNzaWduQ29uZmlnQnlMYWJlbHMSLC5jb25maWcudjFhbHBoYTEuQXNzaWduQ29uZmlnQnlMYWJlbHNSZXF1ZXN0Gi0uY29uZmlnLnYxYWxwaGExLkFzc2lnbkNvbmZpZ0J5TGFiZWxzUmVzcG9uc2USbwoWU3RhcnRSb2xsaW5nRGVwbG95bWVudBIpLmNvbmZpZy52MWFscGhhMS5Sb2xsaW5nRGVwbG95bWVudFJlcXVlc3QaKi5jb25maWcudjFhbHBoYTEuUm9sbGluZ0RlcGxveW1lbnRSZXNwb25zZRJwChNHZXREZXBsb3ltZW50U3RhdHVzEisuY29uZmlnLnYxYWxwaGExLkdldERlcGxveW1lbnRTdGF0dXNSZXF1ZXN0GiwuY29uZmlnLnYxYWxwaGExLkdldERlcGxveW1lbnRTdGF0dXNSZXNwb25zZRJlCg9QYXVzZURlcGxveW1lbnQSJy5jb25maWcudjFhbHBoYTEuUGF1c2VEZXBsb3ltZW50UmVxdWVzdBopLmNvbmZpZy52MWFscGhhMS5EZXBsb3ltZW50QWN0aW9uUmVzcG9uc2USZwoQUmVzdW1lRGVwbG95bWVudBIoLmNvbmZpZy52MWFscGhhMS5SZXN1bWVEZXBsb3ltZW50UmVxdWVzdBopLmNvbmZpZy52MWFscGhhMS5EZXBsb3ltZW50QWN0aW9uUmVzcG9uc2USZwoQQ2FuY2VsRGVwbG95bWVudBIoLmNvbmZpZy52MWFscGhhMS5DYW5jZWxEZXBsb3ltZW50UmVxdWVzdBopLmNvbmZpZy52MWFscGhhMS5EZXBsb3ltZW50QWN0aW9uUmVzcG9uc2USZAoPTGlzdERlcGxveW1lbnRzEicuY29uZmlnLnYxYWxwaGExLkxpc3REZXBsb3ltZW50c1JlcXVlc3QaKC5jb25maWcudjFhbHBoYTEuTGlzdERlcGxveW1lbnRzUmVzcG9uc2VCOFo2Z2l0aHViLmNvbS9vdGVsZmxlZXQvb3RlbGZsZWV0L3BrZy9hcGkvY29uZmlnL3YxYWxwaGExYgZwcm90bzM", [file_google_protobuf_empty, file_google_protobuf_timestamp]);
+  fileDesc("CiRwa2cvYXBpL2NvbmZpZy92MWFscGhhMS9jb25maWcucHJvdG8SD2NvbmZpZy52MWFscGhhMSIjChVDb25maWdGaWx0ZXJSZWZlcmVuY2USCgoCaWQYASABKAkifAoWUHV0Q29uZmlnRmlsdGVyUmVxdWVzdBIzCgNyZWYYASABKAsyJi5jb25maWcudjFhbHBoYTEuQ29uZmlnRmlsdGVyUmVmZXJlbmNlEi0KBmZpbHRlchgCIAEoCzIdLmNvbmZpZy52MWFscGhhMS5Db25maWdGaWx0ZXIiVAoZTGlzdENvbmZpZ0ZpbHRlcnNSZXNwb25zZRI3CgdmaWx0ZXJzGAEgAygLMiYuY29uZmlnLnYxYWxwaGExLkNvbmZpZ0ZpbHRlclJlZmVyZW5jZSLLAQoMQ29uZmlnRmlsdGVyEhQKB2RlZmF1bHQYASABKAhIAIgBARIxCghhcHByb3ZhbBgCIAEoCzIfLmNvbmZpZy52MWFscGhhMS5BcHByb3ZhbENvbmZpZxItCgdmaWx0ZXJzGAMgAygLMhwuY29uZmlnLnYxYWxwaGExLkxhYmVsRmlsdGVyEjcKEGNvbGxlY3Rvcl9jb25maWcYBCABKAsyHS5jb25maWcudjFhbHBoYTEuVGFyZ2V0Q29uZmlnQgoKCF9kZWZhdWx0IsYDCgtMYWJlbEZpbHRlchIoCgR0eXBlGAEgASgOMhouY29uZmlnLnYxYWxwaGExLk1hdGNoVHlwZRJICg9vcGFtcF9pZF9sYWJlbHMYAiADKAsyLy5jb25maWcudjFhbHBoYTEuTGFiZWxGaWx0ZXIuT3BhbXBJZExhYmVsc0VudHJ5Ek8KE29wYW1wX25vbl9pZF9sYWJlbHMYAyADKAsyMi5jb25maWcudjFhbHBoYTEuTGFiZWxGaWx0ZXIuT3BhbXBOb25JZExhYmVsc0VudHJ5EksKEG90ZWxmbGVldF9sYWJlbHMYBCADKAsyMS5jb25maWcudjFhbHBoYTEuTGFiZWxGaWx0ZXIuT3RlbGZsZWV0TGFiZWxzRW50cnkaNAoST3BhbXBJZExhYmVsc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEaNwoVT3BhbXBOb25JZExhYmVsc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEaNgoUT3RlbGZsZWV0TGFiZWxzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASIiCgxUYXJnZXRDb25maWcSEgoKY29uZmlnX3JlZhgBIAEoCSJGCg5BcHByb3ZhbENvbmZpZxIeChFyZXF1aXJlc19hcHByb3ZhbBgBIAEoCEgAiAEBQhQKEl9yZXF1aXJlc19hcHByb3ZhbCJqChBQdXRDb25maWdSZXF1ZXN0Ei0KA3JlZhgBIAEoCzIgLmNvbmZpZy52MWFscGhhMS5Db25maWdSZWZlcmVuY2USJwoGY29uZmlnGAIgASgLMhcuY29uZmlnLnYxYWxwaGExLkNvbmZpZyJAChVWYWxpZGF0ZUNvbmZpZ1JlcXVlc3QSJwoGY29uZmlnGAEgASgLMhcuY29uZmlnLnYxYWxwaGExLkNvbmZpZyJGChFMaXN0Q29uZmlnUmVwb25zZRIxCgdjb25maWdzGAEgAygLMiAuY29uZmlnLnYxYWxwaGExLkNvbmZpZ1JlZmVyZW5jZSIdCg9Db25maWdSZWZlcmVuY2USCgoCaWQYASABKAkiGAoGQ29uZmlnEg4KBmNvbmZpZxgBIAEoDCI3CgtDb25maWdSYW5nZRIUCgxzdGFydFZlcnNpb24YASABKAkSEgoKZW5kVmVyc2lvbhgCIAEoCSJsCgZMYWJlbHMSMwoGbGFiZWxzGAEgAygLMiMuY29uZmlnLnYxYWxwaGExLkxhYmVscy5MYWJlbHNFbnRyeRotCgtMYWJlbHNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIgkKB01hdGNoZXIirAEKEENvbmZpZ0Fzc2lnbm1lbnQSEAoIYWdlbnRfaWQYASABKAkSEQoJY29uZmlnX2lkGAIgASgJEi0KBnNvdXJjZRgDIAEoDjIdLmNvbmZpZy52MWFscGhhMS5Db25maWdTb3VyY2USLwoLYXNzaWduZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhMKC2NvbmZpZ19oYXNoGAUgASgMIjoKE0Fzc2lnbkNvbmZpZ1JlcXVlc3QSEAoIYWdlbnRfaWQYASABKAkSEQoJY29uZmlnX2lkGAIgASgJIjgKFEFzc2lnbkNvbmZpZ1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIpChVHZXRBZ2VudENvbmZpZ1JlcXVlc3QSEAoIYWdlbnRfaWQYASABKAkiiwEKFkdldEFnZW50Q29uZmlnUmVzcG9uc2USEQoJY29uZmlnX2lkGAEgASgJEi0KBnNvdXJjZRgCIAEoDjIdLmNvbmZpZy52MWFscGhhMS5Db25maWdTb3VyY2USLwoLYXNzaWduZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIikKFVVuYXNzaWduQ29uZmlnUmVxdWVzdBIQCghhZ2VudF9pZBgBIAEoCSIpChZVbmFzc2lnbkNvbmZpZ1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiRAocTGlzdENvbmZpZ0Fzc2lnbm1lbnRzUmVxdWVzdBIWCgljb25maWdfaWQYASABKAlIAIgBAUIMCgpfY29uZmlnX2lkIuwBChRDb25maWdBc3NpZ25tZW50SW5mbxIQCghhZ2VudF9pZBgBIAEoCRIRCgljb25maWdfaWQYAiABKAkSLQoGc291cmNlGAMgASgOMh0uY29uZmlnLnYxYWxwaGExLkNvbmZpZ1NvdXJjZRIvCgthc3NpZ25lZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASOAoGc3RhdHVzGAUgASgOMiguY29uZmlnLnYxYWxwaGExLkNvbmZpZ0FwcGxpY2F0aW9uU3RhdHVzEhUKDWVycm9yX21lc3NhZ2UYBiABKAkiWwodTGlzdENvbmZpZ0Fzc2lnbm1lbnRzUmVzcG9uc2USOgoLYXNzaWdubWVudHMYASADKAsyJS5jb25maWcudjFhbHBoYTEuQ29uZmlnQXNzaWdubWVudEluZm8iKgoWR2V0Q29uZmlnU3RhdHVzUmVxdWVzdBIQCghhZ2VudF9pZBgBIAEoCSKiAQoXR2V0Q29uZmlnU3RhdHVzUmVzcG9uc2USOQoKYXNzaWdubWVudBgBIAEoCzIlLmNvbmZpZy52MWFscGhhMS5Db25maWdBc3NpZ25tZW50SW5mbxIdChVlZmZlY3RpdmVfY29uZmlnX2hhc2gYAiABKAwSHAoUYXNzaWduZWRfY29uZmlnX2hhc2gYAyABKAwSDwoHaW5fc3luYxgEIAEoCCJAChhCYXRjaEFzc2lnbkNvbmZpZ1JlcXVlc3QSEQoJYWdlbnRfaWRzGAEgAygJEhEKCWNvbmZpZ19pZBgCIAEoCSJxChlCYXRjaEFzc2lnbkNvbmZpZ1Jlc3BvbnNlEhIKCnN1Y2Nlc3NmdWwYASABKAUSDgoGZmFpbGVkGAIgASgFEhgKEGZhaWxlZF9hZ2VudF9pZHMYAyADKAkSFgoOZXJyb3JfbWVzc2FnZXMYBCADKAkiqQEKG0Fzc2lnbkNvbmZpZ0J5TGFiZWxzUmVxdWVzdBJICgZsYWJlbHMYASADKAsyOC5jb25maWcudjFhbHBoYTEuQXNzaWduQ29uZmlnQnlMYWJlbHNSZXF1ZXN0LkxhYmVsc0VudHJ5EhEKCWNvbmZpZ19pZBgCIAEoCRotCgtMYWJlbHNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIl0KHEFzc2lnbkNvbmZpZ0J5TGFiZWxzUmVzcG9uc2USGQoRbWF0Y2hlZF9hZ2VudF9pZHMYASADKAkSEgoKc3VjY2Vzc2Z1bBgCIAEoBRIOCgZmYWlsZWQYAyABKAUijQIKGFJvbGxpbmdEZXBsb3ltZW50UmVxdWVzdBIRCgljb25maWdfaWQYASABKAkSEQoJYWdlbnRfaWRzGAIgAygJElAKDGFnZW50X2xhYmVscxgDIAMoCzI6LmNvbmZpZy52MWFscGhhMS5Sb2xsaW5nRGVwbG95bWVudFJlcXVlc3QuQWdlbnRMYWJlbHNFbnRyeRISCgpiYXRjaF9zaXplGAQgASgFEhsKE2JhdGNoX2RlbGF5X3NlY29uZHMYBSABKAUSFAoMbWF4X2ZhaWx1cmVzGAYgASgFGjIKEEFnZW50TGFiZWxzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASIyChlSb2xsaW5nRGVwbG95bWVudFJlc3BvbnNlEhUKDWRlcGxveW1lbnRfaWQYASABKAkipgEKFUFnZW50RGVwbG95bWVudFN0YXR1cxIQCghhZ2VudF9pZBgBIAEoCRI0CgVzdGF0ZRgCIAEoDjIlLmNvbmZpZy52MWFscGhhMS5BZ2VudERlcGxveW1lbnRTdGF0ZRIVCg1lcnJvcl9tZXNzYWdlGAMgASgJEi4KCmFwcGxpZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIoUDChBEZXBsb3ltZW50U3RhdHVzEhUKDWRlcGxveW1lbnRfaWQYASABKAkSEQoJY29uZmlnX2lkGAIgASgJEi8KBXN0YXRlGAMgASgOMiAuY29uZmlnLnYxYWxwaGExLkRlcGxveW1lbnRTdGF0ZRIUCgx0b3RhbF9hZ2VudHMYBCABKAUSGAoQY29tcGxldGVkX2FnZW50cxgFIAEoBRIVCg1mYWlsZWRfYWdlbnRzGAYgASgFEhYKDnBlbmRpbmdfYWdlbnRzGAcgASgFEhUKDWN1cnJlbnRfYmF0Y2gYCCABKAUSPgoOYWdlbnRfc3RhdHVzZXMYCSADKAsyJi5jb25maWcudjFhbHBoYTEuQWdlbnREZXBsb3ltZW50U3RhdHVzEi4KCnN0YXJ0ZWRfYXQYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjAKDGNvbXBsZXRlZF9hdBgLIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiMwoaR2V0RGVwbG95bWVudFN0YXR1c1JlcXVlc3QSFQoNZGVwbG95bWVudF9pZBgBIAEoCSJQChtHZXREZXBsb3ltZW50U3RhdHVzUmVzcG9uc2USMQoGc3RhdHVzGAEgASgLMiEuY29uZmlnLnYxYWxwaGExLkRlcGxveW1lbnRTdGF0dXMiLwoWUGF1c2VEZXBsb3ltZW50UmVxdWVzdBIVCg1kZXBsb3ltZW50X2lkGAEgASgJIjAKF1Jlc3VtZURlcGxveW1lbnRSZXF1ZXN0EhUKDWRlcGxveW1lbnRfaWQYASABKAkiMAoXQ2FuY2VsRGVwbG95bWVudFJlcXVlc3QSFQoNZGVwbG95bWVudF9pZBgBIAEoCSI8ChhEZXBsb3ltZW50QWN0aW9uUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJImYKFkxpc3REZXBsb3ltZW50c1JlcXVlc3QSOwoMc3RhdGVfZmlsdGVyGAEgASgOMiAuY29uZmlnLnYxYWxwaGExLkRlcGxveW1lbnRTdGF0ZUgAiAEBQg8KDV9zdGF0ZV9maWx0ZXIiUQoXTGlzdERlcGxveW1lbnRzUmVzcG9uc2USNgoLZGVwbG95bWVudHMYASADKAsyIS5jb25maWcudjFhbHBoYTEuRGVwbG95bWVudFN0YXR1cypwCglNYXRjaFR5cGUSFgoSTUFUQ0hfVFlQRV9VTktOT1dOEAASEQoNTUFUQ0hfVFlQRV9FURABEhIKDk1BVENIX1RZUEVfTkVREAISEQoNTUFUQ0hfVFlQRV9SRRADEhEKDU1BVENIX1RZUEVfTlIQBCp/CgxDb25maWdTb3VyY2USHQoZQ09ORklHX1NPVVJDRV9VTlNQRUNJRklFRBAAEhkKFUNPTkZJR19TT1VSQ0VfREVGQVVMVBABEhsKF0NPTkZJR19TT1VSQ0VfQk9PVFNUUkFQEAISGAoUQ09ORklHX1NPVVJDRV9NQU5VQUwQAyq4AQoXQ29uZmlnQXBwbGljYXRpb25TdGF0dXMSKQolQ09ORklHX0FQUExJQ0FUSU9OX1NUQVRVU19VTlNQRUNJRklFRBAAEiUKIUNPTkZJR19BUFBMSUNBVElPTl9TVEFUVVNfUEVORElORxABEiUKIUNPTkZJR19BUFBMSUNBVElPTl9TVEFUVVNfQVBQTElFRBACEiQKIENPTkZJR19BUFBMSUNBVElPTl9TVEFUVVNfRkFJTEVEEAMq7QEKD0RlcGxveW1lbnRTdGF0ZRIgChxERVBMT1lNRU5UX1NUQVRFX1VOU1BFQ0lGSUVEEAASHAoYREVQTE9ZTUVOVF9TVEFURV9QRU5ESU5HEAESIAocREVQTE9ZTUVOVF9TVEFURV9JTl9QUk9HUkVTUxACEhsKF0RFUExPWU1FTlRfU1RBVEVfUEFVU0VEEAMSHgoaREVQTE9ZTUVOVF9TVEFURV9DT01QTEVURUQQBBIbChdERVBMT1lNRU5UX1NUQVRFX0ZBSUxFRBAFEh4KGkRFUExPWU1FTlRfU1RBVEVfQ0FOQ0VMTEVEEAYqzgEKFEFnZW50RGVwbG95bWVudFN0YXRlEiYKIkFHRU5UX0RFUExPWU1FTlRfU1RBVEVfVU5TUEVDSUZJRUQQABIiCh5BR0VOVF9ERVBMT1lNRU5UX1NUQVRFX1BFTkRJTkcQARIjCh9BR0VOVF9ERVBMT1lNRU5UX1NUQVRFX0FQUExZSU5HEAISIgoeQUdFTlRfREVQTE9ZTUVOVF9TVEFURV9BUFBMSUVEEAMSIQodQUdFTlRfREVQTE9ZTUVOVF9TVEFURV9GQUlMRUQQBDLsAgoNQ29uZmlnU2VydmljZRJSCg9QdXRDb25maWdGaWx0ZXISJy5jb25maWcudjFhbHBoYTEuUHV0Q29uZmlnRmlsdGVyUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRJYCg9HZXRDb25maWdGaWx0ZXISJi5jb25maWcudjFhbHBoYTEuQ29uZmlnRmlsdGVyUmVmZXJlbmNlGh0uY29uZmlnLnYxYWxwaGExLkNvbmZpZ0ZpbHRlchJUChJEZWxldGVDb25maWdGaWx0ZXISJi5jb25maWcudjFhbHBoYTEuQ29uZmlnRmlsdGVyUmVmZXJlbmNlGhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5ElcKEUxpc3RDb25maWdGaWx0ZXJzEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GiouY29uZmlnLnYxYWxwaGExLkxpc3RDb25maWdGaWx0ZXJzUmVzcG9uc2VCOFo2Z2l0aHViLmNvbS9vdGVsZmxlZXQvb3RlbGZsZWV0L3BrZy9hcGkvY29uZmlnL3YxYWxwaGExYgZwcm90bzM", [file_google_protobuf_empty, file_google_protobuf_timestamp]);
+
+/**
+ * @generated from message config.v1alpha1.ConfigFilterReference
+ */
+export type ConfigFilterReference = Message<"config.v1alpha1.ConfigFilterReference"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message config.v1alpha1.ConfigFilterReference.
+ * Use `create(ConfigFilterReferenceSchema)` to create a new message.
+ */
+export const ConfigFilterReferenceSchema: GenMessage<ConfigFilterReference> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 0);
+
+/**
+ * @generated from message config.v1alpha1.PutConfigFilterRequest
+ */
+export type PutConfigFilterRequest = Message<"config.v1alpha1.PutConfigFilterRequest"> & {
+  /**
+   * @generated from field: config.v1alpha1.ConfigFilterReference ref = 1;
+   */
+  ref?: ConfigFilterReference | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ConfigFilter filter = 2;
+   */
+  filter?: ConfigFilter | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.PutConfigFilterRequest.
+ * Use `create(PutConfigFilterRequestSchema)` to create a new message.
+ */
+export const PutConfigFilterRequestSchema: GenMessage<PutConfigFilterRequest> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 1);
+
+/**
+ * @generated from message config.v1alpha1.ListConfigFiltersResponse
+ */
+export type ListConfigFiltersResponse = Message<"config.v1alpha1.ListConfigFiltersResponse"> & {
+  /**
+   * @generated from field: repeated config.v1alpha1.ConfigFilterReference filters = 1;
+   */
+  filters: ConfigFilterReference[];
+};
+
+/**
+ * Describes the message config.v1alpha1.ListConfigFiltersResponse.
+ * Use `create(ListConfigFiltersResponseSchema)` to create a new message.
+ */
+export const ListConfigFiltersResponseSchema: GenMessage<ListConfigFiltersResponse> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 2);
+
+/**
+ * @generated from message config.v1alpha1.ConfigFilter
+ */
+export type ConfigFilter = Message<"config.v1alpha1.ConfigFilter"> & {
+  /**
+   * @generated from field: optional bool default = 1;
+   */
+  default?: boolean | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ApprovalConfig approval = 2;
+   */
+  approval?: ApprovalConfig | undefined;
+
+  /**
+   * @generated from field: repeated config.v1alpha1.LabelFilter filters = 3;
+   */
+  filters: LabelFilter[];
+
+  /**
+   * @generated from field: config.v1alpha1.TargetConfig collector_config = 4;
+   */
+  collectorConfig?: TargetConfig | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.ConfigFilter.
+ * Use `create(ConfigFilterSchema)` to create a new message.
+ */
+export const ConfigFilterSchema: GenMessage<ConfigFilter> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 3);
+
+/**
+ * @generated from message config.v1alpha1.LabelFilter
+ */
+export type LabelFilter = Message<"config.v1alpha1.LabelFilter"> & {
+  /**
+   * @generated from field: config.v1alpha1.MatchType type = 1;
+   */
+  type: MatchType;
+
+  /**
+   * @generated from field: map<string, string> opamp_id_labels = 2;
+   */
+  opampIdLabels: { [key: string]: string };
+
+  /**
+   * @generated from field: map<string, string> opamp_non_id_labels = 3;
+   */
+  opampNonIdLabels: { [key: string]: string };
+
+  /**
+   * @generated from field: map<string, string> otelfleet_labels = 4;
+   */
+  otelfleetLabels: { [key: string]: string };
+};
+
+/**
+ * Describes the message config.v1alpha1.LabelFilter.
+ * Use `create(LabelFilterSchema)` to create a new message.
+ */
+export const LabelFilterSchema: GenMessage<LabelFilter> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 4);
+
+/**
+ * @generated from message config.v1alpha1.TargetConfig
+ */
+export type TargetConfig = Message<"config.v1alpha1.TargetConfig"> & {
+  /**
+   * @generated from field: string config_ref = 1;
+   */
+  configRef: string;
+};
+
+/**
+ * Describes the message config.v1alpha1.TargetConfig.
+ * Use `create(TargetConfigSchema)` to create a new message.
+ */
+export const TargetConfigSchema: GenMessage<TargetConfig> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 5);
+
+/**
+ * @generated from message config.v1alpha1.ApprovalConfig
+ */
+export type ApprovalConfig = Message<"config.v1alpha1.ApprovalConfig"> & {
+  /**
+   * @generated from field: optional bool requires_approval = 1;
+   */
+  requiresApproval?: boolean | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.ApprovalConfig.
+ * Use `create(ApprovalConfigSchema)` to create a new message.
+ */
+export const ApprovalConfigSchema: GenMessage<ApprovalConfig> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 6);
 
 /**
  * @generated from message config.v1alpha1.PutConfigRequest
@@ -34,7 +188,7 @@ export type PutConfigRequest = Message<"config.v1alpha1.PutConfigRequest"> & {
  * Use `create(PutConfigRequestSchema)` to create a new message.
  */
 export const PutConfigRequestSchema: GenMessage<PutConfigRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 0);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 7);
 
 /**
  * @generated from message config.v1alpha1.ValidateConfigRequest
@@ -51,7 +205,7 @@ export type ValidateConfigRequest = Message<"config.v1alpha1.ValidateConfigReque
  * Use `create(ValidateConfigRequestSchema)` to create a new message.
  */
 export const ValidateConfigRequestSchema: GenMessage<ValidateConfigRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 1);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 8);
 
 /**
  * @generated from message config.v1alpha1.ListConfigReponse
@@ -68,7 +222,7 @@ export type ListConfigReponse = Message<"config.v1alpha1.ListConfigReponse"> & {
  * Use `create(ListConfigReponseSchema)` to create a new message.
  */
 export const ListConfigReponseSchema: GenMessage<ListConfigReponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 2);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 9);
 
 /**
  * @generated from message config.v1alpha1.ConfigReference
@@ -85,7 +239,7 @@ export type ConfigReference = Message<"config.v1alpha1.ConfigReference"> & {
  * Use `create(ConfigReferenceSchema)` to create a new message.
  */
 export const ConfigReferenceSchema: GenMessage<ConfigReference> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 3);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 10);
 
 /**
  * @generated from message config.v1alpha1.Config
@@ -102,7 +256,7 @@ export type Config = Message<"config.v1alpha1.Config"> & {
  * Use `create(ConfigSchema)` to create a new message.
  */
 export const ConfigSchema: GenMessage<Config> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 4);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 11);
 
 /**
  * @generated from message config.v1alpha1.ConfigRange
@@ -124,7 +278,7 @@ export type ConfigRange = Message<"config.v1alpha1.ConfigRange"> & {
  * Use `create(ConfigRangeSchema)` to create a new message.
  */
 export const ConfigRangeSchema: GenMessage<ConfigRange> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 5);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 12);
 
 /**
  * @generated from message config.v1alpha1.Labels
@@ -141,7 +295,7 @@ export type Labels = Message<"config.v1alpha1.Labels"> & {
  * Use `create(LabelsSchema)` to create a new message.
  */
 export const LabelsSchema: GenMessage<Labels> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 6);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 13);
 
 /**
  * TODO:
@@ -156,7 +310,7 @@ export type Matcher = Message<"config.v1alpha1.Matcher"> & {
  * Use `create(MatcherSchema)` to create a new message.
  */
 export const MatcherSchema: GenMessage<Matcher> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 7);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 14);
 
 /**
  * ConfigAssignment tracks metadata about a config assignment to an agent
@@ -195,7 +349,7 @@ export type ConfigAssignment = Message<"config.v1alpha1.ConfigAssignment"> & {
  * Use `create(ConfigAssignmentSchema)` to create a new message.
  */
 export const ConfigAssignmentSchema: GenMessage<ConfigAssignment> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 8);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 15);
 
 /**
  * @generated from message config.v1alpha1.AssignConfigRequest
@@ -217,7 +371,7 @@ export type AssignConfigRequest = Message<"config.v1alpha1.AssignConfigRequest">
  * Use `create(AssignConfigRequestSchema)` to create a new message.
  */
 export const AssignConfigRequestSchema: GenMessage<AssignConfigRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 9);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 16);
 
 /**
  * @generated from message config.v1alpha1.AssignConfigResponse
@@ -239,7 +393,7 @@ export type AssignConfigResponse = Message<"config.v1alpha1.AssignConfigResponse
  * Use `create(AssignConfigResponseSchema)` to create a new message.
  */
 export const AssignConfigResponseSchema: GenMessage<AssignConfigResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 10);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 17);
 
 /**
  * @generated from message config.v1alpha1.GetAgentConfigRequest
@@ -256,7 +410,7 @@ export type GetAgentConfigRequest = Message<"config.v1alpha1.GetAgentConfigReque
  * Use `create(GetAgentConfigRequestSchema)` to create a new message.
  */
 export const GetAgentConfigRequestSchema: GenMessage<GetAgentConfigRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 11);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 18);
 
 /**
  * @generated from message config.v1alpha1.GetAgentConfigResponse
@@ -283,7 +437,7 @@ export type GetAgentConfigResponse = Message<"config.v1alpha1.GetAgentConfigResp
  * Use `create(GetAgentConfigResponseSchema)` to create a new message.
  */
 export const GetAgentConfigResponseSchema: GenMessage<GetAgentConfigResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 12);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 19);
 
 /**
  * @generated from message config.v1alpha1.UnassignConfigRequest
@@ -300,7 +454,7 @@ export type UnassignConfigRequest = Message<"config.v1alpha1.UnassignConfigReque
  * Use `create(UnassignConfigRequestSchema)` to create a new message.
  */
 export const UnassignConfigRequestSchema: GenMessage<UnassignConfigRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 13);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 20);
 
 /**
  * @generated from message config.v1alpha1.UnassignConfigResponse
@@ -317,7 +471,7 @@ export type UnassignConfigResponse = Message<"config.v1alpha1.UnassignConfigResp
  * Use `create(UnassignConfigResponseSchema)` to create a new message.
  */
 export const UnassignConfigResponseSchema: GenMessage<UnassignConfigResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 14);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 21);
 
 /**
  * @generated from message config.v1alpha1.ListConfigAssignmentsRequest
@@ -336,7 +490,7 @@ export type ListConfigAssignmentsRequest = Message<"config.v1alpha1.ListConfigAs
  * Use `create(ListConfigAssignmentsRequestSchema)` to create a new message.
  */
 export const ListConfigAssignmentsRequestSchema: GenMessage<ListConfigAssignmentsRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 15);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 22);
 
 /**
  * @generated from message config.v1alpha1.ConfigAssignmentInfo
@@ -378,7 +532,7 @@ export type ConfigAssignmentInfo = Message<"config.v1alpha1.ConfigAssignmentInfo
  * Use `create(ConfigAssignmentInfoSchema)` to create a new message.
  */
 export const ConfigAssignmentInfoSchema: GenMessage<ConfigAssignmentInfo> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 16);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 23);
 
 /**
  * @generated from message config.v1alpha1.ListConfigAssignmentsResponse
@@ -395,7 +549,7 @@ export type ListConfigAssignmentsResponse = Message<"config.v1alpha1.ListConfigA
  * Use `create(ListConfigAssignmentsResponseSchema)` to create a new message.
  */
 export const ListConfigAssignmentsResponseSchema: GenMessage<ListConfigAssignmentsResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 17);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 24);
 
 /**
  * @generated from message config.v1alpha1.GetConfigStatusRequest
@@ -412,7 +566,7 @@ export type GetConfigStatusRequest = Message<"config.v1alpha1.GetConfigStatusReq
  * Use `create(GetConfigStatusRequestSchema)` to create a new message.
  */
 export const GetConfigStatusRequestSchema: GenMessage<GetConfigStatusRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 18);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 25);
 
 /**
  * @generated from message config.v1alpha1.GetConfigStatusResponse
@@ -448,7 +602,7 @@ export type GetConfigStatusResponse = Message<"config.v1alpha1.GetConfigStatusRe
  * Use `create(GetConfigStatusResponseSchema)` to create a new message.
  */
 export const GetConfigStatusResponseSchema: GenMessage<GetConfigStatusResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 19);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 26);
 
 /**
  * @generated from message config.v1alpha1.BatchAssignConfigRequest
@@ -470,7 +624,7 @@ export type BatchAssignConfigRequest = Message<"config.v1alpha1.BatchAssignConfi
  * Use `create(BatchAssignConfigRequestSchema)` to create a new message.
  */
 export const BatchAssignConfigRequestSchema: GenMessage<BatchAssignConfigRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 20);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 27);
 
 /**
  * @generated from message config.v1alpha1.BatchAssignConfigResponse
@@ -502,7 +656,7 @@ export type BatchAssignConfigResponse = Message<"config.v1alpha1.BatchAssignConf
  * Use `create(BatchAssignConfigResponseSchema)` to create a new message.
  */
 export const BatchAssignConfigResponseSchema: GenMessage<BatchAssignConfigResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 21);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 28);
 
 /**
  * @generated from message config.v1alpha1.AssignConfigByLabelsRequest
@@ -526,7 +680,7 @@ export type AssignConfigByLabelsRequest = Message<"config.v1alpha1.AssignConfigB
  * Use `create(AssignConfigByLabelsRequestSchema)` to create a new message.
  */
 export const AssignConfigByLabelsRequestSchema: GenMessage<AssignConfigByLabelsRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 22);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 29);
 
 /**
  * @generated from message config.v1alpha1.AssignConfigByLabelsResponse
@@ -553,7 +707,7 @@ export type AssignConfigByLabelsResponse = Message<"config.v1alpha1.AssignConfig
  * Use `create(AssignConfigByLabelsResponseSchema)` to create a new message.
  */
 export const AssignConfigByLabelsResponseSchema: GenMessage<AssignConfigByLabelsResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 23);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 30);
 
 /**
  * @generated from message config.v1alpha1.RollingDeploymentRequest
@@ -603,7 +757,7 @@ export type RollingDeploymentRequest = Message<"config.v1alpha1.RollingDeploymen
  * Use `create(RollingDeploymentRequestSchema)` to create a new message.
  */
 export const RollingDeploymentRequestSchema: GenMessage<RollingDeploymentRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 24);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 31);
 
 /**
  * @generated from message config.v1alpha1.RollingDeploymentResponse
@@ -620,7 +774,7 @@ export type RollingDeploymentResponse = Message<"config.v1alpha1.RollingDeployme
  * Use `create(RollingDeploymentResponseSchema)` to create a new message.
  */
 export const RollingDeploymentResponseSchema: GenMessage<RollingDeploymentResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 25);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 32);
 
 /**
  * @generated from message config.v1alpha1.AgentDeploymentStatus
@@ -652,7 +806,7 @@ export type AgentDeploymentStatus = Message<"config.v1alpha1.AgentDeploymentStat
  * Use `create(AgentDeploymentStatusSchema)` to create a new message.
  */
 export const AgentDeploymentStatusSchema: GenMessage<AgentDeploymentStatus> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 26);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 33);
 
 /**
  * @generated from message config.v1alpha1.DeploymentStatus
@@ -719,7 +873,7 @@ export type DeploymentStatus = Message<"config.v1alpha1.DeploymentStatus"> & {
  * Use `create(DeploymentStatusSchema)` to create a new message.
  */
 export const DeploymentStatusSchema: GenMessage<DeploymentStatus> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 27);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 34);
 
 /**
  * @generated from message config.v1alpha1.GetDeploymentStatusRequest
@@ -736,7 +890,7 @@ export type GetDeploymentStatusRequest = Message<"config.v1alpha1.GetDeploymentS
  * Use `create(GetDeploymentStatusRequestSchema)` to create a new message.
  */
 export const GetDeploymentStatusRequestSchema: GenMessage<GetDeploymentStatusRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 28);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 35);
 
 /**
  * @generated from message config.v1alpha1.GetDeploymentStatusResponse
@@ -753,7 +907,7 @@ export type GetDeploymentStatusResponse = Message<"config.v1alpha1.GetDeployment
  * Use `create(GetDeploymentStatusResponseSchema)` to create a new message.
  */
 export const GetDeploymentStatusResponseSchema: GenMessage<GetDeploymentStatusResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 29);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 36);
 
 /**
  * @generated from message config.v1alpha1.PauseDeploymentRequest
@@ -770,7 +924,7 @@ export type PauseDeploymentRequest = Message<"config.v1alpha1.PauseDeploymentReq
  * Use `create(PauseDeploymentRequestSchema)` to create a new message.
  */
 export const PauseDeploymentRequestSchema: GenMessage<PauseDeploymentRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 30);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 37);
 
 /**
  * @generated from message config.v1alpha1.ResumeDeploymentRequest
@@ -787,7 +941,7 @@ export type ResumeDeploymentRequest = Message<"config.v1alpha1.ResumeDeploymentR
  * Use `create(ResumeDeploymentRequestSchema)` to create a new message.
  */
 export const ResumeDeploymentRequestSchema: GenMessage<ResumeDeploymentRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 31);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 38);
 
 /**
  * @generated from message config.v1alpha1.CancelDeploymentRequest
@@ -804,7 +958,7 @@ export type CancelDeploymentRequest = Message<"config.v1alpha1.CancelDeploymentR
  * Use `create(CancelDeploymentRequestSchema)` to create a new message.
  */
 export const CancelDeploymentRequestSchema: GenMessage<CancelDeploymentRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 32);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 39);
 
 /**
  * @generated from message config.v1alpha1.DeploymentActionResponse
@@ -826,7 +980,7 @@ export type DeploymentActionResponse = Message<"config.v1alpha1.DeploymentAction
  * Use `create(DeploymentActionResponseSchema)` to create a new message.
  */
 export const DeploymentActionResponseSchema: GenMessage<DeploymentActionResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 33);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 40);
 
 /**
  * @generated from message config.v1alpha1.ListDeploymentsRequest
@@ -843,7 +997,7 @@ export type ListDeploymentsRequest = Message<"config.v1alpha1.ListDeploymentsReq
  * Use `create(ListDeploymentsRequestSchema)` to create a new message.
  */
 export const ListDeploymentsRequestSchema: GenMessage<ListDeploymentsRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 34);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 41);
 
 /**
  * @generated from message config.v1alpha1.ListDeploymentsResponse
@@ -860,7 +1014,43 @@ export type ListDeploymentsResponse = Message<"config.v1alpha1.ListDeploymentsRe
  * Use `create(ListDeploymentsResponseSchema)` to create a new message.
  */
 export const ListDeploymentsResponseSchema: GenMessage<ListDeploymentsResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 35);
+  messageDesc(file_pkg_api_config_v1alpha1_config, 42);
+
+/**
+ * @generated from enum config.v1alpha1.MatchType
+ */
+export enum MatchType {
+  /**
+   * @generated from enum value: MATCH_TYPE_UNKNOWN = 0;
+   */
+  UNKNOWN = 0,
+
+  /**
+   * @generated from enum value: MATCH_TYPE_EQ = 1;
+   */
+  EQ = 1,
+
+  /**
+   * @generated from enum value: MATCH_TYPE_NEQ = 2;
+   */
+  NEQ = 2,
+
+  /**
+   * @generated from enum value: MATCH_TYPE_RE = 3;
+   */
+  RE = 3,
+
+  /**
+   * @generated from enum value: MATCH_TYPE_NR = 4;
+   */
+  NR = 4,
+}
+
+/**
+ * Describes the enum config.v1alpha1.MatchType.
+ */
+export const MatchTypeSchema: GenEnum<MatchType> = /*@__PURE__*/
+  enumDesc(file_pkg_api_config_v1alpha1_config, 0);
 
 /**
  * ConfigSource indicates how a config was assigned to an agent
@@ -893,7 +1083,7 @@ export enum ConfigSource {
  * Describes the enum config.v1alpha1.ConfigSource.
  */
 export const ConfigSourceSchema: GenEnum<ConfigSource> = /*@__PURE__*/
-  enumDesc(file_pkg_api_config_v1alpha1_config, 0);
+  enumDesc(file_pkg_api_config_v1alpha1_config, 1);
 
 /**
  * ConfigApplicationStatus indicates whether the agent has applied the config
@@ -926,7 +1116,7 @@ export enum ConfigApplicationStatus {
  * Describes the enum config.v1alpha1.ConfigApplicationStatus.
  */
 export const ConfigApplicationStatusSchema: GenEnum<ConfigApplicationStatus> = /*@__PURE__*/
-  enumDesc(file_pkg_api_config_v1alpha1_config, 1);
+  enumDesc(file_pkg_api_config_v1alpha1_config, 2);
 
 /**
  * DeploymentState represents the overall state of a deployment
@@ -974,7 +1164,7 @@ export enum DeploymentState {
  * Describes the enum config.v1alpha1.DeploymentState.
  */
 export const DeploymentStateSchema: GenEnum<DeploymentState> = /*@__PURE__*/
-  enumDesc(file_pkg_api_config_v1alpha1_config, 2);
+  enumDesc(file_pkg_api_config_v1alpha1_config, 3);
 
 /**
  * AgentDeploymentState represents the state of deployment for a single agent
@@ -1012,181 +1202,43 @@ export enum AgentDeploymentState {
  * Describes the enum config.v1alpha1.AgentDeploymentState.
  */
 export const AgentDeploymentStateSchema: GenEnum<AgentDeploymentState> = /*@__PURE__*/
-  enumDesc(file_pkg_api_config_v1alpha1_config, 3);
+  enumDesc(file_pkg_api_config_v1alpha1_config, 4);
 
 /**
  * @generated from service config.v1alpha1.ConfigService
  */
 export const ConfigService: GenService<{
   /**
-   * Config CRUD
-   *
-   * @generated from rpc config.v1alpha1.ConfigService.ValidConfig
+   * @generated from rpc config.v1alpha1.ConfigService.PutConfigFilter
    */
-  validConfig: {
+  putConfigFilter: {
     methodKind: "unary";
-    input: typeof ValidateConfigRequestSchema;
+    input: typeof PutConfigFilterRequestSchema;
     output: typeof EmptySchema;
   },
   /**
-   * @generated from rpc config.v1alpha1.ConfigService.PutConfig
+   * @generated from rpc config.v1alpha1.ConfigService.GetConfigFilter
    */
-  putConfig: {
+  getConfigFilter: {
     methodKind: "unary";
-    input: typeof PutConfigRequestSchema;
+    input: typeof ConfigFilterReferenceSchema;
+    output: typeof ConfigFilterSchema;
+  },
+  /**
+   * @generated from rpc config.v1alpha1.ConfigService.DeleteConfigFilter
+   */
+  deleteConfigFilter: {
+    methodKind: "unary";
+    input: typeof ConfigFilterReferenceSchema;
     output: typeof EmptySchema;
   },
   /**
-   * @generated from rpc config.v1alpha1.ConfigService.GetConfig
+   * @generated from rpc config.v1alpha1.ConfigService.ListConfigFilters
    */
-  getConfig: {
-    methodKind: "unary";
-    input: typeof ConfigReferenceSchema;
-    output: typeof ConfigSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.DeleteConfig
-   */
-  deleteConfig: {
-    methodKind: "unary";
-    input: typeof ConfigReferenceSchema;
-    output: typeof EmptySchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.ListConfigs
-   */
-  listConfigs: {
+  listConfigFilters: {
     methodKind: "unary";
     input: typeof EmptySchema;
-    output: typeof ListConfigReponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.GetDefaultConfig
-   */
-  getDefaultConfig: {
-    methodKind: "unary";
-    input: typeof EmptySchema;
-    output: typeof ConfigSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.SetDefaultConfig
-   */
-  setDefaultConfig: {
-    methodKind: "unary";
-    input: typeof PutConfigRequestSchema;
-    output: typeof EmptySchema;
-  },
-  /**
-   * Phase 1: Manual Config Assignment
-   *
-   * @generated from rpc config.v1alpha1.ConfigService.AssignConfig
-   */
-  assignConfig: {
-    methodKind: "unary";
-    input: typeof AssignConfigRequestSchema;
-    output: typeof AssignConfigResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.GetAgentConfig
-   */
-  getAgentConfig: {
-    methodKind: "unary";
-    input: typeof GetAgentConfigRequestSchema;
-    output: typeof GetAgentConfigResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.UnassignConfig
-   */
-  unassignConfig: {
-    methodKind: "unary";
-    input: typeof UnassignConfigRequestSchema;
-    output: typeof UnassignConfigResponseSchema;
-  },
-  /**
-   * Phase 2: Config Assignment Queries and Status
-   *
-   * @generated from rpc config.v1alpha1.ConfigService.ListConfigAssignments
-   */
-  listConfigAssignments: {
-    methodKind: "unary";
-    input: typeof ListConfigAssignmentsRequestSchema;
-    output: typeof ListConfigAssignmentsResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.GetConfigStatus
-   */
-  getConfigStatus: {
-    methodKind: "unary";
-    input: typeof GetConfigStatusRequestSchema;
-    output: typeof GetConfigStatusResponseSchema;
-  },
-  /**
-   * Phase 3: Batch Assignment
-   *
-   * @generated from rpc config.v1alpha1.ConfigService.BatchAssignConfig
-   */
-  batchAssignConfig: {
-    methodKind: "unary";
-    input: typeof BatchAssignConfigRequestSchema;
-    output: typeof BatchAssignConfigResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.AssignConfigByLabels
-   */
-  assignConfigByLabels: {
-    methodKind: "unary";
-    input: typeof AssignConfigByLabelsRequestSchema;
-    output: typeof AssignConfigByLabelsResponseSchema;
-  },
-  /**
-   * Phase 4: Rolling Deployment
-   *
-   * @generated from rpc config.v1alpha1.ConfigService.StartRollingDeployment
-   */
-  startRollingDeployment: {
-    methodKind: "unary";
-    input: typeof RollingDeploymentRequestSchema;
-    output: typeof RollingDeploymentResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.GetDeploymentStatus
-   */
-  getDeploymentStatus: {
-    methodKind: "unary";
-    input: typeof GetDeploymentStatusRequestSchema;
-    output: typeof GetDeploymentStatusResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.PauseDeployment
-   */
-  pauseDeployment: {
-    methodKind: "unary";
-    input: typeof PauseDeploymentRequestSchema;
-    output: typeof DeploymentActionResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.ResumeDeployment
-   */
-  resumeDeployment: {
-    methodKind: "unary";
-    input: typeof ResumeDeploymentRequestSchema;
-    output: typeof DeploymentActionResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.CancelDeployment
-   */
-  cancelDeployment: {
-    methodKind: "unary";
-    input: typeof CancelDeploymentRequestSchema;
-    output: typeof DeploymentActionResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.ListDeployments
-   */
-  listDeployments: {
-    methodKind: "unary";
-    input: typeof ListDeploymentsRequestSchema;
-    output: typeof ListDeploymentsResponseSchema;
+    output: typeof ListConfigFiltersResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_pkg_api_config_v1alpha1_config, 0);
