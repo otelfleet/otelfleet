@@ -14,6 +14,7 @@ import { Route as DeploymentsRouteImport } from './routes/deployments'
 import { Route as ConfigfilterRouteImport } from './routes/configfilter'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TokensCreateRouteImport } from './routes/tokens_.create'
 import { Route as TokensTokenIdRouteImport } from './routes/tokens.$tokenId'
 import { Route as ResourcesTypeRouteImport } from './routes/resources.$type'
 import { Route as DeploymentsAgentIdRouteImport } from './routes/deployments.$agentId'
@@ -43,6 +44,11 @@ const AboutRoute = AboutRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TokensCreateRoute = TokensCreateRouteImport.update({
+  id: '/tokens_/create',
+  path: '/tokens/create',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TokensTokenIdRoute = TokensTokenIdRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
+  '/tokens/create': typeof TokensCreateRoute
   '/resources/$type/editor': typeof ResourcesTypeEditorRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
+  '/tokens/create': typeof TokensCreateRoute
   '/resources/$type/editor': typeof ResourcesTypeEditorRoute
 }
 export interface FileRoutesById {
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
+  '/tokens_/create': typeof TokensCreateRoute
   '/resources/$type_/editor': typeof ResourcesTypeEditorRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
+    | '/tokens/create'
     | '/resources/$type/editor'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
+    | '/tokens/create'
     | '/resources/$type/editor'
   id:
     | '__root__'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
+    | '/tokens_/create'
     | '/resources/$type_/editor'
   fileRoutesById: FileRoutesById
 }
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   TokensRoute: typeof TokensRouteWithChildren
   ConfigfilterEditorRoute: typeof ConfigfilterEditorRoute
   ResourcesTypeRoute: typeof ResourcesTypeRoute
+  TokensCreateRoute: typeof TokensCreateRoute
   ResourcesTypeEditorRoute: typeof ResourcesTypeEditorRoute
 }
 
@@ -193,6 +206,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tokens_/create': {
+      id: '/tokens_/create'
+      path: '/tokens/create'
+      fullPath: '/tokens/create'
+      preLoaderRoute: typeof TokensCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tokens/$tokenId': {
@@ -264,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   TokensRoute: TokensRouteWithChildren,
   ConfigfilterEditorRoute: ConfigfilterEditorRoute,
   ResourcesTypeRoute: ResourcesTypeRoute,
+  TokensCreateRoute: TokensCreateRoute,
   ResourcesTypeEditorRoute: ResourcesTypeEditorRoute,
 }
 export const routeTree = rootRouteImport

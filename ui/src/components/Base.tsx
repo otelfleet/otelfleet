@@ -19,7 +19,7 @@ import {
     type MantineColorScheme,
 } from '@mantine/core';
 import { useDisclosure, useLocalStorage } from '@mantine/hooks'
-import { GitHubLogoIcon, SunIcon, MoonIcon, StackIcon } from '@radix-ui/react-icons';
+import { GitHubLogoIcon, SunIcon, MoonIcon, StackIcon, IdCardIcon, RocketIcon, MixerHorizontalIcon } from '@radix-ui/react-icons';
 import { COMPONENT_ENTITY_TYPES, COLLECTOR_ENTITY_TYPES } from '../resources/entityTypes';
 
 
@@ -188,7 +188,7 @@ const Base: FC = () => {
                             active={active === 'mgmt'}
                             onClick={() => setActive(active === 'mgmt' ? null : 'mgmt')}
                         >
-                            <NavLink component={Link} to="/tokens" label="API tokens" />
+                            <NavLink component={Link} to="/tokens" label="API tokens" leftSection={<IdCardIcon />} />
                         </NavLink>
 
                         <NavLink
@@ -238,8 +238,8 @@ const Base: FC = () => {
                             active={active === 'collectors'}
                             onClick={() => setActive(active === 'collectors' ? null : 'collectors')}
                         >
-                            <NavLink component={Link} to="/deployments" label="Deployments" />
-                            <NavLink component={Link} to="/configfilter" label="Config Assignment"></NavLink>
+                            <NavLink component={Link} to="/deployments" label="Deployments" leftSection={<RocketIcon />} />
+                            <NavLink component={Link} to="/configfilter" label="Config Assignment" leftSection={<MixerHorizontalIcon />} />
                         </NavLink>
                     </Stack>
                 </AppShell.Navbar>

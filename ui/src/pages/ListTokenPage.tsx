@@ -3,19 +3,16 @@ import {
   type ColumnConfig
 } from '../components/Table'
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
-import { Box, Button, ActionIcon, Modal, Group, Text, TextInput, Select, Stack, Badge } from '@mantine/core';
+import { Box, Button, ActionIcon, Modal, Group, Text, Badge } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { useClient } from '../api';
-import { TokenService, CreateTokenRequestSchema } from '../gen/api/pkg/api/bootstrap/v1alpha1/bootstrap_pb';
-import { ResourceService } from '../gen/api/pkg/api/resources/v1alpha1/resources_pb';
-import { collectorConfig } from '../resources/entityTypes';
+import { TokenService } from '../gen/api/pkg/api/bootstrap/v1alpha1/bootstrap_pb';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { BootstrapToken } from '../gen/api/pkg/api/bootstrap/v1alpha1/bootstrap_pb';
-import { create } from '@bufbuild/protobuf';
-import { CheckCircledIcon, TrashIcon, PlusIcon, Cross2Icon, EyeOpenIcon, CopyIcon } from '@radix-ui/react-icons';
+import { CheckCircledIcon, TrashIcon, EyeOpenIcon, CopyIcon } from '@radix-ui/react-icons';
 import { notifyGRPCError } from '../api/notifications';
-import { useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 
 function timestampToDate(ts?: Timestamp | null): Date | null {
   if (!ts) return null;
@@ -42,36 +39,13 @@ function timestampToLocale(ts?: Timestamp | null): string {
   return d ? d.toLocaleString() : "";
 }
 
-interface LabelEntry {
-  key: string;
-  value: string;
-}
-
 export const TokenPage = () => {
   const tokenClient = useClient(TokenService)
-  const resourceClient = useClient(ResourceService)
   const navigate = useNavigate()
 
   const [tokensState, setTokensState] = useState<BootstrapToken[]>([])
-  const [configsState, setConfigsState] = useState<string[]>([])
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false)
-  const [createModalOpened, { open: openCreateModal, close: closeCreateModal }] = useDisclosure(false)
   const [tokenToDelete, setTokenToDelete] = useState<string | null>(null)
-
-  // Create token form state
-  const [selectedConfig, setSelectedConfig] = useState<string | null>(null)
-  const [labels, setLabels] = useState<LabelEntry[]>([])
-  const [newLabelKey, setNewLabelKey] = useState('')
-  const [newLabelValue, setNewLabelValue] = useState('')
-
-  const handleListConfigs = useCallback(async () => {
-    try {
-      const response = await resourceClient.listEntity({ typeUrl: collectorConfig.typeUrl })
-      setConfigsState(response.entities.map(e => e.key))
-    } catch (error) {
-      notifyGRPCError("Failed to list configs", error)
-    }
-  }, [resourceClient])
 
   const handleListTokens = useCallback(async () => {
     try {
@@ -81,62 +55,6 @@ export const TokenPage = () => {
       notifyGRPCError("Failed to list tokens", error)
     }
   }, [tokenClient])
-
-  const handleAddLabel = useCallback(() => {
-    if (newLabelKey.trim() && newLabelValue.trim()) {
-      const newLabel = { key: newLabelKey.trim(), value: newLabelValue.trim() }
-      setLabels(prev => {
-        const updated = [...prev, newLabel]
-        return updated
-      })
-      setNewLabelKey('')
-      setNewLabelValue('')
-    }
-
-  }, [newLabelKey, newLabelValue])
-
-  const handleRemoveLabel = useCallback((index: number) => {
-    setLabels(prev => prev.filter((_, i) => i !== index))
-  }, [])
-
-  const resetCreateForm = useCallback(() => {
-    setSelectedConfig(null)
-    setLabels([])
-    setNewLabelKey('')
-    setNewLabelValue('')
-  }, [])
-
-  const handleOpenCreateModal = useCallback(() => {
-    resetCreateForm()
-    handleListConfigs()
-    openCreateModal()
-  }, [resetCreateForm, handleListConfigs, openCreateModal])
-
-  const handleCreateToken = useCallback(async () => {
-    try {
-      const labelsMap: { [key: string]: string } = {}
-      labels.forEach(({ key, value }) => {
-        labelsMap[key] = value
-      })
-      const request = create(CreateTokenRequestSchema, {
-        TTL: {
-          seconds: BigInt(600),
-        },
-        configReference: selectedConfig || undefined,
-        labels: labelsMap,
-      })
-      await tokenClient.createToken(request)
-      notifications.show({
-        title: "Token successfully created",
-        message: 'Bootstrap token successfully created',
-        icon: <CheckCircledIcon />,
-      })
-      closeCreateModal()
-      handleListTokens()
-    } catch (error) {
-      notifyGRPCError("Create token error", error)
-    }
-  }, [tokenClient, handleListTokens, selectedConfig, labels, closeCreateModal])
 
   const handleDeleteToken = useCallback(async () => {
     if (!tokenToDelete) return
@@ -202,18 +120,6 @@ export const TokenPage = () => {
       }
     },
     {
-      key: 'configReference',
-      label: 'Config',
-      visible: true,
-      render: (value: string | undefined) => (
-        value ? (
-          <Badge variant="light" color="blue">{value}</Badge>
-        ) : (
-          <Badge variant="light" color="gray">none</Badge>
-        )
-      )
-    },
-    {
       key: 'labels',
       label: 'Labels',
       visible: true,
@@ -274,71 +180,11 @@ export const TokenPage = () => {
   return (
     <Box style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <Box style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
-        <Button onClick={handleOpenCreateModal}>
-          Create Token
-        </Button>
+        <Link to="/tokens/create" style={{ display: 'inline-block' }}>
+          <Button>Create Token</Button>
+        </Link>
       </Box>
       <Table<BootstrapToken> title="Tokens" data={tokensState} columns={tokenColumns} rowKey="ID" />
-
-      <Modal opened={createModalOpened} onClose={closeCreateModal} title="Create Token" size="md">
-        <Stack gap="md">
-          <Select
-            label="Associated Config"
-            placeholder="Select a config (optional)"
-            data={configsState}
-            value={selectedConfig}
-            onChange={setSelectedConfig}
-            clearable
-          />
-
-          <Box>
-            <Text size="sm" fw={500} mb="xs">Labels</Text>
-            {labels.map((label, index) => (
-              <Group key={index} mb="xs">
-                <TextInput
-                  value={label.key}
-                  readOnly
-                  style={{ flex: 1 }}
-                  size="sm"
-                />
-                <TextInput
-                  value={label.value}
-                  readOnly
-                  style={{ flex: 1 }}
-                  size="sm"
-                />
-                <ActionIcon color="red" variant="subtle" onClick={() => handleRemoveLabel(index)}>
-                  <Cross2Icon />
-                </ActionIcon>
-              </Group>
-            ))}
-            <Group>
-              <TextInput
-                placeholder="Key"
-                value={newLabelKey}
-                onChange={(e) => setNewLabelKey(e.currentTarget.value)}
-                style={{ flex: 1 }}
-                size="sm"
-              />
-              <TextInput
-                placeholder="Value"
-                value={newLabelValue}
-                onChange={(e) => setNewLabelValue(e.currentTarget.value)}
-                style={{ flex: 1 }}
-                size="sm"
-              />
-              <ActionIcon color="blue" variant="light" onClick={handleAddLabel}>
-                <PlusIcon />
-              </ActionIcon>
-            </Group>
-          </Box>
-
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={closeCreateModal}>Cancel</Button>
-            <Button onClick={handleCreateToken}>Create</Button>
-          </Group>
-        </Stack>
-      </Modal>
 
       <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Confirm Delete">
         <Text>Are you sure you want to delete this token? This action cannot be undone.</Text>
