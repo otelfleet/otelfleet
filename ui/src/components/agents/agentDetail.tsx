@@ -30,7 +30,7 @@ import {
     Select,
 } from '@mantine/core';
 import { DiffEditor } from '@monaco-editor/react';
-import { Editor } from '../Editor';
+import { ConfigViewer } from '../ConfigViewer';
 import { useMonacoTheme } from '../../hooks/useMonacoTheme';
 
 /**
@@ -545,10 +545,9 @@ function RevisionConfig({ revision, config, controls }: {
                     {controls}
                 </Group>
             </Group>
-            <Editor
+            <ConfigViewer
                 key={revision}
-                defaultConfig={configContent}
-                readOnly
+                config={configContent}
                 height="100%"
             />
         </Paper>
@@ -641,9 +640,8 @@ export function EffectiveConfigTab({ status }: { status: AgentStatus | null }) {
                 <Title order={4}>Effective Configuration</Title>
                 <Text size="sm" c="dimmed">{configName}</Text>
             </Group>
-            <Editor
-                defaultConfig={configContent}
-                readOnly
+            <ConfigViewer
+                config={configContent}
                 height="100%"
             />
         </Paper>

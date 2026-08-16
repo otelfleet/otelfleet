@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/tanstack-react';
-import { fn } from 'storybook/test';
 import { AgentState, ConfigSyncStatus } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
 import { AgentDetailView } from './agentDetail';
 import {
@@ -23,10 +22,6 @@ const meta = {
     component: AgentDetailView,
     parameters: {
         layout: 'fullscreen',
-    },
-    args: {
-        onAssign: fn(),
-        onUnassign: fn(),
     },
     // Give the flex/height:100% layout a bounded canvas, like the app shell.
     decorators: [

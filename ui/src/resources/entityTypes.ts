@@ -113,7 +113,7 @@ service:
       exporters: [debug]
 `;
 
-const collectorConfig: EntityType = {
+export const collectorConfig: EntityType = {
   slug: "collectorconfig",
   label: "Collector",
   description: "Collector configurations",

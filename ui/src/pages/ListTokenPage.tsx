@@ -8,8 +8,8 @@ import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { useClient } from '../api';
 import { TokenService, CreateTokenRequestSchema } from '../gen/api/pkg/api/bootstrap/v1alpha1/bootstrap_pb';
-import { ConfigService } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
-import type { ConfigReference } from '../gen/api/pkg/api/config/v1alpha1/config_pb';
+import { ResourceService } from '../gen/api/pkg/api/resources/v1alpha1/resources_pb';
+import { collectorConfig } from '../resources/entityTypes';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { BootstrapToken } from '../gen/api/pkg/api/bootstrap/v1alpha1/bootstrap_pb';
 import { create } from '@bufbuild/protobuf';
@@ -49,11 +49,11 @@ interface LabelEntry {
 
 export const TokenPage = () => {
   const tokenClient = useClient(TokenService)
-  const configClient = useClient(ConfigService)
+  const resourceClient = useClient(ResourceService)
   const navigate = useNavigate()
 
   const [tokensState, setTokensState] = useState<BootstrapToken[]>([])
-  const [configsState, setConfigsState] = useState<ConfigReference[]>([])
+  const [configsState, setConfigsState] = useState<string[]>([])
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false)
   const [createModalOpened, { open: openCreateModal, close: closeCreateModal }] = useDisclosure(false)
   const [tokenToDelete, setTokenToDelete] = useState<string | null>(null)
@@ -66,12 +66,12 @@ export const TokenPage = () => {
 
   const handleListConfigs = useCallback(async () => {
     try {
-      const response = await configClient.listConfigs({})
-      setConfigsState(response.configs)
+      const response = await resourceClient.listEntity({ typeUrl: collectorConfig.typeUrl })
+      setConfigsState(response.entities.map(e => e.key))
     } catch (error) {
       notifyGRPCError("Failed to list configs", error)
     }
-  }, [configClient])
+  }, [resourceClient])
 
   const handleListTokens = useCallback(async () => {
     try {
@@ -285,7 +285,7 @@ export const TokenPage = () => {
           <Select
             label="Associated Config"
             placeholder="Select a config (optional)"
-            data={configsState.map(c => ({ value: c.id, label: c.id }))}
+            data={configsState}
             value={selectedConfig}
             onChange={setSelectedConfig}
             clearable
