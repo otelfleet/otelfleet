@@ -1,18 +1,18 @@
 import { Badge, Tooltip } from '@mantine/core';
 import {
-    AgentState as AgentStateEnum,
+    CollectorState as CollectorStateEnum,
     ConfigSyncStatus as ConfigSyncStatusEnum,
-} from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+} from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import type {
-    AgentState,
+    CollectorState,
     ComponentHealth,
     ConfigSyncStatus,
-} from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+} from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 
-export function StatusBadge({ state }: { state: AgentState }) {
-    const enumStr = AgentStateEnum[state].replace(/AgentState$/i, "");
+export function StatusBadge({ state }: { state: CollectorState }) {
+    const enumStr = CollectorStateEnum[state].replace(/CollectorState$/i, "");
     const trimmed = typeof enumStr === 'string' && enumStr.toLowerCase().startsWith("agentstate")
-        ? enumStr.slice("AgentState".length)
+        ? enumStr.slice("CollectorState".length)
         : enumStr;
     const color = {
         0: 'gray',

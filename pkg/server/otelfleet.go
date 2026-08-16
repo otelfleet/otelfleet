@@ -25,8 +25,8 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/config"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
 	logutil "github.com/otelfleet/otelfleet/pkg/logutil"
-	"github.com/otelfleet/otelfleet/pkg/services/agent"
 	"github.com/otelfleet/otelfleet/pkg/services/authorization"
+	deployment_svc "github.com/otelfleet/otelfleet/pkg/services/deployment"
 	"github.com/otelfleet/otelfleet/pkg/services/lsp"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otlp"
@@ -64,13 +64,13 @@ type logger struct {
 
 // The various modules that make up OtelFleet
 const (
-	All           = "all"
-	Storage       = "storage"
-	Auth          = "authorization"
-	ServerService = "server"
-	OpAmp         = "opamp"
-	ConfigOTEL    = "config-otel"
-	AgentManager  = "agent-manager"
+	All               = "all"
+	Storage           = "storage"
+	Auth              = "authorization"
+	ServerService     = "server"
+	OpAmp             = "opamp"
+	ConfigOTEL        = "config-otel"
+	DeploymentManager = "deployment-manager"
 	// DeploymentModule = "deployment"
 	LSP = "lsp"
 	// UI serves the web UI. Attached to the all-in-one target only.
@@ -219,9 +219,9 @@ func (o *OtelFleet) setupModuleManager() error {
 		return srv, nil
 	})
 
-	mm.RegisterModule(AgentManager, func() (services.Service, error) {
-		srv := agent.NewAgentServer(
-			o.logger.With("service", AgentManager),
+	mm.RegisterModule(DeploymentManager, func() (services.Service, error) {
+		srv := deployment_svc.NewDeploymentServer(
+			o.logger.With("service", DeploymentManager),
 			o.deployMgr,
 		)
 		srv.ConfigureHTTP(o.server.HTTP)
@@ -294,14 +294,14 @@ func (o *OtelFleet) setupModuleManager() error {
 			Gateway, UI,
 		},
 		Gateway: {
-			Auth, OpAmp, AgentManager, OTLP, Resource, LSP,
+			Auth, OpAmp, DeploymentManager, OTLP, Resource, LSP,
 		},
 		ServerService: {},
 
-		Storage:      {ServerService},
-		AgentManager: {ServerService, Storage, OpAmp},
-		OpAmp:        {ServerService, Storage},
-		Auth:         {ServerService, Storage},
+		Storage:           {ServerService},
+		DeploymentManager: {ServerService, Storage, OpAmp},
+		OpAmp:             {ServerService, Storage},
+		Auth:              {ServerService, Storage},
 		// ConfigOTEL:   {ServerService, Storage},
 		Resource: {ServerService, Storage},
 		UI:       {ServerService},
@@ -332,7 +332,7 @@ func (o *OtelFleet) setupModuleManager() error {
 		}
 
 		fmt.Fprintln(os.Stdout)
-		fmt.Fprintln(os.Stdout, fmt.Sprintf("Modules marked with * are included in target %s.", curSvc))
+		fmt.Fprintf(os.Stdout, "Modules marked with * are included in target %s.\n", curSvc)
 	}
 	return nil
 }

@@ -1,0 +1,201 @@
+syntax = "proto3";
+package deployment.v1alpha1;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1";
+
+service CollectorService {
+  // TODO : these APIs need to be refined
+  rpc ListCollectors(ListCollectorsRequest) returns (ListCollectorsResponse);
+  rpc GetCollector(GetCollectorRequest) returns (GetCollectorResponse);
+  rpc CollectorHistory(GetCollectorHistoryRequest) returns (GetCollectorHistoryResponse);
+  rpc Status(GetCollectorStatusRequest) returns (GetCollectorStatusResponse);
+  rpc DeleteCollector(DeleteCollectorRequest) returns (google.protobuf.Empty);
+}
+
+message GetCollectorHistoryRequest {
+  string collector_id = 1;
+  uint64 offset = 2;
+  uint64 limit = 3;
+}
+
+message GetCollectorHistoryResponse {
+  repeated EffectiveConfig effective_config     = 1;
+}
+
+message ListCollectorsRequest {
+  bool with_status = 1;
+}
+
+message ListCollectorsResponse {
+  repeated CollectorDescriptionAndStatus collectors = 1;
+}
+
+message CollectorView {
+  CollectorRegistration registration = 1;
+  CollectorStatus       status       = 2;
+}
+
+// Deprecated: use CollectorView.
+message CollectorDescriptionAndStatus {
+  CollectorDescription collector = 1;
+  CollectorStatus      status    = 2;
+}
+
+message GetCollectorRequest {
+  string collector_id = 1;
+}
+
+message GetCollectorResponse {
+  CollectorDescription collector = 1;
+}
+
+message GetCollectorStatusRequest {
+  string collector_id = 1;
+}
+
+message GetCollectorStatusResponse {
+  CollectorStatus status = 1;
+}
+
+message DeleteCollectorRequest {
+  string collector_id = 1;
+}
+
+message CollectorStatus {
+  ComponentHealth    health               = 1;
+  EffectiveConfig    effective_config     = 2;
+  RemoteConfigStatus remote_config_status = 3;
+
+  ConnectionStatus conn_status = 4;
+  SyncStatus       sync_status = 5;
+}
+
+message CollectorRegistration {
+  string id            = 1;
+  string friendly_name = 2;
+
+  // Attributes that identify the collector (e.g., service.name, service.version, service.instance.id).
+  repeated KeyValue identifying_attributes = 3;
+
+  // Attributes that do not necessarily identify the collector but help describe where it runs.
+  repeated KeyValue non_identifying_attributes = 4;
+
+  repeated string capabilities = 5;
+}
+
+// Deprecated: use CollectorRegistration.
+message CollectorDescription {
+  string id            = 1;
+  string friendly_name = 2;
+
+  // Attributes that identify the collector (e.g., service.name, service.version, service.instance.id).
+  repeated KeyValue identifying_attributes = 3;
+
+  // Attributes that do not necessarily identify the collector but help describe where it runs
+  // (e.g., os.type, os.version, host.*, cloud.*).
+  repeated KeyValue non_identifying_attributes = 4;
+
+  repeated string capabilities = 5;
+}
+
+message KeyValue {
+  string   key   = 1;
+  AnyValue value = 2;
+}
+
+message AnyValue {
+  oneof value {
+    string       string_value = 1;
+    bool         bool_value   = 2;
+    int64        int_value    = 3;
+    double       double_value = 4;
+    bytes        bytes_value  = 5;
+    ArrayValue   array_value  = 6;
+    KeyValueList kvlist_value = 7;
+  }
+}
+
+message ArrayValue {
+  repeated AnyValue values = 1;
+}
+
+message KeyValueList {
+  repeated KeyValue values = 1;
+}
+
+enum CollectorState {
+  COLLECTOR_STATE_UNKNOWN      = 0;
+  COLLECTOR_STATE_CONNECTED    = 1;
+  COLLECTOR_STATE_DISCONNECTED = 2;
+}
+
+// Server-computed by comparing the assigned config hash with the collector-reported hash.
+enum ConfigSyncStatus {
+  CONFIG_SYNC_STATUS_UNKNOWN     = 0;
+  CONFIG_SYNC_STATUS_IN_SYNC     = 1;
+  CONFIG_SYNC_STATUS_OUT_OF_SYNC = 2;
+  CONFIG_SYNC_STATUS_APPLYING    = 3;
+  CONFIG_SYNC_STATUS_ERROR       = 4;
+}
+
+message CollectorConnectionState {
+  string collector_id = 1;
+  CollectorState state = 2;
+  google.protobuf.Timestamp last_seen = 3;
+  google.protobuf.Timestamp connected_at = 4;
+  google.protobuf.Timestamp disconnected_at = 5;
+  bytes instance_uid = 6;
+  uint64 capabilities = 7;
+  uint64 sequence_num = 8;
+}
+
+message ComponentHealth {
+  bool   healthy               = 1;
+  uint64 start_time_unix_nano  = 2;
+  string last_error            = 3;
+  string status                = 4;
+  uint64 status_time_unix_nano = 5;
+  map<string, ComponentHealth> component_health_map = 6;
+}
+
+message EffectiveConfig {
+  CollectorConfigMap config_map = 1;
+}
+
+message CollectorConfigMap {
+  map<string, CollectorConfigFile> config_map = 1;
+}
+
+message CollectorConfigFile {
+  bytes  body         = 1;
+  string content_type = 2;
+}
+
+message RemoteConfigStatus {
+  bytes                last_remote_config_hash = 1;
+  RemoteConfigStatuses status                  = 2;
+  string               error_message           = 3;
+}
+
+enum RemoteConfigStatuses {
+  REMOTE_CONFIG_STATUSES_UNSET    = 0;
+  REMOTE_CONFIG_STATUSES_APPLIED  = 1;
+  REMOTE_CONFIG_STATUSES_APPLYING = 2;
+  REMOTE_CONFIG_STATUSES_FAILED   = 3;
+}
+
+message ConnectionStatus {
+  CollectorState state = 1;
+  google.protobuf.Timestamp last_seen = 2;
+  google.protobuf.Timestamp connected_at = 3;
+  google.protobuf.Timestamp disconnected_at = 4;
+  uint64 sequence = 5;
+}
+
+message SyncStatus {
+  ConfigSyncStatus status = 1;
+  string config_sync_reason = 2;
+}

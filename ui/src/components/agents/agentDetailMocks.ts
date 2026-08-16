@@ -2,24 +2,24 @@
 // protobuf schemas via `create(...)` so the shapes match production messages.
 import { create } from '@bufbuild/protobuf';
 import {
-    AgentDescriptionSchema,
-    AgentStatusSchema,
-    AgentState,
+    CollectorDescriptionSchema,
+    CollectorStatusSchema,
+    CollectorState,
     ConfigSyncStatus,
     EffectiveConfigSchema,
-} from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+} from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import type {
-    AgentDescription,
-    AgentStatus,
+    CollectorDescription,
+    CollectorStatus,
     ComponentHealth,
     EffectiveConfig,
-} from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+} from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 
 // Fixed timestamps so stories render deterministically (no wall-clock).
 const START_TIME_NANOS = 1_704_067_200_000_000_000n;
 const STATUS_TIME_NANOS = 1_704_070_800_000_000_000n; // +1h
 
-/** A string-valued KeyValue init, as accepted by `create(AgentDescriptionSchema, ...)`. */
+/** A string-valued KeyValue init, as accepted by `create(CollectorDescriptionSchema, ...)`. */
 const strAttr = (key: string, value: string) => ({
     key,
     value: { value: { case: 'stringValue' as const, value } },
@@ -31,8 +31,8 @@ export function mockAgent(overrides?: {
     identifying?: Array<[string, string]>;
     nonIdentifying?: Array<[string, string]>;
     capabilities?: string[];
-}): AgentDescription {
-    return create(AgentDescriptionSchema, {
+}): CollectorDescription {
+    return create(CollectorDescriptionSchema, {
         id: overrides?.id ?? 'agent-web-01',
         friendlyName: overrides?.friendlyName ?? 'web-collector-01',
         identifyingAttributes: (overrides?.identifying ?? [
@@ -55,7 +55,7 @@ export function mockAgent(overrides?: {
 }
 
 export function mockStatus(overrides?: {
-    state?: AgentState;
+    state?: CollectorState;
     healthy?: boolean;
     hasHealth?: boolean;
     lastError?: string;
@@ -63,11 +63,11 @@ export function mockStatus(overrides?: {
     configSyncStatus?: ConfigSyncStatus;
     componentHealthMap?: { [key: string]: ComponentHealth };
     effectiveConfigYaml?: string;
-}): AgentStatus {
+}): CollectorStatus {
     const hasHealth = overrides?.hasHealth ?? true;
-    return create(AgentStatusSchema, {
+    return create(CollectorStatusSchema, {
         connStatus: {
-            state: overrides?.state ?? AgentState.CONNECTED,
+            state: overrides?.state ?? CollectorState.CONNECTED,
         },
         syncStatus: {
             status: overrides?.configSyncStatus ?? ConfigSyncStatus.IN_SYNC,
@@ -99,7 +99,7 @@ export function mockStatus(overrides?: {
 
 /** A nested component-health tree exercising the recursive component rows. */
 export const NESTED_COMPONENT_HEALTH: { [key: string]: ComponentHealth } = create(
-    AgentStatusSchema,
+    CollectorStatusSchema,
     {
         health: {
             componentHealthMap: {

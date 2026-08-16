@@ -3,7 +3,7 @@ package handler
 import (
 	"testing"
 
-	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 	"github.com/stretchr/testify/require"
 )
 

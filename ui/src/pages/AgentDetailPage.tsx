@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useClient } from '../api';
 import { notifyGRPCError } from '../api/notifications';
-import { AgentService } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+import { CollectorService } from '../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import type {
-    AgentDescription,
-    AgentStatus,
+    CollectorDescription,
+    CollectorStatus,
     EffectiveConfig,
-} from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+} from '../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import { Loader, Center, Alert } from '@mantine/core';
 import { AlertCircle } from 'react-feather';
 import { AgentDetailView, isAgentTab, type AgentTab } from '../components/agents/agentDetail';
@@ -25,9 +25,9 @@ export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
         navigate({ to: '.', hash: next, replace: true });
     }, [navigate]);
 
-    const agentClient = useClient(AgentService);
-    const [agent, setAgent] = useState<AgentDescription | null>(null);
-    const [status, setStatus] = useState<AgentStatus | null>(null);
+    const agentClient = useClient(CollectorService);
+    const [agent, setAgent] = useState<CollectorDescription | null>(null);
+    const [status, setStatus] = useState<CollectorStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [history, setHistory] = useState<EffectiveConfig[]>([]);
@@ -36,7 +36,7 @@ export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
     const fetchHistory = useCallback(async () => {
         setHistoryLoading(true);
         try {
-            const response = await agentClient.agentHistory({ agentId, offset: 0n, limit: 50n });
+            const response = await agentClient.collectorHistory({ collectorId: agentId, offset: 0n, limit: 50n });
             setHistory(response.effectiveConfig);
         } catch (err) {
             notifyGRPCError('Failed to load agent history', err);
@@ -52,10 +52,10 @@ export function AgentDetailPage({ agentId }: AgentDetailPageProps) {
             setError(null);
             try {
                 const [agentResponse, statusResponse] = await Promise.all([
-                    agentClient.getAgent({ agentId }),
-                    agentClient.status({ agentId }),
+                    agentClient.getCollector({ collectorId: agentId }),
+                    agentClient.status({ collectorId: agentId }),
                 ]);
-                setAgent(agentResponse.agent ?? null);
+                setAgent(agentResponse.collector ?? null);
                 setStatus(statusResponse.status ?? null);
             } catch (err) {
                 notifyGRPCError('Failed to fetch agent details', err);

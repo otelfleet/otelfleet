@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { create } from '@bufbuild/protobuf';
 import {
-    AgentDescriptionAndStatusSchema,
-    AgentState,
+    CollectorDescriptionAndStatusSchema,
+    CollectorState,
     ConfigSyncStatus,
-} from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import type { AgentDescriptionAndStatus } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+} from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
+import type { CollectorDescriptionAndStatus } from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import { Table } from '../Table';
 import { buildAgentColumns } from './agentColumns';
 
@@ -41,14 +41,14 @@ type Story = StoryObj<typeof meta>;
 function mockAgent(init: {
     id: string;
     name: string;
-    state: AgentState;
+    state: CollectorState;
     healthy?: boolean;
     lastError?: string;
     syncStatus: ConfigSyncStatus;
     syncReason?: string;
-}): AgentDescriptionAndStatus {
-    return create(AgentDescriptionAndStatusSchema, {
-        agent: {
+}): CollectorDescriptionAndStatus {
+    return create(CollectorDescriptionAndStatusSchema, {
+        collector: {
             id: init.id,
             friendlyName: init.name,
         },
@@ -66,18 +66,18 @@ function mockAgent(init: {
     });
 }
 
-const AGENTS: AgentDescriptionAndStatus[] = [
+const AGENTS: CollectorDescriptionAndStatus[] = [
     mockAgent({
         id: 'agent-web-01',
         name: 'web-collector-01',
-        state: AgentState.CONNECTED,
+        state: CollectorState.CONNECTED,
         healthy: true,
         syncStatus: ConfigSyncStatus.IN_SYNC,
     }),
     mockAgent({
         id: 'agent-edge-eu',
         name: 'edge-collector-eu',
-        state: AgentState.CONNECTED,
+        state: CollectorState.CONNECTED,
         healthy: false,
         lastError: 'exporter "otlphttp": connection refused to https://otel.example.com:4318',
         syncStatus: ConfigSyncStatus.ERROR,
@@ -86,7 +86,7 @@ const AGENTS: AgentDescriptionAndStatus[] = [
     mockAgent({
         id: 'agent-batch-03',
         name: 'batch-collector-03',
-        state: AgentState.CONNECTED,
+        state: CollectorState.CONNECTED,
         healthy: true,
         syncStatus: ConfigSyncStatus.OUT_OF_SYNC,
         syncReason: 'Assigned config newer than reported hash',
@@ -94,14 +94,14 @@ const AGENTS: AgentDescriptionAndStatus[] = [
     mockAgent({
         id: 'agent-apply-04',
         name: 'ingest-collector-04',
-        state: AgentState.CONNECTED,
+        state: CollectorState.CONNECTED,
         healthy: true,
         syncStatus: ConfigSyncStatus.APPLYING,
     }),
     mockAgent({
         id: 'agent-legacy-09',
         name: 'legacy-agent-09',
-        state: AgentState.DISCONNECTED,
+        state: CollectorState.DISCONNECTED,
         // no health -> "Unknown"
         syncStatus: ConfigSyncStatus.UNKNOWN,
     }),
@@ -110,7 +110,7 @@ const AGENTS: AgentDescriptionAndStatus[] = [
 // --- Interactive wrapper ---------------------------------------------------
 
 interface AgentsTableDemoProps {
-    data: AgentDescriptionAndStatus[];
+    data: CollectorDescriptionAndStatus[];
     selectable: boolean;
     onDelete: (agentId: string, agentName: string) => void;
 }
@@ -120,11 +120,11 @@ function AgentsTableDemo({ data, selectable, onDelete }: AgentsTableDemoProps) {
     const columns = buildAgentColumns({ onDelete });
 
     return (
-        <Table<AgentDescriptionAndStatus>
+        <Table<CollectorDescriptionAndStatus>
             title="OpenTelemetry Collector agents"
             data={data}
             columns={columns}
-            rowKey={(row) => row.agent?.id ?? ''}
+            rowKey={(row) => row.collector?.id ?? ''}
             selectable={selectable}
             selectedKeys={selectedKeys}
             onSelectionChange={setSelectedKeys}

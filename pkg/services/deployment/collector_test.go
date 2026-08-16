@@ -1,4 +1,4 @@
-package agent_test
+package deployment_test
 
 import (
 	"context"
@@ -6,25 +6,25 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/open-telemetry/opamp-go/protobufs"
-	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func TestAgentServer_Status_ReturnsStoredData(t *testing.T) {
+func TestCollectorServer_Status_ReturnsStoredData(t *testing.T) {
 	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
-	agentID := "test-agent-123"
+	collectorID := "test-collector-123"
 
-	// Register the agent first (required by repository)
-	require.NoError(t, env.AgentRepo.Register(ctx, agentID, "Test Agent"))
+	// Register the collector first (required by repository)
+	require.NoError(t, env.CollectorRepo.Register(ctx, collectorID, "Test Collector"))
 
 	// Set up agent connection state in store
-	require.NoError(t, env.ConnectionStateStore.Put(ctx, agentID, &v1alpha1.AgentConnectionState{
-		AgentId:     agentID,
-		State:       v1alpha1.AgentState_AGENT_STATE_CONNECTED,
+	require.NoError(t, env.ConnectionStateStore.Put(ctx, collectorID, &v1alpha1.CollectorConnectionState{
+		CollectorId:     collectorID,
+		State:       v1alpha1.CollectorState_COLLECTOR_STATE_CONNECTED,
 		ConnectedAt: timestamppb.Now(),
 		LastSeen:    timestamppb.Now(),
 	}))
@@ -41,7 +41,7 @@ func TestAgentServer_Status_ReturnsStoredData(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, env.HealthStore.Put(ctx, agentID, health))
+	require.NoError(t, env.HealthStore.Put(ctx, collectorID, health))
 
 	// Store effective config
 	config := &protobufs.EffectiveConfig{
@@ -54,24 +54,24 @@ func TestAgentServer_Status_ReturnsStoredData(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, env.EffectiveConfigStore.Put(ctx, agentID, config))
+	require.NoError(t, env.EffectiveConfigStore.Put(ctx, collectorID, config))
 
 	// Store remote config status
 	remoteStatus := &protobufs.RemoteConfigStatus{
 		LastRemoteConfigHash: []byte("hash-abc"),
 		Status:               protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
 	}
-	require.NoError(t, env.RemoteStatusStore.Put(ctx, agentID, remoteStatus))
+	require.NoError(t, env.RemoteStatusStore.Put(ctx, collectorID, remoteStatus))
 
 	// Call Status RPC
-	req := connect.NewRequest(&v1alpha1.GetAgentStatusRequest{
-		AgentId: agentID,
+	req := connect.NewRequest(&v1alpha1.GetCollectorStatusRequest{
+		CollectorId: collectorID,
 	})
-	resp, err := env.AgentServer.Status(ctx, req)
+	resp, err := env.CollectorServer.Status(ctx, req)
 	require.NoError(t, err)
 
 	// Verify response
-	assert.Equal(t, v1alpha1.AgentState_AGENT_STATE_CONNECTED, resp.Msg.Status.State)
+	assert.Equal(t, v1alpha1.CollectorState_COLLECTOR_STATE_CONNECTED, resp.Msg.Status.State)
 
 	// Check health
 	require.NotNil(t, resp.Msg.Status.Health)
@@ -91,40 +91,40 @@ func TestAgentServer_Status_ReturnsStoredData(t *testing.T) {
 	assert.Equal(t, v1alpha1.RemoteConfigStatuses_REMOTE_CONFIG_STATUSES_APPLIED, resp.Msg.Status.RemoteConfigStatus.Status)
 }
 
-func TestAgentServer_Status_UnknownAgent(t *testing.T) {
+func TestCollectorServer_Status_UnknownAgent(t *testing.T) {
 	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
-	agentID := "non-existent-agent"
+	collectorID := "non-existent-collector"
 
-	// Register the agent but don't add any status data
-	require.NoError(t, env.AgentRepo.Register(ctx, agentID, "Unknown Agent"))
+	// Register the collector but don't add any status data
+	require.NoError(t, env.CollectorRepo.Register(ctx, collectorID, "Unknown Collector"))
 
-	req := connect.NewRequest(&v1alpha1.GetAgentStatusRequest{
-		AgentId: agentID,
+	req := connect.NewRequest(&v1alpha1.GetCollectorStatusRequest{
+		CollectorId: collectorID,
 	})
-	resp, err := env.AgentServer.Status(ctx, req)
+	resp, err := env.CollectorServer.Status(ctx, req)
 	require.NoError(t, err)
 
 	// Should return unknown state when agent has no connection state
-	assert.Equal(t, v1alpha1.AgentState_AGENT_STATE_UNKNOWN, resp.Msg.Status.State)
+	assert.Equal(t, v1alpha1.CollectorState_COLLECTOR_STATE_UNKNOWN, resp.Msg.Status.State)
 	// Other fields should be nil since no data stored
 	assert.Nil(t, resp.Msg.Status.Health)
 	assert.Nil(t, resp.Msg.Status.EffectiveConfig)
 	assert.Nil(t, resp.Msg.Status.RemoteConfigStatus)
 }
 
-func TestAgentServer_Status_PartialData(t *testing.T) {
+func TestCollectorServer_Status_PartialData(t *testing.T) {
 	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
-	agentID := "partial-agent"
+	collectorID := "partial-collector"
 
-	// Register the agent first (required by repository)
-	require.NoError(t, env.AgentRepo.Register(ctx, agentID, "Partial Agent"))
+	// Register the collector first (required by repository)
+	require.NoError(t, env.CollectorRepo.Register(ctx, collectorID, "Partial Collector"))
 
 	// Only set up connection state and health
-	require.NoError(t, env.ConnectionStateStore.Put(ctx, agentID, &v1alpha1.AgentConnectionState{
-		AgentId:     agentID,
-		State:       v1alpha1.AgentState_AGENT_STATE_CONNECTED,
+	require.NoError(t, env.ConnectionStateStore.Put(ctx, collectorID, &v1alpha1.CollectorConnectionState{
+		CollectorId:     collectorID,
+		State:       v1alpha1.CollectorState_COLLECTOR_STATE_CONNECTED,
 		ConnectedAt: timestamppb.Now(),
 		LastSeen:    timestamppb.Now(),
 	}))
@@ -133,15 +133,15 @@ func TestAgentServer_Status_PartialData(t *testing.T) {
 		Healthy: true,
 		Status:  "ok",
 	}
-	require.NoError(t, env.HealthStore.Put(ctx, agentID, health))
+	require.NoError(t, env.HealthStore.Put(ctx, collectorID, health))
 
-	req := connect.NewRequest(&v1alpha1.GetAgentStatusRequest{
-		AgentId: agentID,
+	req := connect.NewRequest(&v1alpha1.GetCollectorStatusRequest{
+		CollectorId: collectorID,
 	})
-	resp, err := env.AgentServer.Status(ctx, req)
+	resp, err := env.CollectorServer.Status(ctx, req)
 	require.NoError(t, err)
 
-	assert.Equal(t, v1alpha1.AgentState_AGENT_STATE_CONNECTED, resp.Msg.Status.State)
+	assert.Equal(t, v1alpha1.CollectorState_COLLECTOR_STATE_CONNECTED, resp.Msg.Status.State)
 	require.NotNil(t, resp.Msg.Status.Health)
 	assert.True(t, resp.Msg.Status.Health.Healthy)
 	// These should be nil since not stored
@@ -149,36 +149,36 @@ func TestAgentServer_Status_PartialData(t *testing.T) {
 	assert.Nil(t, resp.Msg.Status.RemoteConfigStatus)
 }
 
-func TestAgentServer_GetAgent_Found(t *testing.T) {
+func TestCollectorServer_GetCollector_Found(t *testing.T) {
 	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
-	agentID := "test-agent-get"
+	collectorID := "test-collector-get"
 
 	// Store agent description
-	desc := &v1alpha1.AgentDescription{
-		Id:           agentID,
-		FriendlyName: "Test Agent",
+	desc := &v1alpha1.CollectorDescription{
+		Id:           collectorID,
+		FriendlyName: "Test Collector",
 	}
-	require.NoError(t, env.AgentStore.Put(ctx, agentID, desc))
+	require.NoError(t, env.CollectorStore.Put(ctx, collectorID, desc))
 
-	req := connect.NewRequest(&v1alpha1.GetAgentRequest{
-		AgentId: agentID,
+	req := connect.NewRequest(&v1alpha1.GetCollectorRequest{
+		CollectorId: collectorID,
 	})
-	resp, err := env.AgentServer.GetAgent(ctx, req)
+	resp, err := env.CollectorServer.GetCollector(ctx, req)
 	require.NoError(t, err)
 
-	assert.Equal(t, agentID, resp.Msg.Agent.Id)
-	assert.Equal(t, "Test Agent", resp.Msg.Agent.FriendlyName)
+	assert.Equal(t, collectorID, resp.Msg.Collector.Id)
+	assert.Equal(t, "Test Collector", resp.Msg.Collector.FriendlyName)
 }
 
-func TestAgentServer_GetAgent_NotFound(t *testing.T) {
+func TestCollectorServer_GetCollector_NotFound(t *testing.T) {
 	env := testutil.NewTestEnv(t)
 	ctx := context.Background()
 
-	req := connect.NewRequest(&v1alpha1.GetAgentRequest{
-		AgentId: "non-existent",
+	req := connect.NewRequest(&v1alpha1.GetCollectorRequest{
+		CollectorId: "non-existent",
 	})
-	_, err := env.AgentServer.GetAgent(ctx, req)
+	_, err := env.CollectorServer.GetCollector(ctx, req)
 	require.Error(t, err)
 
 	// Should be a NotFound error

@@ -1,5 +1,5 @@
-import { AgentService } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import type { AgentDescriptionAndStatus } from '../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+import { CollectorService } from '../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
+import type { CollectorDescriptionAndStatus } from '../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import { useClient } from '../api';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { notifyGRPCError } from '../api/notifications';
@@ -11,19 +11,19 @@ import { Table } from '../components/Table'
 import { buildAgentColumns } from '../components/agents/agentColumns'
 
 export const AgentPage = () => {
-    const agentClient = useClient(AgentService);
+    const agentClient = useClient(CollectorService);
 
-    const [agentsState, setAgentsState] = useState<AgentDescriptionAndStatus[]>([]);
+    const [agentsState, setAgentsState] = useState<CollectorDescriptionAndStatus[]>([]);
     const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
     const [agentToDelete, setAgentToDelete] = useState<{ id: string; name: string } | null>(null);
     const [deleting, setDeleting] = useState(false);
 
     const handleListAgents = useCallback(async () => {
         try {
-            const response = await agentClient.listAgents({
+            const response = await agentClient.listCollectors({
                 withStatus: true,
             });
-            setAgentsState(response.agents);
+            setAgentsState(response.collectors);
         } catch (error) {
             notifyGRPCError("Failed to list agents", error);
         }
@@ -33,7 +33,7 @@ export const AgentPage = () => {
         if (!agentToDelete) return;
         setDeleting(true);
         try {
-            await agentClient.deleteAgent({ agentId: agentToDelete.id });
+            await agentClient.deleteCollector({ collectorId: agentToDelete.id });
             notifications.show({
                 title: 'Agent Deleted',
                 message: `Agent "${agentToDelete.name}" has been deleted`,
@@ -66,11 +66,11 @@ export const AgentPage = () => {
 
     return (
         <>
-            <Table<AgentDescriptionAndStatus>
+            <Table<CollectorDescriptionAndStatus>
                 title="OpenTelemetry Collector agents"
                 data={agentsState}
                 columns={agentColumns}
-                rowKey={(row) => row.agent?.id ?? ''}
+                rowKey={(row) => row.collector?.id ?? ''}
                 expandedContent={(row) => {
                     const error = row.status?.health?.lastError;
                     if (!error) return null;

@@ -5,7 +5,7 @@ import (
 	"path"
 
 	"github.com/open-telemetry/opamp-go/protobufs"
-	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 )
@@ -22,8 +22,8 @@ type Manager interface {
 }
 
 type Instance interface {
-	GetDescription(ctx context.Context) (*v1alpha1.AgentDescription, error)
-	Status(ctx context.Context) (*v1alpha1.AgentStatus, error)
+	GetDescription(ctx context.Context) (*v1alpha1.CollectorDescription, error)
+	Status(ctx context.Context) (*v1alpha1.CollectorStatus, error)
 	History(ctx context.Context, offset, limit uint64) ([]*v1alpha1.EffectiveConfig, error)
 	GetConnectionState(ctx context.Context) (*v1alpha1.ConnectionStatus, error)
 	GetRemoteStatus(ctx context.Context) (*protobufs.RemoteConfigStatus, error)
@@ -56,14 +56,14 @@ func (m *manager) Instance(deployID string) Instance {
 }
 
 func (m *manager) Get(ctx context.Context, deployID string) (Instance, error) {
-	if _, err := getProto[*v1alpha1.AgentDescription](ctx, m.genericStorage, deployID); err != nil {
+	if _, err := getProto[*v1alpha1.CollectorDescription](ctx, m.genericStorage, deployID); err != nil {
 		return nil, err
 	}
 	return m.Instance(deployID), nil
 }
 
 func (m *manager) Exists(ctx context.Context, deployID string) (bool, error) {
-	_, err := getProto[*v1alpha1.AgentDescription](ctx, m.genericStorage, deployID)
+	_, err := getProto[*v1alpha1.CollectorDescription](ctx, m.genericStorage, deployID)
 	if grpcutil.IsErrorNotFound(err) {
 		return false, nil
 	}
@@ -74,14 +74,14 @@ func (m *manager) Exists(ctx context.Context, deployID string) (bool, error) {
 }
 
 func (m *manager) Register(ctx context.Context, deployID string, friendlyID string) error {
-	return putProto(ctx, m.genericStorage, deployID, &v1alpha1.AgentDescription{
+	return putProto(ctx, m.genericStorage, deployID, &v1alpha1.CollectorDescription{
 		Id:           deployID,
 		FriendlyName: friendlyID,
 	})
 }
 
 func (m *manager) List(ctx context.Context) ([]Instance, error) {
-	keys, err := m.genericStorage.ListKeys(ctx, typeURL[*v1alpha1.AgentDescription]())
+	keys, err := m.genericStorage.ListKeys(ctx, typeURL[*v1alpha1.CollectorDescription]())
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (m *manager) Delete(ctx context.Context, deployID string) error {
 		typeURL[*protobufs.ComponentHealth](),
 		typeURL[*protobufs.EffectiveConfig](),
 		typeURL[*protobufs.RemoteConfigStatus](),
-		typeURL[*v1alpha1.AgentDescription](),
+		typeURL[*v1alpha1.CollectorDescription](),
 	}
 	for _, url := range typeURLs {
 		if err := m.genericStorage.Delete(ctx, url, deployID); err != nil {
@@ -114,8 +114,8 @@ type instance struct {
 	genericStorage schema.SchemaProto
 }
 
-func (i *instance) GetDescription(ctx context.Context) (*v1alpha1.AgentDescription, error) {
-	desc, err := getProto[*v1alpha1.AgentDescription](ctx, i.genericStorage, i.deployID)
+func (i *instance) GetDescription(ctx context.Context) (*v1alpha1.CollectorDescription, error) {
+	desc, err := getProto[*v1alpha1.CollectorDescription](ctx, i.genericStorage, i.deployID)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (i *instance) GetDescription(ctx context.Context) (*v1alpha1.AgentDescripti
 	return desc, nil
 }
 
-func (i *instance) Status(ctx context.Context) (*v1alpha1.AgentStatus, error) {
+func (i *instance) Status(ctx context.Context) (*v1alpha1.CollectorStatus, error) {
 	health, err := getProtoOrNil[*protobufs.ComponentHealth](ctx, i.genericStorage, i.deployID)
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func (i *instance) Status(ctx context.Context) (*v1alpha1.AgentStatus, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &v1alpha1.AgentStatus{
+	return &v1alpha1.CollectorStatus{
 		Health:             convertHealth(health),
 		EffectiveConfig:    convertEffectiveConfig(effective),
 		RemoteConfigStatus: convertRemoteStatus(remote),

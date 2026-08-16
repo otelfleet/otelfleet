@@ -7,7 +7,7 @@ import (
 	"github.com/cockroachdb/pebble/v2"
 	"github.com/cockroachdb/pebble/v2/vfs"
 	"github.com/open-telemetry/opamp-go/protobufs"
-	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
@@ -88,7 +88,7 @@ func TestInstanceStatusAggregates(t *testing.T) {
 		Status: protobufs.RemoteConfigStatuses_RemoteConfigStatuses_APPLIED,
 	}))
 	require.NoError(t, inst.SetConnectionState(ctx, &v1alpha1.ConnectionStatus{
-		State: v1alpha1.AgentState_AGENT_STATE_CONNECTED,
+		State: v1alpha1.CollectorState_COLLECTOR_STATE_CONNECTED,
 	}))
 	require.NoError(t, inst.SetEffectiveConfig(ctx, &protobufs.EffectiveConfig{
 		ConfigMap: &protobufs.AgentConfigMap{
@@ -102,7 +102,7 @@ func TestInstanceStatusAggregates(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, status.GetHealth().GetHealthy())
 	assert.Equal(t, v1alpha1.RemoteConfigStatuses_REMOTE_CONFIG_STATUSES_APPLIED, status.GetRemoteConfigStatus().GetStatus())
-	assert.Equal(t, v1alpha1.AgentState_AGENT_STATE_CONNECTED, status.GetConnStatus().GetState())
+	assert.Equal(t, v1alpha1.CollectorState_COLLECTOR_STATE_CONNECTED, status.GetConnStatus().GetState())
 	assert.Equal(t, []byte("first"),
 		status.GetEffectiveConfig().GetConfigMap().GetConfigMap()["config.yaml"].GetBody())
 }

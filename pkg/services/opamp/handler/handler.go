@@ -13,7 +13,7 @@ import (
 
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/open-telemetry/opamp-go/server/types"
-	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 	resourcesv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
@@ -255,7 +255,7 @@ func (s *CollectorHandler) bootstrap(
 		s.instanceUID = &instanceUID
 		s.inst = s.mgr.Instance(agentID)
 		if err := s.inst.SetConnectionState(ctx, &v1alpha1.ConnectionStatus{
-			State:          v1alpha1.AgentState_AGENT_STATE_CONNECTED,
+			State:          v1alpha1.CollectorState_COLLECTOR_STATE_CONNECTED,
 			LastSeen:       timestamppb.New(now),
 			ConnectedAt:    timestamppb.New(now),
 			DisconnectedAt: nil,
@@ -295,7 +295,7 @@ func (s *CollectorHandler) OnConnectionClose(conn types.Connection) {
 		return
 	}
 	now := time.Now()
-	existingState.State = v1alpha1.AgentState_AGENT_STATE_DISCONNECTED
+	existingState.State = v1alpha1.CollectorState_COLLECTOR_STATE_DISCONNECTED
 	existingState.DisconnectedAt = timestamppb.New(now)
 	if err := s.inst.SetConnectionState(ctx, existingState); err != nil {
 		logger.With("err", err).Error("failed to persist disconnected state")
@@ -333,7 +333,7 @@ func (s *CollectorHandler) updateConnectionState(ctx context.Context, msg *proto
 		s.inst.SetConnectionState(
 			ctx,
 			&v1alpha1.ConnectionStatus{
-				State:       v1alpha1.AgentState_AGENT_STATE_CONNECTED,
+				State:       v1alpha1.CollectorState_COLLECTOR_STATE_CONNECTED,
 				LastSeen:    timestamppb.New(now),
 				ConnectedAt: timestamppb.New(now),
 				Sequence:    msg.SequenceNum,
@@ -353,7 +353,7 @@ func (s *CollectorHandler) updateConnectionState(ctx context.Context, msg *proto
 
 	// Always update LastSeen on every message
 	existingState.LastSeen = timestamppb.New(now)
-	existingState.State = v1alpha1.AgentState_AGENT_STATE_CONNECTED
+	existingState.State = v1alpha1.CollectorState_COLLECTOR_STATE_CONNECTED
 	existingState.Sequence = msg.SequenceNum
 
 	if err := s.inst.SetConnectionState(ctx, existingState); err != nil {
@@ -381,7 +381,7 @@ func (s *CollectorHandler) checkForConfigUpdate(ctx context.Context, agentID str
 		return nil
 	}
 
-	resolved, err := s.constructConfig(ctx, agentID)
+	resolved, err := s.constructConfig(ctx)
 	if err != nil {
 		logger.With("err", err).Error("failed to construct config")
 		return nil
@@ -466,7 +466,7 @@ type resolvedConfig struct {
 	configRef string
 }
 
-func (s *CollectorHandler) filteredConfig(ctx context.Context, agentID string) (string, error) {
+func (s *CollectorHandler) filteredConfig(ctx context.Context) (string, error) {
 	logger := logutil.FromContext(ctx)
 	labels, err := s.agentLabels(ctx)
 	if err != nil {
@@ -477,15 +477,28 @@ func (s *CollectorHandler) filteredConfig(ctx context.Context, agentID string) (
 	filter := s.configFilterSync.Match(labels)
 	configRef := filter.GetCollectorConfig().GetConfigRef()
 	if configRef == "" {
-		panic("bug: invalid config ref")
+		return "", status.Error(codes.NotFound, "no matching config filter")
 	}
 	return configRef, nil
 }
 
-func (s *CollectorHandler) constructConfig(ctx context.Context, agentID string) (*resolvedConfig, error) {
+func (s *CollectorHandler) constructConfig(ctx context.Context) (*resolvedConfig, error) {
 	logger := logutil.FromContext(ctx)
-	configRef, err := s.filteredConfig(ctx, agentID)
-	if err != nil {
+	configRef, err := s.filteredConfig(ctx)
+	if grpcutil.IsError(codes.NotFound, err) {
+		logger.Info("agent has no assigned config from control plane")
+		return &resolvedConfig{
+			configMap: &protobufs.AgentConfigMap{
+				ConfigMap: map[string]*protobufs.AgentConfigFile{
+					"config.yaml": {
+						ContentType: "text/yaml",
+						Body:        []byte(otelconfig.DefaultOtelConfig),
+					},
+				},
+			},
+			configRef: configRef,
+		}, nil
+	} else if err != nil {
 		return nil, fmt.Errorf("error when getting filtered config : %w", err)
 	}
 

@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import {
-    AgentState as AgentStateEnum,
+    CollectorState as CollectorStateEnum,
     ConfigSyncStatus as ConfigSyncStatusEnum,
-} from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+} from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import type {
-    AgentDescription,
-    AgentStatus,
+    CollectorDescription,
+    CollectorStatus,
     ComponentHealth,
     KeyValue,
     AnyValue,
     EffectiveConfig,
-} from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+} from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import {
     Paper,
     Title,
@@ -54,8 +54,8 @@ export function AgentDetailView({
     tab,
     onTabChange,
 }: {
-    agent: AgentDescription | null;
-    status: AgentStatus | null;
+    agent: CollectorDescription | null;
+    status: CollectorStatus | null;
     history?: EffectiveConfig[];
     historyLoading?: boolean;
     tab?: AgentTab;
@@ -96,14 +96,14 @@ export function AgentDetailView({
     );
 }
 
-export function AgentHeader({ agent, status }: { agent: AgentDescription | null; status: AgentStatus | null }) {
+export function AgentHeader({ agent, status }: { agent: CollectorDescription | null; status: CollectorStatus | null }) {
     const stateColor = {
         0: 'gray',
         1: 'green',
         2: 'red',
     }[status?.connStatus?.state ?? 0] ?? 'gray';
 
-    const stateLabel = AgentStateEnum[status?.connStatus?.state ?? 0]?.replace(/^AGENT_STATE_/, '') ?? 'UNKNOWN';
+    const stateLabel = CollectorStateEnum[status?.connStatus?.state ?? 0]?.replace(/^AGENT_STATE_/, '') ?? 'UNKNOWN';
 
     const configSyncStatusMap: Record<number, { color: string; label: string }> = {
         [ConfigSyncStatusEnum.UNKNOWN]: { color: 'gray', label: 'Unknown' },
@@ -195,7 +195,7 @@ function HealthOverview({ health }: { health: ComponentHealth }) {
     );
 }
 
-export function DetailsTab({ agent }: { agent: AgentDescription | null }) {
+export function DetailsTab({ agent }: { agent: CollectorDescription | null }) {
     if (!agent) {
         return (
             <Alert color="gray" title="No Agent Data">
@@ -617,7 +617,7 @@ function RevisionDiff({ history, target, base, onBaseChange, revisionOf, control
     );
 }
 
-export function EffectiveConfigTab({ status }: { status: AgentStatus | null }) {
+export function EffectiveConfigTab({ status }: { status: CollectorStatus | null }) {
     const configMap = status?.effectiveConfig?.configMap?.configMap;
 
     if (!configMap || Object.keys(configMap).length === 0) {

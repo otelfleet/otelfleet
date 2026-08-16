@@ -2,7 +2,7 @@ package deployment
 
 import (
 	"github.com/open-telemetry/opamp-go/protobufs"
-	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 )
 
 func convertHealth(h *protobufs.ComponentHealth) *v1alpha1.ComponentHealth {
@@ -31,12 +31,12 @@ func convertEffectiveConfig(c *protobufs.EffectiveConfig) *v1alpha1.EffectiveCon
 	}
 	files := c.GetConfigMap().GetConfigMap()
 	out := &v1alpha1.EffectiveConfig{
-		ConfigMap: &v1alpha1.AgentConfigMap{
-			ConfigMap: make(map[string]*v1alpha1.AgentConfigFile, len(files)),
+		ConfigMap: &v1alpha1.CollectorConfigMap{
+			ConfigMap: make(map[string]*v1alpha1.CollectorConfigFile, len(files)),
 		},
 	}
 	for name, file := range files {
-		out.ConfigMap.ConfigMap[name] = &v1alpha1.AgentConfigFile{
+		out.ConfigMap.ConfigMap[name] = &v1alpha1.CollectorConfigFile{
 			Body:        file.GetBody(),
 			ContentType: file.GetContentType(),
 		}
