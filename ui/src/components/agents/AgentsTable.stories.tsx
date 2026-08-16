@@ -53,9 +53,11 @@ function mockAgent(init: {
             friendlyName: init.name,
         },
         status: {
-            state: init.state,
-            configSyncStatus: init.syncStatus,
-            configSyncReason: init.syncReason ?? '',
+            connStatus: { state: init.state },
+            syncStatus: {
+                status: init.syncStatus,
+                configSyncReason: init.syncReason ?? '',
+            },
             // Omit health entirely for the "Unknown" case.
             health: init.healthy === undefined
                 ? undefined

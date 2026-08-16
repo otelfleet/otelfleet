@@ -1,4 +1,4 @@
-package opamp
+package sync
 
 import (
 	"context"
@@ -8,13 +8,15 @@ import (
 	"sync/atomic"
 	"time"
 
+	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	resourcesv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/deployment"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	stypes "github.com/otelfleet/otelfleet/pkg/storage/types"
 )
 
-const defaultConfigFilterSyncInterval = 30 * time.Second
+const DefaultConfigFilterSyncInterval = 30 * time.Second
 
 type AgentLabels struct {
 	Identifying    map[string]string
@@ -31,28 +33,31 @@ type ConfigFilterSyncOptions struct {
 type ConfigFilterSync struct {
 	ConfigFilterSyncOptions
 
-	store    stypes.KeyValue[*resourcesv1alpha1.ConfigFilter]
+	configFilters   stypes.KeyValue[*resourcesv1alpha1.ConfigFilter]
+	mgr             deployment.Manager
+	assignedConfigs stypes.KeyValue[*configv1alpha1.AssignedConfig]
+
 	snapshot atomic.Pointer[filterSnapshot]
 }
 
 func NewConfigFilterSync(opts ConfigFilterSyncOptions) *ConfigFilterSync {
 	s := &ConfigFilterSync{
 		ConfigFilterSyncOptions: opts,
-		store:                   storage.NewProtoKVFromSchemaImpl[*resourcesv1alpha1.ConfigFilter](opts.Storage),
+		configFilters:           storage.NewProtoKVFromSchemaImpl[*resourcesv1alpha1.ConfigFilter](opts.Storage),
 	}
 	s.snapshot.Store(&filterSnapshot{})
 	return s
 }
 
-func (s *ConfigFilterSync) start(ctx context.Context) error {
+func (s *ConfigFilterSync) Start(ctx context.Context) error {
 	return s.sync(ctx)
 }
 
-func (s *ConfigFilterSync) stopping() {
+func (s *ConfigFilterSync) Stopping() {
 	s.snapshot.Store(&filterSnapshot{})
 }
 
-func (s *ConfigFilterSync) running(ctx context.Context) error {
+func (s *ConfigFilterSync) Running(ctx context.Context) error {
 	t := time.NewTicker(s.Interval)
 	defer t.Stop()
 	for {
@@ -68,7 +73,7 @@ func (s *ConfigFilterSync) running(ctx context.Context) error {
 }
 
 func (s *ConfigFilterSync) sync(ctx context.Context) error {
-	keys, err := s.store.ListKeys(ctx)
+	keys, err := s.configFilters.ListKeys(ctx)
 	if err != nil {
 		return err
 	}
@@ -76,7 +81,7 @@ func (s *ConfigFilterSync) sync(ctx context.Context) error {
 
 	snap := &filterSnapshot{}
 	for _, key := range keys {
-		filter, err := s.store.Get(ctx, key)
+		filter, err := s.configFilters.Get(ctx, key)
 		if err != nil {
 			s.Logger.With("key", key, "err", err).Warn("skipping unreadable config filter")
 			continue

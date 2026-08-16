@@ -101,9 +101,9 @@ export function AgentHeader({ agent, status }: { agent: AgentDescription | null;
         0: 'gray',
         1: 'green',
         2: 'red',
-    }[status?.state ?? 0] ?? 'gray';
+    }[status?.connStatus?.state ?? 0] ?? 'gray';
 
-    const stateLabel = AgentStateEnum[status?.state ?? 0]?.replace(/^AGENT_STATE_/, '') ?? 'UNKNOWN';
+    const stateLabel = AgentStateEnum[status?.connStatus?.state ?? 0]?.replace(/^AGENT_STATE_/, '') ?? 'UNKNOWN';
 
     const configSyncStatusMap: Record<number, { color: string; label: string }> = {
         [ConfigSyncStatusEnum.UNKNOWN]: { color: 'gray', label: 'Unknown' },
@@ -113,7 +113,7 @@ export function AgentHeader({ agent, status }: { agent: AgentDescription | null;
         [ConfigSyncStatusEnum.ERROR]: { color: 'red', label: 'Error' },
     };
 
-    const configStatus = configSyncStatusMap[status?.configSyncStatus ?? 0] ?? { color: 'gray', label: 'Unknown' };
+    const configStatus = configSyncStatusMap[status?.syncStatus?.status ?? 0] ?? { color: 'gray', label: 'Unknown' };
 
     return (
         <Paper p="md" withBorder>

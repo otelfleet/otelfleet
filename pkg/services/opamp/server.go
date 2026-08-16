@@ -12,16 +12,15 @@ import (
 	"github.com/grafana/dskit/services"
 	"github.com/open-telemetry/opamp-go/server"
 	"github.com/open-telemetry/opamp-go/server/types"
-	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
-	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	resourcesv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
-	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
+	"github.com/otelfleet/otelfleet/pkg/deployment"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
+	"github.com/otelfleet/otelfleet/pkg/services/opamp/handler"
+	opampsync "github.com/otelfleet/otelfleet/pkg/services/opamp/sync"
 	"github.com/otelfleet/otelfleet/pkg/storage"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	stypes "github.com/otelfleet/otelfleet/pkg/storage/types"
-	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -30,9 +29,6 @@ type Server struct {
 	opampSrv       server.OpAMPServer
 	otlpServerAddr string
 
-	// Repository for agent data access
-	agentRepo agentdomain.Repository
-
 	// Keep remoteStatusStore for direct access during config sync checks
 
 	// Connection tracking for active connections (protocol concern)
@@ -40,46 +36,39 @@ type Server struct {
 	addrToId map[string]string
 	idToConn map[string]types.Connection // agentID -> connection
 
-	// Config store for OpAMP-specific config logic
-	assignedConfigStore stypes.KeyValue[*configv1alpha1.Config]
-
 	// all active connection handlers
-	handlers []*ServerAgentHandler
+	handlers []*handler.CollectorHandler
 
-	collectorConfigs      stypes.KeyValue[*resourcesv1alpha1.CollectorConfig]
-	configAssignmentStore stypes.KeyValue[*configv1alpha1.ConfigAssignment]
-	configFilterSync      *ConfigFilterSync
+	// Config store for OpAMP-specific config logic
+	collectorConfigs stypes.KeyValue[*resourcesv1alpha1.CollectorConfig]
+	configFilterSync *opampsync.ConfigFilterSync
 
+	deployMgr deployment.Manager
 	services.Service
-
 	otlpConfig *config.OTLPConfig
 }
 
 func NewServer(
 	l *slog.Logger,
-	agentRepo agentdomain.Repository,
-	assignedConfigStore stypes.KeyValue[*configv1alpha1.Config],
-	configAssignmentStore stypes.KeyValue[*configv1alpha1.ConfigAssignment],
 	resourceStorage schema.SchemaProto,
 	otlpServerAddr string,
 	otlpConfig *config.OTLPConfig,
+	deployMgr deployment.Manager,
 ) *Server {
 	opampSvr := server.New(logutil.NewOpAMPLogger(l))
 	s := &Server{
-		logger:                l,
-		opampSrv:              opampSvr,
-		agentRepo:             agentRepo,
-		addrToId:              map[string]string{},
-		idToConn:              map[string]types.Connection{},
-		assignedConfigStore:   assignedConfigStore,
-		configAssignmentStore: configAssignmentStore,
-		otlpServerAddr:        otlpServerAddr,
-		otlpConfig:            otlpConfig,
-		collectorConfigs:      storage.NewProtoKVFromSchemaImpl[*resourcesv1alpha1.CollectorConfig](resourceStorage),
-		configFilterSync: NewConfigFilterSync(ConfigFilterSyncOptions{
+		logger:           l,
+		deployMgr:        deployMgr,
+		opampSrv:         opampSvr,
+		addrToId:         map[string]string{},
+		idToConn:         map[string]types.Connection{},
+		otlpServerAddr:   otlpServerAddr,
+		otlpConfig:       otlpConfig,
+		collectorConfigs: storage.NewProtoKVFromSchemaImpl[*resourcesv1alpha1.CollectorConfig](resourceStorage),
+		configFilterSync: opampsync.NewConfigFilterSync(opampsync.ConfigFilterSyncOptions{
 			Logger:   l.With("component", "config-filter-sync"),
 			Storage:  resourceStorage,
-			Interval: defaultConfigFilterSyncInterval,
+			Interval: opampsync.DefaultConfigFilterSyncInterval,
 		}),
 	}
 
@@ -88,11 +77,11 @@ func NewServer(
 }
 
 func (s *Server) running(ctx context.Context) error {
-	return s.configFilterSync.running(ctx)
+	return s.configFilterSync.Running(ctx)
 }
 
 func (s *Server) start(ctx context.Context) error {
-	if err := s.configFilterSync.start(ctx); err != nil {
+	if err := s.configFilterSync.Start(ctx); err != nil {
 		return fmt.Errorf("failed to start config filter sync: %w", err)
 	}
 
@@ -118,7 +107,7 @@ func (s *Server) start(ctx context.Context) error {
 func (s *Server) stop(failureCase error) error {
 	ctxca, ca := context.WithTimeout(context.TODO(), time.Second)
 	defer ca()
-	s.configFilterSync.stopping()
+	s.configFilterSync.Stopping()
 	return s.opampSrv.Stop(ctxca)
 }
 
@@ -131,7 +120,16 @@ func (s *Server) OnConnecting(request *http.Request) types.ConnectionResponse {
 	s.logger.With("server-conn-id", serverConnID).With("remote-addr", request.RemoteAddr).Info("assigned connection ID")
 
 	if accept {
-		handler := NewServerAgentHandler(context.TODO(), serverConnID, s.agentRepo, s.assignedConfigStore, s.collectorConfigs, s.configAssignmentStore, s.configFilterSync, s.logger, s.otlpServerAddr, s.otlpConfig)
+		handler := handler.NewCollectorHandler(
+			context.TODO(),
+			serverConnID,
+			s.configFilterSync,
+			s.logger,
+			s.otlpServerAddr,
+			s.otlpConfig,
+			s.deployMgr,
+			s.collectorConfigs,
+		)
 		return types.ConnectionResponse{
 			Accept: accept,
 			ConnectionCallbacks: types.ConnectionCallbacks{
@@ -164,82 +162,4 @@ func (s *Server) handleInitialRequest(r *http.Request) bool {
 	}
 	s.logger.With("type", authHeader).Info("agent could not be authenticated")
 	return false
-}
-
-func (s *Server) OnConnectionClose(conn types.Connection) {
-	remoteAddr := conn.Connection().RemoteAddr().String()
-	logger := s.logger.With("remote_addr", remoteAddr)
-	logger.Info("agent disconnected")
-
-	s.mu.Lock()
-	agentID, ok := s.addrToId[remoteAddr]
-	if ok {
-		delete(s.addrToId, remoteAddr)
-		delete(s.idToConn, agentID)
-	}
-	s.mu.Unlock()
-
-	if !ok {
-		logger.Error("agent not tracked in addr to persistent ID map")
-		return
-	}
-
-	// Persist disconnected state
-	ctx := context.Background()
-	existingState, err := s.agentRepo.GetConnectionState(ctx, agentID)
-	if err != nil {
-		if grpcutil.IsErrorNotFound(err) {
-			// Agent never had state stored - this shouldn't happen but is not critical
-			logger.Warn("no connection state found for disconnected agent")
-		} else {
-			// Actual storage error - log at error level
-			logger.With("err", err).Error("failed to get connection state for disconnected agent")
-		}
-		return
-	}
-	now := time.Now()
-	existingState.State = agentdomain.StateDisconnected
-	existingState.DisconnectedAt = &now
-	if err := s.agentRepo.UpdateConnectionState(ctx, agentID, *existingState); err != nil {
-		logger.With("err", err).Error("failed to persist disconnected state")
-	}
-}
-
-// NotifyConfigChange triggers an immediate config push to the specified agent.
-// This implements the otelconfig.ConfigChangeNotifier interface.
-// If the agent is not connected, this is a no-op (the agent will receive
-// the config when it reconnects).
-func (s *Server) NotifyConfigChange(agentID string) {
-	s.mu.RLock()
-	conn, ok := s.idToConn[agentID]
-	s.mu.RUnlock()
-
-	if !ok {
-		s.logger.With("agent_id", agentID).Debug("agent not connected, config will be sent on reconnect")
-		return
-	}
-
-	// Send config immediately
-	ctx := context.Background()
-	for _, handler := range s.handlers {
-		if handler.agentID == nil {
-			continue
-		}
-		if agentID == *handler.agentID {
-			if err := handler.sendConfig(ctx, conn, agentID); err != nil {
-				s.logger.With("agent_id", agentID, "err", err).Error("failed to send config on notify")
-			} else {
-				s.logger.With("agent_id", agentID).Info("config pushed to agent")
-			}
-		}
-	}
-}
-
-// GetConnectionState is needed for tests or external access to connection state.
-func (s *Server) GetConnectionState(ctx context.Context, agentID string) (*v1alpha1.AgentConnectionState, error) {
-	state, err := s.agentRepo.GetConnectionState(ctx, agentID)
-	if err != nil {
-		return nil, err
-	}
-	return agentdomain.ConnectionStateToProto(agentID, *state), nil
 }

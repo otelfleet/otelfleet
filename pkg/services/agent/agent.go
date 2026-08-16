@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 
@@ -11,29 +10,29 @@ import (
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1/v1alpha1connect"
-	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
+	"github.com/otelfleet/otelfleet/pkg/deployment"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// AgentServer provides the agent management API.
-// It uses the agent repository to access agent data from multiple stores.
 type AgentServer struct {
-	logger     *slog.Logger
-	repository agentdomain.Repository
+	logger *slog.Logger
+
+	mgr deployment.Manager
 
 	services.Service
 }
 
 var _ v1alpha1connect.AgentServiceHandler = (*AgentServer)(nil)
 
-// NewAgentServer creates a new AgentServer with the specified repository.
 func NewAgentServer(
 	logger *slog.Logger,
-	repository agentdomain.Repository,
+	mgr deployment.Manager,
 ) *AgentServer {
 	a := &AgentServer{
-		logger:     logger,
-		repository: repository,
+		logger: logger,
+		mgr:    mgr,
 	}
 	a.Service = services.NewBasicService(nil, a.running, nil)
 	return a
@@ -52,7 +51,7 @@ func (a *AgentServer) ConfigureHTTP(mux *mux.Router) {
 func (a *AgentServer) ListAgents(
 	ctx context.Context, req *connect.Request[v1alpha1.ListAgentsRequest],
 ) (*connect.Response[v1alpha1.ListAgentsResponse], error) {
-	agents, err := a.repository.List(ctx)
+	agents, err := a.mgr.List(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to list agents: %w", err))
 	}
@@ -62,18 +61,19 @@ func (a *AgentServer) ListAgents(
 	// Convert domain agents to API response
 	descAndStatus := make([]*v1alpha1.AgentDescriptionAndStatus, 0, len(agents))
 	for _, domainAgent := range agents {
-		if req.Msg.GetWithStatus() {
-			// Full view with status
-			descAndStatus = append(descAndStatus, &v1alpha1.AgentDescriptionAndStatus{
-				Agent:  toAPIAgentDescription(domainAgent),
-				Status: agentdomain.ToAPIStatus(domainAgent),
-			})
-		} else {
-			// Basic view without status
-			descAndStatus = append(descAndStatus, &v1alpha1.AgentDescriptionAndStatus{
-				Agent: toAPIAgentDescription(domainAgent),
-			})
+		desc, err := domainAgent.GetDescription(ctx)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get agent description: %w", err))
 		}
+		entry := &v1alpha1.AgentDescriptionAndStatus{Agent: desc}
+		if req.Msg.GetWithStatus() {
+			st, err := domainAgent.Status(ctx)
+			if err != nil {
+				return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get agent status: %w", err))
+			}
+			entry.Status = st
+		}
+		descAndStatus = append(descAndStatus, entry)
 	}
 
 	return connect.NewResponse(&v1alpha1.ListAgentsResponse{
@@ -84,32 +84,42 @@ func (a *AgentServer) ListAgents(
 func (a *AgentServer) GetAgent(ctx context.Context, req *connect.Request[v1alpha1.GetAgentRequest]) (*connect.Response[v1alpha1.GetAgentResponse], error) {
 	agentID := req.Msg.GetAgentId()
 
-	domainAgent, err := a.repository.Get(ctx, agentID)
+	domainAgent, err := a.mgr.Get(ctx, agentID)
 	if err != nil {
-		if errors.Is(err, agentdomain.ErrAgentNotFound) {
+		if status.Code(err) == codes.NotFound {
 			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("agent not found: %s", agentID))
 		}
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get agent: %w", err))
 	}
 
+	desc, err := domainAgent.GetDescription(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get agent description: %w", err))
+	}
+
 	return connect.NewResponse(&v1alpha1.GetAgentResponse{
-		Agent: toAPIAgentDescription(domainAgent),
+		Agent: desc,
 	}), nil
 }
 
 func (a *AgentServer) Status(ctx context.Context, req *connect.Request[v1alpha1.GetAgentStatusRequest]) (*connect.Response[v1alpha1.GetAgentStatusResponse], error) {
 	agentID := req.Msg.GetAgentId()
 
-	domainAgent, err := a.repository.Get(ctx, agentID)
+	domainAgent, err := a.mgr.Get(ctx, agentID)
 	if err != nil {
-		if errors.Is(err, agentdomain.ErrAgentNotFound) {
+		if status.Code(err) == codes.NotFound {
 			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("agent not found: %s", agentID))
 		}
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get agent: %w", err))
 	}
 
+	agentStatus, err := domainAgent.Status(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get agent status: %w", err))
+	}
+
 	return connect.NewResponse(&v1alpha1.GetAgentStatusResponse{
-		Status: agentdomain.ToAPIStatus(domainAgent),
+		Status: agentStatus,
 	}), nil
 }
 
@@ -121,8 +131,8 @@ func (a *AgentServer) DeleteAgent(ctx context.Context, req *connect.Request[v1al
 
 	a.logger.With("agent_id", agentID).Info("deleting agent")
 
-	if err := a.repository.Delete(ctx, agentID); err != nil {
-		if errors.Is(err, agentdomain.ErrAgentNotFound) {
+	if err := a.mgr.Delete(ctx, agentID); err != nil {
+		if status.Code(err) == codes.NotFound {
 			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("agent not found: %s", agentID))
 		}
 		a.logger.With("agent_id", agentID, "err", err).Error("failed to delete agent")
@@ -138,24 +148,19 @@ func (a *AgentServer) AgentHistory(ctx context.Context, req *connect.Request[v1a
 	offset, limit := req.Msg.GetOffset(), req.Msg.GetLimit()
 
 	a.logger.With("agent_id", agentID).Debug("requesting agent history")
-	configs, err := a.repository.History(ctx, agentID, offset, limit)
+	inst, err := a.mgr.Get(ctx, agentID)
 	if err != nil {
-		return nil, err
+		if status.Code(err) == codes.NotFound {
+			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("agent not found: %s", agentID))
+		}
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get agent: %w", err))
+	}
+
+	configs, err := inst.History(ctx, offset, limit)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get agent history: %w", err))
 	}
 	return connect.NewResponse(&v1alpha1.GetAgentHistoryResponse{
 		EffectiveConfig: configs,
 	}), nil
-}
-
-// toAPIAgentDescription converts a domain Agent to the v1alpha1.AgentDescription proto type.
-// This maintains backward compatibility with the existing API.
-func toAPIAgentDescription(agent *agentdomain.Agent) *v1alpha1.AgentDescription {
-	reg := agentdomain.ToAPIAgentRegistration(agent)
-	return &v1alpha1.AgentDescription{
-		Id:                       reg.GetId(),
-		FriendlyName:             reg.GetFriendlyName(),
-		IdentifyingAttributes:    reg.GetIdentifyingAttributes(),
-		NonIdentifyingAttributes: reg.GetNonIdentifyingAttributes(),
-		Capabilities:             reg.GetCapabilities(),
-	}
 }

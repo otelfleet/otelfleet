@@ -35,7 +35,7 @@ export function buildAgentColumns({
             label: 'Connection',
             visible: true,
             render: (_: unknown, row: AgentDescriptionAndStatus) => {
-                return <StatusBadge state={row.status?.state ?? 0} />
+                return <StatusBadge state={row.status?.connStatus?.state ?? 0} />
             }
         },
         {
@@ -52,8 +52,8 @@ export function buildAgentColumns({
             visible: true,
             render: (_: unknown, row: AgentDescriptionAndStatus) => {
                 return <ConfigSyncStatusBadge
-                    status={row.status?.configSyncStatus}
-                    reason={row.status?.configSyncReason}
+                    status={row.status?.syncStatus?.status}
+                    reason={row.status?.syncStatus?.configSyncReason}
                 />
             }
         },

@@ -66,8 +66,12 @@ export function mockStatus(overrides?: {
 }): AgentStatus {
     const hasHealth = overrides?.hasHealth ?? true;
     return create(AgentStatusSchema, {
-        state: overrides?.state ?? AgentState.CONNECTED,
-        configSyncStatus: overrides?.configSyncStatus ?? ConfigSyncStatus.IN_SYNC,
+        connStatus: {
+            state: overrides?.state ?? AgentState.CONNECTED,
+        },
+        syncStatus: {
+            status: overrides?.configSyncStatus ?? ConfigSyncStatus.IN_SYNC,
+        },
         health: hasHealth
             ? {
                 healthy: overrides?.healthy ?? true,

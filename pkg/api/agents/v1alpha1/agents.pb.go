@@ -703,18 +703,14 @@ func (x *DeleteAgentRequest) GetAgentId() string {
 
 type AgentStatus struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	State              AgentState             `protobuf:"varint,1,opt,name=state,proto3,enum=config.v1alpha1.AgentState" json:"state,omitempty"`
-	Health             *ComponentHealth       `protobuf:"bytes,2,opt,name=health,proto3" json:"health,omitempty"`
-	EffectiveConfig    *EffectiveConfig       `protobuf:"bytes,3,opt,name=effective_config,json=effectiveConfig,proto3" json:"effective_config,omitempty"`
-	RemoteConfigStatus *RemoteConfigStatus    `protobuf:"bytes,4,opt,name=remote_config_status,json=remoteConfigStatus,proto3" json:"remote_config_status,omitempty"`
+	Health             *ComponentHealth       `protobuf:"bytes,1,opt,name=health,proto3" json:"health,omitempty"`
+	EffectiveConfig    *EffectiveConfig       `protobuf:"bytes,2,opt,name=effective_config,json=effectiveConfig,proto3" json:"effective_config,omitempty"`
+	RemoteConfigStatus *RemoteConfigStatus    `protobuf:"bytes,3,opt,name=remote_config_status,json=remoteConfigStatus,proto3" json:"remote_config_status,omitempty"`
 	// New fields for unified status
-	LastSeen         *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
-	ConfigSyncStatus ConfigSyncStatus       `protobuf:"varint,6,opt,name=config_sync_status,json=configSyncStatus,proto3,enum=config.v1alpha1.ConfigSyncStatus" json:"config_sync_status,omitempty"`
-	ConfigSyncReason string                 `protobuf:"bytes,7,opt,name=config_sync_reason,json=configSyncReason,proto3" json:"config_sync_reason,omitempty"`
-	ConnectedAt      *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=connected_at,json=connectedAt,proto3" json:"connected_at,omitempty"`
-	DisconnectedAt   *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=disconnected_at,json=disconnectedAt,proto3" json:"disconnected_at,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	ConnStatus    *ConnectionStatus `protobuf:"bytes,4,opt,name=conn_status,json=connStatus,proto3" json:"conn_status,omitempty"`
+	SyncStatus    *SyncStatus       `protobuf:"bytes,5,opt,name=sync_status,json=syncStatus,proto3" json:"sync_status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AgentStatus) Reset() {
@@ -747,13 +743,6 @@ func (*AgentStatus) Descriptor() ([]byte, []int) {
 	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *AgentStatus) GetState() AgentState {
-	if x != nil {
-		return x.State
-	}
-	return AgentState_AGENT_STATE_UNKNOWN
-}
-
 func (x *AgentStatus) GetHealth() *ComponentHealth {
 	if x != nil {
 		return x.Health
@@ -775,37 +764,16 @@ func (x *AgentStatus) GetRemoteConfigStatus() *RemoteConfigStatus {
 	return nil
 }
 
-func (x *AgentStatus) GetLastSeen() *timestamppb.Timestamp {
+func (x *AgentStatus) GetConnStatus() *ConnectionStatus {
 	if x != nil {
-		return x.LastSeen
+		return x.ConnStatus
 	}
 	return nil
 }
 
-func (x *AgentStatus) GetConfigSyncStatus() ConfigSyncStatus {
+func (x *AgentStatus) GetSyncStatus() *SyncStatus {
 	if x != nil {
-		return x.ConfigSyncStatus
-	}
-	return ConfigSyncStatus_CONFIG_SYNC_STATUS_UNKNOWN
-}
-
-func (x *AgentStatus) GetConfigSyncReason() string {
-	if x != nil {
-		return x.ConfigSyncReason
-	}
-	return ""
-}
-
-func (x *AgentStatus) GetConnectedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ConnectedAt
-	}
-	return nil
-}
-
-func (x *AgentStatus) GetDisconnectedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.DisconnectedAt
+		return x.SyncStatus
 	}
 	return nil
 }
@@ -1669,6 +1637,134 @@ func (x *RemoteConfigStatus) GetErrorMessage() string {
 	return ""
 }
 
+type ConnectionStatus struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	State          AgentState             `protobuf:"varint,1,opt,name=state,proto3,enum=config.v1alpha1.AgentState" json:"state,omitempty"`
+	LastSeen       *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
+	ConnectedAt    *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=connected_at,json=connectedAt,proto3" json:"connected_at,omitempty"`
+	DisconnectedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=disconnected_at,json=disconnectedAt,proto3" json:"disconnected_at,omitempty"`
+	Sequence       uint64                 `protobuf:"varint,5,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ConnectionStatus) Reset() {
+	*x = ConnectionStatus{}
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConnectionStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConnectionStatus) ProtoMessage() {}
+
+func (x *ConnectionStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConnectionStatus.ProtoReflect.Descriptor instead.
+func (*ConnectionStatus) Descriptor() ([]byte, []int) {
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *ConnectionStatus) GetState() AgentState {
+	if x != nil {
+		return x.State
+	}
+	return AgentState_AGENT_STATE_UNKNOWN
+}
+
+func (x *ConnectionStatus) GetLastSeen() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastSeen
+	}
+	return nil
+}
+
+func (x *ConnectionStatus) GetConnectedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ConnectedAt
+	}
+	return nil
+}
+
+func (x *ConnectionStatus) GetDisconnectedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.DisconnectedAt
+	}
+	return nil
+}
+
+func (x *ConnectionStatus) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+type SyncStatus struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Status           ConfigSyncStatus       `protobuf:"varint,1,opt,name=status,proto3,enum=config.v1alpha1.ConfigSyncStatus" json:"status,omitempty"`
+	ConfigSyncReason string                 `protobuf:"bytes,2,opt,name=config_sync_reason,json=configSyncReason,proto3" json:"config_sync_reason,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *SyncStatus) Reset() {
+	*x = SyncStatus{}
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SyncStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SyncStatus) ProtoMessage() {}
+
+func (x *SyncStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_agents_v1alpha1_agents_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SyncStatus.ProtoReflect.Descriptor instead.
+func (*SyncStatus) Descriptor() ([]byte, []int) {
+	return file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *SyncStatus) GetStatus() ConfigSyncStatus {
+	if x != nil {
+		return x.Status
+	}
+	return ConfigSyncStatus_CONFIG_SYNC_STATUS_UNKNOWN
+}
+
+func (x *SyncStatus) GetConfigSyncReason() string {
+	if x != nil {
+		return x.ConfigSyncReason
+	}
+	return ""
+}
+
 var File_pkg_api_agents_v1alpha1_agents_proto protoreflect.FileDescriptor
 
 const file_pkg_api_agents_v1alpha1_agents_proto_rawDesc = "" +
@@ -1700,17 +1796,15 @@ const file_pkg_api_agents_v1alpha1_agents_proto_rawDesc = "" +
 	"\x16GetAgentStatusResponse\x124\n" +
 	"\x06status\x18\x01 \x01(\v2\x1c.config.v1alpha1.AgentStatusR\x06status\"/\n" +
 	"\x12DeleteAgentRequest\x12\x19\n" +
-	"\bagent_id\x18\x01 \x01(\tR\aagentId\"\xda\x04\n" +
-	"\vAgentStatus\x121\n" +
-	"\x05state\x18\x01 \x01(\x0e2\x1b.config.v1alpha1.AgentStateR\x05state\x128\n" +
-	"\x06health\x18\x02 \x01(\v2 .config.v1alpha1.ComponentHealthR\x06health\x12K\n" +
-	"\x10effective_config\x18\x03 \x01(\v2 .config.v1alpha1.EffectiveConfigR\x0feffectiveConfig\x12U\n" +
-	"\x14remote_config_status\x18\x04 \x01(\v2#.config.v1alpha1.RemoteConfigStatusR\x12remoteConfigStatus\x127\n" +
-	"\tlast_seen\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\blastSeen\x12O\n" +
-	"\x12config_sync_status\x18\x06 \x01(\x0e2!.config.v1alpha1.ConfigSyncStatusR\x10configSyncStatus\x12,\n" +
-	"\x12config_sync_reason\x18\a \x01(\tR\x10configSyncReason\x12=\n" +
-	"\fconnected_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\vconnectedAt\x12C\n" +
-	"\x0fdisconnected_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x0edisconnectedAt\"\x97\x02\n" +
+	"\bagent_id\x18\x01 \x01(\tR\aagentId\"\xed\x02\n" +
+	"\vAgentStatus\x128\n" +
+	"\x06health\x18\x01 \x01(\v2 .config.v1alpha1.ComponentHealthR\x06health\x12K\n" +
+	"\x10effective_config\x18\x02 \x01(\v2 .config.v1alpha1.EffectiveConfigR\x0feffectiveConfig\x12U\n" +
+	"\x14remote_config_status\x18\x03 \x01(\v2#.config.v1alpha1.RemoteConfigStatusR\x12remoteConfigStatus\x12B\n" +
+	"\vconn_status\x18\x04 \x01(\v2!.config.v1alpha1.ConnectionStatusR\n" +
+	"connStatus\x12<\n" +
+	"\vsync_status\x18\x05 \x01(\v2\x1b.config.v1alpha1.SyncStatusR\n" +
+	"syncStatus\"\x97\x02\n" +
 	"\x11AgentRegistration\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12#\n" +
 	"\rfriendly_name\x18\x02 \x01(\tR\ffriendlyName\x12P\n" +
@@ -1778,7 +1872,17 @@ const file_pkg_api_agents_v1alpha1_agents_proto_rawDesc = "" +
 	"\x12RemoteConfigStatus\x125\n" +
 	"\x17last_remote_config_hash\x18\x01 \x01(\fR\x14lastRemoteConfigHash\x12=\n" +
 	"\x06status\x18\x02 \x01(\x0e2%.config.v1alpha1.RemoteConfigStatusesR\x06status\x12#\n" +
-	"\rerror_message\x18\x03 \x01(\tR\ferrorMessage*^\n" +
+	"\rerror_message\x18\x03 \x01(\tR\ferrorMessage\"\x9e\x02\n" +
+	"\x10ConnectionStatus\x121\n" +
+	"\x05state\x18\x01 \x01(\x0e2\x1b.config.v1alpha1.AgentStateR\x05state\x127\n" +
+	"\tlast_seen\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\blastSeen\x12=\n" +
+	"\fconnected_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\vconnectedAt\x12C\n" +
+	"\x0fdisconnected_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x0edisconnectedAt\x12\x1a\n" +
+	"\bsequence\x18\x05 \x01(\x04R\bsequence\"u\n" +
+	"\n" +
+	"SyncStatus\x129\n" +
+	"\x06status\x18\x01 \x01(\x0e2!.config.v1alpha1.ConfigSyncStatusR\x06status\x12,\n" +
+	"\x12config_sync_reason\x18\x02 \x01(\tR\x10configSyncReason*^\n" +
 	"\n" +
 	"AgentState\x12\x17\n" +
 	"\x13AGENT_STATE_UNKNOWN\x10\x00\x12\x19\n" +
@@ -1816,7 +1920,7 @@ func file_pkg_api_agents_v1alpha1_agents_proto_rawDescGZIP() []byte {
 }
 
 var file_pkg_api_agents_v1alpha1_agents_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_pkg_api_agents_v1alpha1_agents_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_pkg_api_agents_v1alpha1_agents_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_pkg_api_agents_v1alpha1_agents_proto_goTypes = []any{
 	(AgentState)(0),                   // 0: config.v1alpha1.AgentState
 	(ConfigSyncStatus)(0),             // 1: config.v1alpha1.ConfigSyncStatus
@@ -1845,10 +1949,12 @@ var file_pkg_api_agents_v1alpha1_agents_proto_goTypes = []any{
 	(*AgentConfigMap)(nil),            // 24: config.v1alpha1.AgentConfigMap
 	(*AgentConfigFile)(nil),           // 25: config.v1alpha1.AgentConfigFile
 	(*RemoteConfigStatus)(nil),        // 26: config.v1alpha1.RemoteConfigStatus
-	nil,                               // 27: config.v1alpha1.ComponentHealth.ComponentHealthMapEntry
-	nil,                               // 28: config.v1alpha1.AgentConfigMap.ConfigMapEntry
-	(*timestamppb.Timestamp)(nil),     // 29: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),             // 30: google.protobuf.Empty
+	(*ConnectionStatus)(nil),          // 27: config.v1alpha1.ConnectionStatus
+	(*SyncStatus)(nil),                // 28: config.v1alpha1.SyncStatus
+	nil,                               // 29: config.v1alpha1.ComponentHealth.ComponentHealthMapEntry
+	nil,                               // 30: config.v1alpha1.AgentConfigMap.ConfigMapEntry
+	(*timestamppb.Timestamp)(nil),     // 31: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),             // 32: google.protobuf.Empty
 }
 var file_pkg_api_agents_v1alpha1_agents_proto_depIdxs = []int32{
 	23, // 0: config.v1alpha1.GetAgentHistoryResponse.effective_config:type_name -> config.v1alpha1.EffectiveConfig
@@ -1859,48 +1965,50 @@ var file_pkg_api_agents_v1alpha1_agents_proto_depIdxs = []int32{
 	14, // 5: config.v1alpha1.AgentDescriptionAndStatus.status:type_name -> config.v1alpha1.AgentStatus
 	16, // 6: config.v1alpha1.GetAgentResponse.agent:type_name -> config.v1alpha1.AgentDescription
 	14, // 7: config.v1alpha1.GetAgentStatusResponse.status:type_name -> config.v1alpha1.AgentStatus
-	0,  // 8: config.v1alpha1.AgentStatus.state:type_name -> config.v1alpha1.AgentState
-	22, // 9: config.v1alpha1.AgentStatus.health:type_name -> config.v1alpha1.ComponentHealth
-	23, // 10: config.v1alpha1.AgentStatus.effective_config:type_name -> config.v1alpha1.EffectiveConfig
-	26, // 11: config.v1alpha1.AgentStatus.remote_config_status:type_name -> config.v1alpha1.RemoteConfigStatus
-	29, // 12: config.v1alpha1.AgentStatus.last_seen:type_name -> google.protobuf.Timestamp
-	1,  // 13: config.v1alpha1.AgentStatus.config_sync_status:type_name -> config.v1alpha1.ConfigSyncStatus
-	29, // 14: config.v1alpha1.AgentStatus.connected_at:type_name -> google.protobuf.Timestamp
-	29, // 15: config.v1alpha1.AgentStatus.disconnected_at:type_name -> google.protobuf.Timestamp
-	17, // 16: config.v1alpha1.AgentRegistration.identifying_attributes:type_name -> config.v1alpha1.KeyValue
-	17, // 17: config.v1alpha1.AgentRegistration.non_identifying_attributes:type_name -> config.v1alpha1.KeyValue
-	17, // 18: config.v1alpha1.AgentDescription.identifying_attributes:type_name -> config.v1alpha1.KeyValue
-	17, // 19: config.v1alpha1.AgentDescription.non_identifying_attributes:type_name -> config.v1alpha1.KeyValue
-	18, // 20: config.v1alpha1.KeyValue.value:type_name -> config.v1alpha1.AnyValue
-	19, // 21: config.v1alpha1.AnyValue.array_value:type_name -> config.v1alpha1.ArrayValue
-	20, // 22: config.v1alpha1.AnyValue.kvlist_value:type_name -> config.v1alpha1.KeyValueList
-	18, // 23: config.v1alpha1.ArrayValue.values:type_name -> config.v1alpha1.AnyValue
-	17, // 24: config.v1alpha1.KeyValueList.values:type_name -> config.v1alpha1.KeyValue
-	0,  // 25: config.v1alpha1.AgentConnectionState.state:type_name -> config.v1alpha1.AgentState
-	29, // 26: config.v1alpha1.AgentConnectionState.last_seen:type_name -> google.protobuf.Timestamp
-	29, // 27: config.v1alpha1.AgentConnectionState.connected_at:type_name -> google.protobuf.Timestamp
-	29, // 28: config.v1alpha1.AgentConnectionState.disconnected_at:type_name -> google.protobuf.Timestamp
-	27, // 29: config.v1alpha1.ComponentHealth.component_health_map:type_name -> config.v1alpha1.ComponentHealth.ComponentHealthMapEntry
-	24, // 30: config.v1alpha1.EffectiveConfig.config_map:type_name -> config.v1alpha1.AgentConfigMap
-	28, // 31: config.v1alpha1.AgentConfigMap.config_map:type_name -> config.v1alpha1.AgentConfigMap.ConfigMapEntry
-	2,  // 32: config.v1alpha1.RemoteConfigStatus.status:type_name -> config.v1alpha1.RemoteConfigStatuses
-	22, // 33: config.v1alpha1.ComponentHealth.ComponentHealthMapEntry.value:type_name -> config.v1alpha1.ComponentHealth
-	25, // 34: config.v1alpha1.AgentConfigMap.ConfigMapEntry.value:type_name -> config.v1alpha1.AgentConfigFile
-	5,  // 35: config.v1alpha1.AgentService.ListAgents:input_type -> config.v1alpha1.ListAgentsRequest
-	9,  // 36: config.v1alpha1.AgentService.GetAgent:input_type -> config.v1alpha1.GetAgentRequest
-	3,  // 37: config.v1alpha1.AgentService.AgentHistory:input_type -> config.v1alpha1.GetAgentHistoryRequest
-	11, // 38: config.v1alpha1.AgentService.Status:input_type -> config.v1alpha1.GetAgentStatusRequest
-	13, // 39: config.v1alpha1.AgentService.DeleteAgent:input_type -> config.v1alpha1.DeleteAgentRequest
-	6,  // 40: config.v1alpha1.AgentService.ListAgents:output_type -> config.v1alpha1.ListAgentsResponse
-	10, // 41: config.v1alpha1.AgentService.GetAgent:output_type -> config.v1alpha1.GetAgentResponse
-	4,  // 42: config.v1alpha1.AgentService.AgentHistory:output_type -> config.v1alpha1.GetAgentHistoryResponse
-	12, // 43: config.v1alpha1.AgentService.Status:output_type -> config.v1alpha1.GetAgentStatusResponse
-	30, // 44: config.v1alpha1.AgentService.DeleteAgent:output_type -> google.protobuf.Empty
-	40, // [40:45] is the sub-list for method output_type
-	35, // [35:40] is the sub-list for method input_type
-	35, // [35:35] is the sub-list for extension type_name
-	35, // [35:35] is the sub-list for extension extendee
-	0,  // [0:35] is the sub-list for field type_name
+	22, // 8: config.v1alpha1.AgentStatus.health:type_name -> config.v1alpha1.ComponentHealth
+	23, // 9: config.v1alpha1.AgentStatus.effective_config:type_name -> config.v1alpha1.EffectiveConfig
+	26, // 10: config.v1alpha1.AgentStatus.remote_config_status:type_name -> config.v1alpha1.RemoteConfigStatus
+	27, // 11: config.v1alpha1.AgentStatus.conn_status:type_name -> config.v1alpha1.ConnectionStatus
+	28, // 12: config.v1alpha1.AgentStatus.sync_status:type_name -> config.v1alpha1.SyncStatus
+	17, // 13: config.v1alpha1.AgentRegistration.identifying_attributes:type_name -> config.v1alpha1.KeyValue
+	17, // 14: config.v1alpha1.AgentRegistration.non_identifying_attributes:type_name -> config.v1alpha1.KeyValue
+	17, // 15: config.v1alpha1.AgentDescription.identifying_attributes:type_name -> config.v1alpha1.KeyValue
+	17, // 16: config.v1alpha1.AgentDescription.non_identifying_attributes:type_name -> config.v1alpha1.KeyValue
+	18, // 17: config.v1alpha1.KeyValue.value:type_name -> config.v1alpha1.AnyValue
+	19, // 18: config.v1alpha1.AnyValue.array_value:type_name -> config.v1alpha1.ArrayValue
+	20, // 19: config.v1alpha1.AnyValue.kvlist_value:type_name -> config.v1alpha1.KeyValueList
+	18, // 20: config.v1alpha1.ArrayValue.values:type_name -> config.v1alpha1.AnyValue
+	17, // 21: config.v1alpha1.KeyValueList.values:type_name -> config.v1alpha1.KeyValue
+	0,  // 22: config.v1alpha1.AgentConnectionState.state:type_name -> config.v1alpha1.AgentState
+	31, // 23: config.v1alpha1.AgentConnectionState.last_seen:type_name -> google.protobuf.Timestamp
+	31, // 24: config.v1alpha1.AgentConnectionState.connected_at:type_name -> google.protobuf.Timestamp
+	31, // 25: config.v1alpha1.AgentConnectionState.disconnected_at:type_name -> google.protobuf.Timestamp
+	29, // 26: config.v1alpha1.ComponentHealth.component_health_map:type_name -> config.v1alpha1.ComponentHealth.ComponentHealthMapEntry
+	24, // 27: config.v1alpha1.EffectiveConfig.config_map:type_name -> config.v1alpha1.AgentConfigMap
+	30, // 28: config.v1alpha1.AgentConfigMap.config_map:type_name -> config.v1alpha1.AgentConfigMap.ConfigMapEntry
+	2,  // 29: config.v1alpha1.RemoteConfigStatus.status:type_name -> config.v1alpha1.RemoteConfigStatuses
+	0,  // 30: config.v1alpha1.ConnectionStatus.state:type_name -> config.v1alpha1.AgentState
+	31, // 31: config.v1alpha1.ConnectionStatus.last_seen:type_name -> google.protobuf.Timestamp
+	31, // 32: config.v1alpha1.ConnectionStatus.connected_at:type_name -> google.protobuf.Timestamp
+	31, // 33: config.v1alpha1.ConnectionStatus.disconnected_at:type_name -> google.protobuf.Timestamp
+	1,  // 34: config.v1alpha1.SyncStatus.status:type_name -> config.v1alpha1.ConfigSyncStatus
+	22, // 35: config.v1alpha1.ComponentHealth.ComponentHealthMapEntry.value:type_name -> config.v1alpha1.ComponentHealth
+	25, // 36: config.v1alpha1.AgentConfigMap.ConfigMapEntry.value:type_name -> config.v1alpha1.AgentConfigFile
+	5,  // 37: config.v1alpha1.AgentService.ListAgents:input_type -> config.v1alpha1.ListAgentsRequest
+	9,  // 38: config.v1alpha1.AgentService.GetAgent:input_type -> config.v1alpha1.GetAgentRequest
+	3,  // 39: config.v1alpha1.AgentService.AgentHistory:input_type -> config.v1alpha1.GetAgentHistoryRequest
+	11, // 40: config.v1alpha1.AgentService.Status:input_type -> config.v1alpha1.GetAgentStatusRequest
+	13, // 41: config.v1alpha1.AgentService.DeleteAgent:input_type -> config.v1alpha1.DeleteAgentRequest
+	6,  // 42: config.v1alpha1.AgentService.ListAgents:output_type -> config.v1alpha1.ListAgentsResponse
+	10, // 43: config.v1alpha1.AgentService.GetAgent:output_type -> config.v1alpha1.GetAgentResponse
+	4,  // 44: config.v1alpha1.AgentService.AgentHistory:output_type -> config.v1alpha1.GetAgentHistoryResponse
+	12, // 45: config.v1alpha1.AgentService.Status:output_type -> config.v1alpha1.GetAgentStatusResponse
+	32, // 46: config.v1alpha1.AgentService.DeleteAgent:output_type -> google.protobuf.Empty
+	42, // [42:47] is the sub-list for method output_type
+	37, // [37:42] is the sub-list for method input_type
+	37, // [37:37] is the sub-list for extension type_name
+	37, // [37:37] is the sub-list for extension extendee
+	0,  // [0:37] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_agents_v1alpha1_agents_proto_init() }
@@ -1923,7 +2031,7 @@ func file_pkg_api_agents_v1alpha1_agents_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_agents_v1alpha1_agents_proto_rawDesc), len(file_pkg_api_agents_v1alpha1_agents_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   26,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

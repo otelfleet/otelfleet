@@ -19,9 +19,7 @@ import (
 	"github.com/lestrrat-go/jwx/jws"
 	v1alpha1bootstrap "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	bootstrapconnect "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1/v1alpha1connect"
-	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/bootstrap"
-	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
 	"github.com/otelfleet/otelfleet/pkg/ecdh"
 	otelfleetsvc "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/storage/types"
@@ -40,16 +38,12 @@ type Bootstrapper interface {
 
 type BootstrapServer struct {
 	tokenStore types.KeyValue[*v1alpha1bootstrap.BootstrapToken]
-	agentRepo  agentdomain.Repository
 
 	privateKey crypto.Signer
 	logger     *slog.Logger
 	services.Service
 
-	bootstrapper         Bootstrapper
-	configStore          types.KeyValue[*configv1alpha1.Config]
-	bootstrapConfigStore types.KeyValue[*configv1alpha1.Config]
-	assignedConfigStore  types.KeyValue[*configv1alpha1.Config]
+	bootstrapper Bootstrapper
 }
 
 var _ otelfleetsvc.HTTPExtension = (*BootstrapServer)(nil)
@@ -61,20 +55,12 @@ func NewBootstrapServer(
 	logger *slog.Logger,
 	privateKey crypto.Signer,
 	tokenStore types.KeyValue[*v1alpha1bootstrap.BootstrapToken],
-	agentRepo agentdomain.Repository,
-	configStore types.KeyValue[*configv1alpha1.Config],
-	bootstrapConfigStore types.KeyValue[*configv1alpha1.Config],
-	assignedConfigStore types.KeyValue[*configv1alpha1.Config],
 ) *BootstrapServer {
 	b := &BootstrapServer{
-		tokenStore:           tokenStore,
-		privateKey:           privateKey,
-		logger:               logger,
-		bootstrapper:         NewBootstrapper(logger, tokenStore, privateKey),
-		agentRepo:            agentRepo,
-		configStore:          configStore,
-		bootstrapConfigStore: bootstrapConfigStore,
-		assignedConfigStore:  assignedConfigStore,
+		tokenStore:   tokenStore,
+		privateKey:   privateKey,
+		logger:       logger,
+		bootstrapper: NewBootstrapper(logger, tokenStore, privateKey),
 	}
 
 	b.Service = services.NewBasicService(nil, b.running, nil)
@@ -101,41 +87,14 @@ func (b *BootstrapServer) CreateToken(ctx context.Context, connectReq *connect.R
 	bT := token.ToBootstrapToken()
 	bT.TTL = req.TTL
 	bT.Expiry = timestamppb.New(time.Now().Add(time.Minute * 5))
-	bT.ConfigReference = req.ConfigReference
 	bT.Labels = req.Labels
-	logger := b.logger.With("token", bT.GetID()).With("config-ref", bT.GetConfigReference())
+	// logger := b.logger.With("token", bT.GetID())
 
-	if ref := req.GetConfigReference(); ref != "" {
-		logger.Info("checking bootstrap token config reference")
-		config, err := b.configStore.Get(ctx, ref)
-		if err != nil {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get associated config for ref %s : %s", ref, err))
-		}
-		logger.Info("persisting bootstrap config")
-		if err := b.bootstrapConfigStore.Put(ctx, token.EncodeToHex(), config); err != nil {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to persist bootstrap config : %s", err))
-		}
-	}
 	if err := b.tokenStore.Put(ctx, bT.GetID(), bT); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return connect.NewResponse(bT), nil
-}
-
-func (b *BootstrapServer) GetBootstrapConfig(ctx context.Context, connectReq *connect.Request[v1alpha1bootstrap.GetConfigRequest]) (*connect.Response[v1alpha1bootstrap.GetConfigResponse], error) {
-	req := connectReq.Msg
-	b.logger.With("token", req.TokenID).Debug("fetching bootstrap config")
-	config, err := b.bootstrapConfigStore.Get(ctx, req.GetTokenID())
-	if err != nil {
-		return nil, err
-	}
-
-	return connect.NewResponse(
-		&v1alpha1bootstrap.GetConfigResponse{
-			Config: config,
-		},
-	), nil
 }
 
 func (b *BootstrapServer) ListTokens(ctx context.Context, _ *connect.Request[emptypb.Empty]) (*connect.Response[v1alpha1bootstrap.ListTokenReponse], error) {
@@ -214,7 +173,7 @@ func (b *BootstrapServer) Bootstrap(ctx context.Context, req *connect.Request[v1
 	if !ok {
 		return nil, grpcutil.ErrorInvalid(fmt.Errorf("can't access headers: no CallInfo for handler context"))
 	}
-	token, err := b.bootstrapper.VerifyToken(ctx, callInfo.RequestHeader())
+	_, err := b.bootstrapper.VerifyToken(ctx, callInfo.RequestHeader())
 	if err != nil {
 		return nil, err
 	}
@@ -224,61 +183,12 @@ func (b *BootstrapServer) Bootstrap(ctx context.Context, req *connect.Request[v1
 		return nil, grpcutil.ErrorInvalid(err)
 	}
 
-	if err := b.updateAgentDetails(ctx, req.Msg.GetClientId(), req.Msg.GetName(), token); err != nil {
-		return nil, err
-	}
-
 	b.logger.With("shared-secret", sharedSecret).Info("got shared secret")
 	return connect.NewResponse(
 		&v1alpha1bootstrap.BootstrapAuthResponse{
 			ServerPubKey: ekp.PublicKey.Bytes(),
 		},
 	), nil
-}
-
-func (b *BootstrapServer) updateAgentDetails(
-	ctx context.Context,
-	agentID string,
-	name string,
-	token string,
-) error {
-	l := b.logger.With("agentID", agentID).With("friendly-name", name).With("token", token)
-	l.Info("bootstrap successful, persisting agent details")
-
-	// Check if agent exists using repository
-	exists, err := b.agentRepo.Exists(ctx, agentID)
-	if err != nil {
-		return grpcutil.ErrorInternal(err)
-	}
-
-	if !exists {
-		l.Info("persisting agent details")
-		if err := b.agentRepo.Register(ctx, agentID, name); err != nil {
-			return grpcutil.ErrorInternal(err)
-		}
-	}
-
-	incomingConfig, err := b.bootstrapConfigStore.Get(ctx, token)
-	if err != nil {
-		if grpcutil.IsErrorNotFound(err) {
-			l.Debug("no bootstrap config associated with token")
-			return nil
-		}
-		return grpcutil.ErrorInternal(fmt.Errorf("failed to get bootstrap config: %w", err))
-	}
-
-	l.Info("agent has an assigned config")
-	_, configErr := b.assignedConfigStore.Get(ctx, agentID)
-	if grpcutil.IsErrorNotFound(configErr) {
-		l.Info("no config has been assigned to an agent yet, associating bootstrap config with agent")
-		if err := b.assignedConfigStore.Put(ctx, agentID, incomingConfig); err != nil {
-			return err
-		}
-	} else if configErr != nil {
-		return grpcutil.ErrorInternal(fmt.Errorf("failed to check assigned config: %w", configErr))
-	}
-	// note: in the future there may be things we want to update here like capabilities / scope
-	return nil
 }
 
 func (b *BootstrapServer) gc(key string) {

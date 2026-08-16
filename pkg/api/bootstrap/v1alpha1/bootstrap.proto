@@ -4,7 +4,6 @@ package bootstrap.v1alpha1;
 import "google/protobuf/duration.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
-import "pkg/api/config/v1alpha1/config.proto";
 
 option go_package = "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1;v1alpha1";
 
@@ -13,16 +12,6 @@ service TokenService {
   rpc ListTokens(google.protobuf.Empty) returns (ListTokenReponse);
   rpc DeleteToken(DeleteTokenRequest) returns (google.protobuf.Empty);
   rpc Signatures(google.protobuf.Empty) returns (SignatureResponse);
-
-  rpc GetBootstrapConfig(GetConfigRequest) returns (GetConfigResponse);
-}
-
-message GetConfigRequest {
-  string tokenID = 1;
-}
-
-message GetConfigResponse {
-  config.v1alpha1.Config config = 1;
 }
 
 service BootstrapService {
@@ -44,8 +33,6 @@ message BootstrapToken {
   string                             Secret = 2;
   google.protobuf.Duration           TTL    = 3;
   optional google.protobuf.Timestamp Expiry = 4;
-  // TODO: eventually this will be insufficient, should refactor to a message ConfigReference in config.proto
-  optional string     configReference = 5;
   map<string, string> labels          = 6;
 }
 
