@@ -19,7 +19,7 @@ import {
     type MantineColorScheme,
 } from '@mantine/core';
 import { useDisclosure, useLocalStorage } from '@mantine/hooks'
-import { GitHubLogoIcon, SunIcon, MoonIcon, StackIcon, IdCardIcon, RocketIcon, MixerHorizontalIcon } from '@radix-ui/react-icons';
+import { GitHubLogoIcon, SunIcon, MoonIcon, StackIcon, IdCardIcon, RocketIcon, MixerHorizontalIcon, CubeIcon, ArchiveIcon, FileTextIcon, LockClosedIcon } from '@radix-ui/react-icons';
 import { COMPONENT_ENTITY_TYPES, COLLECTOR_ENTITY_TYPES } from '../resources/entityTypes';
 
 
@@ -130,6 +130,7 @@ const Base: FC = () => {
     const [opened, { toggle }] = useDisclosure();
     const [active, setActive] = useState<string | null>(null);
     const [componentsOpened, setComponentsOpened] = useState(false);
+    const [registriesOpened, setRegistriesOpened] = useState(false);
     const [colorScheme, setColorScheme] = useLocalStorage<MantineColorScheme>({
         key: 'mantine-color-scheme',
         defaultValue: 'auto',
@@ -189,6 +190,20 @@ const Base: FC = () => {
                             onClick={() => setActive(active === 'mgmt' ? null : 'mgmt')}
                         >
                             <NavLink component={Link} to="/tokens" label="API tokens" leftSection={<IdCardIcon />} />
+                            <NavLink component={Link} to="/rbac"   label="RBAC"       leftSection={<LockClosedIcon />} />
+                            <NavLink
+                                label="Registry"
+                                description="Config & binary registries"
+                                leftSection={<ArchiveIcon />}
+                                opened={registriesOpened}
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    setRegistriesOpened((o) => !o);
+                                }}
+                            >
+                                <NavLink component={Link} to="/registries/config" label="Config registry" leftSection={<FileTextIcon />} />
+                                <NavLink component={Link} to="/registries/binary" label="Binary registry" leftSection={<CubeIcon />} />
+                            </NavLink>
                         </NavLink>
 
                         <NavLink
