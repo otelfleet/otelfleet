@@ -44,4 +44,14 @@ func RegisterCollectorServiceHandler(mux *mux.Router, svc CollectorServiceHandle
 		svc.DeleteCollector,
 		opts...,
 	))
+	mux.Handle("/deployment.v1alpha1.CollectorService/ValidateRouter", connect.NewUnaryHandler(
+		"/deployment.v1alpha1.CollectorService/ValidateRouter",
+		svc.ValidateRouter,
+		opts...,
+	))
+	mux.Handle("/deployment.v1alpha1.CollectorService/PreviewRouter", connect.NewUnaryHandler(
+		"/deployment.v1alpha1.CollectorService/PreviewRouter",
+		svc.PreviewRouter,
+		opts...,
+	))
 }

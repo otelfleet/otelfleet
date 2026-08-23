@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/url"
 	"path"
-	"strconv"
 	"time"
 
 	"github.com/open-telemetry/opamp-go/protobufs"
@@ -18,6 +17,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/config"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
+	"github.com/otelfleet/otelfleet/pkg/router"
 	services_int "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp/sync"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
@@ -421,44 +421,12 @@ func (s *CollectorHandler) calculateHash(agentToConfigMap *protobufs.AgentConfig
 	return util.HashAgentConfigMap(agentToConfigMap)
 }
 
-func (s *CollectorHandler) agentLabels(ctx context.Context) (sync.AgentLabels, error) {
+func (s *CollectorHandler) agentLabels(ctx context.Context) (router.CollectorLabels, error) {
 	agentDescription, err := s.inst.GetDescription(ctx)
 	if err != nil {
-		return sync.AgentLabels{}, err
+		return router.CollectorLabels{}, err
 	}
-	return sync.AgentLabels{
-		Identifying:    toStringLabels(agentDescription.GetIdentifyingAttributes()),
-		NonIdentifying: toStringLabels(agentDescription.GetNonIdentifyingAttributes()),
-	}, nil
-}
-
-func toStringLabels(attrs []*v1alpha1.KeyValue) map[string]string {
-	labels := make(map[string]string, len(attrs))
-	for _, attr := range attrs {
-		value, ok := labelValue(attr.GetValue())
-		if !ok {
-			continue
-		}
-		labels[attr.GetKey()] = value
-	}
-	return labels
-}
-
-// labelValue reports false for composite values, which cannot be matched by label selectors.
-func labelValue(v *v1alpha1.AnyValue) (string, bool) {
-	switch val := v.GetValue().(type) {
-	case *v1alpha1.AnyValue_StringValue:
-		return val.StringValue, true
-	case *v1alpha1.AnyValue_BoolValue:
-		return strconv.FormatBool(val.BoolValue), true
-	case *v1alpha1.AnyValue_IntValue:
-		return strconv.FormatInt(val.IntValue, 10), true
-	case *v1alpha1.AnyValue_DoubleValue:
-		return strconv.FormatFloat(val.DoubleValue, 'g', -1, 64), true
-	case *v1alpha1.AnyValue_BytesValue:
-		return string(val.BytesValue), true
-	}
-	return "", false
+	return util.CollectorDescriptionToLabels(agentDescription), nil
 }
 
 type resolvedConfig struct {
@@ -474,10 +442,9 @@ func (s *CollectorHandler) filteredConfig(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	filter := s.configFilterSync.Match(labels)
-	configRef := filter.GetCollectorConfig().GetConfigRef()
-	if configRef == "" {
-		return "", status.Error(codes.NotFound, "no matching config filter")
+	configRef, err := s.configFilterSync.Match(ctx, labels)
+	if err != nil {
+		return "", err
 	}
 	return configRef, nil
 }
@@ -504,7 +471,7 @@ func (s *CollectorHandler) constructConfig(ctx context.Context) (*resolvedConfig
 
 	config, err := s.collectorConfigs.Get(ctx, configRef)
 	if grpcutil.IsError(codes.NotFound, err) {
-		logger.Info("agent has no assigned config from control plane")
+		logger.Warn("agent has no assigned config from control plane")
 		return &resolvedConfig{
 			configMap: &protobufs.AgentConfigMap{
 				ConfigMap: map[string]*protobufs.AgentConfigFile{

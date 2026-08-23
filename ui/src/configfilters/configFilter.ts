@@ -13,13 +13,13 @@ export const CONFIG_FILTER_TYPE_URL = `type.googleapis.com/${ConfigFilterSchema.
 export type LabelScope = 'identifying' | 'nonIdentifying' | 'otelfleet';
 
 export interface LabelRow {
-  scope: LabelScope;
+  type: MatchType;
   key: string;
   value: string;
 }
 
 export interface LabelFilterValues {
-  type: MatchType;
+  scope: LabelScope;
   labels: LabelRow[];
 }
 
@@ -32,17 +32,52 @@ export interface ConfigFilterValues {
 }
 
 export const MATCH_TYPE_OPTIONS = [
-  { value: String(MatchType.EQ), label: 'equals' },
-  { value: String(MatchType.NEQ), label: 'not equals' },
-  { value: String(MatchType.RE), label: 'matches regex' },
-  { value: String(MatchType.NR), label: 'does not match regex' },
+  { value: String(MatchType.EQ), label: '==' },
+  { value: String(MatchType.NEQ), label: '!=' },
+  { value: String(MatchType.RE), label: '~=' },
+  { value: String(MatchType.NR), label: '!~' },
 ];
 
 export const LABEL_SCOPE_OPTIONS: { value: LabelScope; label: string }[] = [
-  { value: 'identifying', label: 'OpAMP identifying' },
-  { value: 'nonIdentifying', label: 'OpAMP non-identifying' },
-  { value: 'otelfleet', label: 'OtelFleet' },
+  { value: 'identifying', label: 'Collector identity' },
+  { value: 'nonIdentifying', label: 'Collector environment' },
+  { value: 'otelfleet', label: 'User-defined' },
 ];
+
+export const LABEL_SCOPE_DESCRIPTIONS: Record<LabelScope, string> = {
+  identifying: 'Reported by the collector, the OpenTelemetryCollector information',
+  nonIdentifying: 'Reported by the collector: the OpenTelemetryCollector host information',
+  otelfleet: 'Labels you assign in OtelFleet',
+};
+
+// Defaults set by opampextension's createAgentDescription; agents may report more.
+export const LABEL_KEY_SUGGESTIONS: Record<LabelScope, { key: string; description: string }[]> = {
+  identifying: [
+    { key: 'service.instance.id', description: 'Unique ID of the collector instance' },
+    { key: 'service.name', description: 'Collector distribution' },
+    { key: 'service.version', description: 'Version of the collector build' },
+  ],
+  nonIdentifying: [
+    { key: 'host.arch', description: 'CPU architecture of the host, e.g. amd64' },
+    { key: 'host.name', description: 'Hostname of the machine running the collector' },
+    { key: 'os.description', description: 'Human-readable OS version, e.g. Alpine 3.24.1' },
+    { key: 'os.type', description: 'Operating system, e.g. linux' },
+  ],
+  otelfleet: [],
+};
+
+export const LABEL_VALUE_SUGGESTIONS: Record<string, string[]> = {
+  'service.name': ['otelcol', 'otelcol-contrib', 'otelcol-otlp', 'otelcol-k8s', 'otelcol-ebpf-profiler'],
+// GOOS / GOARCH as reported by runtime.GOOS and runtime.GOARCH.
+  'os.type': [
+    'aix', 'android', 'darwin', 'dragonfly', 'freebsd', 'illumos', 'ios', 'js',
+    'linux', 'netbsd', 'openbsd', 'plan9', 'solaris', 'wasip1', 'windows',
+  ],
+  'host.arch': [
+    '386', 'amd64', 'arm', 'arm64', 'loong64', 'mips', 'mips64', 'mips64le',
+    'mipsle', 'ppc64', 'ppc64le', 'riscv64', 's390x', 'wasm',
+  ],
+};
 
 export function emptyConfigFilterValues(): ConfigFilterValues {
   return {
@@ -50,22 +85,26 @@ export function emptyConfigFilterValues(): ConfigFilterValues {
     isDefault: false,
     requiresApproval: false,
     configRef: '',
-    filters: [emptyLabelFilterValues()],
+    filters: [],
   };
 }
 
 export function emptyLabelFilterValues(): LabelFilterValues {
-  return { type: MatchType.EQ, labels: [{ scope: 'identifying', key: '', value: '' }] };
+  return { scope: 'identifying', labels: [emptyLabelRow()] };
+}
+
+export function emptyLabelRow(): LabelRow {
+  return { type: MatchType.EQ, key: '', value: '' };
 }
 
 export function packConfigFilter(values: ConfigFilterValues): Any {
-  const filters = values.filters.map((filter) =>
-    create(LabelFilterSchema, {
-      type: filter.type,
-      opampIdLabels: labelsForScope(filter.labels, 'identifying'),
-      opampNonIdLabels: labelsForScope(filter.labels, 'nonIdentifying'),
-      otelfleetLabels: labelsForScope(filter.labels, 'otelfleet'),
-    }),
+  const filters = values.filters.flatMap((filter) =>
+    matchTypesOf(filter.labels).map((type) =>
+      create(LabelFilterSchema, {
+        type,
+        ...labelsForScope(filter.scope, labelsOfType(filter.labels, type)),
+      }),
+    ),
   );
 
   return anyPack(
@@ -87,21 +126,24 @@ export function unpackConfigFilter(obj?: Any): ConfigFilter | undefined {
 export function toConfigFilterValues(name: string, filter?: ConfigFilter): ConfigFilterValues {
   if (!filter) return { ...emptyConfigFilterValues(), name };
 
-  const filters = filter.filters.map((labelFilter) => ({
-    type: labelFilter.type,
-    labels: [
-      ...labelRows(labelFilter.opampIdLabels, 'identifying'),
-      ...labelRows(labelFilter.opampNonIdLabels, 'nonIdentifying'),
-      ...labelRows(labelFilter.otelfleetLabels, 'otelfleet'),
-    ],
-  }));
+  const filters = filter.filters.flatMap((labelFilter) =>
+    (
+      [
+        ['identifying', labelFilter.opampIdLabels],
+        ['nonIdentifying', labelFilter.opampNonIdLabels],
+        ['otelfleet', labelFilter.otelfleetLabels],
+      ] as const
+    )
+      .filter(([, labels]) => Object.keys(labels).length > 0)
+      .map(([scope, labels]) => ({ scope, labels: labelRows(labels, labelFilter.type) })),
+  );
 
   return {
     name,
     isDefault: filter.default ?? false,
     requiresApproval: filter.approval?.requiresApproval ?? false,
     configRef: filter.collectorConfig?.configRef ?? '',
-    filters: filters.length > 0 ? filters : [emptyLabelFilterValues()],
+    filters,
   };
 }
 
@@ -117,14 +159,29 @@ export function countLabels(filter?: ConfigFilter): number {
   );
 }
 
-function labelsForScope(rows: LabelRow[], scope: LabelScope): { [key: string]: string } {
+function matchTypesOf(rows: LabelRow[]): MatchType[] {
+  return [...new Set(rows.filter((row) => row.key !== '').map((row) => row.type))];
+}
+
+function labelsOfType(rows: LabelRow[], type: MatchType): { [key: string]: string } {
   const labels: { [key: string]: string } = {};
   for (const row of rows) {
-    if (row.scope === scope && row.key !== '') labels[row.key] = row.value;
+    if (row.type === type && row.key !== '') labels[row.key] = row.value;
   }
   return labels;
 }
 
-function labelRows(labels: { [key: string]: string }, scope: LabelScope): LabelRow[] {
-  return Object.entries(labels).map(([key, value]) => ({ scope, key, value }));
+function labelsForScope(scope: LabelScope, labels: { [key: string]: string }) {
+  switch (scope) {
+    case 'identifying':
+      return { opampIdLabels: labels };
+    case 'nonIdentifying':
+      return { opampNonIdLabels: labels };
+    case 'otelfleet':
+      return { otelfleetLabels: labels };
+  }
+}
+
+function labelRows(labels: { [key: string]: string }, type: MatchType): LabelRow[] {
+  return Object.entries(labels).map(([key, value]) => ({ type, key, value }));
 }

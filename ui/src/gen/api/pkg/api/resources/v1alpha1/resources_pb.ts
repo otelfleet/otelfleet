@@ -774,6 +774,8 @@ export type ConfigFilter = Message<"resources.v1alpha1.ConfigFilter"> & {
   approval?: ApprovalConfig | undefined;
 
   /**
+   * TODO : this needs to be enum {Identifying, Non-identifying, Otelfleet} + repeated {Match type, key, value}
+   *
    * @generated from field: repeated resources.v1alpha1.LabelFilter filters = 3;
    */
   filters: LabelFilter[];

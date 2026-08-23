@@ -53,15 +53,15 @@ export const Edit: Story = {
       configRef: 'linux-baseline',
       filters: [
         {
-          type: MatchType.EQ,
+          scope: 'identifying',
           labels: [
-            { scope: 'identifying', key: 'os.type', value: 'linux' },
-            { scope: 'otelfleet', key: 'environment', value: 'production' },
+            { type: MatchType.EQ, key: 'os.type', value: 'linux' },
+            { type: MatchType.NEQ, key: 'service.name', value: 'checkout' },
           ],
         },
         {
-          type: MatchType.RE,
-          labels: [{ scope: 'nonIdentifying', key: 'host.name', value: '^edge-.*' }],
+          scope: 'nonIdentifying',
+          labels: [{ type: MatchType.RE, key: 'host.name', value: '^edge-.*' }],
         },
       ],
     },

@@ -5,9 +5,11 @@ import (
 	"log/slog"
 	"path"
 
+	"connectrpc.com/connect"
 	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/config"
+	otelfleet_svc "github.com/otelfleet/otelfleet/pkg/services"
 	collogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
 	colmetricspb "go.opentelemetry.io/proto/otlp/collector/metrics/v1"
 	coltracespb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
@@ -27,6 +29,8 @@ type Server struct {
 	config *config.OTLPConfig
 	services.Service
 }
+
+var _ otelfleet_svc.HTTPExtension = (*Server)(nil)
 
 func NewServer(
 	l *slog.Logger,
@@ -68,7 +72,7 @@ func (s *Server) ConfigureGRPC(srv *grpc.Server) {
 	srv.RegisterService(&collogspb.LogsService_ServiceDesc, s.logsServer)
 }
 
-func (s *Server) ConfigureHTTP(mux *mux.Router) {
+func (s *Server) ConfigureHTTP(mux *mux.Router, _ []connect.HandlerOption) {
 	mux.HandleFunc(path.Join(s.config.BasePath, s.config.MetricsAPIPath), s.metricsServer.handleMetricsPost)
 	mux.HandleFunc(path.Join(s.config.BasePath, s.config.LogsAPIPath), s.logsServer.handleLogsPost)
 	mux.HandleFunc(path.Join(s.config.BasePath, s.config.TraceAPIPath), s.traceServer.handleTracePost)

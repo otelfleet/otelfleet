@@ -11,6 +11,10 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1/v1alpha1connect"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
+	"github.com/otelfleet/otelfleet/pkg/router"
+	otelfleetsvc "github.com/otelfleet/otelfleet/pkg/services"
+	"github.com/otelfleet/otelfleet/pkg/util"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -25,6 +29,7 @@ type DeploymentServer struct {
 }
 
 var _ v1alpha1connect.CollectorServiceHandler = (*DeploymentServer)(nil)
+var _ otelfleetsvc.HTTPExtension = (*DeploymentServer)(nil)
 
 func NewDeploymentServer(
 	logger *slog.Logger,
@@ -43,9 +48,9 @@ func (a *DeploymentServer) running(ctx context.Context) error {
 	return nil
 }
 
-func (a *DeploymentServer) ConfigureHTTP(mux *mux.Router) {
+func (a *DeploymentServer) ConfigureHTTP(mux *mux.Router, opts []connect.HandlerOption) {
 	a.logger.Info("configuring routes")
-	v1alpha1connect.RegisterCollectorServiceHandler(mux, a)
+	v1alpha1connect.RegisterCollectorServiceHandler(mux, a, opts...)
 }
 
 func (a *DeploymentServer) ListCollectors(
@@ -161,5 +166,39 @@ func (a *DeploymentServer) CollectorHistory(ctx context.Context, req *connect.Re
 	}
 	return connect.NewResponse(&v1alpha1.GetCollectorHistoryResponse{
 		EffectiveConfig: configs,
+	}), nil
+}
+
+func (a *DeploymentServer) ValidateRouter(ctx context.Context, req *connect.Request[v1alpha1.ValidateRouterRequest]) (*connect.Response[v1alpha1.ValidateRouterResponse], error) {
+	_, err := router.NewMatcher(req.Msg.GetRouter())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid router : %w", err))
+	}
+	return connect.NewResponse(&v1alpha1.ValidateRouterResponse{}), nil
+}
+
+func (a *DeploymentServer) PreviewRouter(ctx context.Context, req *connect.Request[v1alpha1.PreviewRouterRequest]) (*connect.Response[v1alpha1.PreviewRouterResponse], error) {
+	matcher, err := router.NewMatcher(req.Msg.GetRouter())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("expected a valid router : %w", err))
+	}
+	insts, err := a.mgr.List(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	ret := map[string]string{}
+
+	for _, inst := range insts {
+		desc, err := inst.GetDescription(ctx)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
+		}
+		l := util.CollectorDescriptionToLabels(desc)
+		configRef := matcher.Match(ctx, l)
+		ret[desc.GetId()] = configRef
+	}
+	return connect.NewResponse(&v1alpha1.PreviewRouterResponse{
+		CollectorsToConfigRef: ret,
 	}), nil
 }

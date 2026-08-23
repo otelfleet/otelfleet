@@ -1949,11 +1949,12 @@ func (x *VersionConstraits) GetMaxVersion() string {
 }
 
 type ConfigFilter struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Default         *bool                  `protobuf:"varint,1,opt,name=default,proto3,oneof" json:"default,omitempty"`
-	Approval        *ApprovalConfig        `protobuf:"bytes,2,opt,name=approval,proto3" json:"approval,omitempty"`
-	Filters         []*LabelFilter         `protobuf:"bytes,3,rep,name=filters,proto3" json:"filters,omitempty"`
-	CollectorConfig *TargetConfig          `protobuf:"bytes,4,opt,name=collector_config,json=collectorConfig,proto3" json:"collector_config,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Default  *bool                  `protobuf:"varint,1,opt,name=default,proto3,oneof" json:"default,omitempty"`
+	Approval *ApprovalConfig        `protobuf:"bytes,2,opt,name=approval,proto3" json:"approval,omitempty"`
+	// TODO : this needs to be enum {Identifying, Non-identifying, Otelfleet} + repeated {Match type, key, value}
+	Filters         []*LabelFilter `protobuf:"bytes,3,rep,name=filters,proto3" json:"filters,omitempty"`
+	CollectorConfig *TargetConfig  `protobuf:"bytes,4,opt,name=collector_config,json=collectorConfig,proto3" json:"collector_config,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }

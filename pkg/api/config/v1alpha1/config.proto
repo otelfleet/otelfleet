@@ -5,6 +5,8 @@ package config.v1alpha1;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "pkg/api/resources/v1alpha1/resources.proto";
+import "google/protobuf/any.proto";
+import "pkg/api/common/v1alpha1/common.proto";
 
 option go_package = "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1";
 
@@ -21,4 +23,112 @@ enum AssignedState {
   ASSIGNED_STATE_PLANNED = 2;
   ASSIGNED_STATE_APPLIED = 3;
   ASSIGNED_STATE_NOT_APPLIED = 4;
+}
+
+message ResourceEntity {
+    string type_url = 1;
+    string key = 2;
+    google.protobuf.Any obj = 3;
+}
+
+
+// CollectorConfig is a complete OpenTelemetryConfig
+message CollectorConfig {
+    common.v1alpha1.CompatibilityMatrix compat = 1;
+    string content_type = 2;
+    oneof value {
+        bytes Raw = 3;
+        CollectorComponents components = 4;
+    }
+}
+
+message CollectorComponents {
+    ReceiverCollection receivers = 1;
+    ProcessorCollection processors = 2;
+    ExporterCollection exporters = 3;
+    ConnectorCollection connectors = 4;
+    ExtensionCollection extensions = 5;
+    PipelineCollection pipelines = 6;
+}
+
+// Receiver is an OpenTelemetry receiver
+message Receiver {
+    common.v1alpha1.CompatibilityMatrix compat = 1;
+    ComponentDefinition value = 2;
+}
+
+message ReceiverCollection {
+    repeated Receiver receivers = 1;
+    ComponentDefinition value = 2;
+}
+
+
+// Processor is an OpenTelemetry processor
+message Processor {
+    common.v1alpha1.CompatibilityMatrix compat = 1;
+    ComponentDefinition value = 2;
+}
+
+message ProcessorCollection {
+    repeated Processor processors = 1;
+}
+
+// Exporter is an OpenTelemetry exporter
+message Exporter {
+    common.v1alpha1.CompatibilityMatrix compat = 1;
+    ComponentDefinition value = 2;
+}
+
+message ExporterCollection {
+    repeated Exporter exporters = 1;
+}
+
+// Connector is an OpenTelemetry connector
+message Connector {
+    common.v1alpha1.CompatibilityMatrix compat = 1;
+    ComponentDefinition value = 2;
+}
+
+message ConnectorCollection {
+    repeated Connector connectors = 1;
+}
+
+// Extensions is an OpenTelemetry extension
+message Extension {
+    common.v1alpha1.CompatibilityMatrix compat = 1;
+    ComponentDefinition value = 2;
+}
+
+message ExtensionCollection {
+    repeated Extension extensions = 1;
+}
+
+enum PipelineType {
+    PIPELINE_TYPE_UNKNOWN = 0;
+    PIPELINE_TYPE_METRICS = 1;
+    PIPELINE_TYPE_TRACES = 2;
+    PIPELINE_TYPE_LOGS = 3;
+    PIPELINE_TYPE_PROFILE = 4;
+}
+
+// Pipelines is an OpenTelemetry extension
+message Pipeline {
+    PipelineType type = 1;
+    optional string pipeline_name =2;
+    common.v1alpha1.CompatibilityMatrix compat = 3;
+    ComponentDefinition value = 4;
+}
+
+message PipelineCollection {
+    repeated Pipeline pipelines = 1;
+}
+
+message ComponentDefinition {
+    string content_type = 1;
+    oneof value {
+        // Holds the full content
+        bytes raw = 2;
+        // Holds the reference
+        string ref = 3;
+    }
 }

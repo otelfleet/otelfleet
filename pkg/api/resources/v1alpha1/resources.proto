@@ -223,6 +223,7 @@ message VersionConstraits {
 message ConfigFilter {
   optional bool default = 1;
   ApprovalConfig approval = 2;
+  // TODO : this needs to be enum {Identifying, Non-identifying, Otelfleet} + repeated {Match type, key, value}
   repeated LabelFilter filters = 3;
   TargetConfig collector_config = 4;
 }

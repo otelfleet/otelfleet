@@ -72,10 +72,10 @@ func (b *BootstrapServer) running(ctx context.Context) error {
 	return nil
 }
 
-func (b *BootstrapServer) ConfigureHTTP(mux *mux.Router) {
+func (b *BootstrapServer) ConfigureHTTP(mux *mux.Router, opts []connect.HandlerOption) {
 	b.logger.Info("configuring routes")
-	bootstrapconnect.RegisterTokenServiceHandler(mux, b)
-	bootstrapconnect.RegisterBootstrapServiceHandler(mux, b)
+	bootstrapconnect.RegisterTokenServiceHandler(mux, b, opts...)
+	bootstrapconnect.RegisterBootstrapServiceHandler(mux, b, opts...)
 }
 
 func (b *BootstrapServer) CreateToken(ctx context.Context, connectReq *connect.Request[v1alpha1bootstrap.CreateTokenRequest]) (*connect.Response[v1alpha1bootstrap.BootstrapToken], error) {

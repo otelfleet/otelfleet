@@ -13,6 +13,9 @@ import (
 	"strconv"
 	"time"
 
+	"connectrpc.com/validate"
+
+	"connectrpc.com/connect"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	dslog "github.com/grafana/dskit/log"
@@ -101,6 +104,8 @@ type OtelFleet struct {
 	serviceMap map[string]services.Service
 	server     *server.Server
 	serverConf server.Config
+
+	connectOpts []connect.HandlerOption
 }
 
 func New(cfg config.Config) (*OtelFleet, error) {
@@ -108,6 +113,9 @@ func New(cfg config.Config) (*OtelFleet, error) {
 	f := &OtelFleet{
 		logger: l,
 		cfg:    cfg,
+		connectOpts: []connect.HandlerOption{
+			connect.WithInterceptors(validate.NewInterceptor()),
+		},
 	}
 
 	httpListenHost, httpListenPort, err := net.SplitHostPort(cfg.HttpListenAddr)
@@ -170,7 +178,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			return nil, err
 		}
 		o.store = storeSvc
-		storeSvc.ConfigureHTTP(o.server.HTTP)
+		storeSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 
 		o.tokenStore = storage.NewProtoKVFromSchemaImpl[*bootstrapv1alpha1.BootstrapToken](o.store.Schema())
 		o.deployMgr = deployment.NewManager(o.store.Schema())
@@ -187,7 +195,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			// o.bootstrapConfigStore,
 			// o.assignmentConfigStore,
 		)
-		bootstrapSvc.ConfigureHTTP(o.server.HTTP)
+		bootstrapSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 
 		return bootstrapSvc, nil
 	})
@@ -224,7 +232,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("service", DeploymentManager),
 			o.deployMgr,
 		)
-		srv.ConfigureHTTP(o.server.HTTP)
+		srv.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 		return srv, nil
 	})
 
@@ -236,20 +244,20 @@ func (o *OtelFleet) setupModuleManager() error {
 		if err != nil {
 			return nil, err
 		}
-		uiSvc.ConfigureHTTP(o.server.HTTP)
+		uiSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 		return uiSvc, nil
 	})
 
 	mm.RegisterModule(OTLP, func() (services.Service, error) {
 		otlpSvc := otlp.NewServer(o.logger.With("service", "otlp"), o.cfg.OTLP)
 		otlpSvc.ConfigureGRPC(o.server.GRPC)
-		otlpSvc.ConfigureHTTP(o.server.HTTP)
+		otlpSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 		return otlpSvc, nil
 	})
 
 	mm.RegisterModule(Resource, func() (services.Service, error) {
 		resourceSvc := resource.NewServer(o.logger.With("service", "resource-server"), o.store.Schema())
-		resourceSvc.ConfigureHTTP(o.server.HTTP)
+		resourceSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 		return resourceSvc, nil
 	})
 
@@ -258,7 +266,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("service", "lsp"),
 			o.cfg.LSP,
 		)
-		lspService.ConfigureHTTP(o.server.HTTP)
+		lspService.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 		return lspService, nil
 	})
 

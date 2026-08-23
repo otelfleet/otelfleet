@@ -6,13 +6,82 @@ import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobu
 import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_empty, file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
+import { file_pkg_api_resources_v1alpha1_resources } from "../../resources/v1alpha1/resources_pb";
+import type { Router } from "../../route/v1alpha1/route_pb";
+import { file_pkg_api_route_v1alpha1_route } from "../../route/v1alpha1/route_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file pkg/api/deployment/v1alpha1/deployment.proto.
  */
 export const file_pkg_api_deployment_v1alpha1_deployment: GenFile = /*@__PURE__*/
-  fileDesc("Cixwa2cvYXBpL2RlcGxveW1lbnQvdjFhbHBoYTEvZGVwbG95bWVudC5wcm90bxITZGVwbG95bWVudC52MWFscGhhMSJRChpHZXRDb2xsZWN0b3JIaXN0b3J5UmVxdWVzdBIUCgxjb2xsZWN0b3JfaWQYASABKAkSDgoGb2Zmc2V0GAIgASgEEg0KBWxpbWl0GAMgASgEIl0KG0dldENvbGxlY3Rvckhpc3RvcnlSZXNwb25zZRI+ChBlZmZlY3RpdmVfY29uZmlnGAEgAygLMiQuZGVwbG95bWVudC52MWFscGhhMS5FZmZlY3RpdmVDb25maWciLAoVTGlzdENvbGxlY3RvcnNSZXF1ZXN0EhMKC3dpdGhfc3RhdHVzGAEgASgIImAKFkxpc3RDb2xsZWN0b3JzUmVzcG9uc2USRgoKY29sbGVjdG9ycxgBIAMoCzIyLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yRGVzY3JpcHRpb25BbmRTdGF0dXMihwEKDUNvbGxlY3RvclZpZXcSQAoMcmVnaXN0cmF0aW9uGAEgASgLMiouZGVwbG95bWVudC52MWFscGhhMS5Db2xsZWN0b3JSZWdpc3RyYXRpb24SNAoGc3RhdHVzGAIgASgLMiQuZGVwbG95bWVudC52MWFscGhhMS5Db2xsZWN0b3JTdGF0dXMikwEKHUNvbGxlY3RvckRlc2NyaXB0aW9uQW5kU3RhdHVzEjwKCWNvbGxlY3RvchgBIAEoCzIpLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yRGVzY3JpcHRpb24SNAoGc3RhdHVzGAIgASgLMiQuZGVwbG95bWVudC52MWFscGhhMS5Db2xsZWN0b3JTdGF0dXMiKwoTR2V0Q29sbGVjdG9yUmVxdWVzdBIUCgxjb2xsZWN0b3JfaWQYASABKAkiVAoUR2V0Q29sbGVjdG9yUmVzcG9uc2USPAoJY29sbGVjdG9yGAEgASgLMikuZGVwbG95bWVudC52MWFscGhhMS5Db2xsZWN0b3JEZXNjcmlwdGlvbiIxChlHZXRDb2xsZWN0b3JTdGF0dXNSZXF1ZXN0EhQKDGNvbGxlY3Rvcl9pZBgBIAEoCSJSChpHZXRDb2xsZWN0b3JTdGF0dXNSZXNwb25zZRI0CgZzdGF0dXMYASABKAsyJC5kZXBsb3ltZW50LnYxYWxwaGExLkNvbGxlY3RvclN0YXR1cyIuChZEZWxldGVDb2xsZWN0b3JSZXF1ZXN0EhQKDGNvbGxlY3Rvcl9pZBgBIAEoCSLAAgoPQ29sbGVjdG9yU3RhdHVzEjQKBmhlYWx0aBgBIAEoCzIkLmRlcGxveW1lbnQudjFhbHBoYTEuQ29tcG9uZW50SGVhbHRoEj4KEGVmZmVjdGl2ZV9jb25maWcYAiABKAsyJC5kZXBsb3ltZW50LnYxYWxwaGExLkVmZmVjdGl2ZUNvbmZpZxJFChRyZW1vdGVfY29uZmlnX3N0YXR1cxgDIAEoCzInLmRlcGxveW1lbnQudjFhbHBoYTEuUmVtb3RlQ29uZmlnU3RhdHVzEjoKC2Nvbm5fc3RhdHVzGAQgASgLMiUuZGVwbG95bWVudC52MWFscGhhMS5Db25uZWN0aW9uU3RhdHVzEjQKC3N5bmNfc3RhdHVzGAUgASgLMh8uZGVwbG95bWVudC52MWFscGhhMS5TeW5jU3RhdHVzItIBChVDb2xsZWN0b3JSZWdpc3RyYXRpb24SCgoCaWQYASABKAkSFQoNZnJpZW5kbHlfbmFtZRgCIAEoCRI9ChZpZGVudGlmeWluZ19hdHRyaWJ1dGVzGAMgAygLMh0uZGVwbG95bWVudC52MWFscGhhMS5LZXlWYWx1ZRJBChpub25faWRlbnRpZnlpbmdfYXR0cmlidXRlcxgEIAMoCzIdLmRlcGxveW1lbnQudjFhbHBoYTEuS2V5VmFsdWUSFAoMY2FwYWJpbGl0aWVzGAUgAygJItEBChRDb2xsZWN0b3JEZXNjcmlwdGlvbhIKCgJpZBgBIAEoCRIVCg1mcmllbmRseV9uYW1lGAIgASgJEj0KFmlkZW50aWZ5aW5nX2F0dHJpYnV0ZXMYAyADKAsyHS5kZXBsb3ltZW50LnYxYWxwaGExLktleVZhbHVlEkEKGm5vbl9pZGVudGlmeWluZ19hdHRyaWJ1dGVzGAQgAygLMh0uZGVwbG95bWVudC52MWFscGhhMS5LZXlWYWx1ZRIUCgxjYXBhYmlsaXRpZXMYBSADKAkiRQoIS2V5VmFsdWUSCwoDa2V5GAEgASgJEiwKBXZhbHVlGAIgASgLMh0uZGVwbG95bWVudC52MWFscGhhMS5BbnlWYWx1ZSL4AQoIQW55VmFsdWUSFgoMc3RyaW5nX3ZhbHVlGAEgASgJSAASFAoKYm9vbF92YWx1ZRgCIAEoCEgAEhMKCWludF92YWx1ZRgDIAEoA0gAEhYKDGRvdWJsZV92YWx1ZRgEIAEoAUgAEhUKC2J5dGVzX3ZhbHVlGAUgASgMSAASNgoLYXJyYXlfdmFsdWUYBiABKAsyHy5kZXBsb3ltZW50LnYxYWxwaGExLkFycmF5VmFsdWVIABI5Cgxrdmxpc3RfdmFsdWUYByABKAsyIS5kZXBsb3ltZW50LnYxYWxwaGExLktleVZhbHVlTGlzdEgAQgcKBXZhbHVlIjsKCkFycmF5VmFsdWUSLQoGdmFsdWVzGAEgAygLMh0uZGVwbG95bWVudC52MWFscGhhMS5BbnlWYWx1ZSI9CgxLZXlWYWx1ZUxpc3QSLQoGdmFsdWVzGAEgAygLMh0uZGVwbG95bWVudC52MWFscGhhMS5LZXlWYWx1ZSK8AgoYQ29sbGVjdG9yQ29ubmVjdGlvblN0YXRlEhQKDGNvbGxlY3Rvcl9pZBgBIAEoCRIyCgVzdGF0ZRgCIAEoDjIjLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yU3RhdGUSLQoJbGFzdF9zZWVuGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIwCgxjb25uZWN0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjMKD2Rpc2Nvbm5lY3RlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASFAoMaW5zdGFuY2VfdWlkGAYgASgMEhQKDGNhcGFiaWxpdGllcxgHIAEoBBIUCgxzZXF1ZW5jZV9udW0YCCABKAQiwAIKD0NvbXBvbmVudEhlYWx0aBIPCgdoZWFsdGh5GAEgASgIEhwKFHN0YXJ0X3RpbWVfdW5peF9uYW5vGAIgASgEEhIKCmxhc3RfZXJyb3IYAyABKAkSDgoGc3RhdHVzGAQgASgJEh0KFXN0YXR1c190aW1lX3VuaXhfbmFubxgFIAEoBBJaChRjb21wb25lbnRfaGVhbHRoX21hcBgGIAMoCzI8LmRlcGxveW1lbnQudjFhbHBoYTEuQ29tcG9uZW50SGVhbHRoLkNvbXBvbmVudEhlYWx0aE1hcEVudHJ5Gl8KF0NvbXBvbmVudEhlYWx0aE1hcEVudHJ5EgsKA2tleRgBIAEoCRIzCgV2YWx1ZRgCIAEoCzIkLmRlcGxveW1lbnQudjFhbHBoYTEuQ29tcG9uZW50SGVhbHRoOgI4ASJOCg9FZmZlY3RpdmVDb25maWcSOwoKY29uZmlnX21hcBgBIAEoCzInLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yQ29uZmlnTWFwIrwBChJDb2xsZWN0b3JDb25maWdNYXASSgoKY29uZmlnX21hcBgBIAMoCzI2LmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yQ29uZmlnTWFwLkNvbmZpZ01hcEVudHJ5GloKDkNvbmZpZ01hcEVudHJ5EgsKA2tleRgBIAEoCRI3CgV2YWx1ZRgCIAEoCzIoLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yQ29uZmlnRmlsZToCOAEiOQoTQ29sbGVjdG9yQ29uZmlnRmlsZRIMCgRib2R5GAEgASgMEhQKDGNvbnRlbnRfdHlwZRgCIAEoCSKHAQoSUmVtb3RlQ29uZmlnU3RhdHVzEh8KF2xhc3RfcmVtb3RlX2NvbmZpZ19oYXNoGAEgASgMEjkKBnN0YXR1cxgCIAEoDjIpLmRlcGxveW1lbnQudjFhbHBoYTEuUmVtb3RlQ29uZmlnU3RhdHVzZXMSFQoNZXJyb3JfbWVzc2FnZRgDIAEoCSLuAQoQQ29ubmVjdGlvblN0YXR1cxIyCgVzdGF0ZRgBIAEoDjIjLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yU3RhdGUSLQoJbGFzdF9zZWVuGAIgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIwCgxjb25uZWN0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjMKD2Rpc2Nvbm5lY3RlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASEAoIc2VxdWVuY2UYBSABKAQiXwoKU3luY1N0YXR1cxI1CgZzdGF0dXMYASABKA4yJS5kZXBsb3ltZW50LnYxYWxwaGExLkNvbmZpZ1N5bmNTdGF0dXMSGgoSY29uZmlnX3N5bmNfcmVhc29uGAIgASgJKm4KDkNvbGxlY3RvclN0YXRlEhsKF0NPTExFQ1RPUl9TVEFURV9VTktOT1dOEAASHQoZQ09MTEVDVE9SX1NUQVRFX0NPTk5FQ1RFRBABEiAKHENPTExFQ1RPUl9TVEFURV9ESVNDT05ORUNURUQQAiq1AQoQQ29uZmlnU3luY1N0YXR1cxIeChpDT05GSUdfU1lOQ19TVEFUVVNfVU5LTk9XThAAEh4KGkNPTkZJR19TWU5DX1NUQVRVU19JTl9TWU5DEAESIgoeQ09ORklHX1NZTkNfU1RBVFVTX09VVF9PRl9TWU5DEAISHwobQ09ORklHX1NZTkNfU1RBVFVTX0FQUExZSU5HEAMSHAoYQ09ORklHX1NZTkNfU1RBVFVTX0VSUk9SEAQqpAEKFFJlbW90ZUNvbmZpZ1N0YXR1c2VzEiAKHFJFTU9URV9DT05GSUdfU1RBVFVTRVNfVU5TRVQQABIiCh5SRU1PVEVfQ09ORklHX1NUQVRVU0VTX0FQUExJRUQQARIjCh9SRU1PVEVfQ09ORklHX1NUQVRVU0VTX0FQUExZSU5HEAISIQodUkVNT1RFX0NPTkZJR19TVEFUVVNFU19GQUlMRUQQAzKcBAoQQ29sbGVjdG9yU2VydmljZRJpCg5MaXN0Q29sbGVjdG9ycxIqLmRlcGxveW1lbnQudjFhbHBoYTEuTGlzdENvbGxlY3RvcnNSZXF1ZXN0GisuZGVwbG95bWVudC52MWFscGhhMS5MaXN0Q29sbGVjdG9yc1Jlc3BvbnNlEmMKDEdldENvbGxlY3RvchIoLmRlcGxveW1lbnQudjFhbHBoYTEuR2V0Q29sbGVjdG9yUmVxdWVzdBopLmRlcGxveW1lbnQudjFhbHBoYTEuR2V0Q29sbGVjdG9yUmVzcG9uc2USdQoQQ29sbGVjdG9ySGlzdG9yeRIvLmRlcGxveW1lbnQudjFhbHBoYTEuR2V0Q29sbGVjdG9ySGlzdG9yeVJlcXVlc3QaMC5kZXBsb3ltZW50LnYxYWxwaGExLkdldENvbGxlY3Rvckhpc3RvcnlSZXNwb25zZRJpCgZTdGF0dXMSLi5kZXBsb3ltZW50LnYxYWxwaGExLkdldENvbGxlY3RvclN0YXR1c1JlcXVlc3QaLy5kZXBsb3ltZW50LnYxYWxwaGExLkdldENvbGxlY3RvclN0YXR1c1Jlc3BvbnNlElYKD0RlbGV0ZUNvbGxlY3RvchIrLmRlcGxveW1lbnQudjFhbHBoYTEuRGVsZXRlQ29sbGVjdG9yUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUI8WjpnaXRodWIuY29tL290ZWxmbGVldC9vdGVsZmxlZXQvcGtnL2FwaS9kZXBsb3ltZW50L3YxYWxwaGExYgZwcm90bzM", [file_google_protobuf_empty, file_google_protobuf_timestamp]);
+  fileDesc("Cixwa2cvYXBpL2RlcGxveW1lbnQvdjFhbHBoYTEvZGVwbG95bWVudC5wcm90bxITZGVwbG95bWVudC52MWFscGhhMSI/ChVWYWxpZGF0ZVJvdXRlclJlcXVlc3QSJgoGcm91dGVyGAEgASgLMhYucm91dGUudjFhbHBoYTEuUm91dGVyIhgKFlZhbGlkYXRlUm91dGVyUmVzcG9uc2UiPgoUUHJldmlld1JvdXRlclJlcXVlc3QSJgoGcm91dGVyGAEgASgLMhYucm91dGUudjFhbHBoYTEuUm91dGVyIrsBChVQcmV2aWV3Um91dGVyUmVzcG9uc2USZAoVY29sbGVjdG9yc1RvQ29uZmlnUmVmGAEgAygLMkUuZGVwbG95bWVudC52MWFscGhhMS5QcmV2aWV3Um91dGVyUmVzcG9uc2UuQ29sbGVjdG9yc1RvQ29uZmlnUmVmRW50cnkaPAoaQ29sbGVjdG9yc1RvQ29uZmlnUmVmRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASJRChpHZXRDb2xsZWN0b3JIaXN0b3J5UmVxdWVzdBIUCgxjb2xsZWN0b3JfaWQYASABKAkSDgoGb2Zmc2V0GAIgASgEEg0KBWxpbWl0GAMgASgEIl0KG0dldENvbGxlY3Rvckhpc3RvcnlSZXNwb25zZRI+ChBlZmZlY3RpdmVfY29uZmlnGAEgAygLMiQuZGVwbG95bWVudC52MWFscGhhMS5FZmZlY3RpdmVDb25maWciLAoVTGlzdENvbGxlY3RvcnNSZXF1ZXN0EhMKC3dpdGhfc3RhdHVzGAEgASgIImAKFkxpc3RDb2xsZWN0b3JzUmVzcG9uc2USRgoKY29sbGVjdG9ycxgBIAMoCzIyLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yRGVzY3JpcHRpb25BbmRTdGF0dXMihwEKDUNvbGxlY3RvclZpZXcSQAoMcmVnaXN0cmF0aW9uGAEgASgLMiouZGVwbG95bWVudC52MWFscGhhMS5Db2xsZWN0b3JSZWdpc3RyYXRpb24SNAoGc3RhdHVzGAIgASgLMiQuZGVwbG95bWVudC52MWFscGhhMS5Db2xsZWN0b3JTdGF0dXMikwEKHUNvbGxlY3RvckRlc2NyaXB0aW9uQW5kU3RhdHVzEjwKCWNvbGxlY3RvchgBIAEoCzIpLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yRGVzY3JpcHRpb24SNAoGc3RhdHVzGAIgASgLMiQuZGVwbG95bWVudC52MWFscGhhMS5Db2xsZWN0b3JTdGF0dXMiKwoTR2V0Q29sbGVjdG9yUmVxdWVzdBIUCgxjb2xsZWN0b3JfaWQYASABKAkiVAoUR2V0Q29sbGVjdG9yUmVzcG9uc2USPAoJY29sbGVjdG9yGAEgASgLMikuZGVwbG95bWVudC52MWFscGhhMS5Db2xsZWN0b3JEZXNjcmlwdGlvbiIxChlHZXRDb2xsZWN0b3JTdGF0dXNSZXF1ZXN0EhQKDGNvbGxlY3Rvcl9pZBgBIAEoCSJSChpHZXRDb2xsZWN0b3JTdGF0dXNSZXNwb25zZRI0CgZzdGF0dXMYASABKAsyJC5kZXBsb3ltZW50LnYxYWxwaGExLkNvbGxlY3RvclN0YXR1cyIuChZEZWxldGVDb2xsZWN0b3JSZXF1ZXN0EhQKDGNvbGxlY3Rvcl9pZBgBIAEoCSLAAgoPQ29sbGVjdG9yU3RhdHVzEjQKBmhlYWx0aBgBIAEoCzIkLmRlcGxveW1lbnQudjFhbHBoYTEuQ29tcG9uZW50SGVhbHRoEj4KEGVmZmVjdGl2ZV9jb25maWcYAiABKAsyJC5kZXBsb3ltZW50LnYxYWxwaGExLkVmZmVjdGl2ZUNvbmZpZxJFChRyZW1vdGVfY29uZmlnX3N0YXR1cxgDIAEoCzInLmRlcGxveW1lbnQudjFhbHBoYTEuUmVtb3RlQ29uZmlnU3RhdHVzEjoKC2Nvbm5fc3RhdHVzGAQgASgLMiUuZGVwbG95bWVudC52MWFscGhhMS5Db25uZWN0aW9uU3RhdHVzEjQKC3N5bmNfc3RhdHVzGAUgASgLMh8uZGVwbG95bWVudC52MWFscGhhMS5TeW5jU3RhdHVzItIBChVDb2xsZWN0b3JSZWdpc3RyYXRpb24SCgoCaWQYASABKAkSFQoNZnJpZW5kbHlfbmFtZRgCIAEoCRI9ChZpZGVudGlmeWluZ19hdHRyaWJ1dGVzGAMgAygLMh0uZGVwbG95bWVudC52MWFscGhhMS5LZXlWYWx1ZRJBChpub25faWRlbnRpZnlpbmdfYXR0cmlidXRlcxgEIAMoCzIdLmRlcGxveW1lbnQudjFhbHBoYTEuS2V5VmFsdWUSFAoMY2FwYWJpbGl0aWVzGAUgAygJItEBChRDb2xsZWN0b3JEZXNjcmlwdGlvbhIKCgJpZBgBIAEoCRIVCg1mcmllbmRseV9uYW1lGAIgASgJEj0KFmlkZW50aWZ5aW5nX2F0dHJpYnV0ZXMYAyADKAsyHS5kZXBsb3ltZW50LnYxYWxwaGExLktleVZhbHVlEkEKGm5vbl9pZGVudGlmeWluZ19hdHRyaWJ1dGVzGAQgAygLMh0uZGVwbG95bWVudC52MWFscGhhMS5LZXlWYWx1ZRIUCgxjYXBhYmlsaXRpZXMYBSADKAkiRQoIS2V5VmFsdWUSCwoDa2V5GAEgASgJEiwKBXZhbHVlGAIgASgLMh0uZGVwbG95bWVudC52MWFscGhhMS5BbnlWYWx1ZSL4AQoIQW55VmFsdWUSFgoMc3RyaW5nX3ZhbHVlGAEgASgJSAASFAoKYm9vbF92YWx1ZRgCIAEoCEgAEhMKCWludF92YWx1ZRgDIAEoA0gAEhYKDGRvdWJsZV92YWx1ZRgEIAEoAUgAEhUKC2J5dGVzX3ZhbHVlGAUgASgMSAASNgoLYXJyYXlfdmFsdWUYBiABKAsyHy5kZXBsb3ltZW50LnYxYWxwaGExLkFycmF5VmFsdWVIABI5Cgxrdmxpc3RfdmFsdWUYByABKAsyIS5kZXBsb3ltZW50LnYxYWxwaGExLktleVZhbHVlTGlzdEgAQgcKBXZhbHVlIjsKCkFycmF5VmFsdWUSLQoGdmFsdWVzGAEgAygLMh0uZGVwbG95bWVudC52MWFscGhhMS5BbnlWYWx1ZSI9CgxLZXlWYWx1ZUxpc3QSLQoGdmFsdWVzGAEgAygLMh0uZGVwbG95bWVudC52MWFscGhhMS5LZXlWYWx1ZSK8AgoYQ29sbGVjdG9yQ29ubmVjdGlvblN0YXRlEhQKDGNvbGxlY3Rvcl9pZBgBIAEoCRIyCgVzdGF0ZRgCIAEoDjIjLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yU3RhdGUSLQoJbGFzdF9zZWVuGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIwCgxjb25uZWN0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjMKD2Rpc2Nvbm5lY3RlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASFAoMaW5zdGFuY2VfdWlkGAYgASgMEhQKDGNhcGFiaWxpdGllcxgHIAEoBBIUCgxzZXF1ZW5jZV9udW0YCCABKAQiwAIKD0NvbXBvbmVudEhlYWx0aBIPCgdoZWFsdGh5GAEgASgIEhwKFHN0YXJ0X3RpbWVfdW5peF9uYW5vGAIgASgEEhIKCmxhc3RfZXJyb3IYAyABKAkSDgoGc3RhdHVzGAQgASgJEh0KFXN0YXR1c190aW1lX3VuaXhfbmFubxgFIAEoBBJaChRjb21wb25lbnRfaGVhbHRoX21hcBgGIAMoCzI8LmRlcGxveW1lbnQudjFhbHBoYTEuQ29tcG9uZW50SGVhbHRoLkNvbXBvbmVudEhlYWx0aE1hcEVudHJ5Gl8KF0NvbXBvbmVudEhlYWx0aE1hcEVudHJ5EgsKA2tleRgBIAEoCRIzCgV2YWx1ZRgCIAEoCzIkLmRlcGxveW1lbnQudjFhbHBoYTEuQ29tcG9uZW50SGVhbHRoOgI4ASJOCg9FZmZlY3RpdmVDb25maWcSOwoKY29uZmlnX21hcBgBIAEoCzInLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yQ29uZmlnTWFwIrwBChJDb2xsZWN0b3JDb25maWdNYXASSgoKY29uZmlnX21hcBgBIAMoCzI2LmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yQ29uZmlnTWFwLkNvbmZpZ01hcEVudHJ5GloKDkNvbmZpZ01hcEVudHJ5EgsKA2tleRgBIAEoCRI3CgV2YWx1ZRgCIAEoCzIoLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yQ29uZmlnRmlsZToCOAEiOQoTQ29sbGVjdG9yQ29uZmlnRmlsZRIMCgRib2R5GAEgASgMEhQKDGNvbnRlbnRfdHlwZRgCIAEoCSKHAQoSUmVtb3RlQ29uZmlnU3RhdHVzEh8KF2xhc3RfcmVtb3RlX2NvbmZpZ19oYXNoGAEgASgMEjkKBnN0YXR1cxgCIAEoDjIpLmRlcGxveW1lbnQudjFhbHBoYTEuUmVtb3RlQ29uZmlnU3RhdHVzZXMSFQoNZXJyb3JfbWVzc2FnZRgDIAEoCSLuAQoQQ29ubmVjdGlvblN0YXR1cxIyCgVzdGF0ZRgBIAEoDjIjLmRlcGxveW1lbnQudjFhbHBoYTEuQ29sbGVjdG9yU3RhdGUSLQoJbGFzdF9zZWVuGAIgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIwCgxjb25uZWN0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjMKD2Rpc2Nvbm5lY3RlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASEAoIc2VxdWVuY2UYBSABKAQiXwoKU3luY1N0YXR1cxI1CgZzdGF0dXMYASABKA4yJS5kZXBsb3ltZW50LnYxYWxwaGExLkNvbmZpZ1N5bmNTdGF0dXMSGgoSY29uZmlnX3N5bmNfcmVhc29uGAIgASgJKm4KDkNvbGxlY3RvclN0YXRlEhsKF0NPTExFQ1RPUl9TVEFURV9VTktOT1dOEAASHQoZQ09MTEVDVE9SX1NUQVRFX0NPTk5FQ1RFRBABEiAKHENPTExFQ1RPUl9TVEFURV9ESVNDT05ORUNURUQQAiq1AQoQQ29uZmlnU3luY1N0YXR1cxIeChpDT05GSUdfU1lOQ19TVEFUVVNfVU5LTk9XThAAEh4KGkNPTkZJR19TWU5DX1NUQVRVU19JTl9TWU5DEAESIgoeQ09ORklHX1NZTkNfU1RBVFVTX09VVF9PRl9TWU5DEAISHwobQ09ORklHX1NZTkNfU1RBVFVTX0FQUExZSU5HEAMSHAoYQ09ORklHX1NZTkNfU1RBVFVTX0VSUk9SEAQqpAEKFFJlbW90ZUNvbmZpZ1N0YXR1c2VzEiAKHFJFTU9URV9DT05GSUdfU1RBVFVTRVNfVU5TRVQQABIiCh5SRU1PVEVfQ09ORklHX1NUQVRVU0VTX0FQUExJRUQQARIjCh9SRU1PVEVfQ09ORklHX1NUQVRVU0VTX0FQUExZSU5HEAISIQodUkVNT1RFX0NPTkZJR19TVEFUVVNFU19GQUlMRUQQAzLvBQoQQ29sbGVjdG9yU2VydmljZRJpCg5MaXN0Q29sbGVjdG9ycxIqLmRlcGxveW1lbnQudjFhbHBoYTEuTGlzdENvbGxlY3RvcnNSZXF1ZXN0GisuZGVwbG95bWVudC52MWFscGhhMS5MaXN0Q29sbGVjdG9yc1Jlc3BvbnNlEmMKDEdldENvbGxlY3RvchIoLmRlcGxveW1lbnQudjFhbHBoYTEuR2V0Q29sbGVjdG9yUmVxdWVzdBopLmRlcGxveW1lbnQudjFhbHBoYTEuR2V0Q29sbGVjdG9yUmVzcG9uc2USdQoQQ29sbGVjdG9ySGlzdG9yeRIvLmRlcGxveW1lbnQudjFhbHBoYTEuR2V0Q29sbGVjdG9ySGlzdG9yeVJlcXVlc3QaMC5kZXBsb3ltZW50LnYxYWxwaGExLkdldENvbGxlY3Rvckhpc3RvcnlSZXNwb25zZRJpCgZTdGF0dXMSLi5kZXBsb3ltZW50LnYxYWxwaGExLkdldENvbGxlY3RvclN0YXR1c1JlcXVlc3QaLy5kZXBsb3ltZW50LnYxYWxwaGExLkdldENvbGxlY3RvclN0YXR1c1Jlc3BvbnNlElYKD0RlbGV0ZUNvbGxlY3RvchIrLmRlcGxveW1lbnQudjFhbHBoYTEuRGVsZXRlQ29sbGVjdG9yUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRJpCg5WYWxpZGF0ZVJvdXRlchIqLmRlcGxveW1lbnQudjFhbHBoYTEuVmFsaWRhdGVSb3V0ZXJSZXF1ZXN0GisuZGVwbG95bWVudC52MWFscGhhMS5WYWxpZGF0ZVJvdXRlclJlc3BvbnNlEmYKDVByZXZpZXdSb3V0ZXISKS5kZXBsb3ltZW50LnYxYWxwaGExLlByZXZpZXdSb3V0ZXJSZXF1ZXN0GiouZGVwbG95bWVudC52MWFscGhhMS5QcmV2aWV3Um91dGVyUmVzcG9uc2VCPFo6Z2l0aHViLmNvbS9vdGVsZmxlZXQvb3RlbGZsZWV0L3BrZy9hcGkvZGVwbG95bWVudC92MWFscGhhMWIGcHJvdG8z", [file_google_protobuf_empty, file_google_protobuf_timestamp, file_pkg_api_resources_v1alpha1_resources, file_pkg_api_route_v1alpha1_route]);
+
+/**
+ * @generated from message deployment.v1alpha1.ValidateRouterRequest
+ */
+export type ValidateRouterRequest = Message<"deployment.v1alpha1.ValidateRouterRequest"> & {
+  /**
+   * @generated from field: route.v1alpha1.Router router = 1;
+   */
+  router?: Router | undefined;
+};
+
+/**
+ * Describes the message deployment.v1alpha1.ValidateRouterRequest.
+ * Use `create(ValidateRouterRequestSchema)` to create a new message.
+ */
+export const ValidateRouterRequestSchema: GenMessage<ValidateRouterRequest> = /*@__PURE__*/
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 0);
+
+/**
+ * TODO : maybe return a diff here?
+ *
+ * @generated from message deployment.v1alpha1.ValidateRouterResponse
+ */
+export type ValidateRouterResponse = Message<"deployment.v1alpha1.ValidateRouterResponse"> & {
+};
+
+/**
+ * Describes the message deployment.v1alpha1.ValidateRouterResponse.
+ * Use `create(ValidateRouterResponseSchema)` to create a new message.
+ */
+export const ValidateRouterResponseSchema: GenMessage<ValidateRouterResponse> = /*@__PURE__*/
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 1);
+
+/**
+ * @generated from message deployment.v1alpha1.PreviewRouterRequest
+ */
+export type PreviewRouterRequest = Message<"deployment.v1alpha1.PreviewRouterRequest"> & {
+  /**
+   * @generated from field: route.v1alpha1.Router router = 1;
+   */
+  router?: Router | undefined;
+};
+
+/**
+ * Describes the message deployment.v1alpha1.PreviewRouterRequest.
+ * Use `create(PreviewRouterRequestSchema)` to create a new message.
+ */
+export const PreviewRouterRequestSchema: GenMessage<PreviewRouterRequest> = /*@__PURE__*/
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 2);
+
+/**
+ * @generated from message deployment.v1alpha1.PreviewRouterResponse
+ */
+export type PreviewRouterResponse = Message<"deployment.v1alpha1.PreviewRouterResponse"> & {
+  /**
+   * @generated from field: map<string, string> collectorsToConfigRef = 1;
+   */
+  collectorsToConfigRef: { [key: string]: string };
+};
+
+/**
+ * Describes the message deployment.v1alpha1.PreviewRouterResponse.
+ * Use `create(PreviewRouterResponseSchema)` to create a new message.
+ */
+export const PreviewRouterResponseSchema: GenMessage<PreviewRouterResponse> = /*@__PURE__*/
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 3);
 
 /**
  * @generated from message deployment.v1alpha1.GetCollectorHistoryRequest
@@ -39,7 +108,7 @@ export type GetCollectorHistoryRequest = Message<"deployment.v1alpha1.GetCollect
  * Use `create(GetCollectorHistoryRequestSchema)` to create a new message.
  */
 export const GetCollectorHistoryRequestSchema: GenMessage<GetCollectorHistoryRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 0);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 4);
 
 /**
  * @generated from message deployment.v1alpha1.GetCollectorHistoryResponse
@@ -56,7 +125,7 @@ export type GetCollectorHistoryResponse = Message<"deployment.v1alpha1.GetCollec
  * Use `create(GetCollectorHistoryResponseSchema)` to create a new message.
  */
 export const GetCollectorHistoryResponseSchema: GenMessage<GetCollectorHistoryResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 1);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 5);
 
 /**
  * @generated from message deployment.v1alpha1.ListCollectorsRequest
@@ -73,7 +142,7 @@ export type ListCollectorsRequest = Message<"deployment.v1alpha1.ListCollectorsR
  * Use `create(ListCollectorsRequestSchema)` to create a new message.
  */
 export const ListCollectorsRequestSchema: GenMessage<ListCollectorsRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 2);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 6);
 
 /**
  * @generated from message deployment.v1alpha1.ListCollectorsResponse
@@ -90,7 +159,7 @@ export type ListCollectorsResponse = Message<"deployment.v1alpha1.ListCollectors
  * Use `create(ListCollectorsResponseSchema)` to create a new message.
  */
 export const ListCollectorsResponseSchema: GenMessage<ListCollectorsResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 3);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 7);
 
 /**
  * @generated from message deployment.v1alpha1.CollectorView
@@ -112,7 +181,7 @@ export type CollectorView = Message<"deployment.v1alpha1.CollectorView"> & {
  * Use `create(CollectorViewSchema)` to create a new message.
  */
 export const CollectorViewSchema: GenMessage<CollectorView> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 4);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 8);
 
 /**
  * Deprecated: use CollectorView.
@@ -136,7 +205,7 @@ export type CollectorDescriptionAndStatus = Message<"deployment.v1alpha1.Collect
  * Use `create(CollectorDescriptionAndStatusSchema)` to create a new message.
  */
 export const CollectorDescriptionAndStatusSchema: GenMessage<CollectorDescriptionAndStatus> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 5);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 9);
 
 /**
  * @generated from message deployment.v1alpha1.GetCollectorRequest
@@ -153,7 +222,7 @@ export type GetCollectorRequest = Message<"deployment.v1alpha1.GetCollectorReque
  * Use `create(GetCollectorRequestSchema)` to create a new message.
  */
 export const GetCollectorRequestSchema: GenMessage<GetCollectorRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 6);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 10);
 
 /**
  * @generated from message deployment.v1alpha1.GetCollectorResponse
@@ -170,7 +239,7 @@ export type GetCollectorResponse = Message<"deployment.v1alpha1.GetCollectorResp
  * Use `create(GetCollectorResponseSchema)` to create a new message.
  */
 export const GetCollectorResponseSchema: GenMessage<GetCollectorResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 7);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 11);
 
 /**
  * @generated from message deployment.v1alpha1.GetCollectorStatusRequest
@@ -187,7 +256,7 @@ export type GetCollectorStatusRequest = Message<"deployment.v1alpha1.GetCollecto
  * Use `create(GetCollectorStatusRequestSchema)` to create a new message.
  */
 export const GetCollectorStatusRequestSchema: GenMessage<GetCollectorStatusRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 8);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 12);
 
 /**
  * @generated from message deployment.v1alpha1.GetCollectorStatusResponse
@@ -204,7 +273,7 @@ export type GetCollectorStatusResponse = Message<"deployment.v1alpha1.GetCollect
  * Use `create(GetCollectorStatusResponseSchema)` to create a new message.
  */
 export const GetCollectorStatusResponseSchema: GenMessage<GetCollectorStatusResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 9);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 13);
 
 /**
  * @generated from message deployment.v1alpha1.DeleteCollectorRequest
@@ -221,7 +290,7 @@ export type DeleteCollectorRequest = Message<"deployment.v1alpha1.DeleteCollecto
  * Use `create(DeleteCollectorRequestSchema)` to create a new message.
  */
 export const DeleteCollectorRequestSchema: GenMessage<DeleteCollectorRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 10);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 14);
 
 /**
  * @generated from message deployment.v1alpha1.CollectorStatus
@@ -258,7 +327,7 @@ export type CollectorStatus = Message<"deployment.v1alpha1.CollectorStatus"> & {
  * Use `create(CollectorStatusSchema)` to create a new message.
  */
 export const CollectorStatusSchema: GenMessage<CollectorStatus> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 11);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 15);
 
 /**
  * @generated from message deployment.v1alpha1.CollectorRegistration
@@ -299,7 +368,7 @@ export type CollectorRegistration = Message<"deployment.v1alpha1.CollectorRegist
  * Use `create(CollectorRegistrationSchema)` to create a new message.
  */
 export const CollectorRegistrationSchema: GenMessage<CollectorRegistration> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 12);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 16);
 
 /**
  * Deprecated: use CollectorRegistration.
@@ -343,7 +412,7 @@ export type CollectorDescription = Message<"deployment.v1alpha1.CollectorDescrip
  * Use `create(CollectorDescriptionSchema)` to create a new message.
  */
 export const CollectorDescriptionSchema: GenMessage<CollectorDescription> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 13);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 17);
 
 /**
  * @generated from message deployment.v1alpha1.KeyValue
@@ -365,7 +434,7 @@ export type KeyValue = Message<"deployment.v1alpha1.KeyValue"> & {
  * Use `create(KeyValueSchema)` to create a new message.
  */
 export const KeyValueSchema: GenMessage<KeyValue> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 14);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 18);
 
 /**
  * @generated from message deployment.v1alpha1.AnyValue
@@ -424,7 +493,7 @@ export type AnyValue = Message<"deployment.v1alpha1.AnyValue"> & {
  * Use `create(AnyValueSchema)` to create a new message.
  */
 export const AnyValueSchema: GenMessage<AnyValue> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 15);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 19);
 
 /**
  * @generated from message deployment.v1alpha1.ArrayValue
@@ -441,7 +510,7 @@ export type ArrayValue = Message<"deployment.v1alpha1.ArrayValue"> & {
  * Use `create(ArrayValueSchema)` to create a new message.
  */
 export const ArrayValueSchema: GenMessage<ArrayValue> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 16);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 20);
 
 /**
  * @generated from message deployment.v1alpha1.KeyValueList
@@ -458,7 +527,7 @@ export type KeyValueList = Message<"deployment.v1alpha1.KeyValueList"> & {
  * Use `create(KeyValueListSchema)` to create a new message.
  */
 export const KeyValueListSchema: GenMessage<KeyValueList> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 17);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 21);
 
 /**
  * @generated from message deployment.v1alpha1.CollectorConnectionState
@@ -510,7 +579,7 @@ export type CollectorConnectionState = Message<"deployment.v1alpha1.CollectorCon
  * Use `create(CollectorConnectionStateSchema)` to create a new message.
  */
 export const CollectorConnectionStateSchema: GenMessage<CollectorConnectionState> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 18);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 22);
 
 /**
  * @generated from message deployment.v1alpha1.ComponentHealth
@@ -552,7 +621,7 @@ export type ComponentHealth = Message<"deployment.v1alpha1.ComponentHealth"> & {
  * Use `create(ComponentHealthSchema)` to create a new message.
  */
 export const ComponentHealthSchema: GenMessage<ComponentHealth> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 19);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 23);
 
 /**
  * @generated from message deployment.v1alpha1.EffectiveConfig
@@ -569,7 +638,7 @@ export type EffectiveConfig = Message<"deployment.v1alpha1.EffectiveConfig"> & {
  * Use `create(EffectiveConfigSchema)` to create a new message.
  */
 export const EffectiveConfigSchema: GenMessage<EffectiveConfig> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 20);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 24);
 
 /**
  * @generated from message deployment.v1alpha1.CollectorConfigMap
@@ -586,7 +655,7 @@ export type CollectorConfigMap = Message<"deployment.v1alpha1.CollectorConfigMap
  * Use `create(CollectorConfigMapSchema)` to create a new message.
  */
 export const CollectorConfigMapSchema: GenMessage<CollectorConfigMap> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 21);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 25);
 
 /**
  * @generated from message deployment.v1alpha1.CollectorConfigFile
@@ -608,7 +677,7 @@ export type CollectorConfigFile = Message<"deployment.v1alpha1.CollectorConfigFi
  * Use `create(CollectorConfigFileSchema)` to create a new message.
  */
 export const CollectorConfigFileSchema: GenMessage<CollectorConfigFile> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 22);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 26);
 
 /**
  * @generated from message deployment.v1alpha1.RemoteConfigStatus
@@ -635,7 +704,7 @@ export type RemoteConfigStatus = Message<"deployment.v1alpha1.RemoteConfigStatus
  * Use `create(RemoteConfigStatusSchema)` to create a new message.
  */
 export const RemoteConfigStatusSchema: GenMessage<RemoteConfigStatus> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 23);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 27);
 
 /**
  * @generated from message deployment.v1alpha1.ConnectionStatus
@@ -672,7 +741,7 @@ export type ConnectionStatus = Message<"deployment.v1alpha1.ConnectionStatus"> &
  * Use `create(ConnectionStatusSchema)` to create a new message.
  */
 export const ConnectionStatusSchema: GenMessage<ConnectionStatus> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 24);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 28);
 
 /**
  * @generated from message deployment.v1alpha1.SyncStatus
@@ -694,7 +763,7 @@ export type SyncStatus = Message<"deployment.v1alpha1.SyncStatus"> & {
  * Use `create(SyncStatusSchema)` to create a new message.
  */
 export const SyncStatusSchema: GenMessage<SyncStatus> = /*@__PURE__*/
-  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 25);
+  messageDesc(file_pkg_api_deployment_v1alpha1_deployment, 29);
 
 /**
  * @generated from enum deployment.v1alpha1.CollectorState
@@ -836,6 +905,22 @@ export const CollectorService: GenService<{
     methodKind: "unary";
     input: typeof DeleteCollectorRequestSchema;
     output: typeof EmptySchema;
+  },
+  /**
+   * @generated from rpc deployment.v1alpha1.CollectorService.ValidateRouter
+   */
+  validateRouter: {
+    methodKind: "unary";
+    input: typeof ValidateRouterRequestSchema;
+    output: typeof ValidateRouterResponseSchema;
+  },
+  /**
+   * @generated from rpc deployment.v1alpha1.CollectorService.PreviewRouter
+   */
+  previewRouter: {
+    methodKind: "unary";
+    input: typeof PreviewRouterRequestSchema;
+    output: typeof PreviewRouterResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_pkg_api_deployment_v1alpha1_deployment, 0);

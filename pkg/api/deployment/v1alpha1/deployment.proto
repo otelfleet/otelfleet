@@ -3,6 +3,8 @@ package deployment.v1alpha1;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "pkg/api/resources/v1alpha1/resources.proto";
+import "pkg/api/route/v1alpha1/route.proto";
 
 option go_package = "github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1";
 
@@ -13,7 +15,28 @@ service CollectorService {
   rpc CollectorHistory(GetCollectorHistoryRequest) returns (GetCollectorHistoryResponse);
   rpc Status(GetCollectorStatusRequest) returns (GetCollectorStatusResponse);
   rpc DeleteCollector(DeleteCollectorRequest) returns (google.protobuf.Empty);
+
+  rpc ValidateRouter(ValidateRouterRequest) returns (ValidateRouterResponse);
+  rpc PreviewRouter(PreviewRouterRequest) returns (PreviewRouterResponse);
 }
+
+message ValidateRouterRequest {
+  route.v1alpha1.Router router = 1;
+}
+
+message ValidateRouterResponse {
+  // TODO : maybe return a diff here?
+}
+
+message PreviewRouterRequest {
+    route.v1alpha1.Router router = 1;
+}
+
+message PreviewRouterResponse {
+    map<string, string> collectorsToConfigRef = 1;
+}
+
+
 
 message GetCollectorHistoryRequest {
   string collector_id = 1;

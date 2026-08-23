@@ -1,15 +1,45 @@
-import { Button, Group, Paper, Select, Stack, Switch, Text, TextInput, ActionIcon } from '@mantine/core';
+import {
+  ActionIcon,
+  Autocomplete,
+  Button,
+  Group,
+  Paper,
+  Select,
+  Stack,
+  Switch,
+  Text,
+  TextInput,
+  ThemeIcon,
+  Tooltip,
+  type ComboboxStringItem,
+} from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { PlusIcon, TrashIcon } from '@radix-ui/react-icons';
+import { InfoCircledIcon, PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 
 import {
+  LABEL_KEY_SUGGESTIONS,
+  LABEL_SCOPE_DESCRIPTIONS,
   LABEL_SCOPE_OPTIONS,
+  LABEL_VALUE_SUGGESTIONS,
   MATCH_TYPE_OPTIONS,
   emptyLabelFilterValues,
+  emptyLabelRow,
   type ConfigFilterValues,
   type LabelScope,
 } from './configFilter';
 import { MatchType } from '../gen/api/pkg/api/resources/v1alpha1/resources_pb';
+
+function renderLabelKeyOption(scope: LabelScope) {
+  return ({ option }: { option: ComboboxStringItem }) => {
+    const description = LABEL_KEY_SUGGESTIONS[scope].find((s) => s.key === option.value)?.description;
+    return (
+      <Stack gap={0}>
+        <Text size="sm">{option.value}</Text>
+        {description && <Text size="xs" c="dimmed">{description}</Text>}
+      </Stack>
+    );
+  };
+}
 
 interface ConfigFilterFormProps {
   initialValues: ConfigFilterValues;
@@ -34,6 +64,9 @@ export function ConfigFilterForm({
       configRef: (value) => (value === '' ? 'Pick a collector config' : null),
     },
   });
+
+  const hasFilters = form.getValues().filters.length > 0;
+  const addFilter = () => form.insertListItem('filters', emptyLabelFilterValues());
 
   return (
     <form onSubmit={form.onSubmit(onSubmit)}>
@@ -70,29 +103,46 @@ export function ConfigFilterForm({
         <Stack gap="sm">
           <Group justify="space-between">
             <Text fw={500}>Label filters</Text>
-            <Button
-              variant="light"
-              size="xs"
-              leftSection={<PlusIcon />}
-              onClick={() => form.insertListItem('filters', emptyLabelFilterValues())}
-            >
-              Add filter
-            </Button>
+            {hasFilters && (
+              <Button variant="light" size="xs" leftSection={<PlusIcon />} onClick={addFilter}>
+                Add filter
+              </Button>
+            )}
           </Group>
+
+          {!hasFilters && (
+            <Paper withBorder p="xl">
+              <Stack align="center" gap="xs">
+                <Text size="sm" c="dimmed">
+                  No label filters, create one to match on collector runtime information or user-defined labels.
+                </Text>
+                <Button variant="light" size="md" leftSection={<PlusIcon />} onClick={addFilter}>
+                  Add filter
+                </Button>
+              </Stack>
+            </Paper>
+          )}
 
           {form.getValues().filters.map((filter, filterIndex) => (
             <Paper key={filterIndex} withBorder p="sm">
               <Stack gap="xs">
                 <Group justify="space-between">
-                  <Select
-                    label="Match type"
-                    data={MATCH_TYPE_OPTIONS}
-                    value={String(filter.type)}
-                    onChange={(value) =>
-                      form.setFieldValue(`filters.${filterIndex}.type`, Number(value) as MatchType)
-                    }
-                    w={200}
-                  />
+                  <Group gap="xs" align="flex-end">
+                    <Select
+                      label="Scope"
+                      data={LABEL_SCOPE_OPTIONS}
+                      w={220}
+                      {...form.getInputProps(`filters.${filterIndex}.scope`)}
+                      onChange={(value) =>
+                        form.setFieldValue(`filters.${filterIndex}.scope`, (value ?? 'identifying') as LabelScope)
+                      }
+                    />
+                    <Tooltip label={LABEL_SCOPE_DESCRIPTIONS[filter.scope]} withArrow>
+                      <ThemeIcon variant="subtle" color="gray" size="lg">
+                        <InfoCircledIcon />
+                      </ThemeIcon>
+                    </Tooltip>
+                  </Group>
                   <ActionIcon
                     color="red"
                     variant="subtle"
@@ -103,29 +153,32 @@ export function ConfigFilterForm({
                   </ActionIcon>
                 </Group>
 
-                {filter.labels.map((_label, labelIndex) => (
+                {filter.labels.map((label, labelIndex) => (
                   <Group key={labelIndex} align="flex-end" gap="xs" wrap="nowrap">
-                    <Select
-                      label="Scope"
-                      data={LABEL_SCOPE_OPTIONS}
-                      w={220}
-                      {...form.getInputProps(`filters.${filterIndex}.labels.${labelIndex}.scope`)}
-                      onChange={(value) =>
-                        form.setFieldValue(
-                          `filters.${filterIndex}.labels.${labelIndex}.scope`,
-                          (value ?? 'identifying') as LabelScope,
-                        )
-                      }
-                    />
-                    <TextInput
+                    <Autocomplete
                       label="Label"
                       placeholder="service.name"
+                      data={LABEL_KEY_SUGGESTIONS[filter.scope].map((s) => s.key)}
+                      renderOption={renderLabelKeyOption(filter.scope)}
                       style={{ flex: 1 }}
                       {...form.getInputProps(`filters.${filterIndex}.labels.${labelIndex}.key`)}
                     />
-                    <TextInput
+                    <Select
+                      label="Operator"
+                      data={MATCH_TYPE_OPTIONS}
+                      w={90}
+                      value={String(label.type)}
+                      onChange={(value) =>
+                        form.setFieldValue(
+                          `filters.${filterIndex}.labels.${labelIndex}.type`,
+                          Number(value) as MatchType,
+                        )
+                      }
+                    />
+                    <Autocomplete
                       label="Value"
                       placeholder="checkout"
+                      data={LABEL_VALUE_SUGGESTIONS[label.key] ?? []}
                       style={{ flex: 1 }}
                       {...form.getInputProps(`filters.${filterIndex}.labels.${labelIndex}.value`)}
                     />
@@ -145,13 +198,7 @@ export function ConfigFilterForm({
                   variant="subtle"
                   size="xs"
                   leftSection={<PlusIcon />}
-                  onClick={() =>
-                    form.insertListItem(`filters.${filterIndex}.labels`, {
-                      scope: 'identifying',
-                      key: '',
-                      value: '',
-                    })
-                  }
+                  onClick={() => form.insertListItem(`filters.${filterIndex}.labels`, emptyLabelRow())}
                 >
                   Add label
                 </Button>

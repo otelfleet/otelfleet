@@ -183,6 +183,15 @@ const Base: FC = () => {
                 <AppShell.Navbar>
                     <Stack gap="xs">
                         <NavLink
+                            label="Overview"
+                            description="Overview of operations"
+                            opened={active === 'overview'}
+                            active={active === 'overview'}
+                            onClick={() => setActive(active === 'overviwew' ? null : 'overview')}
+                        >
+
+                        </NavLink>
+                        <NavLink
                             label="Management"
                             description="Fleet & Authorization"
                             opened={active === 'mgmt'}

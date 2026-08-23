@@ -7,9 +7,11 @@
 package v1alpha1
 
 import (
+	v1alpha11 "github.com/otelfleet/otelfleet/pkg/api/common/v1alpha1"
 	v1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	_ "google.golang.org/protobuf/types/known/emptypb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
@@ -79,6 +81,61 @@ func (AssignedState) EnumDescriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{0}
 }
 
+type PipelineType int32
+
+const (
+	PipelineType_PIPELINE_TYPE_UNKNOWN PipelineType = 0
+	PipelineType_PIPELINE_TYPE_METRICS PipelineType = 1
+	PipelineType_PIPELINE_TYPE_TRACES  PipelineType = 2
+	PipelineType_PIPELINE_TYPE_LOGS    PipelineType = 3
+	PipelineType_PIPELINE_TYPE_PROFILE PipelineType = 4
+)
+
+// Enum value maps for PipelineType.
+var (
+	PipelineType_name = map[int32]string{
+		0: "PIPELINE_TYPE_UNKNOWN",
+		1: "PIPELINE_TYPE_METRICS",
+		2: "PIPELINE_TYPE_TRACES",
+		3: "PIPELINE_TYPE_LOGS",
+		4: "PIPELINE_TYPE_PROFILE",
+	}
+	PipelineType_value = map[string]int32{
+		"PIPELINE_TYPE_UNKNOWN": 0,
+		"PIPELINE_TYPE_METRICS": 1,
+		"PIPELINE_TYPE_TRACES":  2,
+		"PIPELINE_TYPE_LOGS":    3,
+		"PIPELINE_TYPE_PROFILE": 4,
+	}
+)
+
+func (x PipelineType) Enum() *PipelineType {
+	p := new(PipelineType)
+	*p = x
+	return p
+}
+
+func (x PipelineType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PipelineType) Descriptor() protoreflect.EnumDescriptor {
+	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[1].Descriptor()
+}
+
+func (PipelineType) Type() protoreflect.EnumType {
+	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[1]
+}
+
+func (x PipelineType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PipelineType.Descriptor instead.
+func (PipelineType) EnumDescriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{1}
+}
+
 type AssignedConfig struct {
 	state      protoimpl.MessageState    `protogen:"open.v1"`
 	Config     *v1alpha1.CollectorConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
@@ -140,22 +197,1039 @@ func (x *AssignedConfig) GetDetails() string {
 	return ""
 }
 
+type ResourceEntity struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TypeUrl       string                 `protobuf:"bytes,1,opt,name=type_url,json=typeUrl,proto3" json:"type_url,omitempty"`
+	Key           string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	Obj           *anypb.Any             `protobuf:"bytes,3,opt,name=obj,proto3" json:"obj,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResourceEntity) Reset() {
+	*x = ResourceEntity{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResourceEntity) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResourceEntity) ProtoMessage() {}
+
+func (x *ResourceEntity) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResourceEntity.ProtoReflect.Descriptor instead.
+func (*ResourceEntity) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ResourceEntity) GetTypeUrl() string {
+	if x != nil {
+		return x.TypeUrl
+	}
+	return ""
+}
+
+func (x *ResourceEntity) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *ResourceEntity) GetObj() *anypb.Any {
+	if x != nil {
+		return x.Obj
+	}
+	return nil
+}
+
+// CollectorConfig is a complete OpenTelemetryConfig
+type CollectorConfig struct {
+	state       protoimpl.MessageState         `protogen:"open.v1"`
+	Compat      *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	ContentType string                         `protobuf:"bytes,2,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	// Types that are valid to be assigned to Value:
+	//
+	//	*CollectorConfig_Raw
+	//	*CollectorConfig_Components
+	Value         isCollectorConfig_Value `protobuf_oneof:"value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CollectorConfig) Reset() {
+	*x = CollectorConfig{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CollectorConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CollectorConfig) ProtoMessage() {}
+
+func (x *CollectorConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CollectorConfig.ProtoReflect.Descriptor instead.
+func (*CollectorConfig) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CollectorConfig) GetCompat() *v1alpha11.CompatibilityMatrix {
+	if x != nil {
+		return x.Compat
+	}
+	return nil
+}
+
+func (x *CollectorConfig) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
+func (x *CollectorConfig) GetValue() isCollectorConfig_Value {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+func (x *CollectorConfig) GetRaw() []byte {
+	if x != nil {
+		if x, ok := x.Value.(*CollectorConfig_Raw); ok {
+			return x.Raw
+		}
+	}
+	return nil
+}
+
+func (x *CollectorConfig) GetComponents() *CollectorComponents {
+	if x != nil {
+		if x, ok := x.Value.(*CollectorConfig_Components); ok {
+			return x.Components
+		}
+	}
+	return nil
+}
+
+type isCollectorConfig_Value interface {
+	isCollectorConfig_Value()
+}
+
+type CollectorConfig_Raw struct {
+	Raw []byte `protobuf:"bytes,3,opt,name=Raw,proto3,oneof"`
+}
+
+type CollectorConfig_Components struct {
+	Components *CollectorComponents `protobuf:"bytes,4,opt,name=components,proto3,oneof"`
+}
+
+func (*CollectorConfig_Raw) isCollectorConfig_Value() {}
+
+func (*CollectorConfig_Components) isCollectorConfig_Value() {}
+
+type CollectorComponents struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Receivers     *ReceiverCollection    `protobuf:"bytes,1,opt,name=receivers,proto3" json:"receivers,omitempty"`
+	Processors    *ProcessorCollection   `protobuf:"bytes,2,opt,name=processors,proto3" json:"processors,omitempty"`
+	Exporters     *ExporterCollection    `protobuf:"bytes,3,opt,name=exporters,proto3" json:"exporters,omitempty"`
+	Connectors    *ConnectorCollection   `protobuf:"bytes,4,opt,name=connectors,proto3" json:"connectors,omitempty"`
+	Extensions    *ExtensionCollection   `protobuf:"bytes,5,opt,name=extensions,proto3" json:"extensions,omitempty"`
+	Pipelines     *PipelineCollection    `protobuf:"bytes,6,opt,name=pipelines,proto3" json:"pipelines,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CollectorComponents) Reset() {
+	*x = CollectorComponents{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CollectorComponents) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CollectorComponents) ProtoMessage() {}
+
+func (x *CollectorComponents) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CollectorComponents.ProtoReflect.Descriptor instead.
+func (*CollectorComponents) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CollectorComponents) GetReceivers() *ReceiverCollection {
+	if x != nil {
+		return x.Receivers
+	}
+	return nil
+}
+
+func (x *CollectorComponents) GetProcessors() *ProcessorCollection {
+	if x != nil {
+		return x.Processors
+	}
+	return nil
+}
+
+func (x *CollectorComponents) GetExporters() *ExporterCollection {
+	if x != nil {
+		return x.Exporters
+	}
+	return nil
+}
+
+func (x *CollectorComponents) GetConnectors() *ConnectorCollection {
+	if x != nil {
+		return x.Connectors
+	}
+	return nil
+}
+
+func (x *CollectorComponents) GetExtensions() *ExtensionCollection {
+	if x != nil {
+		return x.Extensions
+	}
+	return nil
+}
+
+func (x *CollectorComponents) GetPipelines() *PipelineCollection {
+	if x != nil {
+		return x.Pipelines
+	}
+	return nil
+}
+
+// Receiver is an OpenTelemetry receiver
+type Receiver struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Receiver) Reset() {
+	*x = Receiver{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Receiver) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Receiver) ProtoMessage() {}
+
+func (x *Receiver) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Receiver.ProtoReflect.Descriptor instead.
+func (*Receiver) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Receiver) GetCompat() *v1alpha11.CompatibilityMatrix {
+	if x != nil {
+		return x.Compat
+	}
+	return nil
+}
+
+func (x *Receiver) GetValue() *ComponentDefinition {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type ReceiverCollection struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Receivers     []*Receiver            `protobuf:"bytes,1,rep,name=receivers,proto3" json:"receivers,omitempty"`
+	Value         *ComponentDefinition   `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReceiverCollection) Reset() {
+	*x = ReceiverCollection{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReceiverCollection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReceiverCollection) ProtoMessage() {}
+
+func (x *ReceiverCollection) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReceiverCollection.ProtoReflect.Descriptor instead.
+func (*ReceiverCollection) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ReceiverCollection) GetReceivers() []*Receiver {
+	if x != nil {
+		return x.Receivers
+	}
+	return nil
+}
+
+func (x *ReceiverCollection) GetValue() *ComponentDefinition {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+// Processor is an OpenTelemetry processor
+type Processor struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Processor) Reset() {
+	*x = Processor{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Processor) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Processor) ProtoMessage() {}
+
+func (x *Processor) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Processor.ProtoReflect.Descriptor instead.
+func (*Processor) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Processor) GetCompat() *v1alpha11.CompatibilityMatrix {
+	if x != nil {
+		return x.Compat
+	}
+	return nil
+}
+
+func (x *Processor) GetValue() *ComponentDefinition {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type ProcessorCollection struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Processors    []*Processor           `protobuf:"bytes,1,rep,name=processors,proto3" json:"processors,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProcessorCollection) Reset() {
+	*x = ProcessorCollection{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProcessorCollection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProcessorCollection) ProtoMessage() {}
+
+func (x *ProcessorCollection) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProcessorCollection.ProtoReflect.Descriptor instead.
+func (*ProcessorCollection) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ProcessorCollection) GetProcessors() []*Processor {
+	if x != nil {
+		return x.Processors
+	}
+	return nil
+}
+
+// Exporter is an OpenTelemetry exporter
+type Exporter struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Exporter) Reset() {
+	*x = Exporter{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Exporter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Exporter) ProtoMessage() {}
+
+func (x *Exporter) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Exporter.ProtoReflect.Descriptor instead.
+func (*Exporter) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *Exporter) GetCompat() *v1alpha11.CompatibilityMatrix {
+	if x != nil {
+		return x.Compat
+	}
+	return nil
+}
+
+func (x *Exporter) GetValue() *ComponentDefinition {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type ExporterCollection struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Exporters     []*Exporter            `protobuf:"bytes,1,rep,name=exporters,proto3" json:"exporters,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExporterCollection) Reset() {
+	*x = ExporterCollection{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExporterCollection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExporterCollection) ProtoMessage() {}
+
+func (x *ExporterCollection) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExporterCollection.ProtoReflect.Descriptor instead.
+func (*ExporterCollection) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ExporterCollection) GetExporters() []*Exporter {
+	if x != nil {
+		return x.Exporters
+	}
+	return nil
+}
+
+// Connector is an OpenTelemetry connector
+type Connector struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Connector) Reset() {
+	*x = Connector{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Connector) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Connector) ProtoMessage() {}
+
+func (x *Connector) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Connector.ProtoReflect.Descriptor instead.
+func (*Connector) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *Connector) GetCompat() *v1alpha11.CompatibilityMatrix {
+	if x != nil {
+		return x.Compat
+	}
+	return nil
+}
+
+func (x *Connector) GetValue() *ComponentDefinition {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type ConnectorCollection struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Connectors    []*Connector           `protobuf:"bytes,1,rep,name=connectors,proto3" json:"connectors,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConnectorCollection) Reset() {
+	*x = ConnectorCollection{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConnectorCollection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConnectorCollection) ProtoMessage() {}
+
+func (x *ConnectorCollection) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConnectorCollection.ProtoReflect.Descriptor instead.
+func (*ConnectorCollection) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ConnectorCollection) GetConnectors() []*Connector {
+	if x != nil {
+		return x.Connectors
+	}
+	return nil
+}
+
+// Extensions is an OpenTelemetry extension
+type Extension struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Extension) Reset() {
+	*x = Extension{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Extension) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Extension) ProtoMessage() {}
+
+func (x *Extension) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Extension.ProtoReflect.Descriptor instead.
+func (*Extension) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *Extension) GetCompat() *v1alpha11.CompatibilityMatrix {
+	if x != nil {
+		return x.Compat
+	}
+	return nil
+}
+
+func (x *Extension) GetValue() *ComponentDefinition {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type ExtensionCollection struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Extensions    []*Extension           `protobuf:"bytes,1,rep,name=extensions,proto3" json:"extensions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExtensionCollection) Reset() {
+	*x = ExtensionCollection{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExtensionCollection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExtensionCollection) ProtoMessage() {}
+
+func (x *ExtensionCollection) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExtensionCollection.ProtoReflect.Descriptor instead.
+func (*ExtensionCollection) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ExtensionCollection) GetExtensions() []*Extension {
+	if x != nil {
+		return x.Extensions
+	}
+	return nil
+}
+
+// Pipelines is an OpenTelemetry extension
+type Pipeline struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Type          PipelineType                   `protobuf:"varint,1,opt,name=type,proto3,enum=config.v1alpha1.PipelineType" json:"type,omitempty"`
+	PipelineName  *string                        `protobuf:"bytes,2,opt,name=pipeline_name,json=pipelineName,proto3,oneof" json:"pipeline_name,omitempty"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,3,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Pipeline) Reset() {
+	*x = Pipeline{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Pipeline) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Pipeline) ProtoMessage() {}
+
+func (x *Pipeline) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Pipeline.ProtoReflect.Descriptor instead.
+func (*Pipeline) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *Pipeline) GetType() PipelineType {
+	if x != nil {
+		return x.Type
+	}
+	return PipelineType_PIPELINE_TYPE_UNKNOWN
+}
+
+func (x *Pipeline) GetPipelineName() string {
+	if x != nil && x.PipelineName != nil {
+		return *x.PipelineName
+	}
+	return ""
+}
+
+func (x *Pipeline) GetCompat() *v1alpha11.CompatibilityMatrix {
+	if x != nil {
+		return x.Compat
+	}
+	return nil
+}
+
+func (x *Pipeline) GetValue() *ComponentDefinition {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type PipelineCollection struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Pipelines     []*Pipeline            `protobuf:"bytes,1,rep,name=pipelines,proto3" json:"pipelines,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PipelineCollection) Reset() {
+	*x = PipelineCollection{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PipelineCollection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PipelineCollection) ProtoMessage() {}
+
+func (x *PipelineCollection) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PipelineCollection.ProtoReflect.Descriptor instead.
+func (*PipelineCollection) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *PipelineCollection) GetPipelines() []*Pipeline {
+	if x != nil {
+		return x.Pipelines
+	}
+	return nil
+}
+
+type ComponentDefinition struct {
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	ContentType string                 `protobuf:"bytes,1,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	// Types that are valid to be assigned to Value:
+	//
+	//	*ComponentDefinition_Raw
+	//	*ComponentDefinition_Ref
+	Value         isComponentDefinition_Value `protobuf_oneof:"value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ComponentDefinition) Reset() {
+	*x = ComponentDefinition{}
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ComponentDefinition) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ComponentDefinition) ProtoMessage() {}
+
+func (x *ComponentDefinition) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ComponentDefinition.ProtoReflect.Descriptor instead.
+func (*ComponentDefinition) Descriptor() ([]byte, []int) {
+	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ComponentDefinition) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
+func (x *ComponentDefinition) GetValue() isComponentDefinition_Value {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+func (x *ComponentDefinition) GetRaw() []byte {
+	if x != nil {
+		if x, ok := x.Value.(*ComponentDefinition_Raw); ok {
+			return x.Raw
+		}
+	}
+	return nil
+}
+
+func (x *ComponentDefinition) GetRef() string {
+	if x != nil {
+		if x, ok := x.Value.(*ComponentDefinition_Ref); ok {
+			return x.Ref
+		}
+	}
+	return ""
+}
+
+type isComponentDefinition_Value interface {
+	isComponentDefinition_Value()
+}
+
+type ComponentDefinition_Raw struct {
+	// Holds the full content
+	Raw []byte `protobuf:"bytes,2,opt,name=raw,proto3,oneof"`
+}
+
+type ComponentDefinition_Ref struct {
+	// Holds the reference
+	Ref string `protobuf:"bytes,3,opt,name=ref,proto3,oneof"`
+}
+
+func (*ComponentDefinition_Raw) isComponentDefinition_Value() {}
+
+func (*ComponentDefinition_Ref) isComponentDefinition_Value() {}
+
 var File_pkg_api_config_v1alpha1_config_proto protoreflect.FileDescriptor
 
 const file_pkg_api_config_v1alpha1_config_proto_rawDesc = "" +
 	"\n" +
-	"$pkg/api/config/v1alpha1/config.proto\x12\x0fconfig.v1alpha1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a*pkg/api/resources/v1alpha1/resources.proto\"\xa8\x01\n" +
+	"$pkg/api/config/v1alpha1/config.proto\x12\x0fconfig.v1alpha1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a*pkg/api/resources/v1alpha1/resources.proto\x1a\x19google/protobuf/any.proto\x1a$pkg/api/common/v1alpha1/common.proto\"\xa8\x01\n" +
 	"\x0eAssignedConfig\x12;\n" +
 	"\x06config\x18\x01 \x01(\v2#.resources.v1alpha1.CollectorConfigR\x06config\x12?\n" +
 	"\vapply_state\x18\x02 \x01(\x0e2\x1e.config.v1alpha1.AssignedStateR\n" +
 	"applyState\x12\x18\n" +
-	"\adetails\x18\x03 \x01(\tR\adetails*\x9f\x01\n" +
+	"\adetails\x18\x03 \x01(\tR\adetails\"e\n" +
+	"\x0eResourceEntity\x12\x19\n" +
+	"\btype_url\x18\x01 \x01(\tR\atypeUrl\x12\x10\n" +
+	"\x03key\x18\x02 \x01(\tR\x03key\x12&\n" +
+	"\x03obj\x18\x03 \x01(\v2\x14.google.protobuf.AnyR\x03obj\"\xd7\x01\n" +
+	"\x0fCollectorConfig\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12!\n" +
+	"\fcontent_type\x18\x02 \x01(\tR\vcontentType\x12\x12\n" +
+	"\x03Raw\x18\x03 \x01(\fH\x00R\x03Raw\x12F\n" +
+	"\n" +
+	"components\x18\x04 \x01(\v2$.config.v1alpha1.CollectorComponentsH\x00R\n" +
+	"componentsB\a\n" +
+	"\x05value\"\xb0\x03\n" +
+	"\x13CollectorComponents\x12A\n" +
+	"\treceivers\x18\x01 \x01(\v2#.config.v1alpha1.ReceiverCollectionR\treceivers\x12D\n" +
+	"\n" +
+	"processors\x18\x02 \x01(\v2$.config.v1alpha1.ProcessorCollectionR\n" +
+	"processors\x12A\n" +
+	"\texporters\x18\x03 \x01(\v2#.config.v1alpha1.ExporterCollectionR\texporters\x12D\n" +
+	"\n" +
+	"connectors\x18\x04 \x01(\v2$.config.v1alpha1.ConnectorCollectionR\n" +
+	"connectors\x12D\n" +
+	"\n" +
+	"extensions\x18\x05 \x01(\v2$.config.v1alpha1.ExtensionCollectionR\n" +
+	"extensions\x12A\n" +
+	"\tpipelines\x18\x06 \x01(\v2#.config.v1alpha1.PipelineCollectionR\tpipelines\"\x84\x01\n" +
+	"\bReceiver\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"\x89\x01\n" +
+	"\x12ReceiverCollection\x127\n" +
+	"\treceivers\x18\x01 \x03(\v2\x19.config.v1alpha1.ReceiverR\treceivers\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"\x85\x01\n" +
+	"\tProcessor\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"Q\n" +
+	"\x13ProcessorCollection\x12:\n" +
+	"\n" +
+	"processors\x18\x01 \x03(\v2\x1a.config.v1alpha1.ProcessorR\n" +
+	"processors\"\x84\x01\n" +
+	"\bExporter\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"M\n" +
+	"\x12ExporterCollection\x127\n" +
+	"\texporters\x18\x01 \x03(\v2\x19.config.v1alpha1.ExporterR\texporters\"\x85\x01\n" +
+	"\tConnector\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"Q\n" +
+	"\x13ConnectorCollection\x12:\n" +
+	"\n" +
+	"connectors\x18\x01 \x03(\v2\x1a.config.v1alpha1.ConnectorR\n" +
+	"connectors\"\x85\x01\n" +
+	"\tExtension\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"Q\n" +
+	"\x13ExtensionCollection\x12:\n" +
+	"\n" +
+	"extensions\x18\x01 \x03(\v2\x1a.config.v1alpha1.ExtensionR\n" +
+	"extensions\"\xf3\x01\n" +
+	"\bPipeline\x121\n" +
+	"\x04type\x18\x01 \x01(\x0e2\x1d.config.v1alpha1.PipelineTypeR\x04type\x12(\n" +
+	"\rpipeline_name\x18\x02 \x01(\tH\x00R\fpipelineName\x88\x01\x01\x12<\n" +
+	"\x06compat\x18\x03 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x04 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05valueB\x10\n" +
+	"\x0e_pipeline_name\"M\n" +
+	"\x12PipelineCollection\x127\n" +
+	"\tpipelines\x18\x01 \x03(\v2\x19.config.v1alpha1.PipelineR\tpipelines\"i\n" +
+	"\x13ComponentDefinition\x12!\n" +
+	"\fcontent_type\x18\x01 \x01(\tR\vcontentType\x12\x12\n" +
+	"\x03raw\x18\x02 \x01(\fH\x00R\x03raw\x12\x12\n" +
+	"\x03ref\x18\x03 \x01(\tH\x00R\x03refB\a\n" +
+	"\x05value*\x9f\x01\n" +
 	"\rAssignedState\x12\x1a\n" +
 	"\x16ASSIGNED_STATE_UNKNOWN\x10\x00\x12\x1a\n" +
 	"\x16ASSIGNED_STATE_PENDING\x10\x01\x12\x1a\n" +
 	"\x16ASSIGNED_STATE_PLANNED\x10\x02\x12\x1a\n" +
 	"\x16ASSIGNED_STATE_APPLIED\x10\x03\x12\x1e\n" +
-	"\x1aASSIGNED_STATE_NOT_APPLIED\x10\x04B8Z6github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1b\x06proto3"
+	"\x1aASSIGNED_STATE_NOT_APPLIED\x10\x04*\x91\x01\n" +
+	"\fPipelineType\x12\x19\n" +
+	"\x15PIPELINE_TYPE_UNKNOWN\x10\x00\x12\x19\n" +
+	"\x15PIPELINE_TYPE_METRICS\x10\x01\x12\x18\n" +
+	"\x14PIPELINE_TYPE_TRACES\x10\x02\x12\x16\n" +
+	"\x12PIPELINE_TYPE_LOGS\x10\x03\x12\x19\n" +
+	"\x15PIPELINE_TYPE_PROFILE\x10\x04B8Z6github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1b\x06proto3"
 
 var (
 	file_pkg_api_config_v1alpha1_config_proto_rawDescOnce sync.Once
@@ -169,21 +1243,69 @@ func file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP() []byte {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescData
 }
 
-var file_pkg_api_config_v1alpha1_config_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pkg_api_config_v1alpha1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_pkg_api_config_v1alpha1_config_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_pkg_api_config_v1alpha1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_pkg_api_config_v1alpha1_config_proto_goTypes = []any{
-	(AssignedState)(0),               // 0: config.v1alpha1.AssignedState
-	(*AssignedConfig)(nil),           // 1: config.v1alpha1.AssignedConfig
-	(*v1alpha1.CollectorConfig)(nil), // 2: resources.v1alpha1.CollectorConfig
+	(AssignedState)(0),                    // 0: config.v1alpha1.AssignedState
+	(PipelineType)(0),                     // 1: config.v1alpha1.PipelineType
+	(*AssignedConfig)(nil),                // 2: config.v1alpha1.AssignedConfig
+	(*ResourceEntity)(nil),                // 3: config.v1alpha1.ResourceEntity
+	(*CollectorConfig)(nil),               // 4: config.v1alpha1.CollectorConfig
+	(*CollectorComponents)(nil),           // 5: config.v1alpha1.CollectorComponents
+	(*Receiver)(nil),                      // 6: config.v1alpha1.Receiver
+	(*ReceiverCollection)(nil),            // 7: config.v1alpha1.ReceiverCollection
+	(*Processor)(nil),                     // 8: config.v1alpha1.Processor
+	(*ProcessorCollection)(nil),           // 9: config.v1alpha1.ProcessorCollection
+	(*Exporter)(nil),                      // 10: config.v1alpha1.Exporter
+	(*ExporterCollection)(nil),            // 11: config.v1alpha1.ExporterCollection
+	(*Connector)(nil),                     // 12: config.v1alpha1.Connector
+	(*ConnectorCollection)(nil),           // 13: config.v1alpha1.ConnectorCollection
+	(*Extension)(nil),                     // 14: config.v1alpha1.Extension
+	(*ExtensionCollection)(nil),           // 15: config.v1alpha1.ExtensionCollection
+	(*Pipeline)(nil),                      // 16: config.v1alpha1.Pipeline
+	(*PipelineCollection)(nil),            // 17: config.v1alpha1.PipelineCollection
+	(*ComponentDefinition)(nil),           // 18: config.v1alpha1.ComponentDefinition
+	(*v1alpha1.CollectorConfig)(nil),      // 19: resources.v1alpha1.CollectorConfig
+	(*anypb.Any)(nil),                     // 20: google.protobuf.Any
+	(*v1alpha11.CompatibilityMatrix)(nil), // 21: common.v1alpha1.CompatibilityMatrix
 }
 var file_pkg_api_config_v1alpha1_config_proto_depIdxs = []int32{
-	2, // 0: config.v1alpha1.AssignedConfig.config:type_name -> resources.v1alpha1.CollectorConfig
-	0, // 1: config.v1alpha1.AssignedConfig.apply_state:type_name -> config.v1alpha1.AssignedState
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	19, // 0: config.v1alpha1.AssignedConfig.config:type_name -> resources.v1alpha1.CollectorConfig
+	0,  // 1: config.v1alpha1.AssignedConfig.apply_state:type_name -> config.v1alpha1.AssignedState
+	20, // 2: config.v1alpha1.ResourceEntity.obj:type_name -> google.protobuf.Any
+	21, // 3: config.v1alpha1.CollectorConfig.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	5,  // 4: config.v1alpha1.CollectorConfig.components:type_name -> config.v1alpha1.CollectorComponents
+	7,  // 5: config.v1alpha1.CollectorComponents.receivers:type_name -> config.v1alpha1.ReceiverCollection
+	9,  // 6: config.v1alpha1.CollectorComponents.processors:type_name -> config.v1alpha1.ProcessorCollection
+	11, // 7: config.v1alpha1.CollectorComponents.exporters:type_name -> config.v1alpha1.ExporterCollection
+	13, // 8: config.v1alpha1.CollectorComponents.connectors:type_name -> config.v1alpha1.ConnectorCollection
+	15, // 9: config.v1alpha1.CollectorComponents.extensions:type_name -> config.v1alpha1.ExtensionCollection
+	17, // 10: config.v1alpha1.CollectorComponents.pipelines:type_name -> config.v1alpha1.PipelineCollection
+	21, // 11: config.v1alpha1.Receiver.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 12: config.v1alpha1.Receiver.value:type_name -> config.v1alpha1.ComponentDefinition
+	6,  // 13: config.v1alpha1.ReceiverCollection.receivers:type_name -> config.v1alpha1.Receiver
+	18, // 14: config.v1alpha1.ReceiverCollection.value:type_name -> config.v1alpha1.ComponentDefinition
+	21, // 15: config.v1alpha1.Processor.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 16: config.v1alpha1.Processor.value:type_name -> config.v1alpha1.ComponentDefinition
+	8,  // 17: config.v1alpha1.ProcessorCollection.processors:type_name -> config.v1alpha1.Processor
+	21, // 18: config.v1alpha1.Exporter.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 19: config.v1alpha1.Exporter.value:type_name -> config.v1alpha1.ComponentDefinition
+	10, // 20: config.v1alpha1.ExporterCollection.exporters:type_name -> config.v1alpha1.Exporter
+	21, // 21: config.v1alpha1.Connector.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 22: config.v1alpha1.Connector.value:type_name -> config.v1alpha1.ComponentDefinition
+	12, // 23: config.v1alpha1.ConnectorCollection.connectors:type_name -> config.v1alpha1.Connector
+	21, // 24: config.v1alpha1.Extension.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 25: config.v1alpha1.Extension.value:type_name -> config.v1alpha1.ComponentDefinition
+	14, // 26: config.v1alpha1.ExtensionCollection.extensions:type_name -> config.v1alpha1.Extension
+	1,  // 27: config.v1alpha1.Pipeline.type:type_name -> config.v1alpha1.PipelineType
+	21, // 28: config.v1alpha1.Pipeline.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 29: config.v1alpha1.Pipeline.value:type_name -> config.v1alpha1.ComponentDefinition
+	16, // 30: config.v1alpha1.PipelineCollection.pipelines:type_name -> config.v1alpha1.Pipeline
+	31, // [31:31] is the sub-list for method output_type
+	31, // [31:31] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_config_v1alpha1_config_proto_init() }
@@ -191,13 +1313,22 @@ func file_pkg_api_config_v1alpha1_config_proto_init() {
 	if File_pkg_api_config_v1alpha1_config_proto != nil {
 		return
 	}
+	file_pkg_api_config_v1alpha1_config_proto_msgTypes[2].OneofWrappers = []any{
+		(*CollectorConfig_Raw)(nil),
+		(*CollectorConfig_Components)(nil),
+	}
+	file_pkg_api_config_v1alpha1_config_proto_msgTypes[14].OneofWrappers = []any{}
+	file_pkg_api_config_v1alpha1_config_proto_msgTypes[16].OneofWrappers = []any{
+		(*ComponentDefinition_Raw)(nil),
+		(*ComponentDefinition_Ref)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_config_v1alpha1_config_proto_rawDesc), len(file_pkg_api_config_v1alpha1_config_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   1,
+			NumEnums:      2,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

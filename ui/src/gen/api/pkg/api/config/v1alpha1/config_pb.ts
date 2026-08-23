@@ -4,16 +4,19 @@
 
 import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
-import { file_google_protobuf_empty, file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
-import type { CollectorConfig } from "../../resources/v1alpha1/resources_pb";
+import type { Any } from "@bufbuild/protobuf/wkt";
+import { file_google_protobuf_any, file_google_protobuf_empty, file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
+import type { CollectorConfig as CollectorConfig$1 } from "../../resources/v1alpha1/resources_pb";
 import { file_pkg_api_resources_v1alpha1_resources } from "../../resources/v1alpha1/resources_pb";
+import type { CompatibilityMatrix } from "../../common/v1alpha1/common_pb";
+import { file_pkg_api_common_v1alpha1_common } from "../../common/v1alpha1/common_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file pkg/api/config/v1alpha1/config.proto.
  */
 export const file_pkg_api_config_v1alpha1_config: GenFile = /*@__PURE__*/
-  fileDesc("CiRwa2cvYXBpL2NvbmZpZy92MWFscGhhMS9jb25maWcucHJvdG8SD2NvbmZpZy52MWFscGhhMSKLAQoOQXNzaWduZWRDb25maWcSMwoGY29uZmlnGAEgASgLMiMucmVzb3VyY2VzLnYxYWxwaGExLkNvbGxlY3RvckNvbmZpZxIzCgthcHBseV9zdGF0ZRgCIAEoDjIeLmNvbmZpZy52MWFscGhhMS5Bc3NpZ25lZFN0YXRlEg8KB2RldGFpbHMYAyABKAkqnwEKDUFzc2lnbmVkU3RhdGUSGgoWQVNTSUdORURfU1RBVEVfVU5LTk9XThAAEhoKFkFTU0lHTkVEX1NUQVRFX1BFTkRJTkcQARIaChZBU1NJR05FRF9TVEFURV9QTEFOTkVEEAISGgoWQVNTSUdORURfU1RBVEVfQVBQTElFRBADEh4KGkFTU0lHTkVEX1NUQVRFX05PVF9BUFBMSUVEEARCOFo2Z2l0aHViLmNvbS9vdGVsZmxlZXQvb3RlbGZsZWV0L3BrZy9hcGkvY29uZmlnL3YxYWxwaGExYgZwcm90bzM", [file_google_protobuf_empty, file_google_protobuf_timestamp, file_pkg_api_resources_v1alpha1_resources]);
+  fileDesc("CiRwa2cvYXBpL2NvbmZpZy92MWFscGhhMS9jb25maWcucHJvdG8SD2NvbmZpZy52MWFscGhhMSKLAQoOQXNzaWduZWRDb25maWcSMwoGY29uZmlnGAEgASgLMiMucmVzb3VyY2VzLnYxYWxwaGExLkNvbGxlY3RvckNvbmZpZxIzCgthcHBseV9zdGF0ZRgCIAEoDjIeLmNvbmZpZy52MWFscGhhMS5Bc3NpZ25lZFN0YXRlEg8KB2RldGFpbHMYAyABKAkiUgoOUmVzb3VyY2VFbnRpdHkSEAoIdHlwZV91cmwYASABKAkSCwoDa2V5GAIgASgJEiEKA29iahgDIAEoCzIULmdvb2dsZS5wcm90b2J1Zi5BbnkisQEKD0NvbGxlY3RvckNvbmZpZxI0CgZjb21wYXQYASABKAsyJC5jb21tb24udjFhbHBoYTEuQ29tcGF0aWJpbGl0eU1hdHJpeBIUCgxjb250ZW50X3R5cGUYAiABKAkSDQoDUmF3GAMgASgMSAASOgoKY29tcG9uZW50cxgEIAEoCzIkLmNvbmZpZy52MWFscGhhMS5Db2xsZWN0b3JDb21wb25lbnRzSABCBwoFdmFsdWUi6wIKE0NvbGxlY3RvckNvbXBvbmVudHMSNgoJcmVjZWl2ZXJzGAEgASgLMiMuY29uZmlnLnYxYWxwaGExLlJlY2VpdmVyQ29sbGVjdGlvbhI4Cgpwcm9jZXNzb3JzGAIgASgLMiQuY29uZmlnLnYxYWxwaGExLlByb2Nlc3NvckNvbGxlY3Rpb24SNgoJZXhwb3J0ZXJzGAMgASgLMiMuY29uZmlnLnYxYWxwaGExLkV4cG9ydGVyQ29sbGVjdGlvbhI4Cgpjb25uZWN0b3JzGAQgASgLMiQuY29uZmlnLnYxYWxwaGExLkNvbm5lY3RvckNvbGxlY3Rpb24SOAoKZXh0ZW5zaW9ucxgFIAEoCzIkLmNvbmZpZy52MWFscGhhMS5FeHRlbnNpb25Db2xsZWN0aW9uEjYKCXBpcGVsaW5lcxgGIAEoCzIjLmNvbmZpZy52MWFscGhhMS5QaXBlbGluZUNvbGxlY3Rpb24idQoIUmVjZWl2ZXISNAoGY29tcGF0GAEgASgLMiQuY29tbW9uLnYxYWxwaGExLkNvbXBhdGliaWxpdHlNYXRyaXgSMwoFdmFsdWUYAiABKAsyJC5jb25maWcudjFhbHBoYTEuQ29tcG9uZW50RGVmaW5pdGlvbiJ3ChJSZWNlaXZlckNvbGxlY3Rpb24SLAoJcmVjZWl2ZXJzGAEgAygLMhkuY29uZmlnLnYxYWxwaGExLlJlY2VpdmVyEjMKBXZhbHVlGAIgASgLMiQuY29uZmlnLnYxYWxwaGExLkNvbXBvbmVudERlZmluaXRpb24idgoJUHJvY2Vzc29yEjQKBmNvbXBhdBgBIAEoCzIkLmNvbW1vbi52MWFscGhhMS5Db21wYXRpYmlsaXR5TWF0cml4EjMKBXZhbHVlGAIgASgLMiQuY29uZmlnLnYxYWxwaGExLkNvbXBvbmVudERlZmluaXRpb24iRQoTUHJvY2Vzc29yQ29sbGVjdGlvbhIuCgpwcm9jZXNzb3JzGAEgAygLMhouY29uZmlnLnYxYWxwaGExLlByb2Nlc3NvciJ1CghFeHBvcnRlchI0CgZjb21wYXQYASABKAsyJC5jb21tb24udjFhbHBoYTEuQ29tcGF0aWJpbGl0eU1hdHJpeBIzCgV2YWx1ZRgCIAEoCzIkLmNvbmZpZy52MWFscGhhMS5Db21wb25lbnREZWZpbml0aW9uIkIKEkV4cG9ydGVyQ29sbGVjdGlvbhIsCglleHBvcnRlcnMYASADKAsyGS5jb25maWcudjFhbHBoYTEuRXhwb3J0ZXIidgoJQ29ubmVjdG9yEjQKBmNvbXBhdBgBIAEoCzIkLmNvbW1vbi52MWFscGhhMS5Db21wYXRpYmlsaXR5TWF0cml4EjMKBXZhbHVlGAIgASgLMiQuY29uZmlnLnYxYWxwaGExLkNvbXBvbmVudERlZmluaXRpb24iRQoTQ29ubmVjdG9yQ29sbGVjdGlvbhIuCgpjb25uZWN0b3JzGAEgAygLMhouY29uZmlnLnYxYWxwaGExLkNvbm5lY3RvciJ2CglFeHRlbnNpb24SNAoGY29tcGF0GAEgASgLMiQuY29tbW9uLnYxYWxwaGExLkNvbXBhdGliaWxpdHlNYXRyaXgSMwoFdmFsdWUYAiABKAsyJC5jb25maWcudjFhbHBoYTEuQ29tcG9uZW50RGVmaW5pdGlvbiJFChNFeHRlbnNpb25Db2xsZWN0aW9uEi4KCmV4dGVuc2lvbnMYASADKAsyGi5jb25maWcudjFhbHBoYTEuRXh0ZW5zaW9uItABCghQaXBlbGluZRIrCgR0eXBlGAEgASgOMh0uY29uZmlnLnYxYWxwaGExLlBpcGVsaW5lVHlwZRIaCg1waXBlbGluZV9uYW1lGAIgASgJSACIAQESNAoGY29tcGF0GAMgASgLMiQuY29tbW9uLnYxYWxwaGExLkNvbXBhdGliaWxpdHlNYXRyaXgSMwoFdmFsdWUYBCABKAsyJC5jb25maWcudjFhbHBoYTEuQ29tcG9uZW50RGVmaW5pdGlvbkIQCg5fcGlwZWxpbmVfbmFtZSJCChJQaXBlbGluZUNvbGxlY3Rpb24SLAoJcGlwZWxpbmVzGAEgAygLMhkuY29uZmlnLnYxYWxwaGExLlBpcGVsaW5lIlIKE0NvbXBvbmVudERlZmluaXRpb24SFAoMY29udGVudF90eXBlGAEgASgJEg0KA3JhdxgCIAEoDEgAEg0KA3JlZhgDIAEoCUgAQgcKBXZhbHVlKp8BCg1Bc3NpZ25lZFN0YXRlEhoKFkFTU0lHTkVEX1NUQVRFX1VOS05PV04QABIaChZBU1NJR05FRF9TVEFURV9QRU5ESU5HEAESGgoWQVNTSUdORURfU1RBVEVfUExBTk5FRBACEhoKFkFTU0lHTkVEX1NUQVRFX0FQUExJRUQQAxIeChpBU1NJR05FRF9TVEFURV9OT1RfQVBQTElFRBAEKpEBCgxQaXBlbGluZVR5cGUSGQoVUElQRUxJTkVfVFlQRV9VTktOT1dOEAASGQoVUElQRUxJTkVfVFlQRV9NRVRSSUNTEAESGAoUUElQRUxJTkVfVFlQRV9UUkFDRVMQAhIWChJQSVBFTElORV9UWVBFX0xPR1MQAxIZChVQSVBFTElORV9UWVBFX1BST0ZJTEUQBEI4WjZnaXRodWIuY29tL290ZWxmbGVldC9vdGVsZmxlZXQvcGtnL2FwaS9jb25maWcvdjFhbHBoYTFiBnByb3RvMw", [file_google_protobuf_empty, file_google_protobuf_timestamp, file_pkg_api_resources_v1alpha1_resources, file_google_protobuf_any, file_pkg_api_common_v1alpha1_common]);
 
 /**
  * @generated from message config.v1alpha1.AssignedConfig
@@ -22,7 +25,7 @@ export type AssignedConfig = Message<"config.v1alpha1.AssignedConfig"> & {
   /**
    * @generated from field: resources.v1alpha1.CollectorConfig config = 1;
    */
-  config?: CollectorConfig | undefined;
+  config?: CollectorConfig$1 | undefined;
 
   /**
    * @generated from field: config.v1alpha1.AssignedState apply_state = 2;
@@ -43,6 +46,415 @@ export type AssignedConfig = Message<"config.v1alpha1.AssignedConfig"> & {
  */
 export const AssignedConfigSchema: GenMessage<AssignedConfig> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 0);
+
+/**
+ * @generated from message config.v1alpha1.ResourceEntity
+ */
+export type ResourceEntity = Message<"config.v1alpha1.ResourceEntity"> & {
+  /**
+   * @generated from field: string type_url = 1;
+   */
+  typeUrl: string;
+
+  /**
+   * @generated from field: string key = 2;
+   */
+  key: string;
+
+  /**
+   * @generated from field: google.protobuf.Any obj = 3;
+   */
+  obj?: Any | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.ResourceEntity.
+ * Use `create(ResourceEntitySchema)` to create a new message.
+ */
+export const ResourceEntitySchema: GenMessage<ResourceEntity> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 1);
+
+/**
+ * CollectorConfig is a complete OpenTelemetryConfig
+ *
+ * @generated from message config.v1alpha1.CollectorConfig
+ */
+export type CollectorConfig = Message<"config.v1alpha1.CollectorConfig"> & {
+  /**
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
+   */
+  compat?: CompatibilityMatrix | undefined;
+
+  /**
+   * @generated from field: string content_type = 2;
+   */
+  contentType: string;
+
+  /**
+   * @generated from oneof config.v1alpha1.CollectorConfig.value
+   */
+  value: {
+    /**
+     * @generated from field: bytes Raw = 3;
+     */
+    value: Uint8Array;
+    case: "Raw";
+  } | {
+    /**
+     * @generated from field: config.v1alpha1.CollectorComponents components = 4;
+     */
+    value: CollectorComponents;
+    case: "components";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message config.v1alpha1.CollectorConfig.
+ * Use `create(CollectorConfigSchema)` to create a new message.
+ */
+export const CollectorConfigSchema: GenMessage<CollectorConfig> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 2);
+
+/**
+ * @generated from message config.v1alpha1.CollectorComponents
+ */
+export type CollectorComponents = Message<"config.v1alpha1.CollectorComponents"> & {
+  /**
+   * @generated from field: config.v1alpha1.ReceiverCollection receivers = 1;
+   */
+  receivers?: ReceiverCollection | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ProcessorCollection processors = 2;
+   */
+  processors?: ProcessorCollection | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ExporterCollection exporters = 3;
+   */
+  exporters?: ExporterCollection | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ConnectorCollection connectors = 4;
+   */
+  connectors?: ConnectorCollection | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ExtensionCollection extensions = 5;
+   */
+  extensions?: ExtensionCollection | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.PipelineCollection pipelines = 6;
+   */
+  pipelines?: PipelineCollection | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.CollectorComponents.
+ * Use `create(CollectorComponentsSchema)` to create a new message.
+ */
+export const CollectorComponentsSchema: GenMessage<CollectorComponents> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 3);
+
+/**
+ * Receiver is an OpenTelemetry receiver
+ *
+ * @generated from message config.v1alpha1.Receiver
+ */
+export type Receiver = Message<"config.v1alpha1.Receiver"> & {
+  /**
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
+   */
+  compat?: CompatibilityMatrix | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
+   */
+  value?: ComponentDefinition | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.Receiver.
+ * Use `create(ReceiverSchema)` to create a new message.
+ */
+export const ReceiverSchema: GenMessage<Receiver> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 4);
+
+/**
+ * @generated from message config.v1alpha1.ReceiverCollection
+ */
+export type ReceiverCollection = Message<"config.v1alpha1.ReceiverCollection"> & {
+  /**
+   * @generated from field: repeated config.v1alpha1.Receiver receivers = 1;
+   */
+  receivers: Receiver[];
+
+  /**
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
+   */
+  value?: ComponentDefinition | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.ReceiverCollection.
+ * Use `create(ReceiverCollectionSchema)` to create a new message.
+ */
+export const ReceiverCollectionSchema: GenMessage<ReceiverCollection> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 5);
+
+/**
+ * Processor is an OpenTelemetry processor
+ *
+ * @generated from message config.v1alpha1.Processor
+ */
+export type Processor = Message<"config.v1alpha1.Processor"> & {
+  /**
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
+   */
+  compat?: CompatibilityMatrix | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
+   */
+  value?: ComponentDefinition | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.Processor.
+ * Use `create(ProcessorSchema)` to create a new message.
+ */
+export const ProcessorSchema: GenMessage<Processor> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 6);
+
+/**
+ * @generated from message config.v1alpha1.ProcessorCollection
+ */
+export type ProcessorCollection = Message<"config.v1alpha1.ProcessorCollection"> & {
+  /**
+   * @generated from field: repeated config.v1alpha1.Processor processors = 1;
+   */
+  processors: Processor[];
+};
+
+/**
+ * Describes the message config.v1alpha1.ProcessorCollection.
+ * Use `create(ProcessorCollectionSchema)` to create a new message.
+ */
+export const ProcessorCollectionSchema: GenMessage<ProcessorCollection> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 7);
+
+/**
+ * Exporter is an OpenTelemetry exporter
+ *
+ * @generated from message config.v1alpha1.Exporter
+ */
+export type Exporter = Message<"config.v1alpha1.Exporter"> & {
+  /**
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
+   */
+  compat?: CompatibilityMatrix | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
+   */
+  value?: ComponentDefinition | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.Exporter.
+ * Use `create(ExporterSchema)` to create a new message.
+ */
+export const ExporterSchema: GenMessage<Exporter> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 8);
+
+/**
+ * @generated from message config.v1alpha1.ExporterCollection
+ */
+export type ExporterCollection = Message<"config.v1alpha1.ExporterCollection"> & {
+  /**
+   * @generated from field: repeated config.v1alpha1.Exporter exporters = 1;
+   */
+  exporters: Exporter[];
+};
+
+/**
+ * Describes the message config.v1alpha1.ExporterCollection.
+ * Use `create(ExporterCollectionSchema)` to create a new message.
+ */
+export const ExporterCollectionSchema: GenMessage<ExporterCollection> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 9);
+
+/**
+ * Connector is an OpenTelemetry connector
+ *
+ * @generated from message config.v1alpha1.Connector
+ */
+export type Connector = Message<"config.v1alpha1.Connector"> & {
+  /**
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
+   */
+  compat?: CompatibilityMatrix | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
+   */
+  value?: ComponentDefinition | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.Connector.
+ * Use `create(ConnectorSchema)` to create a new message.
+ */
+export const ConnectorSchema: GenMessage<Connector> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 10);
+
+/**
+ * @generated from message config.v1alpha1.ConnectorCollection
+ */
+export type ConnectorCollection = Message<"config.v1alpha1.ConnectorCollection"> & {
+  /**
+   * @generated from field: repeated config.v1alpha1.Connector connectors = 1;
+   */
+  connectors: Connector[];
+};
+
+/**
+ * Describes the message config.v1alpha1.ConnectorCollection.
+ * Use `create(ConnectorCollectionSchema)` to create a new message.
+ */
+export const ConnectorCollectionSchema: GenMessage<ConnectorCollection> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 11);
+
+/**
+ * Extensions is an OpenTelemetry extension
+ *
+ * @generated from message config.v1alpha1.Extension
+ */
+export type Extension = Message<"config.v1alpha1.Extension"> & {
+  /**
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
+   */
+  compat?: CompatibilityMatrix | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
+   */
+  value?: ComponentDefinition | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.Extension.
+ * Use `create(ExtensionSchema)` to create a new message.
+ */
+export const ExtensionSchema: GenMessage<Extension> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 12);
+
+/**
+ * @generated from message config.v1alpha1.ExtensionCollection
+ */
+export type ExtensionCollection = Message<"config.v1alpha1.ExtensionCollection"> & {
+  /**
+   * @generated from field: repeated config.v1alpha1.Extension extensions = 1;
+   */
+  extensions: Extension[];
+};
+
+/**
+ * Describes the message config.v1alpha1.ExtensionCollection.
+ * Use `create(ExtensionCollectionSchema)` to create a new message.
+ */
+export const ExtensionCollectionSchema: GenMessage<ExtensionCollection> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 13);
+
+/**
+ * Pipelines is an OpenTelemetry extension
+ *
+ * @generated from message config.v1alpha1.Pipeline
+ */
+export type Pipeline = Message<"config.v1alpha1.Pipeline"> & {
+  /**
+   * @generated from field: config.v1alpha1.PipelineType type = 1;
+   */
+  type: PipelineType;
+
+  /**
+   * @generated from field: optional string pipeline_name = 2;
+   */
+  pipelineName?: string | undefined;
+
+  /**
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 3;
+   */
+  compat?: CompatibilityMatrix | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 4;
+   */
+  value?: ComponentDefinition | undefined;
+};
+
+/**
+ * Describes the message config.v1alpha1.Pipeline.
+ * Use `create(PipelineSchema)` to create a new message.
+ */
+export const PipelineSchema: GenMessage<Pipeline> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 14);
+
+/**
+ * @generated from message config.v1alpha1.PipelineCollection
+ */
+export type PipelineCollection = Message<"config.v1alpha1.PipelineCollection"> & {
+  /**
+   * @generated from field: repeated config.v1alpha1.Pipeline pipelines = 1;
+   */
+  pipelines: Pipeline[];
+};
+
+/**
+ * Describes the message config.v1alpha1.PipelineCollection.
+ * Use `create(PipelineCollectionSchema)` to create a new message.
+ */
+export const PipelineCollectionSchema: GenMessage<PipelineCollection> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 15);
+
+/**
+ * @generated from message config.v1alpha1.ComponentDefinition
+ */
+export type ComponentDefinition = Message<"config.v1alpha1.ComponentDefinition"> & {
+  /**
+   * @generated from field: string content_type = 1;
+   */
+  contentType: string;
+
+  /**
+   * @generated from oneof config.v1alpha1.ComponentDefinition.value
+   */
+  value: {
+    /**
+     * Holds the full content
+     *
+     * @generated from field: bytes raw = 2;
+     */
+    value: Uint8Array;
+    case: "raw";
+  } | {
+    /**
+     * Holds the reference
+     *
+     * @generated from field: string ref = 3;
+     */
+    value: string;
+    case: "ref";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message config.v1alpha1.ComponentDefinition.
+ * Use `create(ComponentDefinitionSchema)` to create a new message.
+ */
+export const ComponentDefinitionSchema: GenMessage<ComponentDefinition> = /*@__PURE__*/
+  messageDesc(file_pkg_api_config_v1alpha1_config, 16);
 
 /**
  * @generated from enum config.v1alpha1.AssignedState
@@ -79,4 +491,40 @@ export enum AssignedState {
  */
 export const AssignedStateSchema: GenEnum<AssignedState> = /*@__PURE__*/
   enumDesc(file_pkg_api_config_v1alpha1_config, 0);
+
+/**
+ * @generated from enum config.v1alpha1.PipelineType
+ */
+export enum PipelineType {
+  /**
+   * @generated from enum value: PIPELINE_TYPE_UNKNOWN = 0;
+   */
+  UNKNOWN = 0,
+
+  /**
+   * @generated from enum value: PIPELINE_TYPE_METRICS = 1;
+   */
+  METRICS = 1,
+
+  /**
+   * @generated from enum value: PIPELINE_TYPE_TRACES = 2;
+   */
+  TRACES = 2,
+
+  /**
+   * @generated from enum value: PIPELINE_TYPE_LOGS = 3;
+   */
+  LOGS = 3,
+
+  /**
+   * @generated from enum value: PIPELINE_TYPE_PROFILE = 4;
+   */
+  PROFILE = 4,
+}
+
+/**
+ * Describes the enum config.v1alpha1.PipelineType.
+ */
+export const PipelineTypeSchema: GenEnum<PipelineType> = /*@__PURE__*/
+  enumDesc(file_pkg_api_config_v1alpha1_config, 1);
 

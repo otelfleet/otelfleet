@@ -1,0 +1,58 @@
+syntax = "proto3";
+package common.v1alpha1;
+option go_package = "github.com/otelfleet/otelfleet/pkg/api/common/v1alpha1";
+
+message Label {
+    string key = 1;
+    string value = 2;
+}
+
+message LabelFilter {
+    LabelType type = 1;
+    repeated KeyPairFilter filters = 2;
+}
+
+message KeyPairFilter {
+    MatchType match_type = 1;
+    Label label = 2;
+}
+
+enum MatchType {
+    MATCH_TYPE_EQ  = 0;
+    MATCH_TYPE_NEQ = 1;
+    MATCH_TYPE_RE  = 2;
+    MATCH_TYPE_NRE = 3;
+
+}
+
+enum LabelType {
+    // For user configured labels on a collector instance
+    LabelTypeOtelfleet = 0;
+    // For runtime information reported by the opamp supervisor,
+    // related to the collector distribution
+    LabelTypeIdentifying = 1;
+    // For runtime information reported by the opamp supervisor,
+    // related to the host information or other
+    LabelTypeNonIdentifying = 2;
+}
+
+
+enum VersionOrdering {
+    VERSION_ORDERING_SEMVER = 0;
+}
+
+message CompatibilityMatrix {
+    repeated VersionConstraits constraints = 1;
+}
+
+message VersionConstraits {
+    VersionOrdering ordering = 1;
+    string distribution = 2;
+    optional string min_version = 3;
+    optional string max_version = 4;
+}
+
+message Reference {
+    string key = 1;
+    uint64 revision = 2;
+}

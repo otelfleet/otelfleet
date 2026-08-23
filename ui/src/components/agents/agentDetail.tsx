@@ -357,6 +357,8 @@ function ComponentRows({ componentMap, depth, parentName = '' }: {
     );
 }
 
+const selectableText = { userSelect: 'text' } as const;
+
 function ComponentRow({ name, component, depth, hasChildren }: {
     name: string;
     component: ComponentHealth;
@@ -369,7 +371,7 @@ function ComponentRow({ name, component, depth, hasChildren }: {
         <>
             <Table.Tr
                 onClick={hasChildren ? () => setExpanded(!expanded) : undefined}
-                style={hasChildren ? { cursor: 'pointer' } : undefined}
+                style={hasChildren ? { cursor: 'pointer', userSelect: 'none' } : undefined}
             >
                 <Table.Td>
                     <Box style={{ paddingLeft: depth * 20 }}>
@@ -379,12 +381,12 @@ function ComponentRow({ name, component, depth, hasChildren }: {
                                     {expanded ? '▼' : '▶'}
                                 </Text>
                             )}
-                            <Text fw={depth === 0 ? 600 : 400}>{name}</Text>
+                            <Text fw={depth === 0 ? 600 : 400} style={selectableText}>{name}</Text>
                         </Group>
                     </Box>
                 </Table.Td>
                 <Table.Td>
-                    <Text size="sm">{component.status || 'N/A'}</Text>
+                    <Text size="sm" style={selectableText}>{component.status || 'N/A'}</Text>
                 </Table.Td>
                 <Table.Td>
                     <Badge color={component.healthy ? 'green' : 'red'} variant="filled" size="sm">
@@ -392,7 +394,7 @@ function ComponentRow({ name, component, depth, hasChildren }: {
                     </Badge>
                 </Table.Td>
                 <Table.Td>
-                    <Text size="sm" c={component.lastError ? 'red' : 'dimmed'}>
+                    <Text size="sm" c={component.lastError ? 'red' : 'dimmed'} style={selectableText}>
                         {component.lastError || '-'}
                     </Text>
                 </Table.Td>

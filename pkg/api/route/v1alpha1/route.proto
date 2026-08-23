@@ -1,0 +1,23 @@
+syntax = "proto3";
+package route.v1alpha1;
+
+option go_package = "github.com/otelfleet/otelfleet/pkg/api/route/v1alpha1";
+
+import "pkg/api/common/v1alpha1/common.proto";
+import "buf/validate/validate.proto";
+
+// TODO : proto validate rules
+
+message Route {
+    string name = 1 [(buf.validate.field).string.min_len = 1];
+    repeated common.v1alpha1.LabelFilter filters = 2;
+    string config_ref = 3 [(buf.validate.field).string.min_len = 1];
+    repeated Route routes = 4;
+    string use = 5;
+}
+
+message Router {
+    Route root = 1;
+    repeated Route defs = 2;
+    string config_ref = 3;
+}

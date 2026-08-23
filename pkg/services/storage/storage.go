@@ -12,6 +12,7 @@ import (
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1/v1alpha1connect"
 	"github.com/otelfleet/otelfleet/pkg/config"
+	otelfleet_svc "github.com/otelfleet/otelfleet/pkg/services"
 	otelgrpc "github.com/otelfleet/otelfleet/pkg/storage/grpc"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
@@ -31,6 +32,7 @@ type StorageService struct {
 }
 
 var _ services.Service = (*StorageService)(nil)
+var _ otelfleet_svc.HTTPExtension = (*StorageService)(nil)
 
 // var _ types.KVBroker = (*StorageService)(nil)
 
@@ -97,7 +99,7 @@ func (s *StorageService) Schema() schema.SchemaProto {
 	return s.underlying
 }
 
-func (s *StorageService) ConfigureHTTP(mux *mux.Router) {
+func (s *StorageService) ConfigureHTTP(mux *mux.Router, opts []connect.HandlerOption) {
 	s.logger.Info("configuring routes")
-	v1alpha1connect.RegisterKeyValueServiceHandler(mux, s)
+	v1alpha1connect.RegisterKeyValueServiceHandler(mux, s, opts...)
 }

@@ -4,10 +4,12 @@ import (
 	"context"
 	"log/slog"
 
+	"connectrpc.com/connect"
 	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1/v1alpha1connect"
+	otelfleet_svc "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"github.com/otelfleet/otelfleet/pkg/util/protoutil"
 )
@@ -17,6 +19,8 @@ type Server struct {
 	genericStorage schema.SchemaProto
 	supportedTypes []string
 }
+
+var _ otelfleet_svc.HTTPExtension = (*Server)(nil)
 
 func NewServer(
 	l *slog.Logger,
@@ -44,8 +48,8 @@ func (s *Server) stop(error) error {
 	return nil
 }
 
-func (s *Server) ConfigureHTTP(mux *mux.Router) {
-	v1alpha1connect.RegisterResourceServiceHandler(mux, s)
+func (s *Server) ConfigureHTTP(mux *mux.Router, opts []connect.HandlerOption) {
+	v1alpha1connect.RegisterResourceServiceHandler(mux, s, opts...)
 }
 
 // Returns the typeURLs of supported resources
