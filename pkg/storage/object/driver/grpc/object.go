@@ -6,7 +6,7 @@ import (
 	"connectrpc.com/connect"
 	keyvaluev1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1/v1alpha1connect"
-	"github.com/otelfleet/otelfleet/pkg/storage/schema"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -20,7 +20,7 @@ func NewRemoteKV(client v1alpha1connect.KeyValueServiceClient) *StorageClient {
 	}
 }
 
-var _ schema.ProtoObjectStore = (*StorageClient)(nil)
+var _ object.TypeURLStore = (*StorageClient)(nil)
 
 func (s *StorageClient) Put(ctx context.Context, typeURL, key string, revision uint64, obj *anypb.Any) (*keyvaluev1.KeyValueObject, error) {
 	resp, err := s.client.Put(ctx, connect.NewRequest(&keyvaluev1.PutRequest{

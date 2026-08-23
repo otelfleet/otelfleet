@@ -36,7 +36,6 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/resource"
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
 	"github.com/otelfleet/otelfleet/pkg/services/ui"
-	"github.com/otelfleet/otelfleet/pkg/storage"
 	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/rs/cors"
 	"golang.org/x/net/http2"
@@ -180,7 +179,7 @@ func (o *OtelFleet) setupModuleManager() error {
 		o.store = storeSvc
 		storeSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 
-		o.tokenStore = storage.NewProtoKVFromSchemaImpl[*bootstrapv1alpha1.BootstrapToken](o.store.Schema())
+		o.tokenStore = object.NewKeyValueAdapter[*bootstrapv1alpha1.BootstrapToken](o.store.Schema())
 		o.deployMgr = deployment.NewManager(o.store.Schema())
 
 		return storeSvc, nil

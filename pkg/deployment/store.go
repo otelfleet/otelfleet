@@ -3,7 +3,7 @@ package deployment
 import (
 	"context"
 
-	"github.com/otelfleet/otelfleet/pkg/storage/schema"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -23,7 +23,7 @@ func typeURL[T proto.Message]() string {
 	return any.GetTypeUrl()
 }
 
-func putProto[T proto.Message](ctx context.Context, s schema.ProtoObjectStore, key string, msg T) error {
+func putProto[T proto.Message](ctx context.Context, s object.TypeURLStore, key string, msg T) error {
 	any, err := anypb.New(msg)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func putProto[T proto.Message](ctx context.Context, s schema.ProtoObjectStore, k
 	return err
 }
 
-func getProto[T proto.Message](ctx context.Context, s schema.ProtoObjectStore, key string) (T, error) {
+func getProto[T proto.Message](ctx context.Context, s object.TypeURLStore, key string) (T, error) {
 	obj, err := s.Get(ctx, typeURL[T](), key)
 	if err != nil {
 		var zero T
@@ -47,7 +47,7 @@ func getProto[T proto.Message](ctx context.Context, s schema.ProtoObjectStore, k
 }
 
 // getProtoOrNil returns the zero value when the key has never been written.
-func getProtoOrNil[T proto.Message](ctx context.Context, s schema.ProtoObjectStore, key string) (T, error) {
+func getProtoOrNil[T proto.Message](ctx context.Context, s object.TypeURLStore, key string) (T, error) {
 	msg, err := getProto[T](ctx, s, key)
 	if grpcutil.IsErrorNotFound(err) {
 		var zero T
@@ -56,7 +56,7 @@ func getProtoOrNil[T proto.Message](ctx context.Context, s schema.ProtoObjectSto
 	return msg, err
 }
 
-func historyProto[T proto.Message](ctx context.Context, s schema.ProtoObjectStore, key string, offset, limit uint64) ([]T, error) {
+func historyProto[T proto.Message](ctx context.Context, s object.TypeURLStore, key string, offset, limit uint64) ([]T, error) {
 	resp, err := s.History(ctx, typeURL[T](), key, offset, limit)
 	if grpcutil.IsErrorNotFound(err) {
 		return nil, nil

@@ -11,13 +11,13 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1/v1alpha1connect"
 	routev1alpha1 "github.com/otelfleet/otelfleet/pkg/api/route/v1alpha1"
 	otelfleet_svc "github.com/otelfleet/otelfleet/pkg/services"
-	"github.com/otelfleet/otelfleet/pkg/storage/schema"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/util/protoutil"
 )
 
 type Server struct {
 	services.Service
-	genericStorage schema.ProtoObjectStore
+	genericStorage object.TypeURLStore
 	supportedTypes []string
 }
 
@@ -25,7 +25,7 @@ var _ otelfleet_svc.HTTPExtension = (*Server)(nil)
 
 func NewServer(
 	l *slog.Logger,
-	genericStorage schema.ProtoObjectStore,
+	genericStorage object.TypeURLStore,
 ) *Server {
 	s := &Server{
 		genericStorage: genericStorage,

@@ -1,4 +1,4 @@
-package grpc
+package transport
 
 import (
 	"context"
@@ -7,17 +7,17 @@ import (
 	"connectrpc.com/connect"
 	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1/v1alpha1connect"
-	"github.com/otelfleet/otelfleet/pkg/storage/schema"
+	"github.com/otelfleet/otelfleet/pkg/storage/object/driver/basekv"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 )
 
 type GrpcKeyValue struct {
-	underlying *schema.StorageProtoObject
+	underlying *basekv.StorageProtoObject
 }
 
-func NewLocalKV(underlying *schema.StorageProtoObject) *GrpcKeyValue {
+func NewKVServer(underlying *basekv.StorageProtoObject) *GrpcKeyValue {
 	return &GrpcKeyValue{
 		underlying: underlying,
 	}

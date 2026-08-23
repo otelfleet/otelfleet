@@ -2,7 +2,21 @@ package object
 
 import (
 	"context"
+
+	keyvalue_v1alpha1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
+	"google.golang.org/protobuf/types/known/anypb"
 )
+
+type TypeURLStore interface {
+	Put(ctx context.Context, typeURL, key string, revision uint64, obj *anypb.Any) (*keyvalue_v1alpha1.KeyValueObject, error)
+	Get(ctx context.Context, typeURL, key string) (*keyvalue_v1alpha1.KeyValueObject, error)
+	GetRevision(ctx context.Context, typeURL, key string, revision uint64) (*keyvalue_v1alpha1.KeyValueObject, error)
+	ListKeys(ctx context.Context, typeURL string) ([]string, error)
+	List(ctx context.Context, typeURL string) ([]*keyvalue_v1alpha1.KeyValueObject, error)
+	Delete(ctx context.Context, typeURL, key string) error
+	History(ctx context.Context, typeURL, key string, offset, limit uint64) (*keyvalue_v1alpha1.GetHistoryResponse, error)
+	Watch(ctx context.Context, typeURL, prefix string) (<-chan *keyvalue_v1alpha1.WatchEvent, error)
+}
 
 type KeyValue[T any] interface {
 	Put(ctx context.Context, key string, obj T) error

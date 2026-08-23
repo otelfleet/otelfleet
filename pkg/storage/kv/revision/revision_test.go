@@ -1,19 +1,59 @@
-package schema_test
+package revision_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/cockroachdb/pebble/v2"
+	"github.com/cockroachdb/pebble/v2/vfs"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/google/go-cmp/cmp"
+	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/kv/driver/pebble"
+	"github.com/otelfleet/otelfleet/pkg/storage/object/driver/basekv"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
+
+// newSchema wires a StorageSchemaProto on top of a real (in-memory) KV, so the
+// tests observe end-to-end behaviour rather than a hand-rolled fake.
+func newSchema(t *testing.T) *basekv.StorageProtoObject {
+	t.Helper()
+	db, err := pebble.Open("", &pebble.Options{FS: vfs.NewMem()})
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, db.Close()) })
+	kv := otelpebble.NewKVBroker(db).KeyValue("test")
+	return basekv.NewTypeURLStore(kv)
+}
+
+func mustAny(t *testing.T, msg proto.Message) (string, *anypb.Any) {
+	t.Helper()
+	any, err := anypb.New(msg)
+	require.NoError(t, err)
+	return any.GetTypeUrl(), any
+}
+
+func mustAnyNoType(t *testing.T, msg proto.Message) *anypb.Any {
+	t.Helper()
+	any, err := anypb.New(msg)
+	require.NoError(t, err)
+	return any
+}
+
+func anyDiff(want, got *anypb.Any) string {
+	return cmp.Diff(want, got, protocmp.Transform())
+}
+
+func putAny(t *testing.T, ctx context.Context, s *basekv.StorageProtoObject, typeURL, key string, obj *anypb.Any) {
+	t.Helper()
+	_, err := s.Put(ctx, typeURL, key, 0, obj)
+	require.NoError(t, err)
+}
 
 func TestRevision_UnconditionalPutIncrements(t *testing.T) {
 	ctx := context.Background()

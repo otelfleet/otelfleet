@@ -18,9 +18,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp/handler"
 	opampsync "github.com/otelfleet/otelfleet/pkg/services/opamp/sync"
-	"github.com/otelfleet/otelfleet/pkg/storage"
 	"github.com/otelfleet/otelfleet/pkg/storage/object"
-	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -50,7 +48,7 @@ type Server struct {
 
 func NewServer(
 	l *slog.Logger,
-	resourceStorage schema.ProtoObjectStore,
+	resourceStorage object.TypeURLStore,
 	otlpServerAddr string,
 	otlpConfig *config.OTLPConfig,
 	deployMgr deployment.Manager,
@@ -64,7 +62,7 @@ func NewServer(
 		idToConn:         map[string]types.Connection{},
 		otlpServerAddr:   otlpServerAddr,
 		otlpConfig:       otlpConfig,
-		collectorConfigs: storage.NewProtoKVFromSchemaImpl[*resourcesv1alpha1.CollectorConfig](resourceStorage),
+		collectorConfigs: object.NewKeyValueAdapter[*resourcesv1alpha1.CollectorConfig](resourceStorage),
 		configFilterSync: opampsync.NewConfigFilterSync(opampsync.ConfigFilterSyncOptions{
 			Logger:   l.With("component", "config-filter-sync"),
 			Storage:  resourceStorage,

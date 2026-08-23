@@ -6,7 +6,7 @@ import (
 
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
-	"github.com/otelfleet/otelfleet/pkg/storage/schema"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 )
 
@@ -36,10 +36,10 @@ type Instance interface {
 }
 
 type manager struct {
-	genericStorage schema.ProtoObjectStore
+	genericStorage object.TypeURLStore
 }
 
-func NewManager(genericStorage schema.ProtoObjectStore) Manager {
+func NewManager(genericStorage object.TypeURLStore) Manager {
 	return &manager{genericStorage: genericStorage}
 }
 
@@ -111,7 +111,7 @@ func (m *manager) Delete(ctx context.Context, deployID string) error {
 
 type instance struct {
 	deployID       string
-	genericStorage schema.ProtoObjectStore
+	genericStorage object.TypeURLStore
 }
 
 func (i *instance) GetDescription(ctx context.Context) (*v1alpha1.CollectorDescription, error) {

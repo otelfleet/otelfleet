@@ -1,4 +1,4 @@
-package schema
+package basekv
 
 import (
 	"context"
@@ -7,20 +7,11 @@ import (
 
 	keyvalue_v1alpha1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage/kv"
+	"github.com/otelfleet/otelfleet/pkg/storage/kv/revision"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
-
-type ProtoObjectStore interface {
-	Put(ctx context.Context, typeURL, key string, revision uint64, obj *anypb.Any) (*keyvalue_v1alpha1.KeyValueObject, error)
-	Get(ctx context.Context, typeURL, key string) (*keyvalue_v1alpha1.KeyValueObject, error)
-	GetRevision(ctx context.Context, typeURL, key string, revision uint64) (*keyvalue_v1alpha1.KeyValueObject, error)
-	ListKeys(ctx context.Context, typeURL string) ([]string, error)
-	List(ctx context.Context, typeURL string) ([]*keyvalue_v1alpha1.KeyValueObject, error)
-	Delete(ctx context.Context, typeURL, key string) error
-	History(ctx context.Context, typeURL, key string, offset, limit uint64) (*keyvalue_v1alpha1.GetHistoryResponse, error)
-	Watch(ctx context.Context, typeURL, prefix string) (<-chan *keyvalue_v1alpha1.WatchEvent, error)
-}
 
 var (
 	marshalOptions = proto.MarshalOptions{
@@ -33,41 +24,25 @@ var (
 	}
 )
 
-func encodeProto(msg proto.Message) []byte {
-	data, err := marshalOptions.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
-
-func decodeKeyValueObject(data []byte) (*keyvalue_v1alpha1.KeyValueObject, error) {
-	obj := &keyvalue_v1alpha1.KeyValueObject{}
-	if err := unmarshalOptions.Unmarshal(data, obj); err != nil {
-		return nil, err
-	}
-	return obj, nil
-}
-
 const (
 	defaultVersion = "v1alpha1"
 )
 
 type StorageProtoObject struct {
 	baseVersion string
-	revisions   *RevisionEngine
+	revisions   *revision.RevisionEngine
 }
 
-func NewProtoObjectStore(
+func NewTypeURLStore(
 	kv kv.BaseKV,
 ) *StorageProtoObject {
 	return &StorageProtoObject{
 		baseVersion: defaultVersion,
-		revisions:   NewRevisionEngine(kv),
+		revisions:   revision.NewRevisionEngine(kv),
 	}
 }
 
-var _ ProtoObjectStore = (*StorageProtoObject)(nil)
+var _ object.TypeURLStore = (*StorageProtoObject)(nil)
 
 func (s *StorageProtoObject) protoPath(typeURL string) string {
 	return path.Join(s.baseVersion, typeURL)

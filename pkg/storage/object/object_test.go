@@ -1,4 +1,4 @@
-package storage_test
+package object_test
 
 import (
 	"testing"
@@ -8,9 +8,9 @@ import (
 	"github.com/cockroachdb/pebble/v2/vfs"
 	"github.com/google/go-cmp/cmp"
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
-	"github.com/otelfleet/otelfleet/pkg/storage"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/kv/driver/pebble"
-	"github.com/otelfleet/otelfleet/pkg/storage/schema"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
+	"github.com/otelfleet/otelfleet/pkg/storage/object/driver/basekv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -26,8 +26,8 @@ func TestProtoStorage(t *testing.T) {
 
 	broker := otelpebble.NewKVBroker(db)
 	kv := broker.KeyValue("")
-	protoSchema := schema.NewProtoObjectStore(kv)
-	protoKv := storage.NewProtoKVFromSchemaImpl[*bootstrapv1alpha1.BootstrapToken](protoSchema)
+	protoSchema := basekv.NewTypeURLStore(kv)
+	protoKv := object.NewKeyValueAdapter[*bootstrapv1alpha1.BootstrapToken](protoSchema)
 
 	tok := &bootstrapv1alpha1.BootstrapToken{
 		ID:     "b1",

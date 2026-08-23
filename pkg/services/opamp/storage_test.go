@@ -32,7 +32,7 @@ func setupTestStorage(t *testing.T) types.KVBroker {
 
 func TestAgentHealthStore_PutAndGet(t *testing.T) {
 	broker := setupTestStorage(t)
-	store := storage.NewProtoKVFromSchemaImpl[*protobufs.ComponentHealth](schema.NewProtoObjectStore(broker.KeyValue("agent-health")))
+	store := storage.NewKeyValueAdapter[*protobufs.ComponentHealth](schema.NewTypeURLStore(broker.KeyValue("agent-health")))
 
 	agentID := "agent-123"
 	health := &protobufs.ComponentHealth{
@@ -61,7 +61,7 @@ func TestAgentHealthStore_PutAndGet(t *testing.T) {
 
 func TestAgentHealthStore_GetNotFound(t *testing.T) {
 	broker := setupTestStorage(t)
-	store := storage.NewProtoKVFromSchemaImpl[*protobufs.ComponentHealth](schema.NewProtoObjectStore(broker.KeyValue("agent-health")))
+	store := storage.NewKeyValueAdapter[*protobufs.ComponentHealth](schema.NewTypeURLStore(broker.KeyValue("agent-health")))
 
 	ctx := context.Background()
 
@@ -72,7 +72,7 @@ func TestAgentHealthStore_GetNotFound(t *testing.T) {
 
 func TestAgentHealthStore_Update(t *testing.T) {
 	broker := setupTestStorage(t)
-	store := storage.NewProtoKVFromSchemaImpl[*protobufs.ComponentHealth](schema.NewProtoObjectStore(broker.KeyValue("agent-health")))
+	store := storage.NewKeyValueAdapter[*protobufs.ComponentHealth](schema.NewTypeURLStore(broker.KeyValue("agent-health")))
 
 	agentID := "agent-123"
 	ctx := context.Background()
@@ -99,7 +99,7 @@ func TestAgentHealthStore_Update(t *testing.T) {
 
 func TestAgentHealthStore_Delete(t *testing.T) {
 	broker := setupTestStorage(t)
-	store := storage.NewProtoKVFromSchemaImpl[*protobufs.ComponentHealth](schema.NewProtoObjectStore(broker.KeyValue("agent-health")))
+	store := storage.NewKeyValueAdapter[*protobufs.ComponentHealth](schema.NewTypeURLStore(broker.KeyValue("agent-health")))
 
 	agentID := "agent-123"
 	ctx := context.Background()
@@ -121,7 +121,7 @@ func TestAgentHealthStore_Delete(t *testing.T) {
 
 func TestAgentHealthStore_ListKeys(t *testing.T) {
 	broker := setupTestStorage(t)
-	store := storage.NewProtoKVFromSchemaImpl[*protobufs.ComponentHealth](schema.NewProtoObjectStore(broker.KeyValue("agent-health")))
+	store := storage.NewKeyValueAdapter[*protobufs.ComponentHealth](schema.NewTypeURLStore(broker.KeyValue("agent-health")))
 
 	ctx := context.Background()
 
@@ -138,7 +138,7 @@ func TestAgentHealthStore_ListKeys(t *testing.T) {
 
 func TestAgentEffectiveConfigStore_PutAndGet(t *testing.T) {
 	broker := setupTestStorage(t)
-	store := storage.NewProtoKVFromSchemaImpl[*protobufs.EffectiveConfig](schema.NewProtoObjectStore(broker.KeyValue("agent-effective-config")))
+	store := storage.NewKeyValueAdapter[*protobufs.EffectiveConfig](schema.NewTypeURLStore(broker.KeyValue("agent-effective-config")))
 
 	agentID := "agent-123"
 	config := &protobufs.EffectiveConfig{
@@ -166,7 +166,7 @@ func TestAgentEffectiveConfigStore_PutAndGet(t *testing.T) {
 
 func TestAgentEffectiveConfigStore_GetNotFound(t *testing.T) {
 	broker := setupTestStorage(t)
-	store := storage.NewProtoKVFromSchemaImpl[*protobufs.EffectiveConfig](schema.NewProtoObjectStore(broker.KeyValue("agent-effective-config")))
+	store := storage.NewKeyValueAdapter[*protobufs.EffectiveConfig](schema.NewTypeURLStore(broker.KeyValue("agent-effective-config")))
 
 	ctx := context.Background()
 
@@ -176,7 +176,7 @@ func TestAgentEffectiveConfigStore_GetNotFound(t *testing.T) {
 
 func TestAgentRemoteConfigStatusStore_PutAndGet(t *testing.T) {
 	broker := setupTestStorage(t)
-	store := storage.NewProtoKVFromSchemaImpl[*protobufs.RemoteConfigStatus](schema.NewProtoObjectStore(broker.KeyValue("agent-remote-config-status")))
+	store := storage.NewKeyValueAdapter[*protobufs.RemoteConfigStatus](schema.NewTypeURLStore(broker.KeyValue("agent-remote-config-status")))
 
 	agentID := "agent-123"
 	status := &protobufs.RemoteConfigStatus{
@@ -198,7 +198,7 @@ func TestAgentRemoteConfigStatusStore_PutAndGet(t *testing.T) {
 
 func TestAgentRemoteConfigStatusStore_FailedStatus(t *testing.T) {
 	broker := setupTestStorage(t)
-	store := storage.NewProtoKVFromSchemaImpl[*protobufs.RemoteConfigStatus](schema.NewProtoObjectStore(broker.KeyValue("agent-remote-config-status")))
+	store := storage.NewKeyValueAdapter[*protobufs.RemoteConfigStatus](schema.NewTypeURLStore(broker.KeyValue("agent-remote-config-status")))
 
 	agentID := "agent-123"
 	status := &protobufs.RemoteConfigStatus{

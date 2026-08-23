@@ -13,15 +13,17 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1/v1alpha1connect"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	otelfleet_svc "github.com/otelfleet/otelfleet/pkg/services"
-	otelgrpc "github.com/otelfleet/otelfleet/pkg/storage/grpc"
 	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/kv/driver/pebble"
-	"github.com/otelfleet/otelfleet/pkg/storage/schema"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
+	"github.com/otelfleet/otelfleet/pkg/storage/object/driver/basekv"
+	otelgrpc "github.com/otelfleet/otelfleet/pkg/storage/object/driver/grpc"
+	"github.com/otelfleet/otelfleet/pkg/storage/transport"
 )
 
 type StorageService struct {
 	logger *slog.Logger
 
-	protoStore schema.ProtoObjectStore
+	protoStore object.TypeURLStore
 	cfg        *config.StorageConfig
 
 	services.Service
@@ -44,7 +46,7 @@ func NewStorageService(
 		logger: logger,
 		cfg:    cfg,
 	}
-	var protoStore schema.ProtoObjectStore
+	var protoStore object.TypeURLStore
 	if cfg.File != nil {
 		// TODO : this setup logic is a little wonky...
 		kvDb, err := otelpebble.Open(
@@ -58,9 +60,9 @@ func NewStorageService(
 		s.pebbleDB = kvDb
 		broker := otelpebble.NewKVBroker(kvDb)
 		kv := broker.KeyValue("")
-		protoSchema := schema.NewProtoObjectStore(kv)
-		protoStore = schema.NewProtoObjectStore(kv)
-		s.KeyValueServiceHandler = otelgrpc.NewLocalKV(protoSchema)
+		protoSchema := basekv.NewTypeURLStore(kv)
+		protoStore = basekv.NewTypeURLStore(kv)
+		s.KeyValueServiceHandler = transport.NewKVServer(protoSchema)
 	}
 	if cfg.Client != nil {
 		logger.With("client-addr", cfg.Client.HttpAddr).Info("starting storage in remote mode")
@@ -71,7 +73,7 @@ func NewStorageService(
 			connect.WithHTTPGet(),
 		)
 		protoStore = otelgrpc.NewRemoteKV(client)
-		s.KeyValueServiceHandler = otelgrpc.NewErroringServer(connect.CodeUnimplemented, fmt.Errorf("unimplemented"))
+		s.KeyValueServiceHandler = transport.NewErroringServer(connect.CodeUnimplemented, fmt.Errorf("unimplemented"))
 	}
 	s.protoStore = protoStore
 	s.Service = services.NewBasicService(s.starting, s.running, s.stopping)
@@ -95,7 +97,7 @@ func (s *StorageService) stopping(_ error) error {
 	return nil
 }
 
-func (s *StorageService) Schema() schema.ProtoObjectStore {
+func (s *StorageService) Schema() object.TypeURLStore {
 	return s.protoStore
 }
 

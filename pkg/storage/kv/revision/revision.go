@@ -1,4 +1,4 @@
-package schema
+package revision
 
 import (
 	"bytes"
@@ -15,6 +15,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/util"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -277,4 +278,31 @@ func (e *RevisionEngine) Watch(ctx context.Context, base string) (<-chan *keyval
 	}()
 
 	return sendC, nil
+}
+
+var (
+	marshalOptions = proto.MarshalOptions{
+		AllowPartial:  true,
+		Deterministic: true,
+	}
+	unmarshalOptions = proto.UnmarshalOptions{
+		AllowPartial:   true,
+		DiscardUnknown: true,
+	}
+)
+
+func encodeProto(msg proto.Message) []byte {
+	data, err := marshalOptions.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+func decodeKeyValueObject(data []byte) (*keyvaluev1.KeyValueObject, error) {
+	obj := &keyvaluev1.KeyValueObject{}
+	if err := unmarshalOptions.Unmarshal(data, obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
 }

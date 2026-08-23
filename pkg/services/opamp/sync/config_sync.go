@@ -10,9 +10,7 @@ import (
 	routev1alpha1 "github.com/otelfleet/otelfleet/pkg/api/route/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
 	"github.com/otelfleet/otelfleet/pkg/router"
-	"github.com/otelfleet/otelfleet/pkg/storage"
 	"github.com/otelfleet/otelfleet/pkg/storage/object"
-	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,7 +27,7 @@ type AgentLabels struct {
 
 type ConfigFilterSyncOptions struct {
 	Logger   *slog.Logger
-	Storage  schema.ProtoObjectStore
+	Storage  object.TypeURLStore
 	Interval time.Duration
 }
 
@@ -47,7 +45,7 @@ type ConfigFilterSync struct {
 func NewConfigFilterSync(opts ConfigFilterSyncOptions) *ConfigFilterSync {
 	s := &ConfigFilterSync{
 		ConfigFilterSyncOptions: opts,
-		routerKV:                storage.NewProtoKVFromSchemaImpl[*routev1alpha1.Router](opts.Storage),
+		routerKV:                object.NewKeyValueAdapter[*routev1alpha1.Router](opts.Storage),
 	}
 
 	s.curRouter.Store(nil)
