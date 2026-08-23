@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	keyvaluev1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
-	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -30,7 +30,7 @@ type schemaWrapper[T proto.Message] struct {
 
 func NewProtoKVFromSchemaImpl[T proto.Message](
 	schema schema.ProtoObjectStore,
-) types.KeyValue[T] {
+) object.KeyValue[T] {
 	return &schemaWrapper[T]{
 		underlying: schema,
 	}
@@ -122,12 +122,12 @@ func (w *schemaWrapper[T]) History(ctx context.Context, key string, offset uint6
 
 const bufN = 16
 
-func (w *schemaWrapper[T]) Watch(ctx context.Context, prefix string) (<-chan types.RevisionObject[T], error) {
+func (w *schemaWrapper[T]) Watch(ctx context.Context, prefix string) (<-chan object.RevisionObject[T], error) {
 	resp, err := w.underlying.Watch(ctx, w.typeURL(), prefix)
 	if err != nil {
 		return nil, err
 	}
-	sendC := make(chan types.RevisionObject[T], bufN)
+	sendC := make(chan object.RevisionObject[T], bufN)
 	go func() {
 		defer close(sendC)
 		for {
@@ -153,19 +153,19 @@ func (w *schemaWrapper[T]) Watch(ctx context.Context, prefix string) (<-chan typ
 	return sendC, nil
 }
 
-func revisionObjectFromEvent[T proto.Message](msg *keyvaluev1.WatchEvent) (types.RevisionObject[T], error) {
+func revisionObjectFromEvent[T proto.Message](msg *keyvaluev1.WatchEvent) (object.RevisionObject[T], error) {
 	switch e := msg.GetEventType().(type) {
 	case *keyvaluev1.WatchEvent_DeletedKey:
-		return types.RevisionObject[T]{
+		return object.RevisionObject[T]{
 			Key:     e.DeletedKey,
 			Deleted: true,
 		}, nil
 	case *keyvaluev1.WatchEvent_Modified:
 		obj, err := unmarshalTyped[T](e.Modified)
 		if err != nil {
-			return types.RevisionObject[T]{}, err
+			return object.RevisionObject[T]{}, err
 		}
-		return types.RevisionObject[T]{
+		return object.RevisionObject[T]{
 			// TODO: KeyValueObject carries no key, so Key is unset for modifications.
 			//Key:      "TODO",
 			Revision: e.Modified.GetRevision(),

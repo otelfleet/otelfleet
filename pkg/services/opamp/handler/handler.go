@@ -21,7 +21,7 @@ import (
 	services_int "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp/sync"
 	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
-	stypes "github.com/otelfleet/otelfleet/pkg/storage/types"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/util"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"github.com/otelfleet/otelfleet/pkg/util/opamputil"
@@ -49,7 +49,7 @@ type CollectorHandler struct {
 	// Config store for OpAMP-specific config logic
 	// TODO : I don't think I want to do it this way.
 	configFilterSync *sync.ConfigFilterSync
-	collectorConfigs stypes.KeyValue[*resourcesv1alpha1.CollectorConfig]
+	collectorConfigs object.KeyValue[*resourcesv1alpha1.CollectorConfig]
 
 	// unset until we understand who is who
 	agentID     *string
@@ -68,7 +68,7 @@ func NewCollectorHandler(
 	otlpServerAddr string,
 	otlpConfig *config.OTLPConfig,
 	mgr deployment.Manager,
-	collectorConfigs stypes.KeyValue[*resourcesv1alpha1.CollectorConfig],
+	collectorConfigs object.KeyValue[*resourcesv1alpha1.CollectorConfig],
 ) *CollectorHandler {
 	return &CollectorHandler{
 		ctx:                  ctx,

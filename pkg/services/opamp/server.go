@@ -19,8 +19,8 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/opamp/handler"
 	opampsync "github.com/otelfleet/otelfleet/pkg/services/opamp/sync"
 	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
-	stypes "github.com/otelfleet/otelfleet/pkg/storage/types"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -40,7 +40,7 @@ type Server struct {
 	handlers []*handler.CollectorHandler
 
 	// Config store for OpAMP-specific config logic
-	collectorConfigs stypes.KeyValue[*resourcesv1alpha1.CollectorConfig]
+	collectorConfigs object.KeyValue[*resourcesv1alpha1.CollectorConfig]
 	configFilterSync *opampsync.ConfigFilterSync
 
 	deployMgr deployment.Manager

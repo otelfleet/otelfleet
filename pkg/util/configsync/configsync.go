@@ -7,7 +7,7 @@ import (
 
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
-	"github.com/otelfleet/otelfleet/pkg/storage/types"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 )
 
@@ -21,7 +21,7 @@ func ComputeConfigSyncStatus(
 	ctx context.Context,
 	agentID string,
 	assignedHash []byte,
-	remoteStatusStore types.KeyValue[*protobufs.RemoteConfigStatus],
+	remoteStatusStore object.KeyValue[*protobufs.RemoteConfigStatus],
 ) (v1alpha1.ConfigSyncStatus, string, error) {
 	// If no assigned hash, we can't determine sync status
 	if len(assignedHash) == 0 {

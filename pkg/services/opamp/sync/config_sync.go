@@ -11,8 +11,8 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/deployment"
 	"github.com/otelfleet/otelfleet/pkg/router"
 	"github.com/otelfleet/otelfleet/pkg/storage"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
-	stypes "github.com/otelfleet/otelfleet/pkg/storage/types"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -37,9 +37,9 @@ type ConfigFilterSync struct {
 	ConfigFilterSyncOptions
 
 	mgr             deployment.Manager
-	assignedConfigs stypes.KeyValue[*configv1alpha1.AssignedConfig]
+	assignedConfigs object.KeyValue[*configv1alpha1.AssignedConfig]
 
-	routerKV stypes.KeyValue[*routev1alpha1.Router]
+	routerKV object.KeyValue[*routev1alpha1.Router]
 
 	curRouter atomic.Pointer[router.Matcher]
 }

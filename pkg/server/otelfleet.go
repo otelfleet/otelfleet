@@ -37,7 +37,7 @@ import (
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
 	"github.com/otelfleet/otelfleet/pkg/services/ui"
 	"github.com/otelfleet/otelfleet/pkg/storage"
-	"github.com/otelfleet/otelfleet/pkg/storage/types"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/rs/cors"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -96,7 +96,7 @@ type OtelFleet struct {
 	deps map[string][]string
 
 	store      *storagesvc.StorageService
-	tokenStore types.KeyValue[*bootstrapv1alpha1.BootstrapToken]
+	tokenStore object.KeyValue[*bootstrapv1alpha1.BootstrapToken]
 	deployMgr  deployment.Manager
 
 	opampServer *opamp.Server

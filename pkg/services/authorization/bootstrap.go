@@ -22,7 +22,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/bootstrap"
 	"github.com/otelfleet/otelfleet/pkg/ecdh"
 	otelfleetsvc "github.com/otelfleet/otelfleet/pkg/services"
-	"github.com/otelfleet/otelfleet/pkg/storage/types"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -37,7 +37,7 @@ type Bootstrapper interface {
 }
 
 type BootstrapServer struct {
-	tokenStore types.KeyValue[*v1alpha1bootstrap.BootstrapToken]
+	tokenStore object.KeyValue[*v1alpha1bootstrap.BootstrapToken]
 
 	privateKey crypto.Signer
 	logger     *slog.Logger
@@ -54,7 +54,7 @@ var _ bootstrapconnect.BootstrapServiceHandler = (*BootstrapServer)(nil)
 func NewBootstrapServer(
 	logger *slog.Logger,
 	privateKey crypto.Signer,
-	tokenStore types.KeyValue[*v1alpha1bootstrap.BootstrapToken],
+	tokenStore object.KeyValue[*v1alpha1bootstrap.BootstrapToken],
 ) *BootstrapServer {
 	b := &BootstrapServer{
 		tokenStore:   tokenStore,
@@ -231,7 +231,7 @@ func (n *noopBootstrapper) DeriveSharedSecret(*v1alpha1bootstrap.BootstrapAuthRe
 
 type secureBootstrapper struct {
 	logger     *slog.Logger
-	tokenStore types.KeyValue[*v1alpha1bootstrap.BootstrapToken]
+	tokenStore object.KeyValue[*v1alpha1bootstrap.BootstrapToken]
 	privateKey crypto.Signer
 }
 
@@ -239,7 +239,7 @@ var _ Bootstrapper = (*secureBootstrapper)(nil)
 
 func NewSecureBootstrapper(
 	logger *slog.Logger,
-	tokenStore types.KeyValue[*v1alpha1bootstrap.BootstrapToken],
+	tokenStore object.KeyValue[*v1alpha1bootstrap.BootstrapToken],
 	privateKey crypto.Signer,
 ) *secureBootstrapper {
 	return &secureBootstrapper{
