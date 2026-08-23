@@ -11,7 +11,7 @@ import (
 
 	"github.com/cespare/xxhash/v2"
 	keyvaluev1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
-	"github.com/otelfleet/otelfleet/pkg/storage/types"
+	"github.com/otelfleet/otelfleet/pkg/storage/kv"
 	"github.com/otelfleet/otelfleet/pkg/util"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"google.golang.org/grpc/codes"
@@ -24,10 +24,10 @@ const (
 )
 
 type RevisionEngine struct {
-	kv types.BaseKV
+	kv kv.BaseKV
 }
 
-func NewRevisionEngine(kv types.BaseKV) *RevisionEngine {
+func NewRevisionEngine(kv kv.BaseKV) *RevisionEngine {
 	return &RevisionEngine{kv: kv}
 }
 

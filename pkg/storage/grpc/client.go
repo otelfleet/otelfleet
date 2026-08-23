@@ -99,7 +99,7 @@ func (s *StorageClient) Watch(ctx context.Context, typeURL, prefix string) (<-ch
 	if err != nil {
 		return nil, err
 	}
-	sendC := make(chan *keyvaluev1.WatchEvent, 16)
+	sendC := make(chan *keyvaluev1.WatchEvent, bufN)
 	go func() {
 		for {
 			select {

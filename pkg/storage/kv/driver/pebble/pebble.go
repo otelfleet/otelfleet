@@ -9,7 +9,7 @@ import (
 
 	"github.com/cockroachdb/pebble/v2"
 	"github.com/cockroachdb/pebble/v2/vfs"
-	"github.com/otelfleet/otelfleet/pkg/storage/types"
+	"github.com/otelfleet/otelfleet/pkg/storage/kv"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 )
 
@@ -74,7 +74,7 @@ func NewKVBroker(db *pebble.DB) *KVBroker {
 	}
 }
 
-func (k *KVBroker) KeyValue(prefix string) types.BaseKV {
+func (k *KVBroker) KeyValue(prefix string) kv.BaseKV {
 	return k.newPrefixedKeyValue(prefix)
 }
 
@@ -82,14 +82,14 @@ func (k *KVBroker) newPrefixedKeyValue(prefix string) *prefixedKV {
 	return &prefixedKV{
 		db:      k.db,
 		prefix:  []byte(prefix),
-		notifyC: make(chan types.WatchEvent, notifyBufferSize),
+		notifyC: make(chan kv.WatchEvent, notifyBufferSize),
 	}
 }
 
 type prefixedKV struct {
 	prefix  []byte
 	db      *pebble.DB
-	notifyC chan types.WatchEvent
+	notifyC chan kv.WatchEvent
 }
 
 func (k *prefixedKV) key(key string) []byte {
@@ -107,7 +107,7 @@ func (k *prefixedKV) Put(_ context.Context, key string, value []byte) error {
 	}
 	// FIXME: blocking, think of a better system here,
 	// we don't want to miss events either...
-	k.notifyC <- types.WatchEvent{
+	k.notifyC <- kv.WatchEvent{
 		Key:     key,
 		Deleted: false,
 	}
@@ -204,7 +204,7 @@ func (k *prefixedKV) List(ctx context.Context, listPrefix string) ([][]byte, err
 	return vs, nil
 }
 
-func (k *prefixedKV) ListEntries(ctx context.Context, listPrefix string) ([]types.KVEntry, error) {
+func (k *prefixedKV) ListEntries(ctx context.Context, listPrefix string) ([]kv.KVEntry, error) {
 	prefix := k.listPrefix(listPrefix)
 	pn := len(prefix)
 	upper := make([]byte, len(prefix))
@@ -218,11 +218,11 @@ func (k *prefixedKV) ListEntries(ctx context.Context, listPrefix string) ([]type
 		return nil, err
 	}
 	defer iter.Close()
-	entries := []types.KVEntry{}
+	entries := []kv.KVEntry{}
 	for iter.First(); iter.Valid(); iter.Next() {
 		value := make([]byte, len(iter.Value()))
 		copy(value, iter.Value())
-		entries = append(entries, types.KVEntry{
+		entries = append(entries, kv.KVEntry{
 			Key:   string(iter.Key()[pn:]),
 			Value: value,
 		})
@@ -239,8 +239,8 @@ func (k *prefixedKV) Delete(ctx context.Context, key string) error {
 
 const bufN = 16
 
-func (k *prefixedKV) Watch(ctx context.Context, prefix string) (<-chan types.WatchEvent, error) {
-	ret := make(chan types.WatchEvent, bufN)
+func (k *prefixedKV) Watch(ctx context.Context, prefix string) (<-chan kv.WatchEvent, error) {
+	ret := make(chan kv.WatchEvent, bufN)
 	go func() {
 		for {
 			select {
@@ -257,5 +257,5 @@ func (k *prefixedKV) Watch(ctx context.Context, prefix string) (<-chan types.Wat
 	return ret, nil
 }
 
-var _ types.BaseKV = (*prefixedKV)(nil)
-var _ types.KVBroker = (*KVBroker)(nil)
+var _ kv.BaseKV = (*prefixedKV)(nil)
+var _ kv.KVBroker = (*KVBroker)(nil)

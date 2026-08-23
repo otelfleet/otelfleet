@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage"
-	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
+	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/kv/driver/pebble"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

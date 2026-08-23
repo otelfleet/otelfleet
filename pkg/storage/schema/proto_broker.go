@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	keyvalue_v1alpha1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
-	"github.com/otelfleet/otelfleet/pkg/storage/types"
+	"github.com/otelfleet/otelfleet/pkg/storage/kv"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -59,7 +59,7 @@ type StorageProtoObject struct {
 }
 
 func NewProtoObjectStore(
-	kv types.BaseKV,
+	kv kv.BaseKV,
 ) *StorageProtoObject {
 	return &StorageProtoObject{
 		baseVersion: defaultVersion,

@@ -14,7 +14,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/config"
 	otelfleet_svc "github.com/otelfleet/otelfleet/pkg/services"
 	otelgrpc "github.com/otelfleet/otelfleet/pkg/storage/grpc"
-	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
+	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/kv/driver/pebble"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 )
 
