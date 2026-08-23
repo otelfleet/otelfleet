@@ -307,10 +307,11 @@ func (x *PreviewRouterRequest) GetRouter() *v1alpha1.Router {
 }
 
 type PreviewRouterResponse struct {
-	state                 protoimpl.MessageState `protogen:"open.v1"`
-	CollectorsToConfigRef map[string]string      `protobuf:"bytes,1,rep,name=collectorsToConfigRef,proto3" json:"collectorsToConfigRef,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Old           *RouterConfigAssignment `protobuf:"bytes,1,opt,name=old,proto3" json:"old,omitempty"`
+	New           *RouterConfigAssignment `protobuf:"bytes,2,opt,name=new,proto3" json:"new,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PreviewRouterResponse) Reset() {
@@ -343,7 +344,58 @@ func (*PreviewRouterResponse) Descriptor() ([]byte, []int) {
 	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *PreviewRouterResponse) GetCollectorsToConfigRef() map[string]string {
+func (x *PreviewRouterResponse) GetOld() *RouterConfigAssignment {
+	if x != nil {
+		return x.Old
+	}
+	return nil
+}
+
+func (x *PreviewRouterResponse) GetNew() *RouterConfigAssignment {
+	if x != nil {
+		return x.New
+	}
+	return nil
+}
+
+type RouterConfigAssignment struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	CollectorsToConfigRef map[string]string      `protobuf:"bytes,1,rep,name=collectorsToConfigRef,proto3" json:"collectorsToConfigRef,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *RouterConfigAssignment) Reset() {
+	*x = RouterConfigAssignment{}
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RouterConfigAssignment) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RouterConfigAssignment) ProtoMessage() {}
+
+func (x *RouterConfigAssignment) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RouterConfigAssignment.ProtoReflect.Descriptor instead.
+func (*RouterConfigAssignment) Descriptor() ([]byte, []int) {
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *RouterConfigAssignment) GetCollectorsToConfigRef() map[string]string {
 	if x != nil {
 		return x.CollectorsToConfigRef
 	}
@@ -361,7 +413,7 @@ type GetCollectorHistoryRequest struct {
 
 func (x *GetCollectorHistoryRequest) Reset() {
 	*x = GetCollectorHistoryRequest{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[4]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -373,7 +425,7 @@ func (x *GetCollectorHistoryRequest) String() string {
 func (*GetCollectorHistoryRequest) ProtoMessage() {}
 
 func (x *GetCollectorHistoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[4]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -386,7 +438,7 @@ func (x *GetCollectorHistoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCollectorHistoryRequest.ProtoReflect.Descriptor instead.
 func (*GetCollectorHistoryRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{4}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetCollectorHistoryRequest) GetCollectorId() string {
@@ -419,7 +471,7 @@ type GetCollectorHistoryResponse struct {
 
 func (x *GetCollectorHistoryResponse) Reset() {
 	*x = GetCollectorHistoryResponse{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[5]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -431,7 +483,7 @@ func (x *GetCollectorHistoryResponse) String() string {
 func (*GetCollectorHistoryResponse) ProtoMessage() {}
 
 func (x *GetCollectorHistoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[5]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -444,7 +496,7 @@ func (x *GetCollectorHistoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCollectorHistoryResponse.ProtoReflect.Descriptor instead.
 func (*GetCollectorHistoryResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{5}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetCollectorHistoryResponse) GetEffectiveConfig() []*EffectiveConfig {
@@ -463,7 +515,7 @@ type ListCollectorsRequest struct {
 
 func (x *ListCollectorsRequest) Reset() {
 	*x = ListCollectorsRequest{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[6]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -475,7 +527,7 @@ func (x *ListCollectorsRequest) String() string {
 func (*ListCollectorsRequest) ProtoMessage() {}
 
 func (x *ListCollectorsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[6]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -488,7 +540,7 @@ func (x *ListCollectorsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCollectorsRequest.ProtoReflect.Descriptor instead.
 func (*ListCollectorsRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{6}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ListCollectorsRequest) GetWithStatus() bool {
@@ -507,7 +559,7 @@ type ListCollectorsResponse struct {
 
 func (x *ListCollectorsResponse) Reset() {
 	*x = ListCollectorsResponse{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[7]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -519,7 +571,7 @@ func (x *ListCollectorsResponse) String() string {
 func (*ListCollectorsResponse) ProtoMessage() {}
 
 func (x *ListCollectorsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[7]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -532,7 +584,7 @@ func (x *ListCollectorsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCollectorsResponse.ProtoReflect.Descriptor instead.
 func (*ListCollectorsResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{7}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ListCollectorsResponse) GetCollectors() []*CollectorDescriptionAndStatus {
@@ -552,7 +604,7 @@ type CollectorView struct {
 
 func (x *CollectorView) Reset() {
 	*x = CollectorView{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[8]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -564,7 +616,7 @@ func (x *CollectorView) String() string {
 func (*CollectorView) ProtoMessage() {}
 
 func (x *CollectorView) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[8]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -577,7 +629,7 @@ func (x *CollectorView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectorView.ProtoReflect.Descriptor instead.
 func (*CollectorView) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{8}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CollectorView) GetRegistration() *CollectorRegistration {
@@ -605,7 +657,7 @@ type CollectorDescriptionAndStatus struct {
 
 func (x *CollectorDescriptionAndStatus) Reset() {
 	*x = CollectorDescriptionAndStatus{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[9]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -617,7 +669,7 @@ func (x *CollectorDescriptionAndStatus) String() string {
 func (*CollectorDescriptionAndStatus) ProtoMessage() {}
 
 func (x *CollectorDescriptionAndStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[9]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -630,7 +682,7 @@ func (x *CollectorDescriptionAndStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectorDescriptionAndStatus.ProtoReflect.Descriptor instead.
 func (*CollectorDescriptionAndStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{9}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CollectorDescriptionAndStatus) GetCollector() *CollectorDescription {
@@ -656,7 +708,7 @@ type GetCollectorRequest struct {
 
 func (x *GetCollectorRequest) Reset() {
 	*x = GetCollectorRequest{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[10]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -668,7 +720,7 @@ func (x *GetCollectorRequest) String() string {
 func (*GetCollectorRequest) ProtoMessage() {}
 
 func (x *GetCollectorRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[10]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -681,7 +733,7 @@ func (x *GetCollectorRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCollectorRequest.ProtoReflect.Descriptor instead.
 func (*GetCollectorRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{10}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetCollectorRequest) GetCollectorId() string {
@@ -700,7 +752,7 @@ type GetCollectorResponse struct {
 
 func (x *GetCollectorResponse) Reset() {
 	*x = GetCollectorResponse{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[11]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -712,7 +764,7 @@ func (x *GetCollectorResponse) String() string {
 func (*GetCollectorResponse) ProtoMessage() {}
 
 func (x *GetCollectorResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[11]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -725,7 +777,7 @@ func (x *GetCollectorResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCollectorResponse.ProtoReflect.Descriptor instead.
 func (*GetCollectorResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{11}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetCollectorResponse) GetCollector() *CollectorDescription {
@@ -744,7 +796,7 @@ type GetCollectorStatusRequest struct {
 
 func (x *GetCollectorStatusRequest) Reset() {
 	*x = GetCollectorStatusRequest{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[12]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -756,7 +808,7 @@ func (x *GetCollectorStatusRequest) String() string {
 func (*GetCollectorStatusRequest) ProtoMessage() {}
 
 func (x *GetCollectorStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[12]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -769,7 +821,7 @@ func (x *GetCollectorStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCollectorStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetCollectorStatusRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{12}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetCollectorStatusRequest) GetCollectorId() string {
@@ -788,7 +840,7 @@ type GetCollectorStatusResponse struct {
 
 func (x *GetCollectorStatusResponse) Reset() {
 	*x = GetCollectorStatusResponse{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[13]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -800,7 +852,7 @@ func (x *GetCollectorStatusResponse) String() string {
 func (*GetCollectorStatusResponse) ProtoMessage() {}
 
 func (x *GetCollectorStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[13]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -813,7 +865,7 @@ func (x *GetCollectorStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCollectorStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetCollectorStatusResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{13}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetCollectorStatusResponse) GetStatus() *CollectorStatus {
@@ -832,7 +884,7 @@ type DeleteCollectorRequest struct {
 
 func (x *DeleteCollectorRequest) Reset() {
 	*x = DeleteCollectorRequest{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[14]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -844,7 +896,7 @@ func (x *DeleteCollectorRequest) String() string {
 func (*DeleteCollectorRequest) ProtoMessage() {}
 
 func (x *DeleteCollectorRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[14]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -857,7 +909,7 @@ func (x *DeleteCollectorRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCollectorRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCollectorRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{14}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *DeleteCollectorRequest) GetCollectorId() string {
@@ -880,7 +932,7 @@ type CollectorStatus struct {
 
 func (x *CollectorStatus) Reset() {
 	*x = CollectorStatus{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[15]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -892,7 +944,7 @@ func (x *CollectorStatus) String() string {
 func (*CollectorStatus) ProtoMessage() {}
 
 func (x *CollectorStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[15]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -905,7 +957,7 @@ func (x *CollectorStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectorStatus.ProtoReflect.Descriptor instead.
 func (*CollectorStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{15}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *CollectorStatus) GetHealth() *ComponentHealth {
@@ -958,7 +1010,7 @@ type CollectorRegistration struct {
 
 func (x *CollectorRegistration) Reset() {
 	*x = CollectorRegistration{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[16]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -970,7 +1022,7 @@ func (x *CollectorRegistration) String() string {
 func (*CollectorRegistration) ProtoMessage() {}
 
 func (x *CollectorRegistration) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[16]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -983,7 +1035,7 @@ func (x *CollectorRegistration) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectorRegistration.ProtoReflect.Descriptor instead.
 func (*CollectorRegistration) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{16}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *CollectorRegistration) GetId() string {
@@ -1038,7 +1090,7 @@ type CollectorDescription struct {
 
 func (x *CollectorDescription) Reset() {
 	*x = CollectorDescription{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[17]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1050,7 +1102,7 @@ func (x *CollectorDescription) String() string {
 func (*CollectorDescription) ProtoMessage() {}
 
 func (x *CollectorDescription) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[17]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1063,7 +1115,7 @@ func (x *CollectorDescription) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectorDescription.ProtoReflect.Descriptor instead.
 func (*CollectorDescription) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{17}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *CollectorDescription) GetId() string {
@@ -1111,7 +1163,7 @@ type KeyValue struct {
 
 func (x *KeyValue) Reset() {
 	*x = KeyValue{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[18]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1123,7 +1175,7 @@ func (x *KeyValue) String() string {
 func (*KeyValue) ProtoMessage() {}
 
 func (x *KeyValue) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[18]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1136,7 +1188,7 @@ func (x *KeyValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyValue.ProtoReflect.Descriptor instead.
 func (*KeyValue) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{18}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *KeyValue) GetKey() string {
@@ -1171,7 +1223,7 @@ type AnyValue struct {
 
 func (x *AnyValue) Reset() {
 	*x = AnyValue{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[19]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1183,7 +1235,7 @@ func (x *AnyValue) String() string {
 func (*AnyValue) ProtoMessage() {}
 
 func (x *AnyValue) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[19]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1196,7 +1248,7 @@ func (x *AnyValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AnyValue.ProtoReflect.Descriptor instead.
 func (*AnyValue) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{19}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *AnyValue) GetValue() isAnyValue_Value {
@@ -1324,7 +1376,7 @@ type ArrayValue struct {
 
 func (x *ArrayValue) Reset() {
 	*x = ArrayValue{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[20]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1336,7 +1388,7 @@ func (x *ArrayValue) String() string {
 func (*ArrayValue) ProtoMessage() {}
 
 func (x *ArrayValue) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[20]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1349,7 +1401,7 @@ func (x *ArrayValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArrayValue.ProtoReflect.Descriptor instead.
 func (*ArrayValue) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{20}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ArrayValue) GetValues() []*AnyValue {
@@ -1368,7 +1420,7 @@ type KeyValueList struct {
 
 func (x *KeyValueList) Reset() {
 	*x = KeyValueList{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[21]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1380,7 +1432,7 @@ func (x *KeyValueList) String() string {
 func (*KeyValueList) ProtoMessage() {}
 
 func (x *KeyValueList) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[21]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1393,7 +1445,7 @@ func (x *KeyValueList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyValueList.ProtoReflect.Descriptor instead.
 func (*KeyValueList) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{21}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *KeyValueList) GetValues() []*KeyValue {
@@ -1419,7 +1471,7 @@ type CollectorConnectionState struct {
 
 func (x *CollectorConnectionState) Reset() {
 	*x = CollectorConnectionState{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[22]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1431,7 +1483,7 @@ func (x *CollectorConnectionState) String() string {
 func (*CollectorConnectionState) ProtoMessage() {}
 
 func (x *CollectorConnectionState) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[22]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1444,7 +1496,7 @@ func (x *CollectorConnectionState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectorConnectionState.ProtoReflect.Descriptor instead.
 func (*CollectorConnectionState) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{22}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CollectorConnectionState) GetCollectorId() string {
@@ -1517,7 +1569,7 @@ type ComponentHealth struct {
 
 func (x *ComponentHealth) Reset() {
 	*x = ComponentHealth{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[23]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1529,7 +1581,7 @@ func (x *ComponentHealth) String() string {
 func (*ComponentHealth) ProtoMessage() {}
 
 func (x *ComponentHealth) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[23]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1542,7 +1594,7 @@ func (x *ComponentHealth) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ComponentHealth.ProtoReflect.Descriptor instead.
 func (*ComponentHealth) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{23}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ComponentHealth) GetHealthy() bool {
@@ -1596,7 +1648,7 @@ type EffectiveConfig struct {
 
 func (x *EffectiveConfig) Reset() {
 	*x = EffectiveConfig{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[24]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1608,7 +1660,7 @@ func (x *EffectiveConfig) String() string {
 func (*EffectiveConfig) ProtoMessage() {}
 
 func (x *EffectiveConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[24]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1621,7 +1673,7 @@ func (x *EffectiveConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EffectiveConfig.ProtoReflect.Descriptor instead.
 func (*EffectiveConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{24}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *EffectiveConfig) GetConfigMap() *CollectorConfigMap {
@@ -1640,7 +1692,7 @@ type CollectorConfigMap struct {
 
 func (x *CollectorConfigMap) Reset() {
 	*x = CollectorConfigMap{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[25]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1652,7 +1704,7 @@ func (x *CollectorConfigMap) String() string {
 func (*CollectorConfigMap) ProtoMessage() {}
 
 func (x *CollectorConfigMap) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[25]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1665,7 +1717,7 @@ func (x *CollectorConfigMap) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectorConfigMap.ProtoReflect.Descriptor instead.
 func (*CollectorConfigMap) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{25}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *CollectorConfigMap) GetConfigMap() map[string]*CollectorConfigFile {
@@ -1685,7 +1737,7 @@ type CollectorConfigFile struct {
 
 func (x *CollectorConfigFile) Reset() {
 	*x = CollectorConfigFile{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[26]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1697,7 +1749,7 @@ func (x *CollectorConfigFile) String() string {
 func (*CollectorConfigFile) ProtoMessage() {}
 
 func (x *CollectorConfigFile) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[26]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1710,7 +1762,7 @@ func (x *CollectorConfigFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectorConfigFile.ProtoReflect.Descriptor instead.
 func (*CollectorConfigFile) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{26}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *CollectorConfigFile) GetBody() []byte {
@@ -1738,7 +1790,7 @@ type RemoteConfigStatus struct {
 
 func (x *RemoteConfigStatus) Reset() {
 	*x = RemoteConfigStatus{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[27]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1750,7 +1802,7 @@ func (x *RemoteConfigStatus) String() string {
 func (*RemoteConfigStatus) ProtoMessage() {}
 
 func (x *RemoteConfigStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[27]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1763,7 +1815,7 @@ func (x *RemoteConfigStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoteConfigStatus.ProtoReflect.Descriptor instead.
 func (*RemoteConfigStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{27}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *RemoteConfigStatus) GetLastRemoteConfigHash() []byte {
@@ -1800,7 +1852,7 @@ type ConnectionStatus struct {
 
 func (x *ConnectionStatus) Reset() {
 	*x = ConnectionStatus{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[28]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1812,7 +1864,7 @@ func (x *ConnectionStatus) String() string {
 func (*ConnectionStatus) ProtoMessage() {}
 
 func (x *ConnectionStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[28]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1825,7 +1877,7 @@ func (x *ConnectionStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectionStatus.ProtoReflect.Descriptor instead.
 func (*ConnectionStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{28}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *ConnectionStatus) GetState() CollectorState {
@@ -1873,7 +1925,7 @@ type SyncStatus struct {
 
 func (x *SyncStatus) Reset() {
 	*x = SyncStatus{}
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[29]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1885,7 +1937,7 @@ func (x *SyncStatus) String() string {
 func (*SyncStatus) ProtoMessage() {}
 
 func (x *SyncStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[29]
+	mi := &file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1898,7 +1950,7 @@ func (x *SyncStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncStatus.ProtoReflect.Descriptor instead.
 func (*SyncStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{29}
+	return file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *SyncStatus) GetStatus() ConfigSyncStatus {
@@ -1924,9 +1976,12 @@ const file_pkg_api_deployment_v1alpha1_deployment_proto_rawDesc = "" +
 	"\x06router\x18\x01 \x01(\v2\x16.route.v1alpha1.RouterR\x06router\"\x18\n" +
 	"\x16ValidateRouterResponse\"F\n" +
 	"\x14PreviewRouterRequest\x12.\n" +
-	"\x06router\x18\x01 \x01(\v2\x16.route.v1alpha1.RouterR\x06router\"\xde\x01\n" +
-	"\x15PreviewRouterResponse\x12{\n" +
-	"\x15collectorsToConfigRef\x18\x01 \x03(\v2E.deployment.v1alpha1.PreviewRouterResponse.CollectorsToConfigRefEntryR\x15collectorsToConfigRef\x1aH\n" +
+	"\x06router\x18\x01 \x01(\v2\x16.route.v1alpha1.RouterR\x06router\"\x95\x01\n" +
+	"\x15PreviewRouterResponse\x12=\n" +
+	"\x03old\x18\x01 \x01(\v2+.deployment.v1alpha1.RouterConfigAssignmentR\x03old\x12=\n" +
+	"\x03new\x18\x02 \x01(\v2+.deployment.v1alpha1.RouterConfigAssignmentR\x03new\"\xe0\x01\n" +
+	"\x16RouterConfigAssignment\x12|\n" +
+	"\x15collectorsToConfigRef\x18\x01 \x03(\v2F.deployment.v1alpha1.RouterConfigAssignment.CollectorsToConfigRefEntryR\x15collectorsToConfigRef\x1aH\n" +
 	"\x1aCollectorsToConfigRefEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"m\n" +
@@ -2082,7 +2137,7 @@ func file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP() []byte {
 }
 
 var file_pkg_api_deployment_v1alpha1_deployment_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
+var file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
 var file_pkg_api_deployment_v1alpha1_deployment_proto_goTypes = []any{
 	(CollectorState)(0),                   // 0: deployment.v1alpha1.CollectorState
 	(ConfigSyncStatus)(0),                 // 1: deployment.v1alpha1.ConfigSyncStatus
@@ -2091,99 +2146,102 @@ var file_pkg_api_deployment_v1alpha1_deployment_proto_goTypes = []any{
 	(*ValidateRouterResponse)(nil),        // 4: deployment.v1alpha1.ValidateRouterResponse
 	(*PreviewRouterRequest)(nil),          // 5: deployment.v1alpha1.PreviewRouterRequest
 	(*PreviewRouterResponse)(nil),         // 6: deployment.v1alpha1.PreviewRouterResponse
-	(*GetCollectorHistoryRequest)(nil),    // 7: deployment.v1alpha1.GetCollectorHistoryRequest
-	(*GetCollectorHistoryResponse)(nil),   // 8: deployment.v1alpha1.GetCollectorHistoryResponse
-	(*ListCollectorsRequest)(nil),         // 9: deployment.v1alpha1.ListCollectorsRequest
-	(*ListCollectorsResponse)(nil),        // 10: deployment.v1alpha1.ListCollectorsResponse
-	(*CollectorView)(nil),                 // 11: deployment.v1alpha1.CollectorView
-	(*CollectorDescriptionAndStatus)(nil), // 12: deployment.v1alpha1.CollectorDescriptionAndStatus
-	(*GetCollectorRequest)(nil),           // 13: deployment.v1alpha1.GetCollectorRequest
-	(*GetCollectorResponse)(nil),          // 14: deployment.v1alpha1.GetCollectorResponse
-	(*GetCollectorStatusRequest)(nil),     // 15: deployment.v1alpha1.GetCollectorStatusRequest
-	(*GetCollectorStatusResponse)(nil),    // 16: deployment.v1alpha1.GetCollectorStatusResponse
-	(*DeleteCollectorRequest)(nil),        // 17: deployment.v1alpha1.DeleteCollectorRequest
-	(*CollectorStatus)(nil),               // 18: deployment.v1alpha1.CollectorStatus
-	(*CollectorRegistration)(nil),         // 19: deployment.v1alpha1.CollectorRegistration
-	(*CollectorDescription)(nil),          // 20: deployment.v1alpha1.CollectorDescription
-	(*KeyValue)(nil),                      // 21: deployment.v1alpha1.KeyValue
-	(*AnyValue)(nil),                      // 22: deployment.v1alpha1.AnyValue
-	(*ArrayValue)(nil),                    // 23: deployment.v1alpha1.ArrayValue
-	(*KeyValueList)(nil),                  // 24: deployment.v1alpha1.KeyValueList
-	(*CollectorConnectionState)(nil),      // 25: deployment.v1alpha1.CollectorConnectionState
-	(*ComponentHealth)(nil),               // 26: deployment.v1alpha1.ComponentHealth
-	(*EffectiveConfig)(nil),               // 27: deployment.v1alpha1.EffectiveConfig
-	(*CollectorConfigMap)(nil),            // 28: deployment.v1alpha1.CollectorConfigMap
-	(*CollectorConfigFile)(nil),           // 29: deployment.v1alpha1.CollectorConfigFile
-	(*RemoteConfigStatus)(nil),            // 30: deployment.v1alpha1.RemoteConfigStatus
-	(*ConnectionStatus)(nil),              // 31: deployment.v1alpha1.ConnectionStatus
-	(*SyncStatus)(nil),                    // 32: deployment.v1alpha1.SyncStatus
-	nil,                                   // 33: deployment.v1alpha1.PreviewRouterResponse.CollectorsToConfigRefEntry
-	nil,                                   // 34: deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry
-	nil,                                   // 35: deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry
-	(*v1alpha1.Router)(nil),               // 36: route.v1alpha1.Router
-	(*timestamppb.Timestamp)(nil),         // 37: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),                 // 38: google.protobuf.Empty
+	(*RouterConfigAssignment)(nil),        // 7: deployment.v1alpha1.RouterConfigAssignment
+	(*GetCollectorHistoryRequest)(nil),    // 8: deployment.v1alpha1.GetCollectorHistoryRequest
+	(*GetCollectorHistoryResponse)(nil),   // 9: deployment.v1alpha1.GetCollectorHistoryResponse
+	(*ListCollectorsRequest)(nil),         // 10: deployment.v1alpha1.ListCollectorsRequest
+	(*ListCollectorsResponse)(nil),        // 11: deployment.v1alpha1.ListCollectorsResponse
+	(*CollectorView)(nil),                 // 12: deployment.v1alpha1.CollectorView
+	(*CollectorDescriptionAndStatus)(nil), // 13: deployment.v1alpha1.CollectorDescriptionAndStatus
+	(*GetCollectorRequest)(nil),           // 14: deployment.v1alpha1.GetCollectorRequest
+	(*GetCollectorResponse)(nil),          // 15: deployment.v1alpha1.GetCollectorResponse
+	(*GetCollectorStatusRequest)(nil),     // 16: deployment.v1alpha1.GetCollectorStatusRequest
+	(*GetCollectorStatusResponse)(nil),    // 17: deployment.v1alpha1.GetCollectorStatusResponse
+	(*DeleteCollectorRequest)(nil),        // 18: deployment.v1alpha1.DeleteCollectorRequest
+	(*CollectorStatus)(nil),               // 19: deployment.v1alpha1.CollectorStatus
+	(*CollectorRegistration)(nil),         // 20: deployment.v1alpha1.CollectorRegistration
+	(*CollectorDescription)(nil),          // 21: deployment.v1alpha1.CollectorDescription
+	(*KeyValue)(nil),                      // 22: deployment.v1alpha1.KeyValue
+	(*AnyValue)(nil),                      // 23: deployment.v1alpha1.AnyValue
+	(*ArrayValue)(nil),                    // 24: deployment.v1alpha1.ArrayValue
+	(*KeyValueList)(nil),                  // 25: deployment.v1alpha1.KeyValueList
+	(*CollectorConnectionState)(nil),      // 26: deployment.v1alpha1.CollectorConnectionState
+	(*ComponentHealth)(nil),               // 27: deployment.v1alpha1.ComponentHealth
+	(*EffectiveConfig)(nil),               // 28: deployment.v1alpha1.EffectiveConfig
+	(*CollectorConfigMap)(nil),            // 29: deployment.v1alpha1.CollectorConfigMap
+	(*CollectorConfigFile)(nil),           // 30: deployment.v1alpha1.CollectorConfigFile
+	(*RemoteConfigStatus)(nil),            // 31: deployment.v1alpha1.RemoteConfigStatus
+	(*ConnectionStatus)(nil),              // 32: deployment.v1alpha1.ConnectionStatus
+	(*SyncStatus)(nil),                    // 33: deployment.v1alpha1.SyncStatus
+	nil,                                   // 34: deployment.v1alpha1.RouterConfigAssignment.CollectorsToConfigRefEntry
+	nil,                                   // 35: deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry
+	nil,                                   // 36: deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry
+	(*v1alpha1.Router)(nil),               // 37: route.v1alpha1.Router
+	(*timestamppb.Timestamp)(nil),         // 38: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                 // 39: google.protobuf.Empty
 }
 var file_pkg_api_deployment_v1alpha1_deployment_proto_depIdxs = []int32{
-	36, // 0: deployment.v1alpha1.ValidateRouterRequest.router:type_name -> route.v1alpha1.Router
-	36, // 1: deployment.v1alpha1.PreviewRouterRequest.router:type_name -> route.v1alpha1.Router
-	33, // 2: deployment.v1alpha1.PreviewRouterResponse.collectorsToConfigRef:type_name -> deployment.v1alpha1.PreviewRouterResponse.CollectorsToConfigRefEntry
-	27, // 3: deployment.v1alpha1.GetCollectorHistoryResponse.effective_config:type_name -> deployment.v1alpha1.EffectiveConfig
-	12, // 4: deployment.v1alpha1.ListCollectorsResponse.collectors:type_name -> deployment.v1alpha1.CollectorDescriptionAndStatus
-	19, // 5: deployment.v1alpha1.CollectorView.registration:type_name -> deployment.v1alpha1.CollectorRegistration
-	18, // 6: deployment.v1alpha1.CollectorView.status:type_name -> deployment.v1alpha1.CollectorStatus
-	20, // 7: deployment.v1alpha1.CollectorDescriptionAndStatus.collector:type_name -> deployment.v1alpha1.CollectorDescription
-	18, // 8: deployment.v1alpha1.CollectorDescriptionAndStatus.status:type_name -> deployment.v1alpha1.CollectorStatus
-	20, // 9: deployment.v1alpha1.GetCollectorResponse.collector:type_name -> deployment.v1alpha1.CollectorDescription
-	18, // 10: deployment.v1alpha1.GetCollectorStatusResponse.status:type_name -> deployment.v1alpha1.CollectorStatus
-	26, // 11: deployment.v1alpha1.CollectorStatus.health:type_name -> deployment.v1alpha1.ComponentHealth
-	27, // 12: deployment.v1alpha1.CollectorStatus.effective_config:type_name -> deployment.v1alpha1.EffectiveConfig
-	30, // 13: deployment.v1alpha1.CollectorStatus.remote_config_status:type_name -> deployment.v1alpha1.RemoteConfigStatus
-	31, // 14: deployment.v1alpha1.CollectorStatus.conn_status:type_name -> deployment.v1alpha1.ConnectionStatus
-	32, // 15: deployment.v1alpha1.CollectorStatus.sync_status:type_name -> deployment.v1alpha1.SyncStatus
-	21, // 16: deployment.v1alpha1.CollectorRegistration.identifying_attributes:type_name -> deployment.v1alpha1.KeyValue
-	21, // 17: deployment.v1alpha1.CollectorRegistration.non_identifying_attributes:type_name -> deployment.v1alpha1.KeyValue
-	21, // 18: deployment.v1alpha1.CollectorDescription.identifying_attributes:type_name -> deployment.v1alpha1.KeyValue
-	21, // 19: deployment.v1alpha1.CollectorDescription.non_identifying_attributes:type_name -> deployment.v1alpha1.KeyValue
-	22, // 20: deployment.v1alpha1.KeyValue.value:type_name -> deployment.v1alpha1.AnyValue
-	23, // 21: deployment.v1alpha1.AnyValue.array_value:type_name -> deployment.v1alpha1.ArrayValue
-	24, // 22: deployment.v1alpha1.AnyValue.kvlist_value:type_name -> deployment.v1alpha1.KeyValueList
-	22, // 23: deployment.v1alpha1.ArrayValue.values:type_name -> deployment.v1alpha1.AnyValue
-	21, // 24: deployment.v1alpha1.KeyValueList.values:type_name -> deployment.v1alpha1.KeyValue
-	0,  // 25: deployment.v1alpha1.CollectorConnectionState.state:type_name -> deployment.v1alpha1.CollectorState
-	37, // 26: deployment.v1alpha1.CollectorConnectionState.last_seen:type_name -> google.protobuf.Timestamp
-	37, // 27: deployment.v1alpha1.CollectorConnectionState.connected_at:type_name -> google.protobuf.Timestamp
-	37, // 28: deployment.v1alpha1.CollectorConnectionState.disconnected_at:type_name -> google.protobuf.Timestamp
-	34, // 29: deployment.v1alpha1.ComponentHealth.component_health_map:type_name -> deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry
-	28, // 30: deployment.v1alpha1.EffectiveConfig.config_map:type_name -> deployment.v1alpha1.CollectorConfigMap
-	35, // 31: deployment.v1alpha1.CollectorConfigMap.config_map:type_name -> deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry
-	2,  // 32: deployment.v1alpha1.RemoteConfigStatus.status:type_name -> deployment.v1alpha1.RemoteConfigStatuses
-	0,  // 33: deployment.v1alpha1.ConnectionStatus.state:type_name -> deployment.v1alpha1.CollectorState
-	37, // 34: deployment.v1alpha1.ConnectionStatus.last_seen:type_name -> google.protobuf.Timestamp
-	37, // 35: deployment.v1alpha1.ConnectionStatus.connected_at:type_name -> google.protobuf.Timestamp
-	37, // 36: deployment.v1alpha1.ConnectionStatus.disconnected_at:type_name -> google.protobuf.Timestamp
-	1,  // 37: deployment.v1alpha1.SyncStatus.status:type_name -> deployment.v1alpha1.ConfigSyncStatus
-	26, // 38: deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry.value:type_name -> deployment.v1alpha1.ComponentHealth
-	29, // 39: deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry.value:type_name -> deployment.v1alpha1.CollectorConfigFile
-	9,  // 40: deployment.v1alpha1.CollectorService.ListCollectors:input_type -> deployment.v1alpha1.ListCollectorsRequest
-	13, // 41: deployment.v1alpha1.CollectorService.GetCollector:input_type -> deployment.v1alpha1.GetCollectorRequest
-	7,  // 42: deployment.v1alpha1.CollectorService.CollectorHistory:input_type -> deployment.v1alpha1.GetCollectorHistoryRequest
-	15, // 43: deployment.v1alpha1.CollectorService.Status:input_type -> deployment.v1alpha1.GetCollectorStatusRequest
-	17, // 44: deployment.v1alpha1.CollectorService.DeleteCollector:input_type -> deployment.v1alpha1.DeleteCollectorRequest
-	3,  // 45: deployment.v1alpha1.CollectorService.ValidateRouter:input_type -> deployment.v1alpha1.ValidateRouterRequest
-	5,  // 46: deployment.v1alpha1.CollectorService.PreviewRouter:input_type -> deployment.v1alpha1.PreviewRouterRequest
-	10, // 47: deployment.v1alpha1.CollectorService.ListCollectors:output_type -> deployment.v1alpha1.ListCollectorsResponse
-	14, // 48: deployment.v1alpha1.CollectorService.GetCollector:output_type -> deployment.v1alpha1.GetCollectorResponse
-	8,  // 49: deployment.v1alpha1.CollectorService.CollectorHistory:output_type -> deployment.v1alpha1.GetCollectorHistoryResponse
-	16, // 50: deployment.v1alpha1.CollectorService.Status:output_type -> deployment.v1alpha1.GetCollectorStatusResponse
-	38, // 51: deployment.v1alpha1.CollectorService.DeleteCollector:output_type -> google.protobuf.Empty
-	4,  // 52: deployment.v1alpha1.CollectorService.ValidateRouter:output_type -> deployment.v1alpha1.ValidateRouterResponse
-	6,  // 53: deployment.v1alpha1.CollectorService.PreviewRouter:output_type -> deployment.v1alpha1.PreviewRouterResponse
-	47, // [47:54] is the sub-list for method output_type
-	40, // [40:47] is the sub-list for method input_type
-	40, // [40:40] is the sub-list for extension type_name
-	40, // [40:40] is the sub-list for extension extendee
-	0,  // [0:40] is the sub-list for field type_name
+	37, // 0: deployment.v1alpha1.ValidateRouterRequest.router:type_name -> route.v1alpha1.Router
+	37, // 1: deployment.v1alpha1.PreviewRouterRequest.router:type_name -> route.v1alpha1.Router
+	7,  // 2: deployment.v1alpha1.PreviewRouterResponse.old:type_name -> deployment.v1alpha1.RouterConfigAssignment
+	7,  // 3: deployment.v1alpha1.PreviewRouterResponse.new:type_name -> deployment.v1alpha1.RouterConfigAssignment
+	34, // 4: deployment.v1alpha1.RouterConfigAssignment.collectorsToConfigRef:type_name -> deployment.v1alpha1.RouterConfigAssignment.CollectorsToConfigRefEntry
+	28, // 5: deployment.v1alpha1.GetCollectorHistoryResponse.effective_config:type_name -> deployment.v1alpha1.EffectiveConfig
+	13, // 6: deployment.v1alpha1.ListCollectorsResponse.collectors:type_name -> deployment.v1alpha1.CollectorDescriptionAndStatus
+	20, // 7: deployment.v1alpha1.CollectorView.registration:type_name -> deployment.v1alpha1.CollectorRegistration
+	19, // 8: deployment.v1alpha1.CollectorView.status:type_name -> deployment.v1alpha1.CollectorStatus
+	21, // 9: deployment.v1alpha1.CollectorDescriptionAndStatus.collector:type_name -> deployment.v1alpha1.CollectorDescription
+	19, // 10: deployment.v1alpha1.CollectorDescriptionAndStatus.status:type_name -> deployment.v1alpha1.CollectorStatus
+	21, // 11: deployment.v1alpha1.GetCollectorResponse.collector:type_name -> deployment.v1alpha1.CollectorDescription
+	19, // 12: deployment.v1alpha1.GetCollectorStatusResponse.status:type_name -> deployment.v1alpha1.CollectorStatus
+	27, // 13: deployment.v1alpha1.CollectorStatus.health:type_name -> deployment.v1alpha1.ComponentHealth
+	28, // 14: deployment.v1alpha1.CollectorStatus.effective_config:type_name -> deployment.v1alpha1.EffectiveConfig
+	31, // 15: deployment.v1alpha1.CollectorStatus.remote_config_status:type_name -> deployment.v1alpha1.RemoteConfigStatus
+	32, // 16: deployment.v1alpha1.CollectorStatus.conn_status:type_name -> deployment.v1alpha1.ConnectionStatus
+	33, // 17: deployment.v1alpha1.CollectorStatus.sync_status:type_name -> deployment.v1alpha1.SyncStatus
+	22, // 18: deployment.v1alpha1.CollectorRegistration.identifying_attributes:type_name -> deployment.v1alpha1.KeyValue
+	22, // 19: deployment.v1alpha1.CollectorRegistration.non_identifying_attributes:type_name -> deployment.v1alpha1.KeyValue
+	22, // 20: deployment.v1alpha1.CollectorDescription.identifying_attributes:type_name -> deployment.v1alpha1.KeyValue
+	22, // 21: deployment.v1alpha1.CollectorDescription.non_identifying_attributes:type_name -> deployment.v1alpha1.KeyValue
+	23, // 22: deployment.v1alpha1.KeyValue.value:type_name -> deployment.v1alpha1.AnyValue
+	24, // 23: deployment.v1alpha1.AnyValue.array_value:type_name -> deployment.v1alpha1.ArrayValue
+	25, // 24: deployment.v1alpha1.AnyValue.kvlist_value:type_name -> deployment.v1alpha1.KeyValueList
+	23, // 25: deployment.v1alpha1.ArrayValue.values:type_name -> deployment.v1alpha1.AnyValue
+	22, // 26: deployment.v1alpha1.KeyValueList.values:type_name -> deployment.v1alpha1.KeyValue
+	0,  // 27: deployment.v1alpha1.CollectorConnectionState.state:type_name -> deployment.v1alpha1.CollectorState
+	38, // 28: deployment.v1alpha1.CollectorConnectionState.last_seen:type_name -> google.protobuf.Timestamp
+	38, // 29: deployment.v1alpha1.CollectorConnectionState.connected_at:type_name -> google.protobuf.Timestamp
+	38, // 30: deployment.v1alpha1.CollectorConnectionState.disconnected_at:type_name -> google.protobuf.Timestamp
+	35, // 31: deployment.v1alpha1.ComponentHealth.component_health_map:type_name -> deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry
+	29, // 32: deployment.v1alpha1.EffectiveConfig.config_map:type_name -> deployment.v1alpha1.CollectorConfigMap
+	36, // 33: deployment.v1alpha1.CollectorConfigMap.config_map:type_name -> deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry
+	2,  // 34: deployment.v1alpha1.RemoteConfigStatus.status:type_name -> deployment.v1alpha1.RemoteConfigStatuses
+	0,  // 35: deployment.v1alpha1.ConnectionStatus.state:type_name -> deployment.v1alpha1.CollectorState
+	38, // 36: deployment.v1alpha1.ConnectionStatus.last_seen:type_name -> google.protobuf.Timestamp
+	38, // 37: deployment.v1alpha1.ConnectionStatus.connected_at:type_name -> google.protobuf.Timestamp
+	38, // 38: deployment.v1alpha1.ConnectionStatus.disconnected_at:type_name -> google.protobuf.Timestamp
+	1,  // 39: deployment.v1alpha1.SyncStatus.status:type_name -> deployment.v1alpha1.ConfigSyncStatus
+	27, // 40: deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry.value:type_name -> deployment.v1alpha1.ComponentHealth
+	30, // 41: deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry.value:type_name -> deployment.v1alpha1.CollectorConfigFile
+	10, // 42: deployment.v1alpha1.CollectorService.ListCollectors:input_type -> deployment.v1alpha1.ListCollectorsRequest
+	14, // 43: deployment.v1alpha1.CollectorService.GetCollector:input_type -> deployment.v1alpha1.GetCollectorRequest
+	8,  // 44: deployment.v1alpha1.CollectorService.CollectorHistory:input_type -> deployment.v1alpha1.GetCollectorHistoryRequest
+	16, // 45: deployment.v1alpha1.CollectorService.Status:input_type -> deployment.v1alpha1.GetCollectorStatusRequest
+	18, // 46: deployment.v1alpha1.CollectorService.DeleteCollector:input_type -> deployment.v1alpha1.DeleteCollectorRequest
+	3,  // 47: deployment.v1alpha1.CollectorService.ValidateRouter:input_type -> deployment.v1alpha1.ValidateRouterRequest
+	5,  // 48: deployment.v1alpha1.CollectorService.PreviewRouter:input_type -> deployment.v1alpha1.PreviewRouterRequest
+	11, // 49: deployment.v1alpha1.CollectorService.ListCollectors:output_type -> deployment.v1alpha1.ListCollectorsResponse
+	15, // 50: deployment.v1alpha1.CollectorService.GetCollector:output_type -> deployment.v1alpha1.GetCollectorResponse
+	9,  // 51: deployment.v1alpha1.CollectorService.CollectorHistory:output_type -> deployment.v1alpha1.GetCollectorHistoryResponse
+	17, // 52: deployment.v1alpha1.CollectorService.Status:output_type -> deployment.v1alpha1.GetCollectorStatusResponse
+	39, // 53: deployment.v1alpha1.CollectorService.DeleteCollector:output_type -> google.protobuf.Empty
+	4,  // 54: deployment.v1alpha1.CollectorService.ValidateRouter:output_type -> deployment.v1alpha1.ValidateRouterResponse
+	6,  // 55: deployment.v1alpha1.CollectorService.PreviewRouter:output_type -> deployment.v1alpha1.PreviewRouterResponse
+	49, // [49:56] is the sub-list for method output_type
+	42, // [42:49] is the sub-list for method input_type
+	42, // [42:42] is the sub-list for extension type_name
+	42, // [42:42] is the sub-list for extension extendee
+	0,  // [0:42] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_deployment_v1alpha1_deployment_proto_init() }
@@ -2191,7 +2249,7 @@ func file_pkg_api_deployment_v1alpha1_deployment_proto_init() {
 	if File_pkg_api_deployment_v1alpha1_deployment_proto != nil {
 		return
 	}
-	file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[19].OneofWrappers = []any{
+	file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes[20].OneofWrappers = []any{
 		(*AnyValue_StringValue)(nil),
 		(*AnyValue_BoolValue)(nil),
 		(*AnyValue_IntValue)(nil),
@@ -2206,7 +2264,7 @@ func file_pkg_api_deployment_v1alpha1_deployment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_deployment_v1alpha1_deployment_proto_rawDesc), len(file_pkg_api_deployment_v1alpha1_deployment_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   33,
+			NumMessages:   34,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

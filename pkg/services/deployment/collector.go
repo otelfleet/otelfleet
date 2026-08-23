@@ -10,6 +10,7 @@ import (
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1/v1alpha1connect"
+	routev1alpha1 "github.com/otelfleet/otelfleet/pkg/api/route/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
 	"github.com/otelfleet/otelfleet/pkg/router"
 	otelfleetsvc "github.com/otelfleet/otelfleet/pkg/services"
@@ -178,7 +179,23 @@ func (a *DeploymentServer) ValidateRouter(ctx context.Context, req *connect.Requ
 }
 
 func (a *DeploymentServer) PreviewRouter(ctx context.Context, req *connect.Request[v1alpha1.PreviewRouterRequest]) (*connect.Response[v1alpha1.PreviewRouterResponse], error) {
-	matcher, err := router.NewMatcher(req.Msg.GetRouter())
+	incoming, err := a.incomingAssignment(ctx, req.Msg.GetRouter())
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&v1alpha1.PreviewRouterResponse{
+		Old: &v1alpha1.RouterConfigAssignment{
+			// TODO :
+			CollectorsToConfigRef: nil,
+		},
+		New: &v1alpha1.RouterConfigAssignment{
+			CollectorsToConfigRef: incoming,
+		},
+	}), nil
+}
+
+func (a *DeploymentServer) incomingAssignment(ctx context.Context, req *routev1alpha1.Router) (map[string]string, error) {
+	matcher, err := router.NewMatcher(req)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("expected a valid router : %w", err))
 	}
@@ -198,7 +215,5 @@ func (a *DeploymentServer) PreviewRouter(ctx context.Context, req *connect.Reque
 		configRef := matcher.Match(ctx, l)
 		ret[desc.GetId()] = configRef
 	}
-	return connect.NewResponse(&v1alpha1.PreviewRouterResponse{
-		CollectorsToConfigRef: ret,
-	}), nil
+	return ret, nil
 }

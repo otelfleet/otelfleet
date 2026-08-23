@@ -18,7 +18,6 @@ import { Route as TokensCreateRouteImport } from './routes/tokens_.create'
 import { Route as TokensTokenIdRouteImport } from './routes/tokens.$tokenId'
 import { Route as ResourcesTypeRouteImport } from './routes/resources.$type'
 import { Route as DeploymentsAgentIdRouteImport } from './routes/deployments.$agentId'
-import { Route as ConfigfilterEditorRouteImport } from './routes/configfilter_.editor'
 import { Route as ResourcesTypeEditorRouteImport } from './routes/resources.$type_.editor'
 
 const TokensRoute = TokensRouteImport.update({
@@ -66,11 +65,6 @@ const DeploymentsAgentIdRoute = DeploymentsAgentIdRouteImport.update({
   path: '/$agentId',
   getParentRoute: () => DeploymentsRoute,
 } as any)
-const ConfigfilterEditorRoute = ConfigfilterEditorRouteImport.update({
-  id: '/configfilter_/editor',
-  path: '/configfilter/editor',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ResourcesTypeEditorRoute = ResourcesTypeEditorRouteImport.update({
   id: '/resources/$type_/editor',
   path: '/resources/$type/editor',
@@ -83,7 +77,6 @@ export interface FileRoutesByFullPath {
   '/configfilter': typeof ConfigfilterRoute
   '/deployments': typeof DeploymentsRouteWithChildren
   '/tokens': typeof TokensRouteWithChildren
-  '/configfilter/editor': typeof ConfigfilterEditorRoute
   '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
@@ -96,7 +89,6 @@ export interface FileRoutesByTo {
   '/configfilter': typeof ConfigfilterRoute
   '/deployments': typeof DeploymentsRouteWithChildren
   '/tokens': typeof TokensRouteWithChildren
-  '/configfilter/editor': typeof ConfigfilterEditorRoute
   '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
@@ -110,7 +102,6 @@ export interface FileRoutesById {
   '/configfilter': typeof ConfigfilterRoute
   '/deployments': typeof DeploymentsRouteWithChildren
   '/tokens': typeof TokensRouteWithChildren
-  '/configfilter_/editor': typeof ConfigfilterEditorRoute
   '/deployments/$agentId': typeof DeploymentsAgentIdRoute
   '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
@@ -125,7 +116,6 @@ export interface FileRouteTypes {
     | '/configfilter'
     | '/deployments'
     | '/tokens'
-    | '/configfilter/editor'
     | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
@@ -138,7 +128,6 @@ export interface FileRouteTypes {
     | '/configfilter'
     | '/deployments'
     | '/tokens'
-    | '/configfilter/editor'
     | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
@@ -151,7 +140,6 @@ export interface FileRouteTypes {
     | '/configfilter'
     | '/deployments'
     | '/tokens'
-    | '/configfilter_/editor'
     | '/deployments/$agentId'
     | '/resources/$type'
     | '/tokens/$tokenId'
@@ -165,7 +153,6 @@ export interface RootRouteChildren {
   ConfigfilterRoute: typeof ConfigfilterRoute
   DeploymentsRoute: typeof DeploymentsRouteWithChildren
   TokensRoute: typeof TokensRouteWithChildren
-  ConfigfilterEditorRoute: typeof ConfigfilterEditorRoute
   ResourcesTypeRoute: typeof ResourcesTypeRoute
   TokensCreateRoute: typeof TokensCreateRoute
   ResourcesTypeEditorRoute: typeof ResourcesTypeEditorRoute
@@ -236,13 +223,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeploymentsAgentIdRouteImport
       parentRoute: typeof DeploymentsRoute
     }
-    '/configfilter_/editor': {
-      id: '/configfilter_/editor'
-      path: '/configfilter/editor'
-      fullPath: '/configfilter/editor'
-      preLoaderRoute: typeof ConfigfilterEditorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/resources/$type_/editor': {
       id: '/resources/$type_/editor'
       path: '/resources/$type/editor'
@@ -282,7 +262,6 @@ const rootRouteChildren: RootRouteChildren = {
   ConfigfilterRoute: ConfigfilterRoute,
   DeploymentsRoute: DeploymentsRouteWithChildren,
   TokensRoute: TokensRouteWithChildren,
-  ConfigfilterEditorRoute: ConfigfilterEditorRoute,
   ResourcesTypeRoute: ResourcesTypeRoute,
   TokensCreateRoute: TokensCreateRoute,
   ResourcesTypeEditorRoute: ResourcesTypeEditorRoute,

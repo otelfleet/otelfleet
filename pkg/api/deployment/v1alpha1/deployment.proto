@@ -33,7 +33,12 @@ message PreviewRouterRequest {
 }
 
 message PreviewRouterResponse {
-    map<string, string> collectorsToConfigRef = 1;
+  RouterConfigAssignment old = 1;
+  RouterConfigAssignment new = 2;
+}
+
+message RouterConfigAssignment {
+  map<string, string> collectorsToConfigRef = 1;
 }
 
 

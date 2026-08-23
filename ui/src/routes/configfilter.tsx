@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ConfigFilterPage } from '../configfilters/ConfigFilterPage'
+import { ConfigAssignmentPage } from '../configassignment/ConfigAssignmentPage'
 
 export const Route = createFileRoute('/configfilter')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  return <ConfigFilterPage />
+  return <ConfigAssignmentPage />
 }

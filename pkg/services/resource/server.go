@@ -9,6 +9,7 @@ import (
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1/v1alpha1connect"
+	routev1alpha1 "github.com/otelfleet/otelfleet/pkg/api/route/v1alpha1"
 	otelfleet_svc "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"github.com/otelfleet/otelfleet/pkg/util/protoutil"
@@ -68,6 +69,7 @@ func (s *Server) SupportedResources() []string {
 		protoutil.GetTypeURL(&v1alpha1.Pipeline{}),
 		protoutil.GetTypeURL(&v1alpha1.PipelineCollection{}),
 		protoutil.GetTypeURL(&v1alpha1.CollectorConfig{}),
-		protoutil.GetTypeURL(&v1alpha1.ConfigFilter{}),
+		// protoutil.GetTypeURL(&v1alpha1.ConfigFilter{}),
+		protoutil.GetTypeURL(&routev1alpha1.Router{}),
 	}
 }
