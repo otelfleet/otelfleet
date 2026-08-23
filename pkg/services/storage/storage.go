@@ -21,7 +21,7 @@ import (
 type StorageService struct {
 	logger *slog.Logger
 
-	underlying schema.SchemaProto
+	protoStore schema.ProtoObjectStore
 	cfg        *config.StorageConfig
 
 	services.Service
@@ -44,7 +44,7 @@ func NewStorageService(
 		logger: logger,
 		cfg:    cfg,
 	}
-	var underlyingSchema schema.SchemaProto
+	var protoStore schema.ProtoObjectStore
 	if cfg.File != nil {
 		// TODO : this setup logic is a little wonky...
 		kvDb, err := otelpebble.Open(
@@ -58,9 +58,9 @@ func NewStorageService(
 		s.pebbleDB = kvDb
 		broker := otelpebble.NewKVBroker(kvDb)
 		kv := broker.KeyValue("")
-		protoSchema := schema.NewStorageSchemaProto(kv)
-		underlyingSchema = schema.NewStorageSchemaProto(kv)
-		s.KeyValueServiceHandler = otelgrpc.NewGrpcKeyValue(protoSchema)
+		protoSchema := schema.NewProtoObjectStore(kv)
+		protoStore = schema.NewProtoObjectStore(kv)
+		s.KeyValueServiceHandler = otelgrpc.NewLocalKV(protoSchema)
 	}
 	if cfg.Client != nil {
 		logger.With("client-addr", cfg.Client.HttpAddr).Info("starting storage in remote mode")
@@ -70,10 +70,10 @@ func NewStorageService(
 			"http://"+cfg.Client.HttpAddr,
 			connect.WithHTTPGet(),
 		)
-		underlyingSchema = otelgrpc.NewStorageClient(client)
+		protoStore = otelgrpc.NewRemoteKV(client)
 		s.KeyValueServiceHandler = otelgrpc.NewErroringServer(connect.CodeUnimplemented, fmt.Errorf("unimplemented"))
 	}
-	s.underlying = underlyingSchema
+	s.protoStore = protoStore
 	s.Service = services.NewBasicService(s.starting, s.running, s.stopping)
 	return s, nil
 }
@@ -95,8 +95,8 @@ func (s *StorageService) stopping(_ error) error {
 	return nil
 }
 
-func (s *StorageService) Schema() schema.SchemaProto {
-	return s.underlying
+func (s *StorageService) Schema() schema.ProtoObjectStore {
+	return s.protoStore
 }
 
 func (s *StorageService) ConfigureHTTP(mux *mux.Router, opts []connect.HandlerOption) {

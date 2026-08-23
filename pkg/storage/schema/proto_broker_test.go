@@ -25,13 +25,13 @@ import (
 
 // newSchema wires a StorageSchemaProto on top of a real (in-memory) KV, so the
 // tests observe end-to-end behaviour rather than a hand-rolled fake.
-func newSchema(t *testing.T) *schema.StorageSchemaProto {
+func newSchema(t *testing.T) *schema.StorageProtoObject {
 	t.Helper()
 	db, err := pebble.Open("", &pebble.Options{FS: vfs.NewMem()})
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, db.Close()) })
 	kv := otelpebble.NewKVBroker(db).KeyValue("test")
-	return schema.NewStorageSchemaProto(kv)
+	return schema.NewProtoObjectStore(kv)
 }
 
 func mustAny(t *testing.T, msg proto.Message) (string, *anypb.Any) {
@@ -52,7 +52,7 @@ func anyDiff(want, got *anypb.Any) string {
 	return cmp.Diff(want, got, protocmp.Transform())
 }
 
-func putAny(t *testing.T, ctx context.Context, s *schema.StorageSchemaProto, typeURL, key string, obj *anypb.Any) {
+func putAny(t *testing.T, ctx context.Context, s *schema.StorageProtoObject, typeURL, key string, obj *anypb.Any) {
 	t.Helper()
 	_, err := s.Put(ctx, typeURL, key, 0, obj)
 	require.NoError(t, err)
@@ -115,18 +115,18 @@ func TestStorageSchemaProto_PutGet(t *testing.T) {
 func TestStorageSchemaProto_Get_NotFound(t *testing.T) {
 	type tc struct {
 		name  string
-		setup func(t *testing.T, ctx context.Context, s *schema.StorageSchemaProto, typeURL string)
+		setup func(t *testing.T, ctx context.Context, s *schema.StorageProtoObject, typeURL string)
 		key   string
 	}
 	cases := []tc{
 		{
 			name:  "empty store",
-			setup: func(*testing.T, context.Context, *schema.StorageSchemaProto, string) {},
+			setup: func(*testing.T, context.Context, *schema.StorageProtoObject, string) {},
 			key:   "missing",
 		},
 		{
 			name: "wrong key",
-			setup: func(t *testing.T, ctx context.Context, s *schema.StorageSchemaProto, typeURL string) {
+			setup: func(t *testing.T, ctx context.Context, s *schema.StorageProtoObject, typeURL string) {
 				_, any := mustAny(t, wrapperspb.String("present"))
 				putAny(t, ctx, s, typeURL, "present", any)
 			},
@@ -134,7 +134,7 @@ func TestStorageSchemaProto_Get_NotFound(t *testing.T) {
 		},
 		{
 			name: "after delete",
-			setup: func(t *testing.T, ctx context.Context, s *schema.StorageSchemaProto, typeURL string) {
+			setup: func(t *testing.T, ctx context.Context, s *schema.StorageProtoObject, typeURL string) {
 				_, any := mustAny(t, wrapperspb.String("v"))
 				putAny(t, ctx, s, typeURL, "gone", any)
 				require.NoError(t, s.Delete(ctx, typeURL, "gone"))

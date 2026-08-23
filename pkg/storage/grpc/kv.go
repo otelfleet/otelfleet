@@ -2,20 +2,22 @@ package grpc
 
 import (
 	"context"
+	"io"
 
 	"connectrpc.com/connect"
 	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1/v1alpha1connect"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 )
 
 type GrpcKeyValue struct {
-	underlying *schema.StorageSchemaProto
+	underlying *schema.StorageProtoObject
 }
 
-func NewGrpcKeyValue(underlying *schema.StorageSchemaProto) *GrpcKeyValue {
+func NewLocalKV(underlying *schema.StorageProtoObject) *GrpcKeyValue {
 	return &GrpcKeyValue{
 		underlying: underlying,
 	}
@@ -105,4 +107,28 @@ func (k *GrpcKeyValue) History(ctx context.Context, req *connect.Request[v1alpha
 		return nil, toConnectError(err)
 	}
 	return connect.NewResponse(resp), nil
+}
+
+func (k *GrpcKeyValue) Watch(ctx context.Context, req *connect.Request[v1alpha1.WatchRequest], srv *connect.ServerStream[v1alpha1.WatchEvent]) error {
+	resp, err := k.underlying.Watch(ctx, req.Msg.GetTypeUrl(), req.Msg.GetPrefix())
+	if err != nil {
+		return toConnectError(err)
+	}
+
+	eg, eCtx := errgroup.WithContext(ctx)
+	eg.Go(func() error {
+		for {
+			select {
+			case <-eCtx.Done():
+				return context.Cause(eCtx)
+			case msg, ok := <-resp:
+				if !ok {
+					return io.EOF
+				}
+				srv.Send(msg)
+			}
+		}
+	})
+
+	return eg.Wait()
 }

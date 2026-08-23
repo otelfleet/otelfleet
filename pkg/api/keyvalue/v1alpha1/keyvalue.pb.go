@@ -770,6 +770,140 @@ func (*DeleteResponse) Descriptor() ([]byte, []int) {
 	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{13}
 }
 
+type WatchRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TypeUrl       string                 `protobuf:"bytes,1,opt,name=type_url,json=typeUrl,proto3" json:"type_url,omitempty"`
+	Prefix        string                 `protobuf:"bytes,2,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WatchRequest) Reset() {
+	*x = WatchRequest{}
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WatchRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WatchRequest) ProtoMessage() {}
+
+func (x *WatchRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WatchRequest.ProtoReflect.Descriptor instead.
+func (*WatchRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *WatchRequest) GetTypeUrl() string {
+	if x != nil {
+		return x.TypeUrl
+	}
+	return ""
+}
+
+func (x *WatchRequest) GetPrefix() string {
+	if x != nil {
+		return x.Prefix
+	}
+	return ""
+}
+
+type WatchEvent struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to EventType:
+	//
+	//	*WatchEvent_Modified
+	//	*WatchEvent_DeletedKey
+	EventType     isWatchEvent_EventType `protobuf_oneof:"eventType"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WatchEvent) Reset() {
+	*x = WatchEvent{}
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WatchEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WatchEvent) ProtoMessage() {}
+
+func (x *WatchEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WatchEvent.ProtoReflect.Descriptor instead.
+func (*WatchEvent) Descriptor() ([]byte, []int) {
+	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *WatchEvent) GetEventType() isWatchEvent_EventType {
+	if x != nil {
+		return x.EventType
+	}
+	return nil
+}
+
+func (x *WatchEvent) GetModified() *KeyValueObject {
+	if x != nil {
+		if x, ok := x.EventType.(*WatchEvent_Modified); ok {
+			return x.Modified
+		}
+	}
+	return nil
+}
+
+func (x *WatchEvent) GetDeletedKey() string {
+	if x != nil {
+		if x, ok := x.EventType.(*WatchEvent_DeletedKey); ok {
+			return x.DeletedKey
+		}
+	}
+	return ""
+}
+
+type isWatchEvent_EventType interface {
+	isWatchEvent_EventType()
+}
+
+type WatchEvent_Modified struct {
+	Modified *KeyValueObject `protobuf:"bytes,1,opt,name=modified,proto3,oneof"`
+}
+
+type WatchEvent_DeletedKey struct {
+	DeletedKey string `protobuf:"bytes,2,opt,name=deletedKey,proto3,oneof"`
+}
+
+func (*WatchEvent_Modified) isWatchEvent_EventType() {}
+
+func (*WatchEvent_DeletedKey) isWatchEvent_EventType() {}
+
 var File_pkg_api_keyvalue_v1alpha1_keyvalue_proto protoreflect.FileDescriptor
 
 const file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDesc = "" +
@@ -821,14 +955,25 @@ const file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDesc = "" +
 	"\rDeleteRequest\x12\x19\n" +
 	"\btype_url\x18\x01 \x01(\tR\atypeUrl\x12\x10\n" +
 	"\x03key\x18\x02 \x01(\tR\x03key\"\x10\n" +
-	"\x0eDeleteResponse2\xe2\x03\n" +
+	"\x0eDeleteResponse\"A\n" +
+	"\fWatchRequest\x12\x19\n" +
+	"\btype_url\x18\x01 \x01(\tR\atypeUrl\x12\x16\n" +
+	"\x06prefix\x18\x02 \x01(\tR\x06prefix\"|\n" +
+	"\n" +
+	"WatchEvent\x12?\n" +
+	"\bmodified\x18\x01 \x01(\v2!.keyvalue.v1alpha1.KeyValueObjectH\x00R\bmodified\x12 \n" +
+	"\n" +
+	"deletedKey\x18\x02 \x01(\tH\x00R\n" +
+	"deletedKeyB\v\n" +
+	"\teventType2\xad\x04\n" +
 	"\x0fKeyValueService\x12D\n" +
 	"\x03Get\x12\x1d.keyvalue.v1alpha1.GetRequest\x1a\x1e.keyvalue.v1alpha1.GetResponse\x12D\n" +
 	"\x03Put\x12\x1d.keyvalue.v1alpha1.PutRequest\x1a\x1e.keyvalue.v1alpha1.PutResponse\x12S\n" +
 	"\bListKeys\x12\".keyvalue.v1alpha1.ListKeysRequest\x1a#.keyvalue.v1alpha1.ListKeysResponse\x12G\n" +
 	"\x04List\x12\x1e.keyvalue.v1alpha1.ListRequest\x1a\x1f.keyvalue.v1alpha1.ListResponse\x12M\n" +
 	"\x06Delete\x12 .keyvalue.v1alpha1.DeleteRequest\x1a!.keyvalue.v1alpha1.DeleteResponse\x12V\n" +
-	"\aHistory\x12$.keyvalue.v1alpha1.GetHistoryRequest\x1a%.keyvalue.v1alpha1.GetHistoryResponseB:Z8github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1b\x06proto3"
+	"\aHistory\x12$.keyvalue.v1alpha1.GetHistoryRequest\x1a%.keyvalue.v1alpha1.GetHistoryResponse\x12I\n" +
+	"\x05Watch\x12\x1f.keyvalue.v1alpha1.WatchRequest\x1a\x1d.keyvalue.v1alpha1.WatchEvent0\x01B:Z8github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1b\x06proto3"
 
 var (
 	file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescOnce sync.Once
@@ -842,7 +987,7 @@ func file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescGZIP() []byte {
 	return file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDescData
 }
 
-var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_goTypes = []any{
 	(*GetHistoryRequest)(nil),     // 0: keyvalue.v1alpha1.GetHistoryRequest
 	(*RangeRequest)(nil),          // 1: keyvalue.v1alpha1.RangeRequest
@@ -858,36 +1003,41 @@ var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_goTypes = []any{
 	(*ListKeysResponse)(nil),      // 11: keyvalue.v1alpha1.ListKeysResponse
 	(*DeleteRequest)(nil),         // 12: keyvalue.v1alpha1.DeleteRequest
 	(*DeleteResponse)(nil),        // 13: keyvalue.v1alpha1.DeleteResponse
-	(*anypb.Any)(nil),             // 14: google.protobuf.Any
-	(*timestamppb.Timestamp)(nil), // 15: google.protobuf.Timestamp
+	(*WatchRequest)(nil),          // 14: keyvalue.v1alpha1.WatchRequest
+	(*WatchEvent)(nil),            // 15: keyvalue.v1alpha1.WatchEvent
+	(*anypb.Any)(nil),             // 16: google.protobuf.Any
+	(*timestamppb.Timestamp)(nil), // 17: google.protobuf.Timestamp
 }
 var file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_depIdxs = []int32{
 	1,  // 0: keyvalue.v1alpha1.GetHistoryRequest.query:type_name -> keyvalue.v1alpha1.RangeRequest
 	3,  // 1: keyvalue.v1alpha1.GetHistoryResponse.objs:type_name -> keyvalue.v1alpha1.KeyValueObject
 	1,  // 2: keyvalue.v1alpha1.GetHistoryResponse.position:type_name -> keyvalue.v1alpha1.RangeRequest
-	14, // 3: keyvalue.v1alpha1.KeyValueObject.obj:type_name -> google.protobuf.Any
-	15, // 4: keyvalue.v1alpha1.KeyValueObject.modified_at:type_name -> google.protobuf.Timestamp
-	14, // 5: keyvalue.v1alpha1.PutRequest.data:type_name -> google.protobuf.Any
+	16, // 3: keyvalue.v1alpha1.KeyValueObject.obj:type_name -> google.protobuf.Any
+	17, // 4: keyvalue.v1alpha1.KeyValueObject.modified_at:type_name -> google.protobuf.Timestamp
+	16, // 5: keyvalue.v1alpha1.PutRequest.data:type_name -> google.protobuf.Any
 	3,  // 6: keyvalue.v1alpha1.PutResponse.object:type_name -> keyvalue.v1alpha1.KeyValueObject
 	3,  // 7: keyvalue.v1alpha1.GetResponse.object:type_name -> keyvalue.v1alpha1.KeyValueObject
 	3,  // 8: keyvalue.v1alpha1.ListResponse.objects:type_name -> keyvalue.v1alpha1.KeyValueObject
-	6,  // 9: keyvalue.v1alpha1.KeyValueService.Get:input_type -> keyvalue.v1alpha1.GetRequest
-	4,  // 10: keyvalue.v1alpha1.KeyValueService.Put:input_type -> keyvalue.v1alpha1.PutRequest
-	10, // 11: keyvalue.v1alpha1.KeyValueService.ListKeys:input_type -> keyvalue.v1alpha1.ListKeysRequest
-	8,  // 12: keyvalue.v1alpha1.KeyValueService.List:input_type -> keyvalue.v1alpha1.ListRequest
-	12, // 13: keyvalue.v1alpha1.KeyValueService.Delete:input_type -> keyvalue.v1alpha1.DeleteRequest
-	0,  // 14: keyvalue.v1alpha1.KeyValueService.History:input_type -> keyvalue.v1alpha1.GetHistoryRequest
-	7,  // 15: keyvalue.v1alpha1.KeyValueService.Get:output_type -> keyvalue.v1alpha1.GetResponse
-	5,  // 16: keyvalue.v1alpha1.KeyValueService.Put:output_type -> keyvalue.v1alpha1.PutResponse
-	11, // 17: keyvalue.v1alpha1.KeyValueService.ListKeys:output_type -> keyvalue.v1alpha1.ListKeysResponse
-	9,  // 18: keyvalue.v1alpha1.KeyValueService.List:output_type -> keyvalue.v1alpha1.ListResponse
-	13, // 19: keyvalue.v1alpha1.KeyValueService.Delete:output_type -> keyvalue.v1alpha1.DeleteResponse
-	2,  // 20: keyvalue.v1alpha1.KeyValueService.History:output_type -> keyvalue.v1alpha1.GetHistoryResponse
-	15, // [15:21] is the sub-list for method output_type
-	9,  // [9:15] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	3,  // 9: keyvalue.v1alpha1.WatchEvent.modified:type_name -> keyvalue.v1alpha1.KeyValueObject
+	6,  // 10: keyvalue.v1alpha1.KeyValueService.Get:input_type -> keyvalue.v1alpha1.GetRequest
+	4,  // 11: keyvalue.v1alpha1.KeyValueService.Put:input_type -> keyvalue.v1alpha1.PutRequest
+	10, // 12: keyvalue.v1alpha1.KeyValueService.ListKeys:input_type -> keyvalue.v1alpha1.ListKeysRequest
+	8,  // 13: keyvalue.v1alpha1.KeyValueService.List:input_type -> keyvalue.v1alpha1.ListRequest
+	12, // 14: keyvalue.v1alpha1.KeyValueService.Delete:input_type -> keyvalue.v1alpha1.DeleteRequest
+	0,  // 15: keyvalue.v1alpha1.KeyValueService.History:input_type -> keyvalue.v1alpha1.GetHistoryRequest
+	14, // 16: keyvalue.v1alpha1.KeyValueService.Watch:input_type -> keyvalue.v1alpha1.WatchRequest
+	7,  // 17: keyvalue.v1alpha1.KeyValueService.Get:output_type -> keyvalue.v1alpha1.GetResponse
+	5,  // 18: keyvalue.v1alpha1.KeyValueService.Put:output_type -> keyvalue.v1alpha1.PutResponse
+	11, // 19: keyvalue.v1alpha1.KeyValueService.ListKeys:output_type -> keyvalue.v1alpha1.ListKeysResponse
+	9,  // 20: keyvalue.v1alpha1.KeyValueService.List:output_type -> keyvalue.v1alpha1.ListResponse
+	13, // 21: keyvalue.v1alpha1.KeyValueService.Delete:output_type -> keyvalue.v1alpha1.DeleteResponse
+	2,  // 22: keyvalue.v1alpha1.KeyValueService.History:output_type -> keyvalue.v1alpha1.GetHistoryResponse
+	15, // 23: keyvalue.v1alpha1.KeyValueService.Watch:output_type -> keyvalue.v1alpha1.WatchEvent
+	17, // [17:24] is the sub-list for method output_type
+	10, // [10:17] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_init() }
@@ -895,13 +1045,17 @@ func file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_init() {
 	if File_pkg_api_keyvalue_v1alpha1_keyvalue_proto != nil {
 		return
 	}
+	file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_msgTypes[15].OneofWrappers = []any{
+		(*WatchEvent_Modified)(nil),
+		(*WatchEvent_DeletedKey)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDesc), len(file_pkg_api_keyvalue_v1alpha1_keyvalue_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

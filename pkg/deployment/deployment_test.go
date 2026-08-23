@@ -21,7 +21,7 @@ func newManager(t *testing.T) deployment.Manager {
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, db.Close()) })
 	kv := otelpebble.NewKVBroker(db).KeyValue("deployment")
-	return deployment.NewManager(schema.NewStorageSchemaProto(kv))
+	return deployment.NewManager(schema.NewProtoObjectStore(kv))
 }
 
 func TestManagerRegisterAndList(t *testing.T) {

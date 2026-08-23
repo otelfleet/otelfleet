@@ -42,3 +42,7 @@ func (e *erroringServer) Delete(context.Context, *connect.Request[v1alpha1.Delet
 func (e *erroringServer) History(context.Context, *connect.Request[v1alpha1.GetHistoryRequest]) (*connect.Response[v1alpha1.GetHistoryResponse], error) {
 	return nil, connect.NewError(e.code, e.err)
 }
+
+func (e *erroringServer) Watch(context.Context, *connect.Request[v1alpha1.WatchRequest], *connect.ServerStream[v1alpha1.WatchEvent]) error {
+	return connect.NewError(e.code, e.err)
+}

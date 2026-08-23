@@ -12,6 +12,7 @@ service KeyValueService {
     rpc List(ListRequest) returns (ListResponse);
     rpc Delete(DeleteRequest) returns (DeleteResponse);
     rpc History(GetHistoryRequest) returns (GetHistoryResponse);
+    rpc Watch(WatchRequest) returns (stream WatchEvent);
 }
 
 message GetHistoryRequest {
@@ -87,3 +88,16 @@ message DeleteRequest{
 }
 
 message DeleteResponse{}
+
+
+message WatchRequest {
+    string type_url = 1;
+    string prefix = 2;
+}
+
+message WatchEvent {
+    oneof eventType {
+        KeyValueObject modified = 1;
+        string deletedKey = 2;
+    }
+}

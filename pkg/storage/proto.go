@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 
 	keyvaluev1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage/schema"
@@ -24,11 +25,11 @@ func unmarshalTyped[T proto.Message](obj *keyvaluev1.KeyValueObject) (T, error) 
 }
 
 type schemaWrapper[T proto.Message] struct {
-	underlying schema.SchemaProto
+	underlying schema.ProtoObjectStore
 }
 
 func NewProtoKVFromSchemaImpl[T proto.Message](
-	schema schema.SchemaProto,
+	schema schema.ProtoObjectStore,
 ) types.KeyValue[T] {
 	return &schemaWrapper[T]{
 		underlying: schema,
@@ -117,4 +118,60 @@ func (w *schemaWrapper[T]) History(ctx context.Context, key string, offset uint6
 		ret[idx] = t
 	}
 	return ret, nil
+}
+
+const bufN = 16
+
+func (w *schemaWrapper[T]) Watch(ctx context.Context, prefix string) (<-chan types.RevisionObject[T], error) {
+	resp, err := w.underlying.Watch(ctx, w.typeURL(), prefix)
+	if err != nil {
+		return nil, err
+	}
+	sendC := make(chan types.RevisionObject[T], bufN)
+	go func() {
+		defer close(sendC)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case msg, ok := <-resp:
+				if !ok {
+					return
+				}
+				evt, err := revisionObjectFromEvent[T](msg)
+				if err != nil {
+					continue
+				}
+				select {
+				case sendC <- evt:
+				case <-ctx.Done():
+					return
+				}
+			}
+		}
+	}()
+	return sendC, nil
+}
+
+func revisionObjectFromEvent[T proto.Message](msg *keyvaluev1.WatchEvent) (types.RevisionObject[T], error) {
+	switch e := msg.GetEventType().(type) {
+	case *keyvaluev1.WatchEvent_DeletedKey:
+		return types.RevisionObject[T]{
+			Key:     e.DeletedKey,
+			Deleted: true,
+		}, nil
+	case *keyvaluev1.WatchEvent_Modified:
+		obj, err := unmarshalTyped[T](e.Modified)
+		if err != nil {
+			return types.RevisionObject[T]{}, err
+		}
+		return types.RevisionObject[T]{
+			// TODO: KeyValueObject carries no key, so Key is unset for modifications.
+			//Key:      "TODO",
+			Revision: e.Modified.GetRevision(),
+			Object:   obj,
+		}, nil
+	default:
+		panic(fmt.Sprintf("unknown watch event type %T", e))
+	}
 }

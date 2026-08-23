@@ -26,7 +26,7 @@ func TestProtoStorage(t *testing.T) {
 
 	broker := otelpebble.NewKVBroker(db)
 	kv := broker.KeyValue("")
-	protoSchema := schema.NewStorageSchemaProto(kv)
+	protoSchema := schema.NewProtoObjectStore(kv)
 	protoKv := storage.NewProtoKVFromSchemaImpl[*bootstrapv1alpha1.BootstrapToken](protoSchema)
 
 	tok := &bootstrapv1alpha1.BootstrapToken{

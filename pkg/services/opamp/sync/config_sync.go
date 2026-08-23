@@ -29,7 +29,7 @@ type AgentLabels struct {
 
 type ConfigFilterSyncOptions struct {
 	Logger   *slog.Logger
-	Storage  schema.SchemaProto
+	Storage  schema.ProtoObjectStore
 	Interval time.Duration
 }
 

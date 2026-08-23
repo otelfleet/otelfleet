@@ -14,13 +14,13 @@ type StorageClient struct {
 	client v1alpha1connect.KeyValueServiceClient
 }
 
-func NewStorageClient(client v1alpha1connect.KeyValueServiceClient) *StorageClient {
+func NewRemoteKV(client v1alpha1connect.KeyValueServiceClient) *StorageClient {
 	return &StorageClient{
 		client: client,
 	}
 }
 
-var _ schema.SchemaProto = (*StorageClient)(nil)
+var _ schema.ProtoObjectStore = (*StorageClient)(nil)
 
 func (s *StorageClient) Put(ctx context.Context, typeURL, key string, revision uint64, obj *anypb.Any) (*keyvaluev1.KeyValueObject, error) {
 	resp, err := s.client.Put(ctx, connect.NewRequest(&keyvaluev1.PutRequest{
@@ -87,4 +87,31 @@ func (s *StorageClient) History(ctx context.Context, typeURL, key string, offset
 		return nil, err
 	}
 	return resp.Msg, nil
+}
+
+const bufN = 16
+
+func (s *StorageClient) Watch(ctx context.Context, typeURL, prefix string) (<-chan *keyvaluev1.WatchEvent, error) {
+	srv, err := s.client.Watch(ctx, connect.NewRequest(&keyvaluev1.WatchRequest{
+		TypeUrl: typeURL,
+		Prefix:  prefix,
+	}))
+	if err != nil {
+		return nil, err
+	}
+	sendC := make(chan *keyvaluev1.WatchEvent, 16)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+			default:
+				if !srv.Receive() {
+					close(sendC)
+				}
+				msg := srv.Msg()
+				sendC <- msg
+			}
+		}
+	}()
+	return sendC, nil
 }

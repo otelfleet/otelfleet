@@ -13,6 +13,8 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 )
 
+const notifyBufferSize = 64
+
 type pebbleLogger struct {
 	logger *slog.Logger
 }
@@ -78,14 +80,16 @@ func (k *KVBroker) KeyValue(prefix string) types.BaseKV {
 
 func (k *KVBroker) newPrefixedKeyValue(prefix string) *prefixedKV {
 	return &prefixedKV{
-		db:     k.db,
-		prefix: []byte(prefix),
+		db:      k.db,
+		prefix:  []byte(prefix),
+		notifyC: make(chan types.WatchEvent, notifyBufferSize),
 	}
 }
 
 type prefixedKV struct {
-	prefix []byte
-	db     *pebble.DB
+	prefix  []byte
+	db      *pebble.DB
+	notifyC chan types.WatchEvent
 }
 
 func (k *prefixedKV) key(key string) []byte {
@@ -97,7 +101,17 @@ func (k *prefixedKV) key(key string) []byte {
 }
 
 func (k *prefixedKV) Put(_ context.Context, key string, value []byte) error {
-	return k.db.Set(k.key(key), value, &pebble.WriteOptions{})
+	kvKey := k.key(key)
+	if err := k.db.Set(kvKey, value, &pebble.WriteOptions{}); err != nil {
+		return err
+	}
+	// FIXME: blocking, think of a better system here,
+	// we don't want to miss events either...
+	k.notifyC <- types.WatchEvent{
+		Key:     key,
+		Deleted: false,
+	}
+	return nil
 }
 
 func (k *prefixedKV) Get(_ context.Context, key string) ([]byte, error) {
@@ -221,6 +235,26 @@ func (k *prefixedKV) ListEntries(ctx context.Context, listPrefix string) ([]type
 
 func (k *prefixedKV) Delete(ctx context.Context, key string) error {
 	return k.db.Delete(k.key(key), &pebble.WriteOptions{})
+}
+
+const bufN = 16
+
+func (k *prefixedKV) Watch(ctx context.Context, prefix string) (<-chan types.WatchEvent, error) {
+	ret := make(chan types.WatchEvent, bufN)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case notifyEvt, ok := <-k.notifyC:
+				if !ok {
+					return
+				}
+				ret <- notifyEvt
+			}
+		}
+	}()
+	return ret, nil
 }
 
 var _ types.BaseKV = (*prefixedKV)(nil)

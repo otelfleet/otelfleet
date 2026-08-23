@@ -36,10 +36,10 @@ type Instance interface {
 }
 
 type manager struct {
-	genericStorage schema.SchemaProto
+	genericStorage schema.ProtoObjectStore
 }
 
-func NewManager(genericStorage schema.SchemaProto) Manager {
+func NewManager(genericStorage schema.ProtoObjectStore) Manager {
 	return &manager{genericStorage: genericStorage}
 }
 
@@ -111,7 +111,7 @@ func (m *manager) Delete(ctx context.Context, deployID string) error {
 
 type instance struct {
 	deployID       string
-	genericStorage schema.SchemaProto
+	genericStorage schema.ProtoObjectStore
 }
 
 func (i *instance) GetDescription(ctx context.Context) (*v1alpha1.CollectorDescription, error) {

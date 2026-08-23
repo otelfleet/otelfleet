@@ -50,7 +50,7 @@ type Server struct {
 
 func NewServer(
 	l *slog.Logger,
-	resourceStorage schema.SchemaProto,
+	resourceStorage schema.ProtoObjectStore,
 	otlpServerAddr string,
 	otlpConfig *config.OTLPConfig,
 	deployMgr deployment.Manager,

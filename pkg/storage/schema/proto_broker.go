@@ -5,20 +5,21 @@ import (
 	"path"
 	"sort"
 
-	keyvaluev1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
+	keyvalue_v1alpha1 "github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type SchemaProto interface {
-	Put(ctx context.Context, typeURL, key string, revision uint64, obj *anypb.Any) (*keyvaluev1.KeyValueObject, error)
-	Get(ctx context.Context, typeURL, key string) (*keyvaluev1.KeyValueObject, error)
-	GetRevision(ctx context.Context, typeURL, key string, revision uint64) (*keyvaluev1.KeyValueObject, error)
+type ProtoObjectStore interface {
+	Put(ctx context.Context, typeURL, key string, revision uint64, obj *anypb.Any) (*keyvalue_v1alpha1.KeyValueObject, error)
+	Get(ctx context.Context, typeURL, key string) (*keyvalue_v1alpha1.KeyValueObject, error)
+	GetRevision(ctx context.Context, typeURL, key string, revision uint64) (*keyvalue_v1alpha1.KeyValueObject, error)
 	ListKeys(ctx context.Context, typeURL string) ([]string, error)
-	List(ctx context.Context, typeURL string) ([]*keyvaluev1.KeyValueObject, error)
+	List(ctx context.Context, typeURL string) ([]*keyvalue_v1alpha1.KeyValueObject, error)
 	Delete(ctx context.Context, typeURL, key string) error
-	History(ctx context.Context, typeURL, key string, offset, limit uint64) (*keyvaluev1.GetHistoryResponse, error)
+	History(ctx context.Context, typeURL, key string, offset, limit uint64) (*keyvalue_v1alpha1.GetHistoryResponse, error)
+	Watch(ctx context.Context, typeURL, prefix string) (<-chan *keyvalue_v1alpha1.WatchEvent, error)
 }
 
 var (
@@ -40,8 +41,8 @@ func encodeProto(msg proto.Message) []byte {
 	return data
 }
 
-func decodeKeyValueObject(data []byte) (*keyvaluev1.KeyValueObject, error) {
-	obj := &keyvaluev1.KeyValueObject{}
+func decodeKeyValueObject(data []byte) (*keyvalue_v1alpha1.KeyValueObject, error) {
+	obj := &keyvalue_v1alpha1.KeyValueObject{}
 	if err := unmarshalOptions.Unmarshal(data, obj); err != nil {
 		return nil, err
 	}
@@ -52,45 +53,43 @@ const (
 	defaultVersion = "v1alpha1"
 )
 
-type StorageSchemaProto struct {
+type StorageProtoObject struct {
 	baseVersion string
-	underlying  types.BaseKV
 	revisions   *RevisionEngine
 }
 
-func NewStorageSchemaProto(
+func NewProtoObjectStore(
 	kv types.BaseKV,
-) *StorageSchemaProto {
-	return &StorageSchemaProto{
+) *StorageProtoObject {
+	return &StorageProtoObject{
 		baseVersion: defaultVersion,
-		underlying:  kv,
 		revisions:   NewRevisionEngine(kv),
 	}
 }
 
-var _ SchemaProto = (*StorageSchemaProto)(nil)
+var _ ProtoObjectStore = (*StorageProtoObject)(nil)
 
-func (s *StorageSchemaProto) protoPath(typeURL string) string {
+func (s *StorageProtoObject) protoPath(typeURL string) string {
 	return path.Join(s.baseVersion, typeURL)
 }
 
-func (s *StorageSchemaProto) keyPath(typeURL, key string) string {
+func (s *StorageProtoObject) keyPath(typeURL, key string) string {
 	return path.Join(s.protoPath(typeURL), key)
 }
 
-func (s *StorageSchemaProto) Put(ctx context.Context, typeURL string, key string, revision uint64, obj *anypb.Any) (*keyvaluev1.KeyValueObject, error) {
+func (s *StorageProtoObject) Put(ctx context.Context, typeURL string, key string, revision uint64, obj *anypb.Any) (*keyvalue_v1alpha1.KeyValueObject, error) {
 	return s.revisions.Put(ctx, s.keyPath(typeURL, key), typeURL, revision, obj)
 }
 
-func (s *StorageSchemaProto) Get(ctx context.Context, typeURL string, key string) (*keyvaluev1.KeyValueObject, error) {
+func (s *StorageProtoObject) Get(ctx context.Context, typeURL string, key string) (*keyvalue_v1alpha1.KeyValueObject, error) {
 	return s.revisions.Get(ctx, s.keyPath(typeURL, key))
 }
 
-func (s *StorageSchemaProto) GetRevision(ctx context.Context, typeURL, key string, revision uint64) (*keyvaluev1.KeyValueObject, error) {
+func (s *StorageProtoObject) GetRevision(ctx context.Context, typeURL, key string, revision uint64) (*keyvalue_v1alpha1.KeyValueObject, error) {
 	return s.revisions.GetRevision(ctx, s.keyPath(typeURL, key), revision)
 }
 
-func (s *StorageSchemaProto) ListKeys(ctx context.Context, typeURL string) ([]string, error) {
+func (s *StorageProtoObject) ListKeys(ctx context.Context, typeURL string) ([]string, error) {
 	latest, err := s.revisions.ListLatest(ctx, s.protoPath(typeURL))
 	if err != nil {
 		return nil, err
@@ -103,7 +102,7 @@ func (s *StorageSchemaProto) ListKeys(ctx context.Context, typeURL string) ([]st
 	return keys, nil
 }
 
-func (s *StorageSchemaProto) List(ctx context.Context, typeURL string) ([]*keyvaluev1.KeyValueObject, error) {
+func (s *StorageProtoObject) List(ctx context.Context, typeURL string) ([]*keyvalue_v1alpha1.KeyValueObject, error) {
 	latest, err := s.revisions.ListLatest(ctx, s.protoPath(typeURL))
 	if err != nil {
 		return nil, err
@@ -113,23 +112,32 @@ func (s *StorageSchemaProto) List(ctx context.Context, typeURL string) ([]*keyva
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
-	objs := make([]*keyvaluev1.KeyValueObject, 0, len(latest))
+	objs := make([]*keyvalue_v1alpha1.KeyValueObject, 0, len(latest))
 	for _, key := range keys {
 		objs = append(objs, latest[key])
 	}
 	return objs, nil
 }
 
-func (s *StorageSchemaProto) Delete(ctx context.Context, typeURL, key string) error {
+func (s *StorageProtoObject) Delete(ctx context.Context, typeURL, key string) error {
 	return s.revisions.Delete(ctx, s.keyPath(typeURL, key))
 }
 
-func (s *StorageSchemaProto) History(ctx context.Context, typeURL, key string, offset, limit uint64) (*keyvaluev1.GetHistoryResponse, error) {
+func (s *StorageProtoObject) History(ctx context.Context, typeURL, key string, offset, limit uint64) (*keyvalue_v1alpha1.GetHistoryResponse, error) {
 	base := s.keyPath(typeURL, key)
 	resp, err := s.revisions.History(ctx, base, offset, limit)
 	if err != nil {
 		return nil, err
 	}
 	resp.TypeUrl = typeURL
+	return resp, nil
+}
+
+func (s *StorageProtoObject) Watch(ctx context.Context, typeURL, prefix string) (<-chan *keyvalue_v1alpha1.WatchEvent, error) {
+	base := s.keyPath(typeURL, prefix)
+	resp, err := s.revisions.Watch(ctx, base)
+	if err != nil {
+		return nil, err
+	}
 	return resp, nil
 }

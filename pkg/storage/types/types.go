@@ -1,6 +1,8 @@
 package types
 
-import "context"
+import (
+	"context"
+)
 
 type KVEntry struct {
 	Key   string
@@ -24,6 +26,13 @@ type BaseKV interface {
 	// ListEntries returns key/value pairs under prefix, used to collapse
 	// per-revision entries down to the latest per key.
 	ListEntries(ctx context.Context, prefix string) ([]KVEntry, error)
+
+	Watch(ctx context.Context, prefix string) (<-chan WatchEvent, error)
+}
+
+type WatchEvent struct {
+	Key     string
+	Deleted bool
 }
 
 type KVBroker interface {
@@ -39,6 +48,14 @@ type KeyValue[T any] interface {
 	List(ctx context.Context) ([]T, error)
 	Delete(ctx context.Context, key string) error
 	History(ctx context.Context, key string, offset uint64, limit uint64) ([]T, error)
+	Watch(ctx context.Context, prefix string) (<-chan RevisionObject[T], error)
+}
+
+type RevisionObject[T any] struct {
+	Key      string
+	Revision uint64
+	Object   T
+	Deleted  bool
 }
 
 type KeyValueBroker[T any] interface {

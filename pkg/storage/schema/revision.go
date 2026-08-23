@@ -214,3 +214,67 @@ func (e *RevisionEngine) History(ctx context.Context, base string, offset, limit
 		},
 	}, nil
 }
+
+const bufN = 16
+
+func (e *RevisionEngine) Watch(ctx context.Context, base string) (<-chan *keyvaluev1.WatchEvent, error) {
+	resp, err := e.kv.GetLatest(ctx, base)
+	if err != nil {
+		return nil, err
+	}
+
+	sendC := make(chan *keyvaluev1.WatchEvent, bufN)
+	// TODO : not found
+	first, err := decodeKeyValueObject(resp)
+	if grpcutil.IsError(codes.NotFound, err) {
+		first = nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	recvObj, err := e.kv.Watch(ctx, base)
+	if err != nil {
+		return nil, err
+	}
+	go func() {
+		if first != nil {
+			sendC <- &keyvaluev1.WatchEvent{
+				EventType: &keyvaluev1.WatchEvent_Modified{
+					Modified: first,
+				},
+			}
+		}
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case notifyEvt, ok := <-recvObj:
+				if !ok {
+					return
+				}
+				if notifyEvt.Deleted {
+					sendC <- &keyvaluev1.WatchEvent{
+						EventType: &keyvaluev1.WatchEvent_DeletedKey{
+							DeletedKey: notifyEvt.Key,
+						},
+					}
+				}
+				data, err := e.kv.Get(ctx, notifyEvt.Key)
+				if err != nil {
+					return
+				}
+				obj, err := decodeKeyValueObject(data)
+				if err != nil {
+					continue
+				}
+				sendC <- &keyvaluev1.WatchEvent{
+					EventType: &keyvaluev1.WatchEvent_Modified{
+						Modified: obj,
+					},
+				}
+			}
+		}
+	}()
+
+	return sendC, nil
+}

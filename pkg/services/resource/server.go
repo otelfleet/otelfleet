@@ -17,7 +17,7 @@ import (
 
 type Server struct {
 	services.Service
-	genericStorage schema.SchemaProto
+	genericStorage schema.ProtoObjectStore
 	supportedTypes []string
 }
 
@@ -25,7 +25,7 @@ var _ otelfleet_svc.HTTPExtension = (*Server)(nil)
 
 func NewServer(
 	l *slog.Logger,
-	genericStorage schema.SchemaProto,
+	genericStorage schema.ProtoObjectStore,
 ) *Server {
 	s := &Server{
 		genericStorage: genericStorage,
