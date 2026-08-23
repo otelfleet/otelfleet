@@ -107,5 +107,5 @@ func (s *ConfigFilterSync) Match(ctx context.Context, labels router.CollectorLab
 		return "", status.Error(codes.NotFound, "no router loaded")
 	}
 	m := *matcher
-	return m.Match(ctx, labels), nil
+	return m.Match(ctx, labels).ConfigRef, nil
 }

@@ -54,4 +54,9 @@ func RegisterCollectorServiceHandler(mux *mux.Router, svc CollectorServiceHandle
 		svc.PreviewRouter,
 		opts...,
 	))
+	mux.Handle("/deployment.v1alpha1.CollectorService/MatchRouter", connect.NewUnaryHandler(
+		"/deployment.v1alpha1.CollectorService/MatchRouter",
+		svc.MatchRouter,
+		opts...,
+	))
 }

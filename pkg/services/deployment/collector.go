@@ -194,6 +194,26 @@ func (a *DeploymentServer) PreviewRouter(ctx context.Context, req *connect.Reque
 	}), nil
 }
 
+func (a *DeploymentServer) MatchRouter(ctx context.Context, req *connect.Request[v1alpha1.MatchRouterRequest]) (*connect.Response[v1alpha1.MatchRouterResponse], error) {
+	matcher, err := router.NewMatcher(req.Msg.GetRouter())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("expected a valid router : %w", err))
+	}
+
+	res := matcher.Match(ctx, router.CollectorLabels{
+		Identifying:    req.Msg.GetIdentifyingLabels(),
+		NonIdentifying: req.Msg.GetNonIdentifyingLabels(),
+		Otelfleet:      req.Msg.GetOtelfleetLabels(),
+	})
+
+	return connect.NewResponse(&v1alpha1.MatchRouterResponse{
+		RoutePath:      res.Path,
+		RouteIndexPath: res.IndexPath,
+		ConfigRef:      res.ConfigRef,
+		Matched:        res.Matched,
+	}), nil
+}
+
 func (a *DeploymentServer) incomingAssignment(ctx context.Context, req *routev1alpha1.Router) (map[string]string, error) {
 	matcher, err := router.NewMatcher(req)
 	if err != nil {
@@ -212,7 +232,7 @@ func (a *DeploymentServer) incomingAssignment(ctx context.Context, req *routev1a
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
 		l := util.CollectorDescriptionToLabels(desc)
-		configRef := matcher.Match(ctx, l)
+		configRef := matcher.Match(ctx, l).ConfigRef
 		ret[desc.GetId()] = configRef
 	}
 	return ret, nil

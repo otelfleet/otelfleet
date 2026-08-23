@@ -18,6 +18,7 @@ service CollectorService {
 
   rpc ValidateRouter(ValidateRouterRequest) returns (ValidateRouterResponse);
   rpc PreviewRouter(PreviewRouterRequest) returns (PreviewRouterResponse);
+  rpc MatchRouter(MatchRouterRequest) returns (MatchRouterResponse);
 }
 
 message ValidateRouterRequest {
@@ -39,6 +40,23 @@ message PreviewRouterResponse {
 
 message RouterConfigAssignment {
   map<string, string> collectorsToConfigRef = 1;
+}
+
+message MatchRouterRequest {
+  route.v1alpha1.Router router = 1;
+  map<string, string> identifying_labels = 2;
+  map<string, string> non_identifying_labels = 3;
+  map<string, string> otelfleet_labels = 4;
+}
+
+message MatchRouterResponse {
+  // Names of the routes traversed, from the root to the matched route.
+  repeated string route_path = 1;
+  // Index of each traversed route in its parent's routes, from the root down.
+  repeated uint32 route_index_path = 2;
+  string config_ref = 3;
+  // False when no route matched and config_ref is the router default.
+  bool matched = 4;
 }
 
 

@@ -83,7 +83,7 @@ func TestRouter_Matching(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.wantRef, m.Match(t.Context(), tc.labels))
+			assert.Equal(t, tc.wantRef, m.Match(t.Context(), tc.labels).ConfigRef)
 		})
 	}
 
@@ -183,9 +183,17 @@ func TestRouter_MatchingTree(t *testing.T) {
 
 	tcs := []testcase{
 		{
-			name: "root wins over any child",
+			name: "deepest match wins over the root",
 			labels: router.CollectorLabels{
 				Identifying:    map[string]string{"k1": "v1", "k2": "v2-01"},
+				NonIdentifying: blockNegated,
+			},
+			wantRef: "regex_cfg",
+		},
+		{
+			name: "root matches when no child does",
+			labels: router.CollectorLabels{
+				Identifying:    map[string]string{"k1": "v1"},
 				NonIdentifying: blockNegated,
 			},
 			wantRef: "root_cfg",
@@ -278,7 +286,7 @@ func TestRouter_MatchingTree(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.wantRef, m.Match(t.Context(), tc.labels))
+			assert.Equal(t, tc.wantRef, m.Match(t.Context(), tc.labels).ConfigRef)
 		})
 	}
 }
@@ -437,5 +445,88 @@ func TestRouter_Acyclic(t *testing.T) {
 
 		_, err := router.NewMatcher(pb)
 		assert.NoError(t, err)
+	})
+}
+
+func TestRouter_MatchResult(t *testing.T) {
+	pb := &v1alpha1.Router{
+		ConfigRef: "default",
+		Root: &v1alpha1.Route{
+			Name:      "root",
+			ConfigRef: "root_cfg",
+			Filters: []*commonv1alpha1.LabelFilter{
+				{
+					Type: commonv1alpha1.LabelType_LabelTypeOtelfleet,
+					Filters: []*commonv1alpha1.KeyPairFilter{
+						{
+							MatchType: commonv1alpha1.MatchType_MATCH_TYPE_EQ,
+							Label:     &commonv1alpha1.Label{Key: "env", Value: "prod"},
+						},
+					},
+				},
+			},
+			Routes: []*v1alpha1.Route{
+				{
+					Name:      "other",
+					ConfigRef: "other_cfg",
+					Filters: []*commonv1alpha1.LabelFilter{
+						{
+							Type: commonv1alpha1.LabelType_LabelTypeOtelfleet,
+							Filters: []*commonv1alpha1.KeyPairFilter{
+								{
+									MatchType: commonv1alpha1.MatchType_MATCH_TYPE_EQ,
+									Label:     &commonv1alpha1.Label{Key: "env", Value: "other"},
+								},
+							},
+						},
+					},
+				},
+				{
+					Name:      "eu",
+					ConfigRef: "eu_cfg",
+					Filters: []*commonv1alpha1.LabelFilter{
+						{
+							Type: commonv1alpha1.LabelType_LabelTypeNonIdentifying,
+							Filters: []*commonv1alpha1.KeyPairFilter{
+								{
+									MatchType: commonv1alpha1.MatchType_MATCH_TYPE_EQ,
+									Label:     &commonv1alpha1.Label{Key: "host.name", Value: "eu-1"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	m, err := router.NewMatcher(pb)
+	require.NoError(t, err)
+
+	t.Run("nested route", func(t *testing.T) {
+		res := m.Match(t.Context(), router.CollectorLabels{
+			NonIdentifying: map[string]string{"host.name": "eu-1"},
+		})
+		assert.True(t, res.Matched)
+		assert.Equal(t, "eu_cfg", res.ConfigRef)
+		assert.Equal(t, []string{"root", "eu"}, res.Path)
+		assert.Equal(t, []uint32{1}, res.IndexPath)
+	})
+
+	t.Run("root route", func(t *testing.T) {
+		res := m.Match(t.Context(), router.CollectorLabels{
+			Otelfleet: map[string]string{"env": "prod"},
+		})
+		assert.True(t, res.Matched)
+		assert.Equal(t, "root_cfg", res.ConfigRef)
+		assert.Equal(t, []string{"root"}, res.Path)
+		assert.Empty(t, res.IndexPath)
+	})
+
+	t.Run("no match falls back to the default", func(t *testing.T) {
+		res := m.Match(t.Context(), router.CollectorLabels{})
+		assert.False(t, res.Matched)
+		assert.Equal(t, "default", res.ConfigRef)
+		assert.Empty(t, res.Path)
 	})
 }

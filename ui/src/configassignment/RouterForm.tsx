@@ -54,6 +54,7 @@ export function RouterForm({ value, collectorConfigs, onChange }: RouterFormProp
       {value.defs.map((def, index) => (
         <RouteEditor
           key={index}
+          badgeLabel="definition"
           value={def}
           collectorConfigs={collectorConfigs}
           defNames={defNames.filter((name) => name !== def.name)}

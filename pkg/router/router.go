@@ -16,10 +16,17 @@ type CollectorLabels struct {
 	Otelfleet      map[string]string
 }
 
-// func match
+type MatchResult struct {
+	ConfigRef string
+	// Names of the routes traversed, from the root to the matched route.
+	Path []string
+	// Index of each traversed route in its parent's routes, from the root down.
+	IndexPath []uint32
+	Matched   bool
+}
 
 type Matcher interface {
-	Match(ctx context.Context, labels CollectorLabels) string
+	Match(ctx context.Context, labels CollectorLabels) MatchResult
 }
 
 func NewMatcher(pb *v1alpha1.Router) (Matcher, error) {
@@ -91,30 +98,38 @@ func convertRaw(route *v1alpha1.Route) (node, error) {
 		retMatchers = append(retMatchers, matchers...)
 	}
 	return node{
+		name:      route.GetName(),
 		matchers:  retMatchers,
 		configRef: route.ConfigRef,
 	}, nil
 }
 
 type node struct {
+	name      string
 	matchers  []compiledMatcher
 	configRef string
 	children  []node
 }
 
-func (n node) Match(ctx context.Context, labels CollectorLabels) (string, bool) {
-	if n.matchSelf(ctx, labels) {
-		return n.configRef, true
-	}
-
-	for _, child := range n.children {
-		configRef, ok := child.Match(ctx, labels)
+func (n node) Match(ctx context.Context, labels CollectorLabels) (MatchResult, bool) {
+	for idx, child := range n.children {
+		res, ok := child.Match(ctx, labels)
 		if ok {
-			return configRef, true
+			res.Path = append([]string{n.name}, res.Path...)
+			res.IndexPath = append([]uint32{uint32(idx)}, res.IndexPath...)
+			return res, true
 		}
 	}
 
-	return "", false
+	if n.matchSelf(ctx, labels) {
+		return MatchResult{
+			ConfigRef: n.configRef,
+			Path:      []string{n.name},
+			Matched:   true,
+		}, true
+	}
+
+	return MatchResult{}, false
 }
 
 func (n node) matchSelf(ctx context.Context, labels CollectorLabels) bool {
@@ -131,11 +146,11 @@ type matcher struct {
 	defaultConfigRef string
 }
 
-func (m matcher) Match(ctx context.Context, labels CollectorLabels) string {
-	configRef, ok := m.root.Match(ctx, labels)
+func (m matcher) Match(ctx context.Context, labels CollectorLabels) MatchResult {
+	res, ok := m.root.Match(ctx, labels)
 	if ok {
-		return configRef
+		return res
 	}
 
-	return m.defaultConfigRef
+	return MatchResult{ConfigRef: m.defaultConfigRef}
 }

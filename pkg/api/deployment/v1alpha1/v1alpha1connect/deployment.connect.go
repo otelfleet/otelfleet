@@ -54,6 +54,9 @@ const (
 	// CollectorServicePreviewRouterProcedure is the fully-qualified name of the CollectorService's
 	// PreviewRouter RPC.
 	CollectorServicePreviewRouterProcedure = "/deployment.v1alpha1.CollectorService/PreviewRouter"
+	// CollectorServiceMatchRouterProcedure is the fully-qualified name of the CollectorService's
+	// MatchRouter RPC.
+	CollectorServiceMatchRouterProcedure = "/deployment.v1alpha1.CollectorService/MatchRouter"
 )
 
 // CollectorServiceClient is a client for the deployment.v1alpha1.CollectorService service.
@@ -66,6 +69,7 @@ type CollectorServiceClient interface {
 	DeleteCollector(context.Context, *connect.Request[v1alpha1.DeleteCollectorRequest]) (*connect.Response[emptypb.Empty], error)
 	ValidateRouter(context.Context, *connect.Request[v1alpha1.ValidateRouterRequest]) (*connect.Response[v1alpha1.ValidateRouterResponse], error)
 	PreviewRouter(context.Context, *connect.Request[v1alpha1.PreviewRouterRequest]) (*connect.Response[v1alpha1.PreviewRouterResponse], error)
+	MatchRouter(context.Context, *connect.Request[v1alpha1.MatchRouterRequest]) (*connect.Response[v1alpha1.MatchRouterResponse], error)
 }
 
 // NewCollectorServiceClient constructs a client for the deployment.v1alpha1.CollectorService
@@ -121,6 +125,12 @@ func NewCollectorServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(collectorServiceMethods.ByName("PreviewRouter")),
 			connect.WithClientOptions(opts...),
 		),
+		matchRouter: connect.NewClient[v1alpha1.MatchRouterRequest, v1alpha1.MatchRouterResponse](
+			httpClient,
+			baseURL+CollectorServiceMatchRouterProcedure,
+			connect.WithSchema(collectorServiceMethods.ByName("MatchRouter")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -133,6 +143,7 @@ type collectorServiceClient struct {
 	deleteCollector  *connect.Client[v1alpha1.DeleteCollectorRequest, emptypb.Empty]
 	validateRouter   *connect.Client[v1alpha1.ValidateRouterRequest, v1alpha1.ValidateRouterResponse]
 	previewRouter    *connect.Client[v1alpha1.PreviewRouterRequest, v1alpha1.PreviewRouterResponse]
+	matchRouter      *connect.Client[v1alpha1.MatchRouterRequest, v1alpha1.MatchRouterResponse]
 }
 
 // ListCollectors calls deployment.v1alpha1.CollectorService.ListCollectors.
@@ -170,6 +181,11 @@ func (c *collectorServiceClient) PreviewRouter(ctx context.Context, req *connect
 	return c.previewRouter.CallUnary(ctx, req)
 }
 
+// MatchRouter calls deployment.v1alpha1.CollectorService.MatchRouter.
+func (c *collectorServiceClient) MatchRouter(ctx context.Context, req *connect.Request[v1alpha1.MatchRouterRequest]) (*connect.Response[v1alpha1.MatchRouterResponse], error) {
+	return c.matchRouter.CallUnary(ctx, req)
+}
+
 // CollectorServiceHandler is an implementation of the deployment.v1alpha1.CollectorService service.
 type CollectorServiceHandler interface {
 	// TODO : these APIs need to be refined
@@ -180,6 +196,7 @@ type CollectorServiceHandler interface {
 	DeleteCollector(context.Context, *connect.Request[v1alpha1.DeleteCollectorRequest]) (*connect.Response[emptypb.Empty], error)
 	ValidateRouter(context.Context, *connect.Request[v1alpha1.ValidateRouterRequest]) (*connect.Response[v1alpha1.ValidateRouterResponse], error)
 	PreviewRouter(context.Context, *connect.Request[v1alpha1.PreviewRouterRequest]) (*connect.Response[v1alpha1.PreviewRouterResponse], error)
+	MatchRouter(context.Context, *connect.Request[v1alpha1.MatchRouterRequest]) (*connect.Response[v1alpha1.MatchRouterResponse], error)
 }
 
 // NewCollectorServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -231,6 +248,12 @@ func NewCollectorServiceHandler(svc CollectorServiceHandler, opts ...connect.Han
 		connect.WithSchema(collectorServiceMethods.ByName("PreviewRouter")),
 		connect.WithHandlerOptions(opts...),
 	)
+	collectorServiceMatchRouterHandler := connect.NewUnaryHandler(
+		CollectorServiceMatchRouterProcedure,
+		svc.MatchRouter,
+		connect.WithSchema(collectorServiceMethods.ByName("MatchRouter")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/deployment.v1alpha1.CollectorService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case CollectorServiceListCollectorsProcedure:
@@ -247,6 +270,8 @@ func NewCollectorServiceHandler(svc CollectorServiceHandler, opts ...connect.Han
 			collectorServiceValidateRouterHandler.ServeHTTP(w, r)
 		case CollectorServicePreviewRouterProcedure:
 			collectorServicePreviewRouterHandler.ServeHTTP(w, r)
+		case CollectorServiceMatchRouterProcedure:
+			collectorServiceMatchRouterHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -282,4 +307,8 @@ func (UnimplementedCollectorServiceHandler) ValidateRouter(context.Context, *con
 
 func (UnimplementedCollectorServiceHandler) PreviewRouter(context.Context, *connect.Request[v1alpha1.PreviewRouterRequest]) (*connect.Response[v1alpha1.PreviewRouterResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("deployment.v1alpha1.CollectorService.PreviewRouter is not implemented"))
+}
+
+func (UnimplementedCollectorServiceHandler) MatchRouter(context.Context, *connect.Request[v1alpha1.MatchRouterRequest]) (*connect.Response[v1alpha1.MatchRouterResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("deployment.v1alpha1.CollectorService.MatchRouter is not implemented"))
 }
