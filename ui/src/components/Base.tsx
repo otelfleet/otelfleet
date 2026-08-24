@@ -1,5 +1,5 @@
 import { useState, useCallback, type FC } from 'react'
-import { Link, Outlet } from '@tanstack/react-router'
+import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import ColorSchemeContext from '../contexts/ColorSchemeContext';
 import { useColorScheme } from '../contexts/useColorScheme';
 import { Notifications } from '@mantine/notifications';
@@ -19,7 +19,8 @@ import {
     type MantineColorScheme,
 } from '@mantine/core';
 import { useDisclosure, useLocalStorage } from '@mantine/hooks'
-import { GitHubLogoIcon, SunIcon, MoonIcon } from '@radix-ui/react-icons';
+import { GitHubLogoIcon, DashboardIcon, SunIcon, MoonIcon, StackIcon, IdCardIcon, RocketIcon, MixerHorizontalIcon, CubeIcon, ArchiveIcon, FileTextIcon, LockClosedIcon } from '@radix-ui/react-icons';
+import { COMPONENT_ENTITY_TYPES, COLLECTOR_ENTITY_TYPES } from '../resources/entityTypes';
 
 
 const theme = createTheme({
@@ -127,7 +128,14 @@ const ColorSchemeToggle: FC = () => {
 
 const Base: FC = () => {
     const [opened, { toggle }] = useDisclosure();
-    const [active, setActive] = useState<string | null>(null);
+    const pathname = useRouterState({ select: (state) => state.location.pathname });
+    const [openedGroup, setOpenedGroup] = useState<string | null>(null);
+
+    const isCurrent = (to: string) => pathname === to;
+    const groupContains = (prefixes: string[]) => prefixes.some((prefix) => pathname.startsWith(prefix));
+    const toggleGroup = (group: string) => setOpenedGroup((current) => (current === group ? null : group));
+    const [componentsOpened, setComponentsOpened] = useState(false);
+    const [registriesOpened, setRegistriesOpened] = useState(false);
     const [colorScheme, setColorScheme] = useLocalStorage<MantineColorScheme>({
         key: 'mantine-color-scheme',
         defaultValue: 'auto',
@@ -164,7 +172,7 @@ const Base: FC = () => {
 
                     <Group justify="space-between" style={{ flex: 1, height: '100%', alignItems: 'center', paddingLeft: 12, paddingRight: 12 }}>
                         <img
-                            src="/otelfleet.png"
+                            src={`${import.meta.env.BASE_URL}otelfleet.png`}
                             alt="otelfleet logo"
                             style={{ height: '90%', maxHeight: '100%', objectFit: 'contain' }}
                         />
@@ -180,43 +188,89 @@ const Base: FC = () => {
                 <AppShell.Navbar>
                     <Stack gap="xs">
                         <NavLink
-                            label="Tokens"
-                            description="Manage API tokens"
-                            opened={active === 'tokens'}
-                            active={active === 'tokens'}
-                            onClick={() => setActive(active === 'tokens' ? null : 'tokens')}
+                            component={Link}
+                            to="/"
+                            label="Overview"
+                            description="Overview of operations"
+                            leftSection={<DashboardIcon />}
+                            active={isCurrent('/')}
+                            onClick={() => setOpenedGroup(null)}
+                        />
+                        <NavLink
+                            label="Management"
+                            description="Fleet & Authorization"
+                            opened={openedGroup === 'mgmt' || groupContains(['/tokens', '/rbac', '/registries'])}
+                            active={groupContains(['/tokens', '/rbac', '/registries'])}
+                            onClick={() => toggleGroup('mgmt')}
                         >
-                            <NavLink component={Link} to="/tokens" label="All tokens" />
+                            <NavLink component={Link} to="/tokens" active={isCurrent("/tokens")} label="API tokens" leftSection={<IdCardIcon />} />
+                            <NavLink component={Link} to="/rbac" active={isCurrent("/rbac")}   label="RBAC"       leftSection={<LockClosedIcon />} />
+                            <NavLink
+                                label="Registry"
+                                description="Config & binary registries"
+                                leftSection={<ArchiveIcon />}
+                                opened={registriesOpened}
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    setRegistriesOpened((o) => !o);
+                                }}
+                            >
+                                <NavLink component={Link} to="/registries/config" active={isCurrent("/registries/config")} label="Config registry" leftSection={<FileTextIcon />} />
+                                <NavLink component={Link} to="/registries/binary" active={isCurrent("/registries/binary")} label="Binary registry" leftSection={<CubeIcon />} />
+                            </NavLink>
                         </NavLink>
 
                         <NavLink
                             label="Configs"
                             description="Pipelines & exporters"
-                            opened={active === 'configs'}
-                            active={active === 'configs'}
-                            onClick={() => setActive(active === 'configs' ? null : 'configs')}
+                            opened={openedGroup === 'configs' || groupContains(['/resources'])}
+                            active={groupContains(['/resources'])}
+                            onClick={() => toggleGroup('configs')}
                         >
-                            <NavLink component={Link} to="/configs" label="All configs" />
+                            {COLLECTOR_ENTITY_TYPES.map((entityType) => (
+                                <NavLink
+                                    key={entityType.slug}
+                                    label={entityType.label}
+                                    leftSection={<entityType.icon />}
+                                    active={isCurrent(`/resources/${entityType.slug}`)}
+                                    renderRoot={(props) => (
+                                        <Link to="/resources/$type" params={{ type: entityType.slug }} {...props} />
+                                    )}
+                                />
+                            ))}
+                            <NavLink
+                                label="Components"
+                                description="Individual collector components"
+                                leftSection={<StackIcon />}
+                                opened={componentsOpened}
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    setComponentsOpened((o) => !o);
+                                }}
+                            >
+                                {COMPONENT_ENTITY_TYPES.map((entityType) => (
+                                    <NavLink
+                                        key={entityType.slug}
+                                        label={entityType.label}
+                                        leftSection={<entityType.icon />}
+                                        active={isCurrent(`/resources/${entityType.slug}`)}
+                                        renderRoot={(props) => (
+                                            <Link to="/resources/$type" params={{ type: entityType.slug }} {...props} />
+                                        )}
+                                    />
+                                ))}
+                            </NavLink>
                         </NavLink>
 
                         <NavLink
-                            label="Agents"
+                            label="Collectors"
                             description="Deployed collectors"
-                            opened={active === 'agents'}
-                            active={active === 'agents'}
-                            onClick={() => setActive(active === 'agents' ? null : 'agents')}
+                            opened={openedGroup === 'collectors' || groupContains(['/deployments', '/configfilter'])}
+                            active={groupContains(['/deployments', '/configfilter'])}
+                            onClick={() => toggleGroup('collectors')}
                         >
-                            <NavLink component={Link} to="/agents" label="All agents" />
-                        </NavLink>
-
-                        <NavLink
-                            label="Assignments"
-                            description="Config assignments"
-                            opened={active === 'assignments'}
-                            active={active === 'assignments'}
-                            onClick={() => setActive(active === 'assignments' ? null : 'assignments')}
-                        >
-                            <NavLink component={Link} to="/assignments" label="All assignments" />
+                            <NavLink component={Link} to="/deployments" active={isCurrent("/deployments")} label="Deployments" leftSection={<RocketIcon />} />
+                            <NavLink component={Link} to="/configfilter" active={isCurrent("/configfilter")} label="Config Assignment" leftSection={<MixerHorizontalIcon />} />
                         </NavLink>
                     </Stack>
                 </AppShell.Navbar>

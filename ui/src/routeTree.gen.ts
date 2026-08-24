@@ -10,38 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TokensRouteImport } from './routes/tokens'
-import { Route as EditorRouteImport } from './routes/editor'
-import { Route as ConfigsRouteImport } from './routes/configs'
-import { Route as AssignmentsRouteImport } from './routes/assignments'
-import { Route as AgentsRouteImport } from './routes/agents'
+import { Route as DeploymentsRouteImport } from './routes/deployments'
+import { Route as ConfigfilterRouteImport } from './routes/configfilter'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TokensCreateRouteImport } from './routes/tokens_.create'
 import { Route as TokensTokenIdRouteImport } from './routes/tokens.$tokenId'
-import { Route as AgentsAgentIdRouteImport } from './routes/agents.$agentId'
+import { Route as ResourcesTypeRouteImport } from './routes/resources.$type'
+import { Route as DeploymentsAgentIdRouteImport } from './routes/deployments.$agentId'
+import { Route as ConfigfilterEditorRouteImport } from './routes/configfilter_.editor'
+import { Route as ResourcesTypeEditorRouteImport } from './routes/resources.$type_.editor'
 
 const TokensRoute = TokensRouteImport.update({
   id: '/tokens',
   path: '/tokens',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EditorRoute = EditorRouteImport.update({
-  id: '/editor',
-  path: '/editor',
+const DeploymentsRoute = DeploymentsRouteImport.update({
+  id: '/deployments',
+  path: '/deployments',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ConfigsRoute = ConfigsRouteImport.update({
-  id: '/configs',
-  path: '/configs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AssignmentsRoute = AssignmentsRouteImport.update({
-  id: '/assignments',
-  path: '/assignments',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AgentsRoute = AgentsRouteImport.update({
-  id: '/agents',
-  path: '/agents',
+const ConfigfilterRoute = ConfigfilterRouteImport.update({
+  id: '/configfilter',
+  path: '/configfilter',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -54,95 +46,129 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TokensCreateRoute = TokensCreateRouteImport.update({
+  id: '/tokens_/create',
+  path: '/tokens/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TokensTokenIdRoute = TokensTokenIdRouteImport.update({
   id: '/$tokenId',
   path: '/$tokenId',
   getParentRoute: () => TokensRoute,
 } as any)
-const AgentsAgentIdRoute = AgentsAgentIdRouteImport.update({
+const ResourcesTypeRoute = ResourcesTypeRouteImport.update({
+  id: '/resources/$type',
+  path: '/resources/$type',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeploymentsAgentIdRoute = DeploymentsAgentIdRouteImport.update({
   id: '/$agentId',
   path: '/$agentId',
-  getParentRoute: () => AgentsRoute,
+  getParentRoute: () => DeploymentsRoute,
+} as any)
+const ConfigfilterEditorRoute = ConfigfilterEditorRouteImport.update({
+  id: '/configfilter_/editor',
+  path: '/configfilter/editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesTypeEditorRoute = ResourcesTypeEditorRouteImport.update({
+  id: '/resources/$type_/editor',
+  path: '/resources/$type/editor',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/agents': typeof AgentsRouteWithChildren
-  '/assignments': typeof AssignmentsRoute
-  '/configs': typeof ConfigsRoute
-  '/editor': typeof EditorRoute
+  '/configfilter': typeof ConfigfilterRoute
+  '/deployments': typeof DeploymentsRouteWithChildren
   '/tokens': typeof TokensRouteWithChildren
-  '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/configfilter/editor': typeof ConfigfilterEditorRoute
+  '/deployments/$agentId': typeof DeploymentsAgentIdRoute
+  '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
+  '/tokens/create': typeof TokensCreateRoute
+  '/resources/$type/editor': typeof ResourcesTypeEditorRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/agents': typeof AgentsRouteWithChildren
-  '/assignments': typeof AssignmentsRoute
-  '/configs': typeof ConfigsRoute
-  '/editor': typeof EditorRoute
+  '/configfilter': typeof ConfigfilterRoute
+  '/deployments': typeof DeploymentsRouteWithChildren
   '/tokens': typeof TokensRouteWithChildren
-  '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/configfilter/editor': typeof ConfigfilterEditorRoute
+  '/deployments/$agentId': typeof DeploymentsAgentIdRoute
+  '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
+  '/tokens/create': typeof TokensCreateRoute
+  '/resources/$type/editor': typeof ResourcesTypeEditorRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/agents': typeof AgentsRouteWithChildren
-  '/assignments': typeof AssignmentsRoute
-  '/configs': typeof ConfigsRoute
-  '/editor': typeof EditorRoute
+  '/configfilter': typeof ConfigfilterRoute
+  '/deployments': typeof DeploymentsRouteWithChildren
   '/tokens': typeof TokensRouteWithChildren
-  '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/configfilter_/editor': typeof ConfigfilterEditorRoute
+  '/deployments/$agentId': typeof DeploymentsAgentIdRoute
+  '/resources/$type': typeof ResourcesTypeRoute
   '/tokens/$tokenId': typeof TokensTokenIdRoute
+  '/tokens_/create': typeof TokensCreateRoute
+  '/resources/$type_/editor': typeof ResourcesTypeEditorRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/about'
-    | '/agents'
-    | '/assignments'
-    | '/configs'
-    | '/editor'
+    | '/configfilter'
+    | '/deployments'
     | '/tokens'
-    | '/agents/$agentId'
+    | '/configfilter/editor'
+    | '/deployments/$agentId'
+    | '/resources/$type'
     | '/tokens/$tokenId'
+    | '/tokens/create'
+    | '/resources/$type/editor'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
-    | '/agents'
-    | '/assignments'
-    | '/configs'
-    | '/editor'
+    | '/configfilter'
+    | '/deployments'
     | '/tokens'
-    | '/agents/$agentId'
+    | '/configfilter/editor'
+    | '/deployments/$agentId'
+    | '/resources/$type'
     | '/tokens/$tokenId'
+    | '/tokens/create'
+    | '/resources/$type/editor'
   id:
     | '__root__'
     | '/'
     | '/about'
-    | '/agents'
-    | '/assignments'
-    | '/configs'
-    | '/editor'
+    | '/configfilter'
+    | '/deployments'
     | '/tokens'
-    | '/agents/$agentId'
+    | '/configfilter_/editor'
+    | '/deployments/$agentId'
+    | '/resources/$type'
     | '/tokens/$tokenId'
+    | '/tokens_/create'
+    | '/resources/$type_/editor'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  AgentsRoute: typeof AgentsRouteWithChildren
-  AssignmentsRoute: typeof AssignmentsRoute
-  ConfigsRoute: typeof ConfigsRoute
-  EditorRoute: typeof EditorRoute
+  ConfigfilterRoute: typeof ConfigfilterRoute
+  DeploymentsRoute: typeof DeploymentsRouteWithChildren
   TokensRoute: typeof TokensRouteWithChildren
+  ConfigfilterEditorRoute: typeof ConfigfilterEditorRoute
+  ResourcesTypeRoute: typeof ResourcesTypeRoute
+  TokensCreateRoute: typeof TokensCreateRoute
+  ResourcesTypeEditorRoute: typeof ResourcesTypeEditorRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -154,32 +180,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TokensRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/editor': {
-      id: '/editor'
-      path: '/editor'
-      fullPath: '/editor'
-      preLoaderRoute: typeof EditorRouteImport
+    '/deployments': {
+      id: '/deployments'
+      path: '/deployments'
+      fullPath: '/deployments'
+      preLoaderRoute: typeof DeploymentsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/configs': {
-      id: '/configs'
-      path: '/configs'
-      fullPath: '/configs'
-      preLoaderRoute: typeof ConfigsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/assignments': {
-      id: '/assignments'
-      path: '/assignments'
-      fullPath: '/assignments'
-      preLoaderRoute: typeof AssignmentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/agents': {
-      id: '/agents'
-      path: '/agents'
-      fullPath: '/agents'
-      preLoaderRoute: typeof AgentsRouteImport
+    '/configfilter': {
+      id: '/configfilter'
+      path: '/configfilter'
+      fullPath: '/configfilter'
+      preLoaderRoute: typeof ConfigfilterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -196,6 +208,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tokens_/create': {
+      id: '/tokens_/create'
+      path: '/tokens/create'
+      fullPath: '/tokens/create'
+      preLoaderRoute: typeof TokensCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tokens/$tokenId': {
       id: '/tokens/$tokenId'
       path: '/$tokenId'
@@ -203,26 +222,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TokensTokenIdRouteImport
       parentRoute: typeof TokensRoute
     }
-    '/agents/$agentId': {
-      id: '/agents/$agentId'
+    '/resources/$type': {
+      id: '/resources/$type'
+      path: '/resources/$type'
+      fullPath: '/resources/$type'
+      preLoaderRoute: typeof ResourcesTypeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deployments/$agentId': {
+      id: '/deployments/$agentId'
       path: '/$agentId'
-      fullPath: '/agents/$agentId'
-      preLoaderRoute: typeof AgentsAgentIdRouteImport
-      parentRoute: typeof AgentsRoute
+      fullPath: '/deployments/$agentId'
+      preLoaderRoute: typeof DeploymentsAgentIdRouteImport
+      parentRoute: typeof DeploymentsRoute
+    }
+    '/configfilter_/editor': {
+      id: '/configfilter_/editor'
+      path: '/configfilter/editor'
+      fullPath: '/configfilter/editor'
+      preLoaderRoute: typeof ConfigfilterEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/$type_/editor': {
+      id: '/resources/$type_/editor'
+      path: '/resources/$type/editor'
+      fullPath: '/resources/$type/editor'
+      preLoaderRoute: typeof ResourcesTypeEditorRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface AgentsRouteChildren {
-  AgentsAgentIdRoute: typeof AgentsAgentIdRoute
+interface DeploymentsRouteChildren {
+  DeploymentsAgentIdRoute: typeof DeploymentsAgentIdRoute
 }
 
-const AgentsRouteChildren: AgentsRouteChildren = {
-  AgentsAgentIdRoute: AgentsAgentIdRoute,
+const DeploymentsRouteChildren: DeploymentsRouteChildren = {
+  DeploymentsAgentIdRoute: DeploymentsAgentIdRoute,
 }
 
-const AgentsRouteWithChildren =
-  AgentsRoute._addFileChildren(AgentsRouteChildren)
+const DeploymentsRouteWithChildren = DeploymentsRoute._addFileChildren(
+  DeploymentsRouteChildren,
+)
 
 interface TokensRouteChildren {
   TokensTokenIdRoute: typeof TokensTokenIdRoute
@@ -238,11 +279,13 @@ const TokensRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  AgentsRoute: AgentsRouteWithChildren,
-  AssignmentsRoute: AssignmentsRoute,
-  ConfigsRoute: ConfigsRoute,
-  EditorRoute: EditorRoute,
+  ConfigfilterRoute: ConfigfilterRoute,
+  DeploymentsRoute: DeploymentsRouteWithChildren,
   TokensRoute: TokensRouteWithChildren,
+  ConfigfilterEditorRoute: ConfigfilterEditorRoute,
+  ResourcesTypeRoute: ResourcesTypeRoute,
+  TokensCreateRoute: TokensCreateRoute,
+  ResourcesTypeEditorRoute: ResourcesTypeEditorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

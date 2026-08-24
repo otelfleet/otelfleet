@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strings"
 
+	"connectrpc.com/connect"
 	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/config"
@@ -96,7 +97,7 @@ func serveIndex(w http.ResponseWriter, index []byte) {
 	_, _ = w.Write(index)
 }
 
-func (u *UIService) ConfigureHTTP(router *mux.Router) {
+func (u *UIService) ConfigureHTTP(router *mux.Router, _ []connect.HandlerOption) {
 	u.logger.With("prefix", u.cfg.PathPrefix, "proxy", u.proxy != nil).Info("mounting UI on shared listener")
 	u.mount(router)
 }

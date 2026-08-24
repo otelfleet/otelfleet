@@ -1,21 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/tanstack-react';
-import { fn } from 'storybook/test';
-import { AgentState, ConfigSyncStatus } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import { ConfigSource } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
+import { CollectorState, ConfigSyncStatus } from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import { AgentDetailView } from './agentDetail';
 import {
     mockAgent,
     mockStatus,
-    mockAssignment,
     NESTED_COMPONENT_HEALTH,
     SAMPLE_EFFECTIVE_CONFIG,
 } from './agentDetailMocks';
 
 /**
- * The full agent detail page view — header, config-assignment panel, and the
- * Health / Details / Effective Config tabs assembled together, exactly as
- * rendered on `/agents/$agentId` (minus the data fetching and modals, which
- * live in the page container).
+ * The full agent detail page view — header and the Health / Details /
+ * Effective Config tabs assembled together, exactly as rendered on
+ * `/agents/$agentId` (minus the data fetching, which lives in the page
+ * container).
  *
  * The Effective Config tab uses the Monaco editor, which loads worker assets
  * from a CDN — that tab needs network access the first time it renders.
@@ -25,10 +22,6 @@ const meta = {
     component: AgentDetailView,
     parameters: {
         layout: 'fullscreen',
-    },
-    args: {
-        onAssign: fn(),
-        onUnassign: fn(),
     },
     // Give the flex/height:100% layout a bounded canvas, like the app shell.
     decorators: [
@@ -44,7 +37,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A connected, healthy agent with an assigned config and full component health. */
+/** A connected, healthy agent with full component health. */
 export const Healthy: Story = {
     args: {
         agent: mockAgent(),
@@ -52,7 +45,6 @@ export const Healthy: Story = {
             componentHealthMap: NESTED_COMPONENT_HEALTH,
             effectiveConfigYaml: SAMPLE_EFFECTIVE_CONFIG,
         }),
-        assignment: mockAssignment({ configId: 'prod-traces', source: ConfigSource.MANUAL }),
     },
 };
 
@@ -68,19 +60,17 @@ export const Unhealthy: Story = {
             componentHealthMap: NESTED_COMPONENT_HEALTH,
             effectiveConfigYaml: SAMPLE_EFFECTIVE_CONFIG,
         }),
-        assignment: mockAssignment({ configId: 'edge-eu', source: ConfigSource.MANUAL }),
     },
 };
 
-/** A disconnected agent with no health data and no config assigned. */
+/** A disconnected agent with no health data. */
 export const Disconnected: Story = {
     args: {
         agent: mockAgent(),
         status: mockStatus({
-            state: AgentState.DISCONNECTED,
+            state: CollectorState.DISCONNECTED,
             hasHealth: false,
             configSyncStatus: ConfigSyncStatus.UNKNOWN,
         }),
-        assignment: null,
     },
 };

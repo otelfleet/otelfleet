@@ -41,6 +41,13 @@ func newTestHandler(env *testutil.TestEnv) *opamp.ServerAgentHandler {
 		"test-conn",
 		env.AgentRepo,
 		env.AssignedConfigStore,
+		env.CollectorConfigStore,
+		env.ConfigAssignmentStore,
+		opamp.NewConfigFilterSync(opamp.ConfigFilterSyncOptions{
+			Logger:   env.Logger,
+			Storage:  env.ResourceStorage,
+			Interval: time.Minute,
+		}),
 		env.Logger,
 		"",
 		&config.OTLPConfig{},

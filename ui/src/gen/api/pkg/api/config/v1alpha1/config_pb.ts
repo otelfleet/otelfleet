@@ -2,1192 +2,529 @@
 // @generated from file pkg/api/config/v1alpha1/config.proto (package config.v1alpha1, syntax proto3)
 /* eslint-disable */
 
-import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
-import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
-import { file_google_protobuf_empty, file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
+import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import type { Any } from "@bufbuild/protobuf/wkt";
+import { file_google_protobuf_any, file_google_protobuf_empty, file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
+import type { CollectorConfig as CollectorConfig$1 } from "../../resources/v1alpha1/resources_pb";
+import { file_pkg_api_resources_v1alpha1_resources } from "../../resources/v1alpha1/resources_pb";
+import type { CompatibilityMatrix } from "../../common/v1alpha1/common_pb";
+import { file_pkg_api_common_v1alpha1_common } from "../../common/v1alpha1/common_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file pkg/api/config/v1alpha1/config.proto.
  */
 export const file_pkg_api_config_v1alpha1_config: GenFile = /*@__PURE__*/
-  fileDesc("CiRwa2cvYXBpL2NvbmZpZy92MWFscGhhMS9jb25maWcucHJvdG8SD2NvbmZpZy52MWFscGhhMSJqChBQdXRDb25maWdSZXF1ZXN0Ei0KA3JlZhgBIAEoCzIgLmNvbmZpZy52MWFscGhhMS5Db25maWdSZWZlcmVuY2USJwoGY29uZmlnGAIgASgLMhcuY29uZmlnLnYxYWxwaGExLkNvbmZpZyJAChVWYWxpZGF0ZUNvbmZpZ1JlcXVlc3QSJwoGY29uZmlnGAEgASgLMhcuY29uZmlnLnYxYWxwaGExLkNvbmZpZyJGChFMaXN0Q29uZmlnUmVwb25zZRIxCgdjb25maWdzGAEgAygLMiAuY29uZmlnLnYxYWxwaGExLkNvbmZpZ1JlZmVyZW5jZSIdCg9Db25maWdSZWZlcmVuY2USCgoCaWQYASABKAkiGAoGQ29uZmlnEg4KBmNvbmZpZxgBIAEoDCI3CgtDb25maWdSYW5nZRIUCgxzdGFydFZlcnNpb24YASABKAkSEgoKZW5kVmVyc2lvbhgCIAEoCSJsCgZMYWJlbHMSMwoGbGFiZWxzGAEgAygLMiMuY29uZmlnLnYxYWxwaGExLkxhYmVscy5MYWJlbHNFbnRyeRotCgtMYWJlbHNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIgkKB01hdGNoZXIirAEKEENvbmZpZ0Fzc2lnbm1lbnQSEAoIYWdlbnRfaWQYASABKAkSEQoJY29uZmlnX2lkGAIgASgJEi0KBnNvdXJjZRgDIAEoDjIdLmNvbmZpZy52MWFscGhhMS5Db25maWdTb3VyY2USLwoLYXNzaWduZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhMKC2NvbmZpZ19oYXNoGAUgASgMIjoKE0Fzc2lnbkNvbmZpZ1JlcXVlc3QSEAoIYWdlbnRfaWQYASABKAkSEQoJY29uZmlnX2lkGAIgASgJIjgKFEFzc2lnbkNvbmZpZ1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIpChVHZXRBZ2VudENvbmZpZ1JlcXVlc3QSEAoIYWdlbnRfaWQYASABKAkiiwEKFkdldEFnZW50Q29uZmlnUmVzcG9uc2USEQoJY29uZmlnX2lkGAEgASgJEi0KBnNvdXJjZRgCIAEoDjIdLmNvbmZpZy52MWFscGhhMS5Db25maWdTb3VyY2USLwoLYXNzaWduZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIikKFVVuYXNzaWduQ29uZmlnUmVxdWVzdBIQCghhZ2VudF9pZBgBIAEoCSIpChZVbmFzc2lnbkNvbmZpZ1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiRAocTGlzdENvbmZpZ0Fzc2lnbm1lbnRzUmVxdWVzdBIWCgljb25maWdfaWQYASABKAlIAIgBAUIMCgpfY29uZmlnX2lkIuwBChRDb25maWdBc3NpZ25tZW50SW5mbxIQCghhZ2VudF9pZBgBIAEoCRIRCgljb25maWdfaWQYAiABKAkSLQoGc291cmNlGAMgASgOMh0uY29uZmlnLnYxYWxwaGExLkNvbmZpZ1NvdXJjZRIvCgthc3NpZ25lZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASOAoGc3RhdHVzGAUgASgOMiguY29uZmlnLnYxYWxwaGExLkNvbmZpZ0FwcGxpY2F0aW9uU3RhdHVzEhUKDWVycm9yX21lc3NhZ2UYBiABKAkiWwodTGlzdENvbmZpZ0Fzc2lnbm1lbnRzUmVzcG9uc2USOgoLYXNzaWdubWVudHMYASADKAsyJS5jb25maWcudjFhbHBoYTEuQ29uZmlnQXNzaWdubWVudEluZm8iKgoWR2V0Q29uZmlnU3RhdHVzUmVxdWVzdBIQCghhZ2VudF9pZBgBIAEoCSKiAQoXR2V0Q29uZmlnU3RhdHVzUmVzcG9uc2USOQoKYXNzaWdubWVudBgBIAEoCzIlLmNvbmZpZy52MWFscGhhMS5Db25maWdBc3NpZ25tZW50SW5mbxIdChVlZmZlY3RpdmVfY29uZmlnX2hhc2gYAiABKAwSHAoUYXNzaWduZWRfY29uZmlnX2hhc2gYAyABKAwSDwoHaW5fc3luYxgEIAEoCCJAChhCYXRjaEFzc2lnbkNvbmZpZ1JlcXVlc3QSEQoJYWdlbnRfaWRzGAEgAygJEhEKCWNvbmZpZ19pZBgCIAEoCSJxChlCYXRjaEFzc2lnbkNvbmZpZ1Jlc3BvbnNlEhIKCnN1Y2Nlc3NmdWwYASABKAUSDgoGZmFpbGVkGAIgASgFEhgKEGZhaWxlZF9hZ2VudF9pZHMYAyADKAkSFgoOZXJyb3JfbWVzc2FnZXMYBCADKAkiqQEKG0Fzc2lnbkNvbmZpZ0J5TGFiZWxzUmVxdWVzdBJICgZsYWJlbHMYASADKAsyOC5jb25maWcudjFhbHBoYTEuQXNzaWduQ29uZmlnQnlMYWJlbHNSZXF1ZXN0LkxhYmVsc0VudHJ5EhEKCWNvbmZpZ19pZBgCIAEoCRotCgtMYWJlbHNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIl0KHEFzc2lnbkNvbmZpZ0J5TGFiZWxzUmVzcG9uc2USGQoRbWF0Y2hlZF9hZ2VudF9pZHMYASADKAkSEgoKc3VjY2Vzc2Z1bBgCIAEoBRIOCgZmYWlsZWQYAyABKAUijQIKGFJvbGxpbmdEZXBsb3ltZW50UmVxdWVzdBIRCgljb25maWdfaWQYASABKAkSEQoJYWdlbnRfaWRzGAIgAygJElAKDGFnZW50X2xhYmVscxgDIAMoCzI6LmNvbmZpZy52MWFscGhhMS5Sb2xsaW5nRGVwbG95bWVudFJlcXVlc3QuQWdlbnRMYWJlbHNFbnRyeRISCgpiYXRjaF9zaXplGAQgASgFEhsKE2JhdGNoX2RlbGF5X3NlY29uZHMYBSABKAUSFAoMbWF4X2ZhaWx1cmVzGAYgASgFGjIKEEFnZW50TGFiZWxzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASIyChlSb2xsaW5nRGVwbG95bWVudFJlc3BvbnNlEhUKDWRlcGxveW1lbnRfaWQYASABKAkipgEKFUFnZW50RGVwbG95bWVudFN0YXR1cxIQCghhZ2VudF9pZBgBIAEoCRI0CgVzdGF0ZRgCIAEoDjIlLmNvbmZpZy52MWFscGhhMS5BZ2VudERlcGxveW1lbnRTdGF0ZRIVCg1lcnJvcl9tZXNzYWdlGAMgASgJEi4KCmFwcGxpZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIoUDChBEZXBsb3ltZW50U3RhdHVzEhUKDWRlcGxveW1lbnRfaWQYASABKAkSEQoJY29uZmlnX2lkGAIgASgJEi8KBXN0YXRlGAMgASgOMiAuY29uZmlnLnYxYWxwaGExLkRlcGxveW1lbnRTdGF0ZRIUCgx0b3RhbF9hZ2VudHMYBCABKAUSGAoQY29tcGxldGVkX2FnZW50cxgFIAEoBRIVCg1mYWlsZWRfYWdlbnRzGAYgASgFEhYKDnBlbmRpbmdfYWdlbnRzGAcgASgFEhUKDWN1cnJlbnRfYmF0Y2gYCCABKAUSPgoOYWdlbnRfc3RhdHVzZXMYCSADKAsyJi5jb25maWcudjFhbHBoYTEuQWdlbnREZXBsb3ltZW50U3RhdHVzEi4KCnN0YXJ0ZWRfYXQYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjAKDGNvbXBsZXRlZF9hdBgLIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiMwoaR2V0RGVwbG95bWVudFN0YXR1c1JlcXVlc3QSFQoNZGVwbG95bWVudF9pZBgBIAEoCSJQChtHZXREZXBsb3ltZW50U3RhdHVzUmVzcG9uc2USMQoGc3RhdHVzGAEgASgLMiEuY29uZmlnLnYxYWxwaGExLkRlcGxveW1lbnRTdGF0dXMiLwoWUGF1c2VEZXBsb3ltZW50UmVxdWVzdBIVCg1kZXBsb3ltZW50X2lkGAEgASgJIjAKF1Jlc3VtZURlcGxveW1lbnRSZXF1ZXN0EhUKDWRlcGxveW1lbnRfaWQYASABKAkiMAoXQ2FuY2VsRGVwbG95bWVudFJlcXVlc3QSFQoNZGVwbG95bWVudF9pZBgBIAEoCSI8ChhEZXBsb3ltZW50QWN0aW9uUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJImYKFkxpc3REZXBsb3ltZW50c1JlcXVlc3QSOwoMc3RhdGVfZmlsdGVyGAEgASgOMiAuY29uZmlnLnYxYWxwaGExLkRlcGxveW1lbnRTdGF0ZUgAiAEBQg8KDV9zdGF0ZV9maWx0ZXIiUQoXTGlzdERlcGxveW1lbnRzUmVzcG9uc2USNgoLZGVwbG95bWVudHMYASADKAsyIS5jb25maWcudjFhbHBoYTEuRGVwbG95bWVudFN0YXR1cyp/CgxDb25maWdTb3VyY2USHQoZQ09ORklHX1NPVVJDRV9VTlNQRUNJRklFRBAAEhkKFUNPTkZJR19TT1VSQ0VfREVGQVVMVBABEhsKF0NPTkZJR19TT1VSQ0VfQk9PVFNUUkFQEAISGAoUQ09ORklHX1NPVVJDRV9NQU5VQUwQAyq4AQoXQ29uZmlnQXBwbGljYXRpb25TdGF0dXMSKQolQ09ORklHX0FQUExJQ0FUSU9OX1NUQVRVU19VTlNQRUNJRklFRBAAEiUKIUNPTkZJR19BUFBMSUNBVElPTl9TVEFUVVNfUEVORElORxABEiUKIUNPTkZJR19BUFBMSUNBVElPTl9TVEFUVVNfQVBQTElFRBACEiQKIENPTkZJR19BUFBMSUNBVElPTl9TVEFUVVNfRkFJTEVEEAMq7QEKD0RlcGxveW1lbnRTdGF0ZRIgChxERVBMT1lNRU5UX1NUQVRFX1VOU1BFQ0lGSUVEEAASHAoYREVQTE9ZTUVOVF9TVEFURV9QRU5ESU5HEAESIAocREVQTE9ZTUVOVF9TVEFURV9JTl9QUk9HUkVTUxACEhsKF0RFUExPWU1FTlRfU1RBVEVfUEFVU0VEEAMSHgoaREVQTE9ZTUVOVF9TVEFURV9DT01QTEVURUQQBBIbChdERVBMT1lNRU5UX1NUQVRFX0ZBSUxFRBAFEh4KGkRFUExPWU1FTlRfU1RBVEVfQ0FOQ0VMTEVEEAYqzgEKFEFnZW50RGVwbG95bWVudFN0YXRlEiYKIkFHRU5UX0RFUExPWU1FTlRfU1RBVEVfVU5TUEVDSUZJRUQQABIiCh5BR0VOVF9ERVBMT1lNRU5UX1NUQVRFX1BFTkRJTkcQARIjCh9BR0VOVF9ERVBMT1lNRU5UX1NUQVRFX0FQUExZSU5HEAISIgoeQUdFTlRfREVQTE9ZTUVOVF9TVEFURV9BUFBMSUVEEAMSIQodQUdFTlRfREVQTE9ZTUVOVF9TVEFURV9GQUlMRUQQBDL7DgoNQ29uZmlnU2VydmljZRJNCgtWYWxpZENvbmZpZxImLmNvbmZpZy52MWFscGhhMS5WYWxpZGF0ZUNvbmZpZ1JlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkSRgoJUHV0Q29uZmlnEiEuY29uZmlnLnYxYWxwaGExLlB1dENvbmZpZ1JlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkSRgoJR2V0Q29uZmlnEiAuY29uZmlnLnYxYWxwaGExLkNvbmZpZ1JlZmVyZW5jZRoXLmNvbmZpZy52MWFscGhhMS5Db25maWcSSAoMRGVsZXRlQ29uZmlnEiAuY29uZmlnLnYxYWxwaGExLkNvbmZpZ1JlZmVyZW5jZRoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRJJCgtMaXN0Q29uZmlncxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoiLmNvbmZpZy52MWFscGhhMS5MaXN0Q29uZmlnUmVwb25zZRJDChBHZXREZWZhdWx0Q29uZmlnEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhcuY29uZmlnLnYxYWxwaGExLkNvbmZpZxJNChBTZXREZWZhdWx0Q29uZmlnEiEuY29uZmlnLnYxYWxwaGExLlB1dENvbmZpZ1JlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkSWwoMQXNzaWduQ29uZmlnEiQuY29uZmlnLnYxYWxwaGExLkFzc2lnbkNvbmZpZ1JlcXVlc3QaJS5jb25maWcudjFhbHBoYTEuQXNzaWduQ29uZmlnUmVzcG9uc2USYQoOR2V0QWdlbnRDb25maWcSJi5jb25maWcudjFhbHBoYTEuR2V0QWdlbnRDb25maWdSZXF1ZXN0GicuY29uZmlnLnYxYWxwaGExLkdldEFnZW50Q29uZmlnUmVzcG9uc2USYQoOVW5hc3NpZ25Db25maWcSJi5jb25maWcudjFhbHBoYTEuVW5hc3NpZ25Db25maWdSZXF1ZXN0GicuY29uZmlnLnYxYWxwaGExLlVuYXNzaWduQ29uZmlnUmVzcG9uc2USdgoVTGlzdENvbmZpZ0Fzc2lnbm1lbnRzEi0uY29uZmlnLnYxYWxwaGExLkxpc3RDb25maWdBc3NpZ25tZW50c1JlcXVlc3QaLi5jb25maWcudjFhbHBoYTEuTGlzdENvbmZpZ0Fzc2lnbm1lbnRzUmVzcG9uc2USZAoPR2V0Q29uZmlnU3RhdHVzEicuY29uZmlnLnYxYWxwaGExLkdldENvbmZpZ1N0YXR1c1JlcXVlc3QaKC5jb25maWcudjFhbHBoYTEuR2V0Q29uZmlnU3RhdHVzUmVzcG9uc2USagoRQmF0Y2hBc3NpZ25Db25maWcSKS5jb25maWcudjFhbHBoYTEuQmF0Y2hBc3NpZ25Db25maWdSZXF1ZXN0GiouY29uZmlnLnYxYWxwaGExLkJhdGNoQXNzaWduQ29uZmlnUmVzcG9uc2UScwoUQXNzaWduQ29uZmlnQnlMYWJlbHMSLC5jb25maWcudjFhbHBoYTEuQXNzaWduQ29uZmlnQnlMYWJlbHNSZXF1ZXN0Gi0uY29uZmlnLnYxYWxwaGExLkFzc2lnbkNvbmZpZ0J5TGFiZWxzUmVzcG9uc2USbwoWU3RhcnRSb2xsaW5nRGVwbG95bWVudBIpLmNvbmZpZy52MWFscGhhMS5Sb2xsaW5nRGVwbG95bWVudFJlcXVlc3QaKi5jb25maWcudjFhbHBoYTEuUm9sbGluZ0RlcGxveW1lbnRSZXNwb25zZRJwChNHZXREZXBsb3ltZW50U3RhdHVzEisuY29uZmlnLnYxYWxwaGExLkdldERlcGxveW1lbnRTdGF0dXNSZXF1ZXN0GiwuY29uZmlnLnYxYWxwaGExLkdldERlcGxveW1lbnRTdGF0dXNSZXNwb25zZRJlCg9QYXVzZURlcGxveW1lbnQSJy5jb25maWcudjFhbHBoYTEuUGF1c2VEZXBsb3ltZW50UmVxdWVzdBopLmNvbmZpZy52MWFscGhhMS5EZXBsb3ltZW50QWN0aW9uUmVzcG9uc2USZwoQUmVzdW1lRGVwbG95bWVudBIoLmNvbmZpZy52MWFscGhhMS5SZXN1bWVEZXBsb3ltZW50UmVxdWVzdBopLmNvbmZpZy52MWFscGhhMS5EZXBsb3ltZW50QWN0aW9uUmVzcG9uc2USZwoQQ2FuY2VsRGVwbG95bWVudBIoLmNvbmZpZy52MWFscGhhMS5DYW5jZWxEZXBsb3ltZW50UmVxdWVzdBopLmNvbmZpZy52MWFscGhhMS5EZXBsb3ltZW50QWN0aW9uUmVzcG9uc2USZAoPTGlzdERlcGxveW1lbnRzEicuY29uZmlnLnYxYWxwaGExLkxpc3REZXBsb3ltZW50c1JlcXVlc3QaKC5jb25maWcudjFhbHBoYTEuTGlzdERlcGxveW1lbnRzUmVzcG9uc2VCOFo2Z2l0aHViLmNvbS9vdGVsZmxlZXQvb3RlbGZsZWV0L3BrZy9hcGkvY29uZmlnL3YxYWxwaGExYgZwcm90bzM", [file_google_protobuf_empty, file_google_protobuf_timestamp]);
+  fileDesc("CiRwa2cvYXBpL2NvbmZpZy92MWFscGhhMS9jb25maWcucHJvdG8SD2NvbmZpZy52MWFscGhhMSKLAQoOQXNzaWduZWRDb25maWcSMwoGY29uZmlnGAEgASgLMiMucmVzb3VyY2VzLnYxYWxwaGExLkNvbGxlY3RvckNvbmZpZxIzCgthcHBseV9zdGF0ZRgCIAEoDjIeLmNvbmZpZy52MWFscGhhMS5Bc3NpZ25lZFN0YXRlEg8KB2RldGFpbHMYAyABKAkiUgoOUmVzb3VyY2VFbnRpdHkSEAoIdHlwZV91cmwYASABKAkSCwoDa2V5GAIgASgJEiEKA29iahgDIAEoCzIULmdvb2dsZS5wcm90b2J1Zi5BbnkisQEKD0NvbGxlY3RvckNvbmZpZxI0CgZjb21wYXQYASABKAsyJC5jb21tb24udjFhbHBoYTEuQ29tcGF0aWJpbGl0eU1hdHJpeBIUCgxjb250ZW50X3R5cGUYAiABKAkSDQoDUmF3GAMgASgMSAASOgoKY29tcG9uZW50cxgEIAEoCzIkLmNvbmZpZy52MWFscGhhMS5Db2xsZWN0b3JDb21wb25lbnRzSABCBwoFdmFsdWUi6wIKE0NvbGxlY3RvckNvbXBvbmVudHMSNgoJcmVjZWl2ZXJzGAEgASgLMiMuY29uZmlnLnYxYWxwaGExLlJlY2VpdmVyQ29sbGVjdGlvbhI4Cgpwcm9jZXNzb3JzGAIgASgLMiQuY29uZmlnLnYxYWxwaGExLlByb2Nlc3NvckNvbGxlY3Rpb24SNgoJZXhwb3J0ZXJzGAMgASgLMiMuY29uZmlnLnYxYWxwaGExLkV4cG9ydGVyQ29sbGVjdGlvbhI4Cgpjb25uZWN0b3JzGAQgASgLMiQuY29uZmlnLnYxYWxwaGExLkNvbm5lY3RvckNvbGxlY3Rpb24SOAoKZXh0ZW5zaW9ucxgFIAEoCzIkLmNvbmZpZy52MWFscGhhMS5FeHRlbnNpb25Db2xsZWN0aW9uEjYKCXBpcGVsaW5lcxgGIAEoCzIjLmNvbmZpZy52MWFscGhhMS5QaXBlbGluZUNvbGxlY3Rpb24idQoIUmVjZWl2ZXISNAoGY29tcGF0GAEgASgLMiQuY29tbW9uLnYxYWxwaGExLkNvbXBhdGliaWxpdHlNYXRyaXgSMwoFdmFsdWUYAiABKAsyJC5jb25maWcudjFhbHBoYTEuQ29tcG9uZW50RGVmaW5pdGlvbiJ3ChJSZWNlaXZlckNvbGxlY3Rpb24SLAoJcmVjZWl2ZXJzGAEgAygLMhkuY29uZmlnLnYxYWxwaGExLlJlY2VpdmVyEjMKBXZhbHVlGAIgASgLMiQuY29uZmlnLnYxYWxwaGExLkNvbXBvbmVudERlZmluaXRpb24idgoJUHJvY2Vzc29yEjQKBmNvbXBhdBgBIAEoCzIkLmNvbW1vbi52MWFscGhhMS5Db21wYXRpYmlsaXR5TWF0cml4EjMKBXZhbHVlGAIgASgLMiQuY29uZmlnLnYxYWxwaGExLkNvbXBvbmVudERlZmluaXRpb24iRQoTUHJvY2Vzc29yQ29sbGVjdGlvbhIuCgpwcm9jZXNzb3JzGAEgAygLMhouY29uZmlnLnYxYWxwaGExLlByb2Nlc3NvciJ1CghFeHBvcnRlchI0CgZjb21wYXQYASABKAsyJC5jb21tb24udjFhbHBoYTEuQ29tcGF0aWJpbGl0eU1hdHJpeBIzCgV2YWx1ZRgCIAEoCzIkLmNvbmZpZy52MWFscGhhMS5Db21wb25lbnREZWZpbml0aW9uIkIKEkV4cG9ydGVyQ29sbGVjdGlvbhIsCglleHBvcnRlcnMYASADKAsyGS5jb25maWcudjFhbHBoYTEuRXhwb3J0ZXIidgoJQ29ubmVjdG9yEjQKBmNvbXBhdBgBIAEoCzIkLmNvbW1vbi52MWFscGhhMS5Db21wYXRpYmlsaXR5TWF0cml4EjMKBXZhbHVlGAIgASgLMiQuY29uZmlnLnYxYWxwaGExLkNvbXBvbmVudERlZmluaXRpb24iRQoTQ29ubmVjdG9yQ29sbGVjdGlvbhIuCgpjb25uZWN0b3JzGAEgAygLMhouY29uZmlnLnYxYWxwaGExLkNvbm5lY3RvciJ2CglFeHRlbnNpb24SNAoGY29tcGF0GAEgASgLMiQuY29tbW9uLnYxYWxwaGExLkNvbXBhdGliaWxpdHlNYXRyaXgSMwoFdmFsdWUYAiABKAsyJC5jb25maWcudjFhbHBoYTEuQ29tcG9uZW50RGVmaW5pdGlvbiJFChNFeHRlbnNpb25Db2xsZWN0aW9uEi4KCmV4dGVuc2lvbnMYASADKAsyGi5jb25maWcudjFhbHBoYTEuRXh0ZW5zaW9uItABCghQaXBlbGluZRIrCgR0eXBlGAEgASgOMh0uY29uZmlnLnYxYWxwaGExLlBpcGVsaW5lVHlwZRIaCg1waXBlbGluZV9uYW1lGAIgASgJSACIAQESNAoGY29tcGF0GAMgASgLMiQuY29tbW9uLnYxYWxwaGExLkNvbXBhdGliaWxpdHlNYXRyaXgSMwoFdmFsdWUYBCABKAsyJC5jb25maWcudjFhbHBoYTEuQ29tcG9uZW50RGVmaW5pdGlvbkIQCg5fcGlwZWxpbmVfbmFtZSJCChJQaXBlbGluZUNvbGxlY3Rpb24SLAoJcGlwZWxpbmVzGAEgAygLMhkuY29uZmlnLnYxYWxwaGExLlBpcGVsaW5lIlIKE0NvbXBvbmVudERlZmluaXRpb24SFAoMY29udGVudF90eXBlGAEgASgJEg0KA3JhdxgCIAEoDEgAEg0KA3JlZhgDIAEoCUgAQgcKBXZhbHVlKp8BCg1Bc3NpZ25lZFN0YXRlEhoKFkFTU0lHTkVEX1NUQVRFX1VOS05PV04QABIaChZBU1NJR05FRF9TVEFURV9QRU5ESU5HEAESGgoWQVNTSUdORURfU1RBVEVfUExBTk5FRBACEhoKFkFTU0lHTkVEX1NUQVRFX0FQUExJRUQQAxIeChpBU1NJR05FRF9TVEFURV9OT1RfQVBQTElFRBAEKpEBCgxQaXBlbGluZVR5cGUSGQoVUElQRUxJTkVfVFlQRV9VTktOT1dOEAASGQoVUElQRUxJTkVfVFlQRV9NRVRSSUNTEAESGAoUUElQRUxJTkVfVFlQRV9UUkFDRVMQAhIWChJQSVBFTElORV9UWVBFX0xPR1MQAxIZChVQSVBFTElORV9UWVBFX1BST0ZJTEUQBEI4WjZnaXRodWIuY29tL290ZWxmbGVldC9vdGVsZmxlZXQvcGtnL2FwaS9jb25maWcvdjFhbHBoYTFiBnByb3RvMw", [file_google_protobuf_empty, file_google_protobuf_timestamp, file_pkg_api_resources_v1alpha1_resources, file_google_protobuf_any, file_pkg_api_common_v1alpha1_common]);
 
 /**
- * @generated from message config.v1alpha1.PutConfigRequest
+ * @generated from message config.v1alpha1.AssignedConfig
  */
-export type PutConfigRequest = Message<"config.v1alpha1.PutConfigRequest"> & {
+export type AssignedConfig = Message<"config.v1alpha1.AssignedConfig"> & {
   /**
-   * @generated from field: config.v1alpha1.ConfigReference ref = 1;
+   * @generated from field: resources.v1alpha1.CollectorConfig config = 1;
    */
-  ref?: ConfigReference | undefined;
+  config?: CollectorConfig$1 | undefined;
 
   /**
-   * @generated from field: config.v1alpha1.Config config = 2;
+   * @generated from field: config.v1alpha1.AssignedState apply_state = 2;
    */
-  config?: Config | undefined;
+  applyState: AssignedState;
+
+  /**
+   * details on failures
+   *
+   * @generated from field: string details = 3;
+   */
+  details: string;
 };
 
 /**
- * Describes the message config.v1alpha1.PutConfigRequest.
- * Use `create(PutConfigRequestSchema)` to create a new message.
+ * Describes the message config.v1alpha1.AssignedConfig.
+ * Use `create(AssignedConfigSchema)` to create a new message.
  */
-export const PutConfigRequestSchema: GenMessage<PutConfigRequest> = /*@__PURE__*/
+export const AssignedConfigSchema: GenMessage<AssignedConfig> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 0);
 
 /**
- * @generated from message config.v1alpha1.ValidateConfigRequest
+ * @generated from message config.v1alpha1.ResourceEntity
  */
-export type ValidateConfigRequest = Message<"config.v1alpha1.ValidateConfigRequest"> & {
+export type ResourceEntity = Message<"config.v1alpha1.ResourceEntity"> & {
   /**
-   * @generated from field: config.v1alpha1.Config config = 1;
+   * @generated from field: string type_url = 1;
    */
-  config?: Config | undefined;
+  typeUrl: string;
+
+  /**
+   * @generated from field: string key = 2;
+   */
+  key: string;
+
+  /**
+   * @generated from field: google.protobuf.Any obj = 3;
+   */
+  obj?: Any | undefined;
 };
 
 /**
- * Describes the message config.v1alpha1.ValidateConfigRequest.
- * Use `create(ValidateConfigRequestSchema)` to create a new message.
+ * Describes the message config.v1alpha1.ResourceEntity.
+ * Use `create(ResourceEntitySchema)` to create a new message.
  */
-export const ValidateConfigRequestSchema: GenMessage<ValidateConfigRequest> = /*@__PURE__*/
+export const ResourceEntitySchema: GenMessage<ResourceEntity> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 1);
 
 /**
- * @generated from message config.v1alpha1.ListConfigReponse
+ * CollectorConfig is a complete OpenTelemetryConfig
+ *
+ * @generated from message config.v1alpha1.CollectorConfig
  */
-export type ListConfigReponse = Message<"config.v1alpha1.ListConfigReponse"> & {
+export type CollectorConfig = Message<"config.v1alpha1.CollectorConfig"> & {
   /**
-   * @generated from field: repeated config.v1alpha1.ConfigReference configs = 1;
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
    */
-  configs: ConfigReference[];
+  compat?: CompatibilityMatrix | undefined;
+
+  /**
+   * @generated from field: string content_type = 2;
+   */
+  contentType: string;
+
+  /**
+   * @generated from oneof config.v1alpha1.CollectorConfig.value
+   */
+  value: {
+    /**
+     * @generated from field: bytes Raw = 3;
+     */
+    value: Uint8Array;
+    case: "Raw";
+  } | {
+    /**
+     * @generated from field: config.v1alpha1.CollectorComponents components = 4;
+     */
+    value: CollectorComponents;
+    case: "components";
+  } | { case: undefined; value?: undefined };
 };
 
 /**
- * Describes the message config.v1alpha1.ListConfigReponse.
- * Use `create(ListConfigReponseSchema)` to create a new message.
+ * Describes the message config.v1alpha1.CollectorConfig.
+ * Use `create(CollectorConfigSchema)` to create a new message.
  */
-export const ListConfigReponseSchema: GenMessage<ListConfigReponse> = /*@__PURE__*/
+export const CollectorConfigSchema: GenMessage<CollectorConfig> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 2);
 
 /**
- * @generated from message config.v1alpha1.ConfigReference
+ * @generated from message config.v1alpha1.CollectorComponents
  */
-export type ConfigReference = Message<"config.v1alpha1.ConfigReference"> & {
+export type CollectorComponents = Message<"config.v1alpha1.CollectorComponents"> & {
   /**
-   * @generated from field: string id = 1;
+   * @generated from field: config.v1alpha1.ReceiverCollection receivers = 1;
    */
-  id: string;
+  receivers?: ReceiverCollection | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ProcessorCollection processors = 2;
+   */
+  processors?: ProcessorCollection | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ExporterCollection exporters = 3;
+   */
+  exporters?: ExporterCollection | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ConnectorCollection connectors = 4;
+   */
+  connectors?: ConnectorCollection | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ExtensionCollection extensions = 5;
+   */
+  extensions?: ExtensionCollection | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.PipelineCollection pipelines = 6;
+   */
+  pipelines?: PipelineCollection | undefined;
 };
 
 /**
- * Describes the message config.v1alpha1.ConfigReference.
- * Use `create(ConfigReferenceSchema)` to create a new message.
+ * Describes the message config.v1alpha1.CollectorComponents.
+ * Use `create(CollectorComponentsSchema)` to create a new message.
  */
-export const ConfigReferenceSchema: GenMessage<ConfigReference> = /*@__PURE__*/
+export const CollectorComponentsSchema: GenMessage<CollectorComponents> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 3);
 
 /**
- * @generated from message config.v1alpha1.Config
+ * Receiver is an OpenTelemetry receiver
+ *
+ * @generated from message config.v1alpha1.Receiver
  */
-export type Config = Message<"config.v1alpha1.Config"> & {
+export type Receiver = Message<"config.v1alpha1.Receiver"> & {
   /**
-   * @generated from field: bytes config = 1;
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
    */
-  config: Uint8Array;
+  compat?: CompatibilityMatrix | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
+   */
+  value?: ComponentDefinition | undefined;
 };
 
 /**
- * Describes the message config.v1alpha1.Config.
- * Use `create(ConfigSchema)` to create a new message.
+ * Describes the message config.v1alpha1.Receiver.
+ * Use `create(ReceiverSchema)` to create a new message.
  */
-export const ConfigSchema: GenMessage<Config> = /*@__PURE__*/
+export const ReceiverSchema: GenMessage<Receiver> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 4);
 
 /**
- * @generated from message config.v1alpha1.ConfigRange
+ * @generated from message config.v1alpha1.ReceiverCollection
  */
-export type ConfigRange = Message<"config.v1alpha1.ConfigRange"> & {
+export type ReceiverCollection = Message<"config.v1alpha1.ReceiverCollection"> & {
   /**
-   * @generated from field: string startVersion = 1;
+   * @generated from field: repeated config.v1alpha1.Receiver receivers = 1;
    */
-  startVersion: string;
+  receivers: Receiver[];
 
   /**
-   * @generated from field: string endVersion = 2;
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
    */
-  endVersion: string;
+  value?: ComponentDefinition | undefined;
 };
 
 /**
- * Describes the message config.v1alpha1.ConfigRange.
- * Use `create(ConfigRangeSchema)` to create a new message.
+ * Describes the message config.v1alpha1.ReceiverCollection.
+ * Use `create(ReceiverCollectionSchema)` to create a new message.
  */
-export const ConfigRangeSchema: GenMessage<ConfigRange> = /*@__PURE__*/
+export const ReceiverCollectionSchema: GenMessage<ReceiverCollection> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 5);
 
 /**
- * @generated from message config.v1alpha1.Labels
+ * Processor is an OpenTelemetry processor
+ *
+ * @generated from message config.v1alpha1.Processor
  */
-export type Labels = Message<"config.v1alpha1.Labels"> & {
+export type Processor = Message<"config.v1alpha1.Processor"> & {
   /**
-   * @generated from field: map<string, string> labels = 1;
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
    */
-  labels: { [key: string]: string };
+  compat?: CompatibilityMatrix | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
+   */
+  value?: ComponentDefinition | undefined;
 };
 
 /**
- * Describes the message config.v1alpha1.Labels.
- * Use `create(LabelsSchema)` to create a new message.
+ * Describes the message config.v1alpha1.Processor.
+ * Use `create(ProcessorSchema)` to create a new message.
  */
-export const LabelsSchema: GenMessage<Labels> = /*@__PURE__*/
+export const ProcessorSchema: GenMessage<Processor> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 6);
 
 /**
- * TODO:
- *
- * @generated from message config.v1alpha1.Matcher
+ * @generated from message config.v1alpha1.ProcessorCollection
  */
-export type Matcher = Message<"config.v1alpha1.Matcher"> & {
+export type ProcessorCollection = Message<"config.v1alpha1.ProcessorCollection"> & {
+  /**
+   * @generated from field: repeated config.v1alpha1.Processor processors = 1;
+   */
+  processors: Processor[];
 };
 
 /**
- * Describes the message config.v1alpha1.Matcher.
- * Use `create(MatcherSchema)` to create a new message.
+ * Describes the message config.v1alpha1.ProcessorCollection.
+ * Use `create(ProcessorCollectionSchema)` to create a new message.
  */
-export const MatcherSchema: GenMessage<Matcher> = /*@__PURE__*/
+export const ProcessorCollectionSchema: GenMessage<ProcessorCollection> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 7);
 
 /**
- * ConfigAssignment tracks metadata about a config assignment to an agent
+ * Exporter is an OpenTelemetry exporter
  *
- * @generated from message config.v1alpha1.ConfigAssignment
+ * @generated from message config.v1alpha1.Exporter
  */
-export type ConfigAssignment = Message<"config.v1alpha1.ConfigAssignment"> & {
+export type Exporter = Message<"config.v1alpha1.Exporter"> & {
   /**
-   * @generated from field: string agent_id = 1;
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
    */
-  agentId: string;
+  compat?: CompatibilityMatrix | undefined;
 
   /**
-   * @generated from field: string config_id = 2;
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
    */
-  configId: string;
-
-  /**
-   * @generated from field: config.v1alpha1.ConfigSource source = 3;
-   */
-  source: ConfigSource;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp assigned_at = 4;
-   */
-  assignedAt?: Timestamp | undefined;
-
-  /**
-   * @generated from field: bytes config_hash = 5;
-   */
-  configHash: Uint8Array;
+  value?: ComponentDefinition | undefined;
 };
 
 /**
- * Describes the message config.v1alpha1.ConfigAssignment.
- * Use `create(ConfigAssignmentSchema)` to create a new message.
+ * Describes the message config.v1alpha1.Exporter.
+ * Use `create(ExporterSchema)` to create a new message.
  */
-export const ConfigAssignmentSchema: GenMessage<ConfigAssignment> = /*@__PURE__*/
+export const ExporterSchema: GenMessage<Exporter> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 8);
 
 /**
- * @generated from message config.v1alpha1.AssignConfigRequest
+ * @generated from message config.v1alpha1.ExporterCollection
  */
-export type AssignConfigRequest = Message<"config.v1alpha1.AssignConfigRequest"> & {
+export type ExporterCollection = Message<"config.v1alpha1.ExporterCollection"> & {
   /**
-   * @generated from field: string agent_id = 1;
+   * @generated from field: repeated config.v1alpha1.Exporter exporters = 1;
    */
-  agentId: string;
-
-  /**
-   * @generated from field: string config_id = 2;
-   */
-  configId: string;
+  exporters: Exporter[];
 };
 
 /**
- * Describes the message config.v1alpha1.AssignConfigRequest.
- * Use `create(AssignConfigRequestSchema)` to create a new message.
+ * Describes the message config.v1alpha1.ExporterCollection.
+ * Use `create(ExporterCollectionSchema)` to create a new message.
  */
-export const AssignConfigRequestSchema: GenMessage<AssignConfigRequest> = /*@__PURE__*/
+export const ExporterCollectionSchema: GenMessage<ExporterCollection> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 9);
 
 /**
- * @generated from message config.v1alpha1.AssignConfigResponse
+ * Connector is an OpenTelemetry connector
+ *
+ * @generated from message config.v1alpha1.Connector
  */
-export type AssignConfigResponse = Message<"config.v1alpha1.AssignConfigResponse"> & {
+export type Connector = Message<"config.v1alpha1.Connector"> & {
   /**
-   * @generated from field: bool success = 1;
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
    */
-  success: boolean;
+  compat?: CompatibilityMatrix | undefined;
 
   /**
-   * @generated from field: string message = 2;
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
    */
-  message: string;
+  value?: ComponentDefinition | undefined;
 };
 
 /**
- * Describes the message config.v1alpha1.AssignConfigResponse.
- * Use `create(AssignConfigResponseSchema)` to create a new message.
+ * Describes the message config.v1alpha1.Connector.
+ * Use `create(ConnectorSchema)` to create a new message.
  */
-export const AssignConfigResponseSchema: GenMessage<AssignConfigResponse> = /*@__PURE__*/
+export const ConnectorSchema: GenMessage<Connector> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 10);
 
 /**
- * @generated from message config.v1alpha1.GetAgentConfigRequest
+ * @generated from message config.v1alpha1.ConnectorCollection
  */
-export type GetAgentConfigRequest = Message<"config.v1alpha1.GetAgentConfigRequest"> & {
+export type ConnectorCollection = Message<"config.v1alpha1.ConnectorCollection"> & {
   /**
-   * @generated from field: string agent_id = 1;
+   * @generated from field: repeated config.v1alpha1.Connector connectors = 1;
    */
-  agentId: string;
+  connectors: Connector[];
 };
 
 /**
- * Describes the message config.v1alpha1.GetAgentConfigRequest.
- * Use `create(GetAgentConfigRequestSchema)` to create a new message.
+ * Describes the message config.v1alpha1.ConnectorCollection.
+ * Use `create(ConnectorCollectionSchema)` to create a new message.
  */
-export const GetAgentConfigRequestSchema: GenMessage<GetAgentConfigRequest> = /*@__PURE__*/
+export const ConnectorCollectionSchema: GenMessage<ConnectorCollection> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 11);
 
 /**
- * @generated from message config.v1alpha1.GetAgentConfigResponse
+ * Extensions is an OpenTelemetry extension
+ *
+ * @generated from message config.v1alpha1.Extension
  */
-export type GetAgentConfigResponse = Message<"config.v1alpha1.GetAgentConfigResponse"> & {
+export type Extension = Message<"config.v1alpha1.Extension"> & {
   /**
-   * @generated from field: string config_id = 1;
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 1;
    */
-  configId: string;
+  compat?: CompatibilityMatrix | undefined;
 
   /**
-   * @generated from field: config.v1alpha1.ConfigSource source = 2;
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 2;
    */
-  source: ConfigSource;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp assigned_at = 3;
-   */
-  assignedAt?: Timestamp | undefined;
+  value?: ComponentDefinition | undefined;
 };
 
 /**
- * Describes the message config.v1alpha1.GetAgentConfigResponse.
- * Use `create(GetAgentConfigResponseSchema)` to create a new message.
+ * Describes the message config.v1alpha1.Extension.
+ * Use `create(ExtensionSchema)` to create a new message.
  */
-export const GetAgentConfigResponseSchema: GenMessage<GetAgentConfigResponse> = /*@__PURE__*/
+export const ExtensionSchema: GenMessage<Extension> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 12);
 
 /**
- * @generated from message config.v1alpha1.UnassignConfigRequest
+ * @generated from message config.v1alpha1.ExtensionCollection
  */
-export type UnassignConfigRequest = Message<"config.v1alpha1.UnassignConfigRequest"> & {
+export type ExtensionCollection = Message<"config.v1alpha1.ExtensionCollection"> & {
   /**
-   * @generated from field: string agent_id = 1;
+   * @generated from field: repeated config.v1alpha1.Extension extensions = 1;
    */
-  agentId: string;
+  extensions: Extension[];
 };
 
 /**
- * Describes the message config.v1alpha1.UnassignConfigRequest.
- * Use `create(UnassignConfigRequestSchema)` to create a new message.
+ * Describes the message config.v1alpha1.ExtensionCollection.
+ * Use `create(ExtensionCollectionSchema)` to create a new message.
  */
-export const UnassignConfigRequestSchema: GenMessage<UnassignConfigRequest> = /*@__PURE__*/
+export const ExtensionCollectionSchema: GenMessage<ExtensionCollection> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 13);
 
 /**
- * @generated from message config.v1alpha1.UnassignConfigResponse
+ * Pipelines is an OpenTelemetry extension
+ *
+ * @generated from message config.v1alpha1.Pipeline
  */
-export type UnassignConfigResponse = Message<"config.v1alpha1.UnassignConfigResponse"> & {
+export type Pipeline = Message<"config.v1alpha1.Pipeline"> & {
   /**
-   * @generated from field: bool success = 1;
+   * @generated from field: config.v1alpha1.PipelineType type = 1;
    */
-  success: boolean;
+  type: PipelineType;
+
+  /**
+   * @generated from field: optional string pipeline_name = 2;
+   */
+  pipelineName?: string | undefined;
+
+  /**
+   * @generated from field: common.v1alpha1.CompatibilityMatrix compat = 3;
+   */
+  compat?: CompatibilityMatrix | undefined;
+
+  /**
+   * @generated from field: config.v1alpha1.ComponentDefinition value = 4;
+   */
+  value?: ComponentDefinition | undefined;
 };
 
 /**
- * Describes the message config.v1alpha1.UnassignConfigResponse.
- * Use `create(UnassignConfigResponseSchema)` to create a new message.
+ * Describes the message config.v1alpha1.Pipeline.
+ * Use `create(PipelineSchema)` to create a new message.
  */
-export const UnassignConfigResponseSchema: GenMessage<UnassignConfigResponse> = /*@__PURE__*/
+export const PipelineSchema: GenMessage<Pipeline> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 14);
 
 /**
- * @generated from message config.v1alpha1.ListConfigAssignmentsRequest
+ * @generated from message config.v1alpha1.PipelineCollection
  */
-export type ListConfigAssignmentsRequest = Message<"config.v1alpha1.ListConfigAssignmentsRequest"> & {
+export type PipelineCollection = Message<"config.v1alpha1.PipelineCollection"> & {
   /**
-   * Filter by config
-   *
-   * @generated from field: optional string config_id = 1;
+   * @generated from field: repeated config.v1alpha1.Pipeline pipelines = 1;
    */
-  configId?: string | undefined;
+  pipelines: Pipeline[];
 };
 
 /**
- * Describes the message config.v1alpha1.ListConfigAssignmentsRequest.
- * Use `create(ListConfigAssignmentsRequestSchema)` to create a new message.
+ * Describes the message config.v1alpha1.PipelineCollection.
+ * Use `create(PipelineCollectionSchema)` to create a new message.
  */
-export const ListConfigAssignmentsRequestSchema: GenMessage<ListConfigAssignmentsRequest> = /*@__PURE__*/
+export const PipelineCollectionSchema: GenMessage<PipelineCollection> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 15);
 
 /**
- * @generated from message config.v1alpha1.ConfigAssignmentInfo
+ * @generated from message config.v1alpha1.ComponentDefinition
  */
-export type ConfigAssignmentInfo = Message<"config.v1alpha1.ConfigAssignmentInfo"> & {
+export type ComponentDefinition = Message<"config.v1alpha1.ComponentDefinition"> & {
   /**
-   * @generated from field: string agent_id = 1;
+   * @generated from field: string content_type = 1;
    */
-  agentId: string;
+  contentType: string;
 
   /**
-   * @generated from field: string config_id = 2;
+   * @generated from oneof config.v1alpha1.ComponentDefinition.value
    */
-  configId: string;
-
-  /**
-   * @generated from field: config.v1alpha1.ConfigSource source = 3;
-   */
-  source: ConfigSource;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp assigned_at = 4;
-   */
-  assignedAt?: Timestamp | undefined;
-
-  /**
-   * @generated from field: config.v1alpha1.ConfigApplicationStatus status = 5;
-   */
-  status: ConfigApplicationStatus;
-
-  /**
-   * @generated from field: string error_message = 6;
-   */
-  errorMessage: string;
+  value: {
+    /**
+     * Holds the full content
+     *
+     * @generated from field: bytes raw = 2;
+     */
+    value: Uint8Array;
+    case: "raw";
+  } | {
+    /**
+     * Holds the reference
+     *
+     * @generated from field: string ref = 3;
+     */
+    value: string;
+    case: "ref";
+  } | { case: undefined; value?: undefined };
 };
 
 /**
- * Describes the message config.v1alpha1.ConfigAssignmentInfo.
- * Use `create(ConfigAssignmentInfoSchema)` to create a new message.
+ * Describes the message config.v1alpha1.ComponentDefinition.
+ * Use `create(ComponentDefinitionSchema)` to create a new message.
  */
-export const ConfigAssignmentInfoSchema: GenMessage<ConfigAssignmentInfo> = /*@__PURE__*/
+export const ComponentDefinitionSchema: GenMessage<ComponentDefinition> = /*@__PURE__*/
   messageDesc(file_pkg_api_config_v1alpha1_config, 16);
 
 /**
- * @generated from message config.v1alpha1.ListConfigAssignmentsResponse
+ * @generated from enum config.v1alpha1.AssignedState
  */
-export type ListConfigAssignmentsResponse = Message<"config.v1alpha1.ListConfigAssignmentsResponse"> & {
+export enum AssignedState {
   /**
-   * @generated from field: repeated config.v1alpha1.ConfigAssignmentInfo assignments = 1;
+   * @generated from enum value: ASSIGNED_STATE_UNKNOWN = 0;
    */
-  assignments: ConfigAssignmentInfo[];
-};
-
-/**
- * Describes the message config.v1alpha1.ListConfigAssignmentsResponse.
- * Use `create(ListConfigAssignmentsResponseSchema)` to create a new message.
- */
-export const ListConfigAssignmentsResponseSchema: GenMessage<ListConfigAssignmentsResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 17);
-
-/**
- * @generated from message config.v1alpha1.GetConfigStatusRequest
- */
-export type GetConfigStatusRequest = Message<"config.v1alpha1.GetConfigStatusRequest"> & {
-  /**
-   * @generated from field: string agent_id = 1;
-   */
-  agentId: string;
-};
-
-/**
- * Describes the message config.v1alpha1.GetConfigStatusRequest.
- * Use `create(GetConfigStatusRequestSchema)` to create a new message.
- */
-export const GetConfigStatusRequestSchema: GenMessage<GetConfigStatusRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 18);
-
-/**
- * @generated from message config.v1alpha1.GetConfigStatusResponse
- */
-export type GetConfigStatusResponse = Message<"config.v1alpha1.GetConfigStatusResponse"> & {
-  /**
-   * @generated from field: config.v1alpha1.ConfigAssignmentInfo assignment = 1;
-   */
-  assignment?: ConfigAssignmentInfo | undefined;
+  UNKNOWN = 0,
 
   /**
-   * What agent reports
-   *
-   * @generated from field: bytes effective_config_hash = 2;
-   */
-  effectiveConfigHash: Uint8Array;
-
-  /**
-   * What we assigned
-   *
-   * @generated from field: bytes assigned_config_hash = 3;
-   */
-  assignedConfigHash: Uint8Array;
-
-  /**
-   * @generated from field: bool in_sync = 4;
-   */
-  inSync: boolean;
-};
-
-/**
- * Describes the message config.v1alpha1.GetConfigStatusResponse.
- * Use `create(GetConfigStatusResponseSchema)` to create a new message.
- */
-export const GetConfigStatusResponseSchema: GenMessage<GetConfigStatusResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 19);
-
-/**
- * @generated from message config.v1alpha1.BatchAssignConfigRequest
- */
-export type BatchAssignConfigRequest = Message<"config.v1alpha1.BatchAssignConfigRequest"> & {
-  /**
-   * @generated from field: repeated string agent_ids = 1;
-   */
-  agentIds: string[];
-
-  /**
-   * @generated from field: string config_id = 2;
-   */
-  configId: string;
-};
-
-/**
- * Describes the message config.v1alpha1.BatchAssignConfigRequest.
- * Use `create(BatchAssignConfigRequestSchema)` to create a new message.
- */
-export const BatchAssignConfigRequestSchema: GenMessage<BatchAssignConfigRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 20);
-
-/**
- * @generated from message config.v1alpha1.BatchAssignConfigResponse
- */
-export type BatchAssignConfigResponse = Message<"config.v1alpha1.BatchAssignConfigResponse"> & {
-  /**
-   * @generated from field: int32 successful = 1;
-   */
-  successful: number;
-
-  /**
-   * @generated from field: int32 failed = 2;
-   */
-  failed: number;
-
-  /**
-   * @generated from field: repeated string failed_agent_ids = 3;
-   */
-  failedAgentIds: string[];
-
-  /**
-   * @generated from field: repeated string error_messages = 4;
-   */
-  errorMessages: string[];
-};
-
-/**
- * Describes the message config.v1alpha1.BatchAssignConfigResponse.
- * Use `create(BatchAssignConfigResponseSchema)` to create a new message.
- */
-export const BatchAssignConfigResponseSchema: GenMessage<BatchAssignConfigResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 21);
-
-/**
- * @generated from message config.v1alpha1.AssignConfigByLabelsRequest
- */
-export type AssignConfigByLabelsRequest = Message<"config.v1alpha1.AssignConfigByLabelsRequest"> & {
-  /**
-   * Agent labels to match
-   *
-   * @generated from field: map<string, string> labels = 1;
-   */
-  labels: { [key: string]: string };
-
-  /**
-   * @generated from field: string config_id = 2;
-   */
-  configId: string;
-};
-
-/**
- * Describes the message config.v1alpha1.AssignConfigByLabelsRequest.
- * Use `create(AssignConfigByLabelsRequestSchema)` to create a new message.
- */
-export const AssignConfigByLabelsRequestSchema: GenMessage<AssignConfigByLabelsRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 22);
-
-/**
- * @generated from message config.v1alpha1.AssignConfigByLabelsResponse
- */
-export type AssignConfigByLabelsResponse = Message<"config.v1alpha1.AssignConfigByLabelsResponse"> & {
-  /**
-   * @generated from field: repeated string matched_agent_ids = 1;
-   */
-  matchedAgentIds: string[];
-
-  /**
-   * @generated from field: int32 successful = 2;
-   */
-  successful: number;
-
-  /**
-   * @generated from field: int32 failed = 3;
-   */
-  failed: number;
-};
-
-/**
- * Describes the message config.v1alpha1.AssignConfigByLabelsResponse.
- * Use `create(AssignConfigByLabelsResponseSchema)` to create a new message.
- */
-export const AssignConfigByLabelsResponseSchema: GenMessage<AssignConfigByLabelsResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 23);
-
-/**
- * @generated from message config.v1alpha1.RollingDeploymentRequest
- */
-export type RollingDeploymentRequest = Message<"config.v1alpha1.RollingDeploymentRequest"> & {
-  /**
-   * @generated from field: string config_id = 1;
-   */
-  configId: string;
-
-  /**
-   * @generated from field: repeated string agent_ids = 2;
-   */
-  agentIds: string[];
-
-  /**
-   * Alternative to agent_ids
-   *
-   * @generated from field: map<string, string> agent_labels = 3;
-   */
-  agentLabels: { [key: string]: string };
-
-  /**
-   * Agents per batch (default: 1)
-   *
-   * @generated from field: int32 batch_size = 4;
-   */
-  batchSize: number;
-
-  /**
-   * Delay between batches (default: 0)
-   *
-   * @generated from field: int32 batch_delay_seconds = 5;
-   */
-  batchDelaySeconds: number;
-
-  /**
-   * Stop after N failures (default: 0 = no limit)
-   *
-   * @generated from field: int32 max_failures = 6;
-   */
-  maxFailures: number;
-};
-
-/**
- * Describes the message config.v1alpha1.RollingDeploymentRequest.
- * Use `create(RollingDeploymentRequestSchema)` to create a new message.
- */
-export const RollingDeploymentRequestSchema: GenMessage<RollingDeploymentRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 24);
-
-/**
- * @generated from message config.v1alpha1.RollingDeploymentResponse
- */
-export type RollingDeploymentResponse = Message<"config.v1alpha1.RollingDeploymentResponse"> & {
-  /**
-   * @generated from field: string deployment_id = 1;
-   */
-  deploymentId: string;
-};
-
-/**
- * Describes the message config.v1alpha1.RollingDeploymentResponse.
- * Use `create(RollingDeploymentResponseSchema)` to create a new message.
- */
-export const RollingDeploymentResponseSchema: GenMessage<RollingDeploymentResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 25);
-
-/**
- * @generated from message config.v1alpha1.AgentDeploymentStatus
- */
-export type AgentDeploymentStatus = Message<"config.v1alpha1.AgentDeploymentStatus"> & {
-  /**
-   * @generated from field: string agent_id = 1;
-   */
-  agentId: string;
-
-  /**
-   * @generated from field: config.v1alpha1.AgentDeploymentState state = 2;
-   */
-  state: AgentDeploymentState;
-
-  /**
-   * @generated from field: string error_message = 3;
-   */
-  errorMessage: string;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp applied_at = 4;
-   */
-  appliedAt?: Timestamp | undefined;
-};
-
-/**
- * Describes the message config.v1alpha1.AgentDeploymentStatus.
- * Use `create(AgentDeploymentStatusSchema)` to create a new message.
- */
-export const AgentDeploymentStatusSchema: GenMessage<AgentDeploymentStatus> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 26);
-
-/**
- * @generated from message config.v1alpha1.DeploymentStatus
- */
-export type DeploymentStatus = Message<"config.v1alpha1.DeploymentStatus"> & {
-  /**
-   * @generated from field: string deployment_id = 1;
-   */
-  deploymentId: string;
-
-  /**
-   * @generated from field: string config_id = 2;
-   */
-  configId: string;
-
-  /**
-   * @generated from field: config.v1alpha1.DeploymentState state = 3;
-   */
-  state: DeploymentState;
-
-  /**
-   * @generated from field: int32 total_agents = 4;
-   */
-  totalAgents: number;
-
-  /**
-   * @generated from field: int32 completed_agents = 5;
-   */
-  completedAgents: number;
-
-  /**
-   * @generated from field: int32 failed_agents = 6;
-   */
-  failedAgents: number;
-
-  /**
-   * @generated from field: int32 pending_agents = 7;
-   */
-  pendingAgents: number;
-
-  /**
-   * @generated from field: int32 current_batch = 8;
-   */
-  currentBatch: number;
-
-  /**
-   * @generated from field: repeated config.v1alpha1.AgentDeploymentStatus agent_statuses = 9;
-   */
-  agentStatuses: AgentDeploymentStatus[];
-
-  /**
-   * @generated from field: google.protobuf.Timestamp started_at = 10;
-   */
-  startedAt?: Timestamp | undefined;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp completed_at = 11;
-   */
-  completedAt?: Timestamp | undefined;
-};
-
-/**
- * Describes the message config.v1alpha1.DeploymentStatus.
- * Use `create(DeploymentStatusSchema)` to create a new message.
- */
-export const DeploymentStatusSchema: GenMessage<DeploymentStatus> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 27);
-
-/**
- * @generated from message config.v1alpha1.GetDeploymentStatusRequest
- */
-export type GetDeploymentStatusRequest = Message<"config.v1alpha1.GetDeploymentStatusRequest"> & {
-  /**
-   * @generated from field: string deployment_id = 1;
-   */
-  deploymentId: string;
-};
-
-/**
- * Describes the message config.v1alpha1.GetDeploymentStatusRequest.
- * Use `create(GetDeploymentStatusRequestSchema)` to create a new message.
- */
-export const GetDeploymentStatusRequestSchema: GenMessage<GetDeploymentStatusRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 28);
-
-/**
- * @generated from message config.v1alpha1.GetDeploymentStatusResponse
- */
-export type GetDeploymentStatusResponse = Message<"config.v1alpha1.GetDeploymentStatusResponse"> & {
-  /**
-   * @generated from field: config.v1alpha1.DeploymentStatus status = 1;
-   */
-  status?: DeploymentStatus | undefined;
-};
-
-/**
- * Describes the message config.v1alpha1.GetDeploymentStatusResponse.
- * Use `create(GetDeploymentStatusResponseSchema)` to create a new message.
- */
-export const GetDeploymentStatusResponseSchema: GenMessage<GetDeploymentStatusResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 29);
-
-/**
- * @generated from message config.v1alpha1.PauseDeploymentRequest
- */
-export type PauseDeploymentRequest = Message<"config.v1alpha1.PauseDeploymentRequest"> & {
-  /**
-   * @generated from field: string deployment_id = 1;
-   */
-  deploymentId: string;
-};
-
-/**
- * Describes the message config.v1alpha1.PauseDeploymentRequest.
- * Use `create(PauseDeploymentRequestSchema)` to create a new message.
- */
-export const PauseDeploymentRequestSchema: GenMessage<PauseDeploymentRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 30);
-
-/**
- * @generated from message config.v1alpha1.ResumeDeploymentRequest
- */
-export type ResumeDeploymentRequest = Message<"config.v1alpha1.ResumeDeploymentRequest"> & {
-  /**
-   * @generated from field: string deployment_id = 1;
-   */
-  deploymentId: string;
-};
-
-/**
- * Describes the message config.v1alpha1.ResumeDeploymentRequest.
- * Use `create(ResumeDeploymentRequestSchema)` to create a new message.
- */
-export const ResumeDeploymentRequestSchema: GenMessage<ResumeDeploymentRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 31);
-
-/**
- * @generated from message config.v1alpha1.CancelDeploymentRequest
- */
-export type CancelDeploymentRequest = Message<"config.v1alpha1.CancelDeploymentRequest"> & {
-  /**
-   * @generated from field: string deployment_id = 1;
-   */
-  deploymentId: string;
-};
-
-/**
- * Describes the message config.v1alpha1.CancelDeploymentRequest.
- * Use `create(CancelDeploymentRequestSchema)` to create a new message.
- */
-export const CancelDeploymentRequestSchema: GenMessage<CancelDeploymentRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 32);
-
-/**
- * @generated from message config.v1alpha1.DeploymentActionResponse
- */
-export type DeploymentActionResponse = Message<"config.v1alpha1.DeploymentActionResponse"> & {
-  /**
-   * @generated from field: bool success = 1;
-   */
-  success: boolean;
-
-  /**
-   * @generated from field: string message = 2;
-   */
-  message: string;
-};
-
-/**
- * Describes the message config.v1alpha1.DeploymentActionResponse.
- * Use `create(DeploymentActionResponseSchema)` to create a new message.
- */
-export const DeploymentActionResponseSchema: GenMessage<DeploymentActionResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 33);
-
-/**
- * @generated from message config.v1alpha1.ListDeploymentsRequest
- */
-export type ListDeploymentsRequest = Message<"config.v1alpha1.ListDeploymentsRequest"> & {
-  /**
-   * @generated from field: optional config.v1alpha1.DeploymentState state_filter = 1;
-   */
-  stateFilter?: DeploymentState | undefined;
-};
-
-/**
- * Describes the message config.v1alpha1.ListDeploymentsRequest.
- * Use `create(ListDeploymentsRequestSchema)` to create a new message.
- */
-export const ListDeploymentsRequestSchema: GenMessage<ListDeploymentsRequest> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 34);
-
-/**
- * @generated from message config.v1alpha1.ListDeploymentsResponse
- */
-export type ListDeploymentsResponse = Message<"config.v1alpha1.ListDeploymentsResponse"> & {
-  /**
-   * @generated from field: repeated config.v1alpha1.DeploymentStatus deployments = 1;
-   */
-  deployments: DeploymentStatus[];
-};
-
-/**
- * Describes the message config.v1alpha1.ListDeploymentsResponse.
- * Use `create(ListDeploymentsResponseSchema)` to create a new message.
- */
-export const ListDeploymentsResponseSchema: GenMessage<ListDeploymentsResponse> = /*@__PURE__*/
-  messageDesc(file_pkg_api_config_v1alpha1_config, 35);
-
-/**
- * ConfigSource indicates how a config was assigned to an agent
- *
- * @generated from enum config.v1alpha1.ConfigSource
- */
-export enum ConfigSource {
-  /**
-   * @generated from enum value: CONFIG_SOURCE_UNSPECIFIED = 0;
-   */
-  UNSPECIFIED = 0,
-
-  /**
-   * @generated from enum value: CONFIG_SOURCE_DEFAULT = 1;
-   */
-  DEFAULT = 1,
-
-  /**
-   * @generated from enum value: CONFIG_SOURCE_BOOTSTRAP = 2;
-   */
-  BOOTSTRAP = 2,
-
-  /**
-   * @generated from enum value: CONFIG_SOURCE_MANUAL = 3;
-   */
-  MANUAL = 3,
-}
-
-/**
- * Describes the enum config.v1alpha1.ConfigSource.
- */
-export const ConfigSourceSchema: GenEnum<ConfigSource> = /*@__PURE__*/
-  enumDesc(file_pkg_api_config_v1alpha1_config, 0);
-
-/**
- * ConfigApplicationStatus indicates whether the agent has applied the config
- *
- * @generated from enum config.v1alpha1.ConfigApplicationStatus
- */
-export enum ConfigApplicationStatus {
-  /**
-   * @generated from enum value: CONFIG_APPLICATION_STATUS_UNSPECIFIED = 0;
-   */
-  UNSPECIFIED = 0,
-
-  /**
-   * @generated from enum value: CONFIG_APPLICATION_STATUS_PENDING = 1;
+   * @generated from enum value: ASSIGNED_STATE_PENDING = 1;
    */
   PENDING = 1,
 
   /**
-   * @generated from enum value: CONFIG_APPLICATION_STATUS_APPLIED = 2;
+   * @generated from enum value: ASSIGNED_STATE_PLANNED = 2;
    */
-  APPLIED = 2,
+  PLANNED = 2,
 
   /**
-   * @generated from enum value: CONFIG_APPLICATION_STATUS_FAILED = 3;
-   */
-  FAILED = 3,
-}
-
-/**
- * Describes the enum config.v1alpha1.ConfigApplicationStatus.
- */
-export const ConfigApplicationStatusSchema: GenEnum<ConfigApplicationStatus> = /*@__PURE__*/
-  enumDesc(file_pkg_api_config_v1alpha1_config, 1);
-
-/**
- * DeploymentState represents the overall state of a deployment
- *
- * @generated from enum config.v1alpha1.DeploymentState
- */
-export enum DeploymentState {
-  /**
-   * @generated from enum value: DEPLOYMENT_STATE_UNSPECIFIED = 0;
-   */
-  UNSPECIFIED = 0,
-
-  /**
-   * @generated from enum value: DEPLOYMENT_STATE_PENDING = 1;
-   */
-  PENDING = 1,
-
-  /**
-   * @generated from enum value: DEPLOYMENT_STATE_IN_PROGRESS = 2;
-   */
-  IN_PROGRESS = 2,
-
-  /**
-   * @generated from enum value: DEPLOYMENT_STATE_PAUSED = 3;
-   */
-  PAUSED = 3,
-
-  /**
-   * @generated from enum value: DEPLOYMENT_STATE_COMPLETED = 4;
-   */
-  COMPLETED = 4,
-
-  /**
-   * @generated from enum value: DEPLOYMENT_STATE_FAILED = 5;
-   */
-  FAILED = 5,
-
-  /**
-   * @generated from enum value: DEPLOYMENT_STATE_CANCELLED = 6;
-   */
-  CANCELLED = 6,
-}
-
-/**
- * Describes the enum config.v1alpha1.DeploymentState.
- */
-export const DeploymentStateSchema: GenEnum<DeploymentState> = /*@__PURE__*/
-  enumDesc(file_pkg_api_config_v1alpha1_config, 2);
-
-/**
- * AgentDeploymentState represents the state of deployment for a single agent
- *
- * @generated from enum config.v1alpha1.AgentDeploymentState
- */
-export enum AgentDeploymentState {
-  /**
-   * @generated from enum value: AGENT_DEPLOYMENT_STATE_UNSPECIFIED = 0;
-   */
-  UNSPECIFIED = 0,
-
-  /**
-   * @generated from enum value: AGENT_DEPLOYMENT_STATE_PENDING = 1;
-   */
-  PENDING = 1,
-
-  /**
-   * @generated from enum value: AGENT_DEPLOYMENT_STATE_APPLYING = 2;
-   */
-  APPLYING = 2,
-
-  /**
-   * @generated from enum value: AGENT_DEPLOYMENT_STATE_APPLIED = 3;
+   * @generated from enum value: ASSIGNED_STATE_APPLIED = 3;
    */
   APPLIED = 3,
 
   /**
-   * @generated from enum value: AGENT_DEPLOYMENT_STATE_FAILED = 4;
+   * @generated from enum value: ASSIGNED_STATE_NOT_APPLIED = 4;
    */
-  FAILED = 4,
+  NOT_APPLIED = 4,
 }
 
 /**
- * Describes the enum config.v1alpha1.AgentDeploymentState.
+ * Describes the enum config.v1alpha1.AssignedState.
  */
-export const AgentDeploymentStateSchema: GenEnum<AgentDeploymentState> = /*@__PURE__*/
-  enumDesc(file_pkg_api_config_v1alpha1_config, 3);
+export const AssignedStateSchema: GenEnum<AssignedState> = /*@__PURE__*/
+  enumDesc(file_pkg_api_config_v1alpha1_config, 0);
 
 /**
- * @generated from service config.v1alpha1.ConfigService
+ * @generated from enum config.v1alpha1.PipelineType
  */
-export const ConfigService: GenService<{
+export enum PipelineType {
   /**
-   * Config CRUD
-   *
-   * @generated from rpc config.v1alpha1.ConfigService.ValidConfig
+   * @generated from enum value: PIPELINE_TYPE_UNKNOWN = 0;
    */
-  validConfig: {
-    methodKind: "unary";
-    input: typeof ValidateConfigRequestSchema;
-    output: typeof EmptySchema;
-  },
+  UNKNOWN = 0,
+
   /**
-   * @generated from rpc config.v1alpha1.ConfigService.PutConfig
+   * @generated from enum value: PIPELINE_TYPE_METRICS = 1;
    */
-  putConfig: {
-    methodKind: "unary";
-    input: typeof PutConfigRequestSchema;
-    output: typeof EmptySchema;
-  },
+  METRICS = 1,
+
   /**
-   * @generated from rpc config.v1alpha1.ConfigService.GetConfig
+   * @generated from enum value: PIPELINE_TYPE_TRACES = 2;
    */
-  getConfig: {
-    methodKind: "unary";
-    input: typeof ConfigReferenceSchema;
-    output: typeof ConfigSchema;
-  },
+  TRACES = 2,
+
   /**
-   * @generated from rpc config.v1alpha1.ConfigService.DeleteConfig
+   * @generated from enum value: PIPELINE_TYPE_LOGS = 3;
    */
-  deleteConfig: {
-    methodKind: "unary";
-    input: typeof ConfigReferenceSchema;
-    output: typeof EmptySchema;
-  },
+  LOGS = 3,
+
   /**
-   * @generated from rpc config.v1alpha1.ConfigService.ListConfigs
+   * @generated from enum value: PIPELINE_TYPE_PROFILE = 4;
    */
-  listConfigs: {
-    methodKind: "unary";
-    input: typeof EmptySchema;
-    output: typeof ListConfigReponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.GetDefaultConfig
-   */
-  getDefaultConfig: {
-    methodKind: "unary";
-    input: typeof EmptySchema;
-    output: typeof ConfigSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.SetDefaultConfig
-   */
-  setDefaultConfig: {
-    methodKind: "unary";
-    input: typeof PutConfigRequestSchema;
-    output: typeof EmptySchema;
-  },
-  /**
-   * Phase 1: Manual Config Assignment
-   *
-   * @generated from rpc config.v1alpha1.ConfigService.AssignConfig
-   */
-  assignConfig: {
-    methodKind: "unary";
-    input: typeof AssignConfigRequestSchema;
-    output: typeof AssignConfigResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.GetAgentConfig
-   */
-  getAgentConfig: {
-    methodKind: "unary";
-    input: typeof GetAgentConfigRequestSchema;
-    output: typeof GetAgentConfigResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.UnassignConfig
-   */
-  unassignConfig: {
-    methodKind: "unary";
-    input: typeof UnassignConfigRequestSchema;
-    output: typeof UnassignConfigResponseSchema;
-  },
-  /**
-   * Phase 2: Config Assignment Queries and Status
-   *
-   * @generated from rpc config.v1alpha1.ConfigService.ListConfigAssignments
-   */
-  listConfigAssignments: {
-    methodKind: "unary";
-    input: typeof ListConfigAssignmentsRequestSchema;
-    output: typeof ListConfigAssignmentsResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.GetConfigStatus
-   */
-  getConfigStatus: {
-    methodKind: "unary";
-    input: typeof GetConfigStatusRequestSchema;
-    output: typeof GetConfigStatusResponseSchema;
-  },
-  /**
-   * Phase 3: Batch Assignment
-   *
-   * @generated from rpc config.v1alpha1.ConfigService.BatchAssignConfig
-   */
-  batchAssignConfig: {
-    methodKind: "unary";
-    input: typeof BatchAssignConfigRequestSchema;
-    output: typeof BatchAssignConfigResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.AssignConfigByLabels
-   */
-  assignConfigByLabels: {
-    methodKind: "unary";
-    input: typeof AssignConfigByLabelsRequestSchema;
-    output: typeof AssignConfigByLabelsResponseSchema;
-  },
-  /**
-   * Phase 4: Rolling Deployment
-   *
-   * @generated from rpc config.v1alpha1.ConfigService.StartRollingDeployment
-   */
-  startRollingDeployment: {
-    methodKind: "unary";
-    input: typeof RollingDeploymentRequestSchema;
-    output: typeof RollingDeploymentResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.GetDeploymentStatus
-   */
-  getDeploymentStatus: {
-    methodKind: "unary";
-    input: typeof GetDeploymentStatusRequestSchema;
-    output: typeof GetDeploymentStatusResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.PauseDeployment
-   */
-  pauseDeployment: {
-    methodKind: "unary";
-    input: typeof PauseDeploymentRequestSchema;
-    output: typeof DeploymentActionResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.ResumeDeployment
-   */
-  resumeDeployment: {
-    methodKind: "unary";
-    input: typeof ResumeDeploymentRequestSchema;
-    output: typeof DeploymentActionResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.CancelDeployment
-   */
-  cancelDeployment: {
-    methodKind: "unary";
-    input: typeof CancelDeploymentRequestSchema;
-    output: typeof DeploymentActionResponseSchema;
-  },
-  /**
-   * @generated from rpc config.v1alpha1.ConfigService.ListDeployments
-   */
-  listDeployments: {
-    methodKind: "unary";
-    input: typeof ListDeploymentsRequestSchema;
-    output: typeof ListDeploymentsResponseSchema;
-  },
-}> = /*@__PURE__*/
-  serviceDesc(file_pkg_api_config_v1alpha1_config, 0);
+  PROFILE = 4,
+}
+
+/**
+ * Describes the enum config.v1alpha1.PipelineType.
+ */
+export const PipelineTypeSchema: GenEnum<PipelineType> = /*@__PURE__*/
+  enumDesc(file_pkg_api_config_v1alpha1_config, 1);
 

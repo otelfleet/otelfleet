@@ -13,6 +13,9 @@ import (
 	"strconv"
 	"time"
 
+	"connectrpc.com/validate"
+
+	"connectrpc.com/connect"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	dslog "github.com/grafana/dskit/log"
@@ -21,26 +24,26 @@ import (
 	"github.com/grafana/dskit/server"
 	"github.com/grafana/dskit/services"
 	"github.com/grafana/dskit/signals"
-	"github.com/open-telemetry/opamp-go/protobufs"
-	agentsv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/agents/v1alpha1"
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
-	configv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1"
+	eventv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/event/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
-	agentdomain "github.com/otelfleet/otelfleet/pkg/domain/agent"
+	"github.com/otelfleet/otelfleet/pkg/deployment"
 	logutil "github.com/otelfleet/otelfleet/pkg/logutil"
-	"github.com/otelfleet/otelfleet/pkg/services/agent"
-	"github.com/otelfleet/otelfleet/pkg/services/bootstrap"
-	"github.com/otelfleet/otelfleet/pkg/services/deployment"
+	"github.com/otelfleet/otelfleet/pkg/services/authorization"
+	deployment_svc "github.com/otelfleet/otelfleet/pkg/services/deployment"
+	"github.com/otelfleet/otelfleet/pkg/services/event"
+	"github.com/otelfleet/otelfleet/pkg/services/lsp"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
-	"github.com/otelfleet/otelfleet/pkg/services/otelconfig"
 	"github.com/otelfleet/otelfleet/pkg/services/otlp"
+	"github.com/otelfleet/otelfleet/pkg/services/resource"
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
 	"github.com/otelfleet/otelfleet/pkg/services/ui"
-	"github.com/otelfleet/otelfleet/pkg/storage"
-	"github.com/otelfleet/otelfleet/pkg/storage/types"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/rs/cors"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+
+	eventsink "github.com/otelfleet/otelfleet/pkg/event"
 )
 
 func initLogger(logFormat string, logLevel dslog.Level) *logger {
@@ -67,18 +70,21 @@ type logger struct {
 
 // The various modules that make up OtelFleet
 const (
-	All              = "all"
-	Storage          = "storage"
-	Bootstrap        = "bootstrap"
-	ServerService    = "server"
-	OpAmp            = "opamp"
-	ConfigOTEL       = "config-otel"
-	AgentManager     = "agent-manager"
-	DeploymentModule = "deployment"
+	All               = "all"
+	Storage           = "storage"
+	Auth              = "authorization"
+	ServerService     = "server"
+	OpAmp             = "opamp"
+	ConfigOTEL        = "config-otel"
+	DeploymentManager = "deployment-manager"
+	// DeploymentModule = "deployment"
+	LSP = "lsp"
 	// UI serves the web UI. Attached to the all-in-one target only.
 	UI = "ui"
 	// Embedded OTLP service
 	OTLP = "otlp"
+	// Resource server is the API over the first class resources in the data layer.
+	Resource = "resource"
 	// Gatewat acts as the control plane service. This is the public
 	// entry point for all other services, whether other services
 	// run in-process or not
@@ -92,47 +98,17 @@ type OtelFleet struct {
 	mm   *modules.Manager
 	deps map[string][]string
 
-	store           *storagesvc.StorageService
-	tokenStore      types.KeyValue[*bootstrapv1alpha1.BootstrapToken]
-	agentStore      types.KeyValue[*agentsv1alpha1.AgentDescription]
-	opampAgentStore types.KeyValue[*protobufs.AgentToServer]
+	store      *storagesvc.StorageService
+	tokenStore object.KeyValue[*bootstrapv1alpha1.BootstrapToken]
+	deployMgr  deployment.Manager
 
-	agentHealthStore       types.KeyValue[*protobufs.ComponentHealth]
-	agentEffectiveConfig   types.KeyValue[*protobufs.EffectiveConfig]
-	agentRemoteConfigStore types.KeyValue[*protobufs.RemoteConfigStatus]
-	opampAgentDescription  types.KeyValue[*protobufs.AgentDescription]
-
-	// store for raw configs
-	configStore types.KeyValue[*configv1alpha1.Config]
-	// store for default configs
-	defaultConfigStore types.KeyValue[*configv1alpha1.Config]
-	// store for bootstrap configs
-	// tokenID -> config
-	bootstrapConfigStore types.KeyValue[*configv1alpha1.Config]
-	// store for associating configs to agents
-	// otelfleet agentID -> config
-	assignmentConfigStore types.KeyValue[*configv1alpha1.Config]
-	// store for config assignment metadata
-	// otelfleet agentID -> ConfigAssignment
-	configAssignmentStore types.KeyValue[*configv1alpha1.ConfigAssignment]
-
-	// store for deployment status
-	deploymentStore types.KeyValue[*configv1alpha1.DeploymentStatus]
-	// store for per-agent deployment status
-	agentDeploymentStore types.KeyValue[*configv1alpha1.AgentDeploymentStatus]
-	// store for persisted connection state (replaces in-memory agentTracker)
-	connectionStateStore types.KeyValue[*agentsv1alpha1.AgentConnectionState]
-
-	// Agent repository - unified access to agent data
-	agentRepo agentdomain.Repository
-
-	opampServer          *opamp.Server
-	configServer         *otelconfig.ConfigServer
-	deploymentController *deployment.Controller
+	opampServer *opamp.Server
 
 	serviceMap map[string]services.Service
 	server     *server.Server
 	serverConf server.Config
+
+	connectOpts []connect.HandlerOption
 }
 
 func New(cfg config.Config) (*OtelFleet, error) {
@@ -140,6 +116,9 @@ func New(cfg config.Config) (*OtelFleet, error) {
 	f := &OtelFleet{
 		logger: l,
 		cfg:    cfg,
+		connectOpts: []connect.HandlerOption{
+			connect.WithInterceptors(validate.NewInterceptor()),
+		},
 	}
 
 	httpListenHost, httpListenPort, err := net.SplitHostPort(cfg.HttpListenAddr)
@@ -202,118 +181,44 @@ func (o *OtelFleet) setupModuleManager() error {
 			return nil, err
 		}
 		o.store = storeSvc
-		storeSvc.ConfigureHTTP(o.server.HTTP)
-		o.opampAgentStore = storage.NewProtoKVFromSchemaImpl[*protobufs.AgentToServer](o.store.Schema())
+		storeSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 
-		o.agentStore = storage.NewProtoKVFromSchemaImpl[*agentsv1alpha1.AgentDescription](o.store.Schema())
-
-		o.tokenStore = storage.NewProtoKVFromSchemaImpl[*bootstrapv1alpha1.BootstrapToken](o.store.Schema())
-
-		// dedupe: all *configv1alpha1.Config stores share one underlying store
-		// TODO : figure out best to decouple these
-		configStore := storage.NewProtoKVFromSchemaImpl[*configv1alpha1.Config](o.store.Schema())
-		o.configStore = configStore
-		o.defaultConfigStore = configStore
-		o.bootstrapConfigStore = configStore
-		o.assignmentConfigStore = configStore
-
-		o.agentHealthStore = storage.NewProtoKVFromSchemaImpl[*protobufs.ComponentHealth](o.store.Schema())
-		o.agentEffectiveConfig = storage.NewProtoKVFromSchemaImpl[*protobufs.EffectiveConfig](o.store.Schema())
-		o.agentRemoteConfigStore = storage.NewProtoKVFromSchemaImpl[*protobufs.RemoteConfigStatus](o.store.Schema())
-
-		o.opampAgentDescription = storage.NewProtoKVFromSchemaImpl[*protobufs.AgentDescription](o.store.Schema())
-		o.configAssignmentStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.ConfigAssignment](o.store.Schema())
-		o.deploymentStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.DeploymentStatus](o.store.Schema())
-		o.agentDeploymentStore = storage.NewProtoKVFromSchemaImpl[*configv1alpha1.AgentDeploymentStatus](o.store.Schema())
-		o.connectionStateStore = storage.NewProtoKVFromSchemaImpl[*agentsv1alpha1.AgentConnectionState](o.store.Schema())
-
-		// Create the agent repository with all the underlying stores
-		o.agentRepo = agentdomain.NewRepository(
-			o.logger.With("component", "agent-repository"),
-			o.agentStore,
-			o.opampAgentDescription,
-			o.connectionStateStore,
-			o.agentHealthStore,
-			o.agentEffectiveConfig,
-			o.agentRemoteConfigStore,
-			o.configAssignmentStore,
-		)
+		o.tokenStore = object.NewKeyValueAdapter[*bootstrapv1alpha1.BootstrapToken](o.store.Schema())
+		o.deployMgr = deployment.NewManager(o.store.Schema())
 
 		return storeSvc, nil
 	}, modules.UserInvisibleModule)
 
-	mm.RegisterModule(Bootstrap, func() (services.Service, error) {
-		bootstrapSvc := bootstrap.NewBootstrapServer(
-			o.logger.With("service", Bootstrap),
+	mm.RegisterModule(Auth, func() (services.Service, error) {
+		bootstrapSvc := authorization.NewBootstrapServer(
+			o.logger.With("service", Auth),
 			nil, // TODO: privateKey for secure bootstrap
 			o.tokenStore,
-			o.agentRepo,
-			o.configStore,
-			o.bootstrapConfigStore,
-			o.assignmentConfigStore,
 		)
-		bootstrapSvc.ConfigureHTTP(o.server.HTTP)
-
+		bootstrapSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 		return bootstrapSvc, nil
-	})
-
-	mm.RegisterModule(ConfigOTEL, func() (services.Service, error) {
-		cfgServer := otelconfig.NewConfigServer(
-			o.logger.With("service", ConfigOTEL),
-			o.configStore,
-			o.defaultConfigStore,
-			o.assignmentConfigStore,
-			o.configAssignmentStore,
-			o.agentRepo,
-			o.agentEffectiveConfig,
-			o.agentRemoteConfigStore,
-		)
-		cfgServer.ConfigureHTTP(o.server.HTTP)
-		o.configServer = cfgServer
-
-		return cfgServer, nil
 	})
 
 	mm.RegisterModule(OpAmp, func() (services.Service, error) {
 		srv := opamp.NewServer(
 			o.logger.With("service", OpAmp),
-			o.agentRepo,
-			o.assignmentConfigStore,
+			o.store.Schema(),
 			o.server.HTTPListenAddr().String(),
 			o.cfg.OTLP,
+			o.deployMgr,
+			eventsink.NewEventSink(object.NewKeyValueAdapter[*eventv1alpha1.Event](o.store.Schema()), eventsink.GroupCollector),
 		)
 		o.opampServer = srv
-		// Wire up the config change notifier so ConfigServer can push configs to agents
-		if o.configServer != nil {
-			o.configServer.SetNotifier(srv)
-		}
 		return srv, nil
 	})
 
-	mm.RegisterModule(AgentManager, func() (services.Service, error) {
-		srv := agent.NewAgentServer(
-			o.logger.With("service", AgentManager),
-			o.agentRepo,
+	mm.RegisterModule(DeploymentManager, func() (services.Service, error) {
+		srv := deployment_svc.NewDeploymentServer(
+			o.logger.With("service", DeploymentManager),
+			o.deployMgr,
 		)
-		srv.ConfigureHTTP(o.server.HTTP)
+		srv.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 		return srv, nil
-	})
-
-	mm.RegisterModule(DeploymentModule, func() (services.Service, error) {
-		ctrl := deployment.NewController(
-			o.logger.With("service", DeploymentModule),
-			o.deploymentStore,
-			o.agentDeploymentStore,
-			o.configStore,
-			o.agentRepo,
-		)
-		o.deploymentController = ctrl
-		// Wire up the config assigner so the deployment controller can assign configs
-		if o.configServer != nil {
-			ctrl.SetConfigAssigner(o.configServer)
-			o.configServer.SetDeploymentController(ctrl)
-		}
-		return ctrl, nil
 	})
 
 	mm.RegisterModule(UI, func() (services.Service, error) {
@@ -324,15 +229,38 @@ func (o *OtelFleet) setupModuleManager() error {
 		if err != nil {
 			return nil, err
 		}
-		uiSvc.ConfigureHTTP(o.server.HTTP)
+		uiSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 		return uiSvc, nil
 	})
 
 	mm.RegisterModule(OTLP, func() (services.Service, error) {
 		otlpSvc := otlp.NewServer(o.logger.With("service", "otlp"), o.cfg.OTLP)
 		otlpSvc.ConfigureGRPC(o.server.GRPC)
-		otlpSvc.ConfigureHTTP(o.server.HTTP)
+		otlpSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 		return otlpSvc, nil
+	})
+
+	mm.RegisterModule(Resource, func() (services.Service, error) {
+		resourceSvc := resource.NewServer(o.logger.With("service", "resource-server"), o.store.Schema())
+		resourceSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
+
+		// FIXME: for now let's put the event querier on the same API
+		// path as generic control plane resources API.
+		eventSvc := event.NewServer(
+			object.NewKeyValueAdapter[*eventv1alpha1.Event](o.store.Schema()),
+		)
+		eventSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
+
+		return resourceSvc, nil
+	})
+
+	mm.RegisterModule(LSP, func() (services.Service, error) {
+		lspService := lsp.NewLSPServer(
+			o.logger.With("service", "lsp"),
+			o.cfg.LSP,
+		)
+		lspService.ConfigureHTTP(o.server.HTTP, o.connectOpts)
+		return lspService, nil
 	})
 
 	mm.RegisterModule(ServerService, func() (services.Service, error) {
@@ -367,18 +295,18 @@ func (o *OtelFleet) setupModuleManager() error {
 			Gateway, UI,
 		},
 		Gateway: {
-			Bootstrap, OpAmp, AgentManager, DeploymentModule, OTLP,
+			Auth, OpAmp, DeploymentManager, OTLP, Resource, LSP,
 		},
 		ServerService: {},
 
-		Storage:          {ServerService},
-		AgentManager:     {ServerService, OpAmp},
-		OpAmp:            {ServerService, ConfigOTEL, Storage},
-		Bootstrap:        {ServerService, Storage},
-		ConfigOTEL:       {ServerService, Storage},
-		DeploymentModule: {ServerService, ConfigOTEL, Storage},
-		UI:               {ServerService},
-		OTLP:             {ServerService},
+		Storage:           {ServerService},
+		DeploymentManager: {ServerService, Storage, OpAmp},
+		OpAmp:             {ServerService, Storage},
+		Auth:              {ServerService, Storage},
+		Resource:          {ServerService, Storage},
+		UI:                {ServerService},
+		OTLP:              {ServerService},
+		LSP:               {ServerService},
 	}
 
 	for mod, targets := range deps {
@@ -403,7 +331,7 @@ func (o *OtelFleet) setupModuleManager() error {
 		}
 
 		fmt.Fprintln(os.Stdout)
-		fmt.Fprintln(os.Stdout, fmt.Sprintf("Modules marked with * are included in target %s.", curSvc))
+		fmt.Fprintf(os.Stdout, "Modules marked with * are included in target %s.\n", curSvc)
 	}
 	return nil
 }

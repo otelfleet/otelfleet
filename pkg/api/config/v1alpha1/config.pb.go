@@ -7,10 +7,13 @@
 package v1alpha1
 
 import (
+	v1alpha11 "github.com/otelfleet/otelfleet/pkg/api/common/v1alpha1"
+	v1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	anypb "google.golang.org/protobuf/types/known/anypb"
+	_ "google.golang.org/protobuf/types/known/emptypb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -23,252 +26,140 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// ConfigSource indicates how a config was assigned to an agent
-type ConfigSource int32
+type AssignedState int32
 
 const (
-	ConfigSource_CONFIG_SOURCE_UNSPECIFIED ConfigSource = 0
-	ConfigSource_CONFIG_SOURCE_DEFAULT     ConfigSource = 1
-	ConfigSource_CONFIG_SOURCE_BOOTSTRAP   ConfigSource = 2
-	ConfigSource_CONFIG_SOURCE_MANUAL      ConfigSource = 3
+	AssignedState_ASSIGNED_STATE_UNKNOWN     AssignedState = 0
+	AssignedState_ASSIGNED_STATE_PENDING     AssignedState = 1
+	AssignedState_ASSIGNED_STATE_PLANNED     AssignedState = 2
+	AssignedState_ASSIGNED_STATE_APPLIED     AssignedState = 3
+	AssignedState_ASSIGNED_STATE_NOT_APPLIED AssignedState = 4
 )
 
-// Enum value maps for ConfigSource.
+// Enum value maps for AssignedState.
 var (
-	ConfigSource_name = map[int32]string{
-		0: "CONFIG_SOURCE_UNSPECIFIED",
-		1: "CONFIG_SOURCE_DEFAULT",
-		2: "CONFIG_SOURCE_BOOTSTRAP",
-		3: "CONFIG_SOURCE_MANUAL",
+	AssignedState_name = map[int32]string{
+		0: "ASSIGNED_STATE_UNKNOWN",
+		1: "ASSIGNED_STATE_PENDING",
+		2: "ASSIGNED_STATE_PLANNED",
+		3: "ASSIGNED_STATE_APPLIED",
+		4: "ASSIGNED_STATE_NOT_APPLIED",
 	}
-	ConfigSource_value = map[string]int32{
-		"CONFIG_SOURCE_UNSPECIFIED": 0,
-		"CONFIG_SOURCE_DEFAULT":     1,
-		"CONFIG_SOURCE_BOOTSTRAP":   2,
-		"CONFIG_SOURCE_MANUAL":      3,
+	AssignedState_value = map[string]int32{
+		"ASSIGNED_STATE_UNKNOWN":     0,
+		"ASSIGNED_STATE_PENDING":     1,
+		"ASSIGNED_STATE_PLANNED":     2,
+		"ASSIGNED_STATE_APPLIED":     3,
+		"ASSIGNED_STATE_NOT_APPLIED": 4,
 	}
 )
 
-func (x ConfigSource) Enum() *ConfigSource {
-	p := new(ConfigSource)
+func (x AssignedState) Enum() *AssignedState {
+	p := new(AssignedState)
 	*p = x
 	return p
 }
 
-func (x ConfigSource) String() string {
+func (x AssignedState) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (ConfigSource) Descriptor() protoreflect.EnumDescriptor {
+func (AssignedState) Descriptor() protoreflect.EnumDescriptor {
 	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[0].Descriptor()
 }
 
-func (ConfigSource) Type() protoreflect.EnumType {
+func (AssignedState) Type() protoreflect.EnumType {
 	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[0]
 }
 
-func (x ConfigSource) Number() protoreflect.EnumNumber {
+func (x AssignedState) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use ConfigSource.Descriptor instead.
-func (ConfigSource) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use AssignedState.Descriptor instead.
+func (AssignedState) EnumDescriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{0}
 }
 
-// ConfigApplicationStatus indicates whether the agent has applied the config
-type ConfigApplicationStatus int32
+type PipelineType int32
 
 const (
-	ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_UNSPECIFIED ConfigApplicationStatus = 0
-	ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_PENDING     ConfigApplicationStatus = 1
-	ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_APPLIED     ConfigApplicationStatus = 2
-	ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_FAILED      ConfigApplicationStatus = 3
+	PipelineType_PIPELINE_TYPE_UNKNOWN PipelineType = 0
+	PipelineType_PIPELINE_TYPE_METRICS PipelineType = 1
+	PipelineType_PIPELINE_TYPE_TRACES  PipelineType = 2
+	PipelineType_PIPELINE_TYPE_LOGS    PipelineType = 3
+	PipelineType_PIPELINE_TYPE_PROFILE PipelineType = 4
 )
 
-// Enum value maps for ConfigApplicationStatus.
+// Enum value maps for PipelineType.
 var (
-	ConfigApplicationStatus_name = map[int32]string{
-		0: "CONFIG_APPLICATION_STATUS_UNSPECIFIED",
-		1: "CONFIG_APPLICATION_STATUS_PENDING",
-		2: "CONFIG_APPLICATION_STATUS_APPLIED",
-		3: "CONFIG_APPLICATION_STATUS_FAILED",
+	PipelineType_name = map[int32]string{
+		0: "PIPELINE_TYPE_UNKNOWN",
+		1: "PIPELINE_TYPE_METRICS",
+		2: "PIPELINE_TYPE_TRACES",
+		3: "PIPELINE_TYPE_LOGS",
+		4: "PIPELINE_TYPE_PROFILE",
 	}
-	ConfigApplicationStatus_value = map[string]int32{
-		"CONFIG_APPLICATION_STATUS_UNSPECIFIED": 0,
-		"CONFIG_APPLICATION_STATUS_PENDING":     1,
-		"CONFIG_APPLICATION_STATUS_APPLIED":     2,
-		"CONFIG_APPLICATION_STATUS_FAILED":      3,
+	PipelineType_value = map[string]int32{
+		"PIPELINE_TYPE_UNKNOWN": 0,
+		"PIPELINE_TYPE_METRICS": 1,
+		"PIPELINE_TYPE_TRACES":  2,
+		"PIPELINE_TYPE_LOGS":    3,
+		"PIPELINE_TYPE_PROFILE": 4,
 	}
 )
 
-func (x ConfigApplicationStatus) Enum() *ConfigApplicationStatus {
-	p := new(ConfigApplicationStatus)
+func (x PipelineType) Enum() *PipelineType {
+	p := new(PipelineType)
 	*p = x
 	return p
 }
 
-func (x ConfigApplicationStatus) String() string {
+func (x PipelineType) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (ConfigApplicationStatus) Descriptor() protoreflect.EnumDescriptor {
+func (PipelineType) Descriptor() protoreflect.EnumDescriptor {
 	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[1].Descriptor()
 }
 
-func (ConfigApplicationStatus) Type() protoreflect.EnumType {
+func (PipelineType) Type() protoreflect.EnumType {
 	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[1]
 }
 
-func (x ConfigApplicationStatus) Number() protoreflect.EnumNumber {
+func (x PipelineType) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use ConfigApplicationStatus.Descriptor instead.
-func (ConfigApplicationStatus) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use PipelineType.Descriptor instead.
+func (PipelineType) EnumDescriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{1}
 }
 
-// DeploymentState represents the overall state of a deployment
-type DeploymentState int32
-
-const (
-	DeploymentState_DEPLOYMENT_STATE_UNSPECIFIED DeploymentState = 0
-	DeploymentState_DEPLOYMENT_STATE_PENDING     DeploymentState = 1
-	DeploymentState_DEPLOYMENT_STATE_IN_PROGRESS DeploymentState = 2
-	DeploymentState_DEPLOYMENT_STATE_PAUSED      DeploymentState = 3
-	DeploymentState_DEPLOYMENT_STATE_COMPLETED   DeploymentState = 4
-	DeploymentState_DEPLOYMENT_STATE_FAILED      DeploymentState = 5
-	DeploymentState_DEPLOYMENT_STATE_CANCELLED   DeploymentState = 6
-)
-
-// Enum value maps for DeploymentState.
-var (
-	DeploymentState_name = map[int32]string{
-		0: "DEPLOYMENT_STATE_UNSPECIFIED",
-		1: "DEPLOYMENT_STATE_PENDING",
-		2: "DEPLOYMENT_STATE_IN_PROGRESS",
-		3: "DEPLOYMENT_STATE_PAUSED",
-		4: "DEPLOYMENT_STATE_COMPLETED",
-		5: "DEPLOYMENT_STATE_FAILED",
-		6: "DEPLOYMENT_STATE_CANCELLED",
-	}
-	DeploymentState_value = map[string]int32{
-		"DEPLOYMENT_STATE_UNSPECIFIED": 0,
-		"DEPLOYMENT_STATE_PENDING":     1,
-		"DEPLOYMENT_STATE_IN_PROGRESS": 2,
-		"DEPLOYMENT_STATE_PAUSED":      3,
-		"DEPLOYMENT_STATE_COMPLETED":   4,
-		"DEPLOYMENT_STATE_FAILED":      5,
-		"DEPLOYMENT_STATE_CANCELLED":   6,
-	}
-)
-
-func (x DeploymentState) Enum() *DeploymentState {
-	p := new(DeploymentState)
-	*p = x
-	return p
-}
-
-func (x DeploymentState) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (DeploymentState) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[2].Descriptor()
-}
-
-func (DeploymentState) Type() protoreflect.EnumType {
-	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[2]
-}
-
-func (x DeploymentState) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use DeploymentState.Descriptor instead.
-func (DeploymentState) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{2}
-}
-
-// AgentDeploymentState represents the state of deployment for a single agent
-type AgentDeploymentState int32
-
-const (
-	AgentDeploymentState_AGENT_DEPLOYMENT_STATE_UNSPECIFIED AgentDeploymentState = 0
-	AgentDeploymentState_AGENT_DEPLOYMENT_STATE_PENDING     AgentDeploymentState = 1
-	AgentDeploymentState_AGENT_DEPLOYMENT_STATE_APPLYING    AgentDeploymentState = 2
-	AgentDeploymentState_AGENT_DEPLOYMENT_STATE_APPLIED     AgentDeploymentState = 3
-	AgentDeploymentState_AGENT_DEPLOYMENT_STATE_FAILED      AgentDeploymentState = 4
-)
-
-// Enum value maps for AgentDeploymentState.
-var (
-	AgentDeploymentState_name = map[int32]string{
-		0: "AGENT_DEPLOYMENT_STATE_UNSPECIFIED",
-		1: "AGENT_DEPLOYMENT_STATE_PENDING",
-		2: "AGENT_DEPLOYMENT_STATE_APPLYING",
-		3: "AGENT_DEPLOYMENT_STATE_APPLIED",
-		4: "AGENT_DEPLOYMENT_STATE_FAILED",
-	}
-	AgentDeploymentState_value = map[string]int32{
-		"AGENT_DEPLOYMENT_STATE_UNSPECIFIED": 0,
-		"AGENT_DEPLOYMENT_STATE_PENDING":     1,
-		"AGENT_DEPLOYMENT_STATE_APPLYING":    2,
-		"AGENT_DEPLOYMENT_STATE_APPLIED":     3,
-		"AGENT_DEPLOYMENT_STATE_FAILED":      4,
-	}
-)
-
-func (x AgentDeploymentState) Enum() *AgentDeploymentState {
-	p := new(AgentDeploymentState)
-	*p = x
-	return p
-}
-
-func (x AgentDeploymentState) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (AgentDeploymentState) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_api_config_v1alpha1_config_proto_enumTypes[3].Descriptor()
-}
-
-func (AgentDeploymentState) Type() protoreflect.EnumType {
-	return &file_pkg_api_config_v1alpha1_config_proto_enumTypes[3]
-}
-
-func (x AgentDeploymentState) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use AgentDeploymentState.Descriptor instead.
-func (AgentDeploymentState) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{3}
-}
-
-type PutConfigRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ref           *ConfigReference       `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
-	Config        *Config                `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
+type AssignedConfig struct {
+	state      protoimpl.MessageState    `protogen:"open.v1"`
+	Config     *v1alpha1.CollectorConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	ApplyState AssignedState             `protobuf:"varint,2,opt,name=apply_state,json=applyState,proto3,enum=config.v1alpha1.AssignedState" json:"apply_state,omitempty"`
+	// details on failures
+	Details       string `protobuf:"bytes,3,opt,name=details,proto3" json:"details,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *PutConfigRequest) Reset() {
-	*x = PutConfigRequest{}
+func (x *AssignedConfig) Reset() {
+	*x = AssignedConfig{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *PutConfigRequest) String() string {
+func (x *AssignedConfig) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*PutConfigRequest) ProtoMessage() {}
+func (*AssignedConfig) ProtoMessage() {}
 
-func (x *PutConfigRequest) ProtoReflect() protoreflect.Message {
+func (x *AssignedConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -280,46 +171,55 @@ func (x *PutConfigRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use PutConfigRequest.ProtoReflect.Descriptor instead.
-func (*PutConfigRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use AssignedConfig.ProtoReflect.Descriptor instead.
+func (*AssignedConfig) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *PutConfigRequest) GetRef() *ConfigReference {
-	if x != nil {
-		return x.Ref
-	}
-	return nil
-}
-
-func (x *PutConfigRequest) GetConfig() *Config {
+func (x *AssignedConfig) GetConfig() *v1alpha1.CollectorConfig {
 	if x != nil {
 		return x.Config
 	}
 	return nil
 }
 
-type ValidateConfigRequest struct {
+func (x *AssignedConfig) GetApplyState() AssignedState {
+	if x != nil {
+		return x.ApplyState
+	}
+	return AssignedState_ASSIGNED_STATE_UNKNOWN
+}
+
+func (x *AssignedConfig) GetDetails() string {
+	if x != nil {
+		return x.Details
+	}
+	return ""
+}
+
+type ResourceEntity struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Config        *Config                `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	TypeUrl       string                 `protobuf:"bytes,1,opt,name=type_url,json=typeUrl,proto3" json:"type_url,omitempty"`
+	Key           string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	Obj           *anypb.Any             `protobuf:"bytes,3,opt,name=obj,proto3" json:"obj,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ValidateConfigRequest) Reset() {
-	*x = ValidateConfigRequest{}
+func (x *ResourceEntity) Reset() {
+	*x = ResourceEntity{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ValidateConfigRequest) String() string {
+func (x *ResourceEntity) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ValidateConfigRequest) ProtoMessage() {}
+func (*ResourceEntity) ProtoMessage() {}
 
-func (x *ValidateConfigRequest) ProtoReflect() protoreflect.Message {
+func (x *ResourceEntity) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -331,39 +231,60 @@ func (x *ValidateConfigRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ValidateConfigRequest.ProtoReflect.Descriptor instead.
-func (*ValidateConfigRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ResourceEntity.ProtoReflect.Descriptor instead.
+func (*ResourceEntity) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ValidateConfigRequest) GetConfig() *Config {
+func (x *ResourceEntity) GetTypeUrl() string {
 	if x != nil {
-		return x.Config
+		return x.TypeUrl
+	}
+	return ""
+}
+
+func (x *ResourceEntity) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *ResourceEntity) GetObj() *anypb.Any {
+	if x != nil {
+		return x.Obj
 	}
 	return nil
 }
 
-type ListConfigReponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Configs       []*ConfigReference     `protobuf:"bytes,1,rep,name=configs,proto3" json:"configs,omitempty"`
+// CollectorConfig is a complete OpenTelemetryConfig
+type CollectorConfig struct {
+	state       protoimpl.MessageState         `protogen:"open.v1"`
+	Compat      *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	ContentType string                         `protobuf:"bytes,2,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	// Types that are valid to be assigned to Value:
+	//
+	//	*CollectorConfig_Raw
+	//	*CollectorConfig_Components
+	Value         isCollectorConfig_Value `protobuf_oneof:"value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListConfigReponse) Reset() {
-	*x = ListConfigReponse{}
+func (x *CollectorConfig) Reset() {
+	*x = CollectorConfig{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListConfigReponse) String() string {
+func (x *CollectorConfig) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListConfigReponse) ProtoMessage() {}
+func (*CollectorConfig) ProtoMessage() {}
 
-func (x *ListConfigReponse) ProtoReflect() protoreflect.Message {
+func (x *CollectorConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -375,39 +296,92 @@ func (x *ListConfigReponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListConfigReponse.ProtoReflect.Descriptor instead.
-func (*ListConfigReponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CollectorConfig.ProtoReflect.Descriptor instead.
+func (*CollectorConfig) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *ListConfigReponse) GetConfigs() []*ConfigReference {
+func (x *CollectorConfig) GetCompat() *v1alpha11.CompatibilityMatrix {
 	if x != nil {
-		return x.Configs
+		return x.Compat
 	}
 	return nil
 }
 
-type ConfigReference struct {
+func (x *CollectorConfig) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
+func (x *CollectorConfig) GetValue() isCollectorConfig_Value {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+func (x *CollectorConfig) GetRaw() []byte {
+	if x != nil {
+		if x, ok := x.Value.(*CollectorConfig_Raw); ok {
+			return x.Raw
+		}
+	}
+	return nil
+}
+
+func (x *CollectorConfig) GetComponents() *CollectorComponents {
+	if x != nil {
+		if x, ok := x.Value.(*CollectorConfig_Components); ok {
+			return x.Components
+		}
+	}
+	return nil
+}
+
+type isCollectorConfig_Value interface {
+	isCollectorConfig_Value()
+}
+
+type CollectorConfig_Raw struct {
+	Raw []byte `protobuf:"bytes,3,opt,name=Raw,proto3,oneof"`
+}
+
+type CollectorConfig_Components struct {
+	Components *CollectorComponents `protobuf:"bytes,4,opt,name=components,proto3,oneof"`
+}
+
+func (*CollectorConfig_Raw) isCollectorConfig_Value() {}
+
+func (*CollectorConfig_Components) isCollectorConfig_Value() {}
+
+type CollectorComponents struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Receivers     *ReceiverCollection    `protobuf:"bytes,1,opt,name=receivers,proto3" json:"receivers,omitempty"`
+	Processors    *ProcessorCollection   `protobuf:"bytes,2,opt,name=processors,proto3" json:"processors,omitempty"`
+	Exporters     *ExporterCollection    `protobuf:"bytes,3,opt,name=exporters,proto3" json:"exporters,omitempty"`
+	Connectors    *ConnectorCollection   `protobuf:"bytes,4,opt,name=connectors,proto3" json:"connectors,omitempty"`
+	Extensions    *ExtensionCollection   `protobuf:"bytes,5,opt,name=extensions,proto3" json:"extensions,omitempty"`
+	Pipelines     *PipelineCollection    `protobuf:"bytes,6,opt,name=pipelines,proto3" json:"pipelines,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ConfigReference) Reset() {
-	*x = ConfigReference{}
+func (x *CollectorComponents) Reset() {
+	*x = CollectorComponents{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ConfigReference) String() string {
+func (x *CollectorComponents) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConfigReference) ProtoMessage() {}
+func (*CollectorComponents) ProtoMessage() {}
 
-func (x *ConfigReference) ProtoReflect() protoreflect.Message {
+func (x *CollectorComponents) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -419,39 +393,76 @@ func (x *ConfigReference) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConfigReference.ProtoReflect.Descriptor instead.
-func (*ConfigReference) Descriptor() ([]byte, []int) {
+// Deprecated: Use CollectorComponents.ProtoReflect.Descriptor instead.
+func (*CollectorComponents) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ConfigReference) GetId() string {
+func (x *CollectorComponents) GetReceivers() *ReceiverCollection {
 	if x != nil {
-		return x.Id
+		return x.Receivers
 	}
-	return ""
+	return nil
 }
 
-type Config struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Config        []byte                 `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+func (x *CollectorComponents) GetProcessors() *ProcessorCollection {
+	if x != nil {
+		return x.Processors
+	}
+	return nil
+}
+
+func (x *CollectorComponents) GetExporters() *ExporterCollection {
+	if x != nil {
+		return x.Exporters
+	}
+	return nil
+}
+
+func (x *CollectorComponents) GetConnectors() *ConnectorCollection {
+	if x != nil {
+		return x.Connectors
+	}
+	return nil
+}
+
+func (x *CollectorComponents) GetExtensions() *ExtensionCollection {
+	if x != nil {
+		return x.Extensions
+	}
+	return nil
+}
+
+func (x *CollectorComponents) GetPipelines() *PipelineCollection {
+	if x != nil {
+		return x.Pipelines
+	}
+	return nil
+}
+
+// Receiver is an OpenTelemetry receiver
+type Receiver struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Config) Reset() {
-	*x = Config{}
+func (x *Receiver) Reset() {
+	*x = Receiver{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Config) String() string {
+func (x *Receiver) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Config) ProtoMessage() {}
+func (*Receiver) ProtoMessage() {}
 
-func (x *Config) ProtoReflect() protoreflect.Message {
+func (x *Receiver) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -463,40 +474,47 @@ func (x *Config) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Config.ProtoReflect.Descriptor instead.
-func (*Config) Descriptor() ([]byte, []int) {
+// Deprecated: Use Receiver.ProtoReflect.Descriptor instead.
+func (*Receiver) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *Config) GetConfig() []byte {
+func (x *Receiver) GetCompat() *v1alpha11.CompatibilityMatrix {
 	if x != nil {
-		return x.Config
+		return x.Compat
 	}
 	return nil
 }
 
-type ConfigRange struct {
+func (x *Receiver) GetValue() *ComponentDefinition {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type ReceiverCollection struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	StartVersion  string                 `protobuf:"bytes,1,opt,name=startVersion,proto3" json:"startVersion,omitempty"`
-	EndVersion    string                 `protobuf:"bytes,2,opt,name=endVersion,proto3" json:"endVersion,omitempty"`
+	Receivers     []*Receiver            `protobuf:"bytes,1,rep,name=receivers,proto3" json:"receivers,omitempty"`
+	Value         *ComponentDefinition   `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ConfigRange) Reset() {
-	*x = ConfigRange{}
+func (x *ReceiverCollection) Reset() {
+	*x = ReceiverCollection{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ConfigRange) String() string {
+func (x *ReceiverCollection) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConfigRange) ProtoMessage() {}
+func (*ReceiverCollection) ProtoMessage() {}
 
-func (x *ConfigRange) ProtoReflect() protoreflect.Message {
+func (x *ReceiverCollection) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -508,46 +526,48 @@ func (x *ConfigRange) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConfigRange.ProtoReflect.Descriptor instead.
-func (*ConfigRange) Descriptor() ([]byte, []int) {
+// Deprecated: Use ReceiverCollection.ProtoReflect.Descriptor instead.
+func (*ReceiverCollection) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ConfigRange) GetStartVersion() string {
+func (x *ReceiverCollection) GetReceivers() []*Receiver {
 	if x != nil {
-		return x.StartVersion
+		return x.Receivers
 	}
-	return ""
+	return nil
 }
 
-func (x *ConfigRange) GetEndVersion() string {
+func (x *ReceiverCollection) GetValue() *ComponentDefinition {
 	if x != nil {
-		return x.EndVersion
+		return x.Value
 	}
-	return ""
+	return nil
 }
 
-type Labels struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Labels        map[string]string      `protobuf:"bytes,1,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+// Processor is an OpenTelemetry processor
+type Processor struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Labels) Reset() {
-	*x = Labels{}
+func (x *Processor) Reset() {
+	*x = Processor{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Labels) String() string {
+func (x *Processor) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Labels) ProtoMessage() {}
+func (*Processor) ProtoMessage() {}
 
-func (x *Labels) ProtoReflect() protoreflect.Message {
+func (x *Processor) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -559,38 +579,46 @@ func (x *Labels) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Labels.ProtoReflect.Descriptor instead.
-func (*Labels) Descriptor() ([]byte, []int) {
+// Deprecated: Use Processor.ProtoReflect.Descriptor instead.
+func (*Processor) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *Labels) GetLabels() map[string]string {
+func (x *Processor) GetCompat() *v1alpha11.CompatibilityMatrix {
 	if x != nil {
-		return x.Labels
+		return x.Compat
 	}
 	return nil
 }
 
-type Matcher struct {
+func (x *Processor) GetValue() *ComponentDefinition {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type ProcessorCollection struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Processors    []*Processor           `protobuf:"bytes,1,rep,name=processors,proto3" json:"processors,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Matcher) Reset() {
-	*x = Matcher{}
+func (x *ProcessorCollection) Reset() {
+	*x = ProcessorCollection{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Matcher) String() string {
+func (x *ProcessorCollection) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Matcher) ProtoMessage() {}
+func (*ProcessorCollection) ProtoMessage() {}
 
-func (x *Matcher) ProtoReflect() protoreflect.Message {
+func (x *ProcessorCollection) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -602,37 +630,41 @@ func (x *Matcher) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Matcher.ProtoReflect.Descriptor instead.
-func (*Matcher) Descriptor() ([]byte, []int) {
+// Deprecated: Use ProcessorCollection.ProtoReflect.Descriptor instead.
+func (*ProcessorCollection) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{7}
 }
 
-// ConfigAssignment tracks metadata about a config assignment to an agent
-type ConfigAssignment struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	ConfigId      string                 `protobuf:"bytes,2,opt,name=config_id,json=configId,proto3" json:"config_id,omitempty"`
-	Source        ConfigSource           `protobuf:"varint,3,opt,name=source,proto3,enum=config.v1alpha1.ConfigSource" json:"source,omitempty"`
-	AssignedAt    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=assigned_at,json=assignedAt,proto3" json:"assigned_at,omitempty"`
-	ConfigHash    []byte                 `protobuf:"bytes,5,opt,name=config_hash,json=configHash,proto3" json:"config_hash,omitempty"`
+func (x *ProcessorCollection) GetProcessors() []*Processor {
+	if x != nil {
+		return x.Processors
+	}
+	return nil
+}
+
+// Exporter is an OpenTelemetry exporter
+type Exporter struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ConfigAssignment) Reset() {
-	*x = ConfigAssignment{}
+func (x *Exporter) Reset() {
+	*x = Exporter{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ConfigAssignment) String() string {
+func (x *Exporter) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConfigAssignment) ProtoMessage() {}
+func (*Exporter) ProtoMessage() {}
 
-func (x *ConfigAssignment) ProtoReflect() protoreflect.Message {
+func (x *Exporter) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -644,68 +676,46 @@ func (x *ConfigAssignment) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConfigAssignment.ProtoReflect.Descriptor instead.
-func (*ConfigAssignment) Descriptor() ([]byte, []int) {
+// Deprecated: Use Exporter.ProtoReflect.Descriptor instead.
+func (*Exporter) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *ConfigAssignment) GetAgentId() string {
+func (x *Exporter) GetCompat() *v1alpha11.CompatibilityMatrix {
 	if x != nil {
-		return x.AgentId
-	}
-	return ""
-}
-
-func (x *ConfigAssignment) GetConfigId() string {
-	if x != nil {
-		return x.ConfigId
-	}
-	return ""
-}
-
-func (x *ConfigAssignment) GetSource() ConfigSource {
-	if x != nil {
-		return x.Source
-	}
-	return ConfigSource_CONFIG_SOURCE_UNSPECIFIED
-}
-
-func (x *ConfigAssignment) GetAssignedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.AssignedAt
+		return x.Compat
 	}
 	return nil
 }
 
-func (x *ConfigAssignment) GetConfigHash() []byte {
+func (x *Exporter) GetValue() *ComponentDefinition {
 	if x != nil {
-		return x.ConfigHash
+		return x.Value
 	}
 	return nil
 }
 
-type AssignConfigRequest struct {
+type ExporterCollection struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	ConfigId      string                 `protobuf:"bytes,2,opt,name=config_id,json=configId,proto3" json:"config_id,omitempty"`
+	Exporters     []*Exporter            `protobuf:"bytes,1,rep,name=exporters,proto3" json:"exporters,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *AssignConfigRequest) Reset() {
-	*x = AssignConfigRequest{}
+func (x *ExporterCollection) Reset() {
+	*x = ExporterCollection{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AssignConfigRequest) String() string {
+func (x *ExporterCollection) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AssignConfigRequest) ProtoMessage() {}
+func (*ExporterCollection) ProtoMessage() {}
 
-func (x *AssignConfigRequest) ProtoReflect() protoreflect.Message {
+func (x *ExporterCollection) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -717,47 +727,41 @@ func (x *AssignConfigRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AssignConfigRequest.ProtoReflect.Descriptor instead.
-func (*AssignConfigRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExporterCollection.ProtoReflect.Descriptor instead.
+func (*ExporterCollection) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *AssignConfigRequest) GetAgentId() string {
+func (x *ExporterCollection) GetExporters() []*Exporter {
 	if x != nil {
-		return x.AgentId
+		return x.Exporters
 	}
-	return ""
+	return nil
 }
 
-func (x *AssignConfigRequest) GetConfigId() string {
-	if x != nil {
-		return x.ConfigId
-	}
-	return ""
-}
-
-type AssignConfigResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+// Connector is an OpenTelemetry connector
+type Connector struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *AssignConfigResponse) Reset() {
-	*x = AssignConfigResponse{}
+func (x *Connector) Reset() {
+	*x = Connector{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AssignConfigResponse) String() string {
+func (x *Connector) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AssignConfigResponse) ProtoMessage() {}
+func (*Connector) ProtoMessage() {}
 
-func (x *AssignConfigResponse) ProtoReflect() protoreflect.Message {
+func (x *Connector) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -769,46 +773,46 @@ func (x *AssignConfigResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AssignConfigResponse.ProtoReflect.Descriptor instead.
-func (*AssignConfigResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use Connector.ProtoReflect.Descriptor instead.
+func (*Connector) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *AssignConfigResponse) GetSuccess() bool {
+func (x *Connector) GetCompat() *v1alpha11.CompatibilityMatrix {
 	if x != nil {
-		return x.Success
+		return x.Compat
 	}
-	return false
+	return nil
 }
 
-func (x *AssignConfigResponse) GetMessage() string {
+func (x *Connector) GetValue() *ComponentDefinition {
 	if x != nil {
-		return x.Message
+		return x.Value
 	}
-	return ""
+	return nil
 }
 
-type GetAgentConfigRequest struct {
+type ConnectorCollection struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	Connectors    []*Connector           `protobuf:"bytes,1,rep,name=connectors,proto3" json:"connectors,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetAgentConfigRequest) Reset() {
-	*x = GetAgentConfigRequest{}
+func (x *ConnectorCollection) Reset() {
+	*x = ConnectorCollection{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetAgentConfigRequest) String() string {
+func (x *ConnectorCollection) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetAgentConfigRequest) ProtoMessage() {}
+func (*ConnectorCollection) ProtoMessage() {}
 
-func (x *GetAgentConfigRequest) ProtoReflect() protoreflect.Message {
+func (x *ConnectorCollection) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -820,41 +824,41 @@ func (x *GetAgentConfigRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetAgentConfigRequest.ProtoReflect.Descriptor instead.
-func (*GetAgentConfigRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ConnectorCollection.ProtoReflect.Descriptor instead.
+func (*ConnectorCollection) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *GetAgentConfigRequest) GetAgentId() string {
+func (x *ConnectorCollection) GetConnectors() []*Connector {
 	if x != nil {
-		return x.AgentId
+		return x.Connectors
 	}
-	return ""
+	return nil
 }
 
-type GetAgentConfigResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ConfigId      string                 `protobuf:"bytes,1,opt,name=config_id,json=configId,proto3" json:"config_id,omitempty"`
-	Source        ConfigSource           `protobuf:"varint,2,opt,name=source,proto3,enum=config.v1alpha1.ConfigSource" json:"source,omitempty"`
-	AssignedAt    *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=assigned_at,json=assignedAt,proto3" json:"assigned_at,omitempty"`
+// Extensions is an OpenTelemetry extension
+type Extension struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,1,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetAgentConfigResponse) Reset() {
-	*x = GetAgentConfigResponse{}
+func (x *Extension) Reset() {
+	*x = Extension{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetAgentConfigResponse) String() string {
+func (x *Extension) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetAgentConfigResponse) ProtoMessage() {}
+func (*Extension) ProtoMessage() {}
 
-func (x *GetAgentConfigResponse) ProtoReflect() protoreflect.Message {
+func (x *Extension) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -866,53 +870,46 @@ func (x *GetAgentConfigResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetAgentConfigResponse.ProtoReflect.Descriptor instead.
-func (*GetAgentConfigResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use Extension.ProtoReflect.Descriptor instead.
+func (*Extension) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *GetAgentConfigResponse) GetConfigId() string {
+func (x *Extension) GetCompat() *v1alpha11.CompatibilityMatrix {
 	if x != nil {
-		return x.ConfigId
-	}
-	return ""
-}
-
-func (x *GetAgentConfigResponse) GetSource() ConfigSource {
-	if x != nil {
-		return x.Source
-	}
-	return ConfigSource_CONFIG_SOURCE_UNSPECIFIED
-}
-
-func (x *GetAgentConfigResponse) GetAssignedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.AssignedAt
+		return x.Compat
 	}
 	return nil
 }
 
-type UnassignConfigRequest struct {
+func (x *Extension) GetValue() *ComponentDefinition {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type ExtensionCollection struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	Extensions    []*Extension           `protobuf:"bytes,1,rep,name=extensions,proto3" json:"extensions,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UnassignConfigRequest) Reset() {
-	*x = UnassignConfigRequest{}
+func (x *ExtensionCollection) Reset() {
+	*x = ExtensionCollection{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UnassignConfigRequest) String() string {
+func (x *ExtensionCollection) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UnassignConfigRequest) ProtoMessage() {}
+func (*ExtensionCollection) ProtoMessage() {}
 
-func (x *UnassignConfigRequest) ProtoReflect() protoreflect.Message {
+func (x *ExtensionCollection) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -924,39 +921,43 @@ func (x *UnassignConfigRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UnassignConfigRequest.ProtoReflect.Descriptor instead.
-func (*UnassignConfigRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExtensionCollection.ProtoReflect.Descriptor instead.
+func (*ExtensionCollection) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *UnassignConfigRequest) GetAgentId() string {
+func (x *ExtensionCollection) GetExtensions() []*Extension {
 	if x != nil {
-		return x.AgentId
+		return x.Extensions
 	}
-	return ""
+	return nil
 }
 
-type UnassignConfigResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+// Pipelines is an OpenTelemetry extension
+type Pipeline struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Type          PipelineType                   `protobuf:"varint,1,opt,name=type,proto3,enum=config.v1alpha1.PipelineType" json:"type,omitempty"`
+	PipelineName  *string                        `protobuf:"bytes,2,opt,name=pipeline_name,json=pipelineName,proto3,oneof" json:"pipeline_name,omitempty"`
+	Compat        *v1alpha11.CompatibilityMatrix `protobuf:"bytes,3,opt,name=compat,proto3" json:"compat,omitempty"`
+	Value         *ComponentDefinition           `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UnassignConfigResponse) Reset() {
-	*x = UnassignConfigResponse{}
+func (x *Pipeline) Reset() {
+	*x = Pipeline{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UnassignConfigResponse) String() string {
+func (x *Pipeline) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UnassignConfigResponse) ProtoMessage() {}
+func (*Pipeline) ProtoMessage() {}
 
-func (x *UnassignConfigResponse) ProtoReflect() protoreflect.Message {
+func (x *Pipeline) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -968,39 +969,60 @@ func (x *UnassignConfigResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UnassignConfigResponse.ProtoReflect.Descriptor instead.
-func (*UnassignConfigResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use Pipeline.ProtoReflect.Descriptor instead.
+func (*Pipeline) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *UnassignConfigResponse) GetSuccess() bool {
+func (x *Pipeline) GetType() PipelineType {
 	if x != nil {
-		return x.Success
+		return x.Type
 	}
-	return false
+	return PipelineType_PIPELINE_TYPE_UNKNOWN
 }
 
-type ListConfigAssignmentsRequest struct {
+func (x *Pipeline) GetPipelineName() string {
+	if x != nil && x.PipelineName != nil {
+		return *x.PipelineName
+	}
+	return ""
+}
+
+func (x *Pipeline) GetCompat() *v1alpha11.CompatibilityMatrix {
+	if x != nil {
+		return x.Compat
+	}
+	return nil
+}
+
+func (x *Pipeline) GetValue() *ComponentDefinition {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type PipelineCollection struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ConfigId      *string                `protobuf:"bytes,1,opt,name=config_id,json=configId,proto3,oneof" json:"config_id,omitempty"` // Filter by config
+	Pipelines     []*Pipeline            `protobuf:"bytes,1,rep,name=pipelines,proto3" json:"pipelines,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListConfigAssignmentsRequest) Reset() {
-	*x = ListConfigAssignmentsRequest{}
+func (x *PipelineCollection) Reset() {
+	*x = PipelineCollection{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListConfigAssignmentsRequest) String() string {
+func (x *PipelineCollection) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListConfigAssignmentsRequest) ProtoMessage() {}
+func (*PipelineCollection) ProtoMessage() {}
 
-func (x *ListConfigAssignmentsRequest) ProtoReflect() protoreflect.Message {
+func (x *PipelineCollection) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1012,44 +1034,44 @@ func (x *ListConfigAssignmentsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListConfigAssignmentsRequest.ProtoReflect.Descriptor instead.
-func (*ListConfigAssignmentsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use PipelineCollection.ProtoReflect.Descriptor instead.
+func (*PipelineCollection) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *ListConfigAssignmentsRequest) GetConfigId() string {
-	if x != nil && x.ConfigId != nil {
-		return *x.ConfigId
+func (x *PipelineCollection) GetPipelines() []*Pipeline {
+	if x != nil {
+		return x.Pipelines
 	}
-	return ""
+	return nil
 }
 
-type ConfigAssignmentInfo struct {
-	state         protoimpl.MessageState  `protogen:"open.v1"`
-	AgentId       string                  `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	ConfigId      string                  `protobuf:"bytes,2,opt,name=config_id,json=configId,proto3" json:"config_id,omitempty"`
-	Source        ConfigSource            `protobuf:"varint,3,opt,name=source,proto3,enum=config.v1alpha1.ConfigSource" json:"source,omitempty"`
-	AssignedAt    *timestamppb.Timestamp  `protobuf:"bytes,4,opt,name=assigned_at,json=assignedAt,proto3" json:"assigned_at,omitempty"`
-	Status        ConfigApplicationStatus `protobuf:"varint,5,opt,name=status,proto3,enum=config.v1alpha1.ConfigApplicationStatus" json:"status,omitempty"`
-	ErrorMessage  string                  `protobuf:"bytes,6,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+type ComponentDefinition struct {
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	ContentType string                 `protobuf:"bytes,1,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	// Types that are valid to be assigned to Value:
+	//
+	//	*ComponentDefinition_Raw
+	//	*ComponentDefinition_Ref
+	Value         isComponentDefinition_Value `protobuf_oneof:"value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ConfigAssignmentInfo) Reset() {
-	*x = ConfigAssignmentInfo{}
+func (x *ComponentDefinition) Reset() {
+	*x = ComponentDefinition{}
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ConfigAssignmentInfo) String() string {
+func (x *ComponentDefinition) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConfigAssignmentInfo) ProtoMessage() {}
+func (*ComponentDefinition) ProtoMessage() {}
 
-func (x *ConfigAssignmentInfo) ProtoReflect() protoreflect.Message {
+func (x *ComponentDefinition) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1061,1314 +1083,153 @@ func (x *ConfigAssignmentInfo) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConfigAssignmentInfo.ProtoReflect.Descriptor instead.
-func (*ConfigAssignmentInfo) Descriptor() ([]byte, []int) {
+// Deprecated: Use ComponentDefinition.ProtoReflect.Descriptor instead.
+func (*ComponentDefinition) Descriptor() ([]byte, []int) {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *ConfigAssignmentInfo) GetAgentId() string {
+func (x *ComponentDefinition) GetContentType() string {
 	if x != nil {
-		return x.AgentId
+		return x.ContentType
 	}
 	return ""
 }
 
-func (x *ConfigAssignmentInfo) GetConfigId() string {
+func (x *ComponentDefinition) GetValue() isComponentDefinition_Value {
 	if x != nil {
-		return x.ConfigId
+		return x.Value
+	}
+	return nil
+}
+
+func (x *ComponentDefinition) GetRaw() []byte {
+	if x != nil {
+		if x, ok := x.Value.(*ComponentDefinition_Raw); ok {
+			return x.Raw
+		}
+	}
+	return nil
+}
+
+func (x *ComponentDefinition) GetRef() string {
+	if x != nil {
+		if x, ok := x.Value.(*ComponentDefinition_Ref); ok {
+			return x.Ref
+		}
 	}
 	return ""
 }
 
-func (x *ConfigAssignmentInfo) GetSource() ConfigSource {
-	if x != nil {
-		return x.Source
-	}
-	return ConfigSource_CONFIG_SOURCE_UNSPECIFIED
+type isComponentDefinition_Value interface {
+	isComponentDefinition_Value()
 }
 
-func (x *ConfigAssignmentInfo) GetAssignedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.AssignedAt
-	}
-	return nil
+type ComponentDefinition_Raw struct {
+	// Holds the full content
+	Raw []byte `protobuf:"bytes,2,opt,name=raw,proto3,oneof"`
 }
 
-func (x *ConfigAssignmentInfo) GetStatus() ConfigApplicationStatus {
-	if x != nil {
-		return x.Status
-	}
-	return ConfigApplicationStatus_CONFIG_APPLICATION_STATUS_UNSPECIFIED
+type ComponentDefinition_Ref struct {
+	// Holds the reference
+	Ref string `protobuf:"bytes,3,opt,name=ref,proto3,oneof"`
 }
 
-func (x *ConfigAssignmentInfo) GetErrorMessage() string {
-	if x != nil {
-		return x.ErrorMessage
-	}
-	return ""
-}
-
-type ListConfigAssignmentsResponse struct {
-	state         protoimpl.MessageState  `protogen:"open.v1"`
-	Assignments   []*ConfigAssignmentInfo `protobuf:"bytes,1,rep,name=assignments,proto3" json:"assignments,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListConfigAssignmentsResponse) Reset() {
-	*x = ListConfigAssignmentsResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[17]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListConfigAssignmentsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListConfigAssignmentsResponse) ProtoMessage() {}
-
-func (x *ListConfigAssignmentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[17]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListConfigAssignmentsResponse.ProtoReflect.Descriptor instead.
-func (*ListConfigAssignmentsResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *ListConfigAssignmentsResponse) GetAssignments() []*ConfigAssignmentInfo {
-	if x != nil {
-		return x.Assignments
-	}
-	return nil
-}
-
-type GetConfigStatusRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetConfigStatusRequest) Reset() {
-	*x = GetConfigStatusRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[18]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetConfigStatusRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetConfigStatusRequest) ProtoMessage() {}
-
-func (x *GetConfigStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[18]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetConfigStatusRequest.ProtoReflect.Descriptor instead.
-func (*GetConfigStatusRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{18}
-}
-
-func (x *GetConfigStatusRequest) GetAgentId() string {
-	if x != nil {
-		return x.AgentId
-	}
-	return ""
-}
-
-type GetConfigStatusResponse struct {
-	state               protoimpl.MessageState `protogen:"open.v1"`
-	Assignment          *ConfigAssignmentInfo  `protobuf:"bytes,1,opt,name=assignment,proto3" json:"assignment,omitempty"`
-	EffectiveConfigHash []byte                 `protobuf:"bytes,2,opt,name=effective_config_hash,json=effectiveConfigHash,proto3" json:"effective_config_hash,omitempty"` // What agent reports
-	AssignedConfigHash  []byte                 `protobuf:"bytes,3,opt,name=assigned_config_hash,json=assignedConfigHash,proto3" json:"assigned_config_hash,omitempty"`    // What we assigned
-	InSync              bool                   `protobuf:"varint,4,opt,name=in_sync,json=inSync,proto3" json:"in_sync,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
-}
-
-func (x *GetConfigStatusResponse) Reset() {
-	*x = GetConfigStatusResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[19]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetConfigStatusResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetConfigStatusResponse) ProtoMessage() {}
-
-func (x *GetConfigStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[19]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetConfigStatusResponse.ProtoReflect.Descriptor instead.
-func (*GetConfigStatusResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{19}
-}
-
-func (x *GetConfigStatusResponse) GetAssignment() *ConfigAssignmentInfo {
-	if x != nil {
-		return x.Assignment
-	}
-	return nil
-}
-
-func (x *GetConfigStatusResponse) GetEffectiveConfigHash() []byte {
-	if x != nil {
-		return x.EffectiveConfigHash
-	}
-	return nil
-}
-
-func (x *GetConfigStatusResponse) GetAssignedConfigHash() []byte {
-	if x != nil {
-		return x.AssignedConfigHash
-	}
-	return nil
-}
-
-func (x *GetConfigStatusResponse) GetInSync() bool {
-	if x != nil {
-		return x.InSync
-	}
-	return false
-}
-
-type BatchAssignConfigRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	AgentIds      []string               `protobuf:"bytes,1,rep,name=agent_ids,json=agentIds,proto3" json:"agent_ids,omitempty"`
-	ConfigId      string                 `protobuf:"bytes,2,opt,name=config_id,json=configId,proto3" json:"config_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BatchAssignConfigRequest) Reset() {
-	*x = BatchAssignConfigRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[20]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BatchAssignConfigRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BatchAssignConfigRequest) ProtoMessage() {}
-
-func (x *BatchAssignConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[20]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BatchAssignConfigRequest.ProtoReflect.Descriptor instead.
-func (*BatchAssignConfigRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{20}
-}
-
-func (x *BatchAssignConfigRequest) GetAgentIds() []string {
-	if x != nil {
-		return x.AgentIds
-	}
-	return nil
-}
-
-func (x *BatchAssignConfigRequest) GetConfigId() string {
-	if x != nil {
-		return x.ConfigId
-	}
-	return ""
-}
-
-type BatchAssignConfigResponse struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	Successful     int32                  `protobuf:"varint,1,opt,name=successful,proto3" json:"successful,omitempty"`
-	Failed         int32                  `protobuf:"varint,2,opt,name=failed,proto3" json:"failed,omitempty"`
-	FailedAgentIds []string               `protobuf:"bytes,3,rep,name=failed_agent_ids,json=failedAgentIds,proto3" json:"failed_agent_ids,omitempty"`
-	ErrorMessages  []string               `protobuf:"bytes,4,rep,name=error_messages,json=errorMessages,proto3" json:"error_messages,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
-}
-
-func (x *BatchAssignConfigResponse) Reset() {
-	*x = BatchAssignConfigResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[21]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BatchAssignConfigResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BatchAssignConfigResponse) ProtoMessage() {}
-
-func (x *BatchAssignConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[21]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BatchAssignConfigResponse.ProtoReflect.Descriptor instead.
-func (*BatchAssignConfigResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{21}
-}
-
-func (x *BatchAssignConfigResponse) GetSuccessful() int32 {
-	if x != nil {
-		return x.Successful
-	}
-	return 0
-}
-
-func (x *BatchAssignConfigResponse) GetFailed() int32 {
-	if x != nil {
-		return x.Failed
-	}
-	return 0
-}
-
-func (x *BatchAssignConfigResponse) GetFailedAgentIds() []string {
-	if x != nil {
-		return x.FailedAgentIds
-	}
-	return nil
-}
-
-func (x *BatchAssignConfigResponse) GetErrorMessages() []string {
-	if x != nil {
-		return x.ErrorMessages
-	}
-	return nil
-}
-
-type AssignConfigByLabelsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Labels        map[string]string      `protobuf:"bytes,1,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // Agent labels to match
-	ConfigId      string                 `protobuf:"bytes,2,opt,name=config_id,json=configId,proto3" json:"config_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *AssignConfigByLabelsRequest) Reset() {
-	*x = AssignConfigByLabelsRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[22]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AssignConfigByLabelsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AssignConfigByLabelsRequest) ProtoMessage() {}
-
-func (x *AssignConfigByLabelsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[22]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AssignConfigByLabelsRequest.ProtoReflect.Descriptor instead.
-func (*AssignConfigByLabelsRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{22}
-}
-
-func (x *AssignConfigByLabelsRequest) GetLabels() map[string]string {
-	if x != nil {
-		return x.Labels
-	}
-	return nil
-}
-
-func (x *AssignConfigByLabelsRequest) GetConfigId() string {
-	if x != nil {
-		return x.ConfigId
-	}
-	return ""
-}
-
-type AssignConfigByLabelsResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	MatchedAgentIds []string               `protobuf:"bytes,1,rep,name=matched_agent_ids,json=matchedAgentIds,proto3" json:"matched_agent_ids,omitempty"`
-	Successful      int32                  `protobuf:"varint,2,opt,name=successful,proto3" json:"successful,omitempty"`
-	Failed          int32                  `protobuf:"varint,3,opt,name=failed,proto3" json:"failed,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *AssignConfigByLabelsResponse) Reset() {
-	*x = AssignConfigByLabelsResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[23]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AssignConfigByLabelsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AssignConfigByLabelsResponse) ProtoMessage() {}
-
-func (x *AssignConfigByLabelsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[23]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AssignConfigByLabelsResponse.ProtoReflect.Descriptor instead.
-func (*AssignConfigByLabelsResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{23}
-}
-
-func (x *AssignConfigByLabelsResponse) GetMatchedAgentIds() []string {
-	if x != nil {
-		return x.MatchedAgentIds
-	}
-	return nil
-}
-
-func (x *AssignConfigByLabelsResponse) GetSuccessful() int32 {
-	if x != nil {
-		return x.Successful
-	}
-	return 0
-}
-
-func (x *AssignConfigByLabelsResponse) GetFailed() int32 {
-	if x != nil {
-		return x.Failed
-	}
-	return 0
-}
-
-type RollingDeploymentRequest struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	ConfigId          string                 `protobuf:"bytes,1,opt,name=config_id,json=configId,proto3" json:"config_id,omitempty"`
-	AgentIds          []string               `protobuf:"bytes,2,rep,name=agent_ids,json=agentIds,proto3" json:"agent_ids,omitempty"`
-	AgentLabels       map[string]string      `protobuf:"bytes,3,rep,name=agent_labels,json=agentLabels,proto3" json:"agent_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // Alternative to agent_ids
-	BatchSize         int32                  `protobuf:"varint,4,opt,name=batch_size,json=batchSize,proto3" json:"batch_size,omitempty"`                                                                                // Agents per batch (default: 1)
-	BatchDelaySeconds int32                  `protobuf:"varint,5,opt,name=batch_delay_seconds,json=batchDelaySeconds,proto3" json:"batch_delay_seconds,omitempty"`                                                      // Delay between batches (default: 0)
-	MaxFailures       int32                  `protobuf:"varint,6,opt,name=max_failures,json=maxFailures,proto3" json:"max_failures,omitempty"`                                                                          // Stop after N failures (default: 0 = no limit)
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *RollingDeploymentRequest) Reset() {
-	*x = RollingDeploymentRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[24]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RollingDeploymentRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RollingDeploymentRequest) ProtoMessage() {}
-
-func (x *RollingDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[24]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RollingDeploymentRequest.ProtoReflect.Descriptor instead.
-func (*RollingDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{24}
-}
-
-func (x *RollingDeploymentRequest) GetConfigId() string {
-	if x != nil {
-		return x.ConfigId
-	}
-	return ""
-}
-
-func (x *RollingDeploymentRequest) GetAgentIds() []string {
-	if x != nil {
-		return x.AgentIds
-	}
-	return nil
-}
-
-func (x *RollingDeploymentRequest) GetAgentLabels() map[string]string {
-	if x != nil {
-		return x.AgentLabels
-	}
-	return nil
-}
-
-func (x *RollingDeploymentRequest) GetBatchSize() int32 {
-	if x != nil {
-		return x.BatchSize
-	}
-	return 0
-}
-
-func (x *RollingDeploymentRequest) GetBatchDelaySeconds() int32 {
-	if x != nil {
-		return x.BatchDelaySeconds
-	}
-	return 0
-}
-
-func (x *RollingDeploymentRequest) GetMaxFailures() int32 {
-	if x != nil {
-		return x.MaxFailures
-	}
-	return 0
-}
-
-type RollingDeploymentResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DeploymentId  string                 `protobuf:"bytes,1,opt,name=deployment_id,json=deploymentId,proto3" json:"deployment_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *RollingDeploymentResponse) Reset() {
-	*x = RollingDeploymentResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[25]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RollingDeploymentResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RollingDeploymentResponse) ProtoMessage() {}
-
-func (x *RollingDeploymentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[25]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RollingDeploymentResponse.ProtoReflect.Descriptor instead.
-func (*RollingDeploymentResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{25}
-}
-
-func (x *RollingDeploymentResponse) GetDeploymentId() string {
-	if x != nil {
-		return x.DeploymentId
-	}
-	return ""
-}
-
-type AgentDeploymentStatus struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	State         AgentDeploymentState   `protobuf:"varint,2,opt,name=state,proto3,enum=config.v1alpha1.AgentDeploymentState" json:"state,omitempty"`
-	ErrorMessage  string                 `protobuf:"bytes,3,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
-	AppliedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=applied_at,json=appliedAt,proto3" json:"applied_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *AgentDeploymentStatus) Reset() {
-	*x = AgentDeploymentStatus{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[26]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
+func (*ComponentDefinition_Raw) isComponentDefinition_Value() {}
 
-func (x *AgentDeploymentStatus) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AgentDeploymentStatus) ProtoMessage() {}
-
-func (x *AgentDeploymentStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[26]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AgentDeploymentStatus.ProtoReflect.Descriptor instead.
-func (*AgentDeploymentStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{26}
-}
-
-func (x *AgentDeploymentStatus) GetAgentId() string {
-	if x != nil {
-		return x.AgentId
-	}
-	return ""
-}
-
-func (x *AgentDeploymentStatus) GetState() AgentDeploymentState {
-	if x != nil {
-		return x.State
-	}
-	return AgentDeploymentState_AGENT_DEPLOYMENT_STATE_UNSPECIFIED
-}
-
-func (x *AgentDeploymentStatus) GetErrorMessage() string {
-	if x != nil {
-		return x.ErrorMessage
-	}
-	return ""
-}
-
-func (x *AgentDeploymentStatus) GetAppliedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.AppliedAt
-	}
-	return nil
-}
-
-type DeploymentStatus struct {
-	state           protoimpl.MessageState   `protogen:"open.v1"`
-	DeploymentId    string                   `protobuf:"bytes,1,opt,name=deployment_id,json=deploymentId,proto3" json:"deployment_id,omitempty"`
-	ConfigId        string                   `protobuf:"bytes,2,opt,name=config_id,json=configId,proto3" json:"config_id,omitempty"`
-	State           DeploymentState          `protobuf:"varint,3,opt,name=state,proto3,enum=config.v1alpha1.DeploymentState" json:"state,omitempty"`
-	TotalAgents     int32                    `protobuf:"varint,4,opt,name=total_agents,json=totalAgents,proto3" json:"total_agents,omitempty"`
-	CompletedAgents int32                    `protobuf:"varint,5,opt,name=completed_agents,json=completedAgents,proto3" json:"completed_agents,omitempty"`
-	FailedAgents    int32                    `protobuf:"varint,6,opt,name=failed_agents,json=failedAgents,proto3" json:"failed_agents,omitempty"`
-	PendingAgents   int32                    `protobuf:"varint,7,opt,name=pending_agents,json=pendingAgents,proto3" json:"pending_agents,omitempty"`
-	CurrentBatch    int32                    `protobuf:"varint,8,opt,name=current_batch,json=currentBatch,proto3" json:"current_batch,omitempty"`
-	AgentStatuses   []*AgentDeploymentStatus `protobuf:"bytes,9,rep,name=agent_statuses,json=agentStatuses,proto3" json:"agent_statuses,omitempty"`
-	StartedAt       *timestamppb.Timestamp   `protobuf:"bytes,10,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
-	CompletedAt     *timestamppb.Timestamp   `protobuf:"bytes,11,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *DeploymentStatus) Reset() {
-	*x = DeploymentStatus{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[27]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeploymentStatus) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeploymentStatus) ProtoMessage() {}
-
-func (x *DeploymentStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[27]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeploymentStatus.ProtoReflect.Descriptor instead.
-func (*DeploymentStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{27}
-}
-
-func (x *DeploymentStatus) GetDeploymentId() string {
-	if x != nil {
-		return x.DeploymentId
-	}
-	return ""
-}
-
-func (x *DeploymentStatus) GetConfigId() string {
-	if x != nil {
-		return x.ConfigId
-	}
-	return ""
-}
-
-func (x *DeploymentStatus) GetState() DeploymentState {
-	if x != nil {
-		return x.State
-	}
-	return DeploymentState_DEPLOYMENT_STATE_UNSPECIFIED
-}
-
-func (x *DeploymentStatus) GetTotalAgents() int32 {
-	if x != nil {
-		return x.TotalAgents
-	}
-	return 0
-}
-
-func (x *DeploymentStatus) GetCompletedAgents() int32 {
-	if x != nil {
-		return x.CompletedAgents
-	}
-	return 0
-}
-
-func (x *DeploymentStatus) GetFailedAgents() int32 {
-	if x != nil {
-		return x.FailedAgents
-	}
-	return 0
-}
-
-func (x *DeploymentStatus) GetPendingAgents() int32 {
-	if x != nil {
-		return x.PendingAgents
-	}
-	return 0
-}
-
-func (x *DeploymentStatus) GetCurrentBatch() int32 {
-	if x != nil {
-		return x.CurrentBatch
-	}
-	return 0
-}
-
-func (x *DeploymentStatus) GetAgentStatuses() []*AgentDeploymentStatus {
-	if x != nil {
-		return x.AgentStatuses
-	}
-	return nil
-}
-
-func (x *DeploymentStatus) GetStartedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.StartedAt
-	}
-	return nil
-}
-
-func (x *DeploymentStatus) GetCompletedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CompletedAt
-	}
-	return nil
-}
-
-type GetDeploymentStatusRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DeploymentId  string                 `protobuf:"bytes,1,opt,name=deployment_id,json=deploymentId,proto3" json:"deployment_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetDeploymentStatusRequest) Reset() {
-	*x = GetDeploymentStatusRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[28]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetDeploymentStatusRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetDeploymentStatusRequest) ProtoMessage() {}
-
-func (x *GetDeploymentStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[28]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetDeploymentStatusRequest.ProtoReflect.Descriptor instead.
-func (*GetDeploymentStatusRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{28}
-}
-
-func (x *GetDeploymentStatusRequest) GetDeploymentId() string {
-	if x != nil {
-		return x.DeploymentId
-	}
-	return ""
-}
-
-type GetDeploymentStatusResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        *DeploymentStatus      `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetDeploymentStatusResponse) Reset() {
-	*x = GetDeploymentStatusResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[29]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetDeploymentStatusResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetDeploymentStatusResponse) ProtoMessage() {}
-
-func (x *GetDeploymentStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[29]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetDeploymentStatusResponse.ProtoReflect.Descriptor instead.
-func (*GetDeploymentStatusResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{29}
-}
-
-func (x *GetDeploymentStatusResponse) GetStatus() *DeploymentStatus {
-	if x != nil {
-		return x.Status
-	}
-	return nil
-}
-
-type PauseDeploymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DeploymentId  string                 `protobuf:"bytes,1,opt,name=deployment_id,json=deploymentId,proto3" json:"deployment_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *PauseDeploymentRequest) Reset() {
-	*x = PauseDeploymentRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[30]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *PauseDeploymentRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*PauseDeploymentRequest) ProtoMessage() {}
-
-func (x *PauseDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[30]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use PauseDeploymentRequest.ProtoReflect.Descriptor instead.
-func (*PauseDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{30}
-}
-
-func (x *PauseDeploymentRequest) GetDeploymentId() string {
-	if x != nil {
-		return x.DeploymentId
-	}
-	return ""
-}
-
-type ResumeDeploymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DeploymentId  string                 `protobuf:"bytes,1,opt,name=deployment_id,json=deploymentId,proto3" json:"deployment_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ResumeDeploymentRequest) Reset() {
-	*x = ResumeDeploymentRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[31]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ResumeDeploymentRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ResumeDeploymentRequest) ProtoMessage() {}
-
-func (x *ResumeDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[31]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ResumeDeploymentRequest.ProtoReflect.Descriptor instead.
-func (*ResumeDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{31}
-}
-
-func (x *ResumeDeploymentRequest) GetDeploymentId() string {
-	if x != nil {
-		return x.DeploymentId
-	}
-	return ""
-}
-
-type CancelDeploymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DeploymentId  string                 `protobuf:"bytes,1,opt,name=deployment_id,json=deploymentId,proto3" json:"deployment_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CancelDeploymentRequest) Reset() {
-	*x = CancelDeploymentRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[32]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CancelDeploymentRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CancelDeploymentRequest) ProtoMessage() {}
-
-func (x *CancelDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[32]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CancelDeploymentRequest.ProtoReflect.Descriptor instead.
-func (*CancelDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{32}
-}
-
-func (x *CancelDeploymentRequest) GetDeploymentId() string {
-	if x != nil {
-		return x.DeploymentId
-	}
-	return ""
-}
-
-type DeploymentActionResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeploymentActionResponse) Reset() {
-	*x = DeploymentActionResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[33]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeploymentActionResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeploymentActionResponse) ProtoMessage() {}
-
-func (x *DeploymentActionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[33]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeploymentActionResponse.ProtoReflect.Descriptor instead.
-func (*DeploymentActionResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{33}
-}
-
-func (x *DeploymentActionResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-func (x *DeploymentActionResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
-type ListDeploymentsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	StateFilter   *DeploymentState       `protobuf:"varint,1,opt,name=state_filter,json=stateFilter,proto3,enum=config.v1alpha1.DeploymentState,oneof" json:"state_filter,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListDeploymentsRequest) Reset() {
-	*x = ListDeploymentsRequest{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[34]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListDeploymentsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListDeploymentsRequest) ProtoMessage() {}
-
-func (x *ListDeploymentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[34]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListDeploymentsRequest.ProtoReflect.Descriptor instead.
-func (*ListDeploymentsRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{34}
-}
-
-func (x *ListDeploymentsRequest) GetStateFilter() DeploymentState {
-	if x != nil && x.StateFilter != nil {
-		return *x.StateFilter
-	}
-	return DeploymentState_DEPLOYMENT_STATE_UNSPECIFIED
-}
-
-type ListDeploymentsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Deployments   []*DeploymentStatus    `protobuf:"bytes,1,rep,name=deployments,proto3" json:"deployments,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListDeploymentsResponse) Reset() {
-	*x = ListDeploymentsResponse{}
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[35]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListDeploymentsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListDeploymentsResponse) ProtoMessage() {}
-
-func (x *ListDeploymentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_config_v1alpha1_config_proto_msgTypes[35]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListDeploymentsResponse.ProtoReflect.Descriptor instead.
-func (*ListDeploymentsResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP(), []int{35}
-}
-
-func (x *ListDeploymentsResponse) GetDeployments() []*DeploymentStatus {
-	if x != nil {
-		return x.Deployments
-	}
-	return nil
-}
+func (*ComponentDefinition_Ref) isComponentDefinition_Value() {}
 
 var File_pkg_api_config_v1alpha1_config_proto protoreflect.FileDescriptor
 
 const file_pkg_api_config_v1alpha1_config_proto_rawDesc = "" +
 	"\n" +
-	"$pkg/api/config/v1alpha1/config.proto\x12\x0fconfig.v1alpha1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"w\n" +
-	"\x10PutConfigRequest\x122\n" +
-	"\x03ref\x18\x01 \x01(\v2 .config.v1alpha1.ConfigReferenceR\x03ref\x12/\n" +
-	"\x06config\x18\x02 \x01(\v2\x17.config.v1alpha1.ConfigR\x06config\"H\n" +
-	"\x15ValidateConfigRequest\x12/\n" +
-	"\x06config\x18\x01 \x01(\v2\x17.config.v1alpha1.ConfigR\x06config\"O\n" +
-	"\x11ListConfigReponse\x12:\n" +
-	"\aconfigs\x18\x01 \x03(\v2 .config.v1alpha1.ConfigReferenceR\aconfigs\"!\n" +
-	"\x0fConfigReference\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\" \n" +
-	"\x06Config\x12\x16\n" +
-	"\x06config\x18\x01 \x01(\fR\x06config\"Q\n" +
-	"\vConfigRange\x12\"\n" +
-	"\fstartVersion\x18\x01 \x01(\tR\fstartVersion\x12\x1e\n" +
+	"$pkg/api/config/v1alpha1/config.proto\x12\x0fconfig.v1alpha1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a*pkg/api/resources/v1alpha1/resources.proto\x1a\x19google/protobuf/any.proto\x1a$pkg/api/common/v1alpha1/common.proto\"\xa8\x01\n" +
+	"\x0eAssignedConfig\x12;\n" +
+	"\x06config\x18\x01 \x01(\v2#.resources.v1alpha1.CollectorConfigR\x06config\x12?\n" +
+	"\vapply_state\x18\x02 \x01(\x0e2\x1e.config.v1alpha1.AssignedStateR\n" +
+	"applyState\x12\x18\n" +
+	"\adetails\x18\x03 \x01(\tR\adetails\"e\n" +
+	"\x0eResourceEntity\x12\x19\n" +
+	"\btype_url\x18\x01 \x01(\tR\atypeUrl\x12\x10\n" +
+	"\x03key\x18\x02 \x01(\tR\x03key\x12&\n" +
+	"\x03obj\x18\x03 \x01(\v2\x14.google.protobuf.AnyR\x03obj\"\xd7\x01\n" +
+	"\x0fCollectorConfig\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12!\n" +
+	"\fcontent_type\x18\x02 \x01(\tR\vcontentType\x12\x12\n" +
+	"\x03Raw\x18\x03 \x01(\fH\x00R\x03Raw\x12F\n" +
 	"\n" +
-	"endVersion\x18\x02 \x01(\tR\n" +
-	"endVersion\"\x80\x01\n" +
-	"\x06Labels\x12;\n" +
-	"\x06labels\x18\x01 \x03(\v2#.config.v1alpha1.Labels.LabelsEntryR\x06labels\x1a9\n" +
-	"\vLabelsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\t\n" +
-	"\aMatcher\"\xdf\x01\n" +
-	"\x10ConfigAssignment\x12\x19\n" +
-	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12\x1b\n" +
-	"\tconfig_id\x18\x02 \x01(\tR\bconfigId\x125\n" +
-	"\x06source\x18\x03 \x01(\x0e2\x1d.config.v1alpha1.ConfigSourceR\x06source\x12;\n" +
-	"\vassigned_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"assignedAt\x12\x1f\n" +
-	"\vconfig_hash\x18\x05 \x01(\fR\n" +
-	"configHash\"M\n" +
-	"\x13AssignConfigRequest\x12\x19\n" +
-	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12\x1b\n" +
-	"\tconfig_id\x18\x02 \x01(\tR\bconfigId\"J\n" +
-	"\x14AssignConfigResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"2\n" +
-	"\x15GetAgentConfigRequest\x12\x19\n" +
-	"\bagent_id\x18\x01 \x01(\tR\aagentId\"\xa9\x01\n" +
-	"\x16GetAgentConfigResponse\x12\x1b\n" +
-	"\tconfig_id\x18\x01 \x01(\tR\bconfigId\x125\n" +
-	"\x06source\x18\x02 \x01(\x0e2\x1d.config.v1alpha1.ConfigSourceR\x06source\x12;\n" +
-	"\vassigned_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"assignedAt\"2\n" +
-	"\x15UnassignConfigRequest\x12\x19\n" +
-	"\bagent_id\x18\x01 \x01(\tR\aagentId\"2\n" +
-	"\x16UnassignConfigResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"N\n" +
-	"\x1cListConfigAssignmentsRequest\x12 \n" +
-	"\tconfig_id\x18\x01 \x01(\tH\x00R\bconfigId\x88\x01\x01B\f\n" +
+	"components\x18\x04 \x01(\v2$.config.v1alpha1.CollectorComponentsH\x00R\n" +
+	"componentsB\a\n" +
+	"\x05value\"\xb0\x03\n" +
+	"\x13CollectorComponents\x12A\n" +
+	"\treceivers\x18\x01 \x01(\v2#.config.v1alpha1.ReceiverCollectionR\treceivers\x12D\n" +
 	"\n" +
-	"_config_id\"\xa9\x02\n" +
-	"\x14ConfigAssignmentInfo\x12\x19\n" +
-	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12\x1b\n" +
-	"\tconfig_id\x18\x02 \x01(\tR\bconfigId\x125\n" +
-	"\x06source\x18\x03 \x01(\x0e2\x1d.config.v1alpha1.ConfigSourceR\x06source\x12;\n" +
-	"\vassigned_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"assignedAt\x12@\n" +
-	"\x06status\x18\x05 \x01(\x0e2(.config.v1alpha1.ConfigApplicationStatusR\x06status\x12#\n" +
-	"\rerror_message\x18\x06 \x01(\tR\ferrorMessage\"h\n" +
-	"\x1dListConfigAssignmentsResponse\x12G\n" +
-	"\vassignments\x18\x01 \x03(\v2%.config.v1alpha1.ConfigAssignmentInfoR\vassignments\"3\n" +
-	"\x16GetConfigStatusRequest\x12\x19\n" +
-	"\bagent_id\x18\x01 \x01(\tR\aagentId\"\xdf\x01\n" +
-	"\x17GetConfigStatusResponse\x12E\n" +
+	"processors\x18\x02 \x01(\v2$.config.v1alpha1.ProcessorCollectionR\n" +
+	"processors\x12A\n" +
+	"\texporters\x18\x03 \x01(\v2#.config.v1alpha1.ExporterCollectionR\texporters\x12D\n" +
 	"\n" +
-	"assignment\x18\x01 \x01(\v2%.config.v1alpha1.ConfigAssignmentInfoR\n" +
-	"assignment\x122\n" +
-	"\x15effective_config_hash\x18\x02 \x01(\fR\x13effectiveConfigHash\x120\n" +
-	"\x14assigned_config_hash\x18\x03 \x01(\fR\x12assignedConfigHash\x12\x17\n" +
-	"\ain_sync\x18\x04 \x01(\bR\x06inSync\"T\n" +
-	"\x18BatchAssignConfigRequest\x12\x1b\n" +
-	"\tagent_ids\x18\x01 \x03(\tR\bagentIds\x12\x1b\n" +
-	"\tconfig_id\x18\x02 \x01(\tR\bconfigId\"\xa4\x01\n" +
-	"\x19BatchAssignConfigResponse\x12\x1e\n" +
+	"connectors\x18\x04 \x01(\v2$.config.v1alpha1.ConnectorCollectionR\n" +
+	"connectors\x12D\n" +
 	"\n" +
-	"successful\x18\x01 \x01(\x05R\n" +
-	"successful\x12\x16\n" +
-	"\x06failed\x18\x02 \x01(\x05R\x06failed\x12(\n" +
-	"\x10failed_agent_ids\x18\x03 \x03(\tR\x0efailedAgentIds\x12%\n" +
-	"\x0eerror_messages\x18\x04 \x03(\tR\rerrorMessages\"\xc7\x01\n" +
-	"\x1bAssignConfigByLabelsRequest\x12P\n" +
-	"\x06labels\x18\x01 \x03(\v28.config.v1alpha1.AssignConfigByLabelsRequest.LabelsEntryR\x06labels\x12\x1b\n" +
-	"\tconfig_id\x18\x02 \x01(\tR\bconfigId\x1a9\n" +
-	"\vLabelsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x82\x01\n" +
-	"\x1cAssignConfigByLabelsResponse\x12*\n" +
-	"\x11matched_agent_ids\x18\x01 \x03(\tR\x0fmatchedAgentIds\x12\x1e\n" +
+	"extensions\x18\x05 \x01(\v2$.config.v1alpha1.ExtensionCollectionR\n" +
+	"extensions\x12A\n" +
+	"\tpipelines\x18\x06 \x01(\v2#.config.v1alpha1.PipelineCollectionR\tpipelines\"\x84\x01\n" +
+	"\bReceiver\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"\x89\x01\n" +
+	"\x12ReceiverCollection\x127\n" +
+	"\treceivers\x18\x01 \x03(\v2\x19.config.v1alpha1.ReceiverR\treceivers\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"\x85\x01\n" +
+	"\tProcessor\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"Q\n" +
+	"\x13ProcessorCollection\x12:\n" +
 	"\n" +
-	"successful\x18\x02 \x01(\x05R\n" +
-	"successful\x12\x16\n" +
-	"\x06failed\x18\x03 \x01(\x05R\x06failed\"\xe5\x02\n" +
-	"\x18RollingDeploymentRequest\x12\x1b\n" +
-	"\tconfig_id\x18\x01 \x01(\tR\bconfigId\x12\x1b\n" +
-	"\tagent_ids\x18\x02 \x03(\tR\bagentIds\x12]\n" +
-	"\fagent_labels\x18\x03 \x03(\v2:.config.v1alpha1.RollingDeploymentRequest.AgentLabelsEntryR\vagentLabels\x12\x1d\n" +
+	"processors\x18\x01 \x03(\v2\x1a.config.v1alpha1.ProcessorR\n" +
+	"processors\"\x84\x01\n" +
+	"\bExporter\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"M\n" +
+	"\x12ExporterCollection\x127\n" +
+	"\texporters\x18\x01 \x03(\v2\x19.config.v1alpha1.ExporterR\texporters\"\x85\x01\n" +
+	"\tConnector\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"Q\n" +
+	"\x13ConnectorCollection\x12:\n" +
 	"\n" +
-	"batch_size\x18\x04 \x01(\x05R\tbatchSize\x12.\n" +
-	"\x13batch_delay_seconds\x18\x05 \x01(\x05R\x11batchDelaySeconds\x12!\n" +
-	"\fmax_failures\x18\x06 \x01(\x05R\vmaxFailures\x1a>\n" +
-	"\x10AgentLabelsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"@\n" +
-	"\x19RollingDeploymentResponse\x12#\n" +
-	"\rdeployment_id\x18\x01 \x01(\tR\fdeploymentId\"\xcf\x01\n" +
-	"\x15AgentDeploymentStatus\x12\x19\n" +
-	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12;\n" +
-	"\x05state\x18\x02 \x01(\x0e2%.config.v1alpha1.AgentDeploymentStateR\x05state\x12#\n" +
-	"\rerror_message\x18\x03 \x01(\tR\ferrorMessage\x129\n" +
+	"connectors\x18\x01 \x03(\v2\x1a.config.v1alpha1.ConnectorR\n" +
+	"connectors\"\x85\x01\n" +
+	"\tExtension\x12<\n" +
+	"\x06compat\x18\x01 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x02 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05value\"Q\n" +
+	"\x13ExtensionCollection\x12:\n" +
 	"\n" +
-	"applied_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tappliedAt\"\x94\x04\n" +
-	"\x10DeploymentStatus\x12#\n" +
-	"\rdeployment_id\x18\x01 \x01(\tR\fdeploymentId\x12\x1b\n" +
-	"\tconfig_id\x18\x02 \x01(\tR\bconfigId\x126\n" +
-	"\x05state\x18\x03 \x01(\x0e2 .config.v1alpha1.DeploymentStateR\x05state\x12!\n" +
-	"\ftotal_agents\x18\x04 \x01(\x05R\vtotalAgents\x12)\n" +
-	"\x10completed_agents\x18\x05 \x01(\x05R\x0fcompletedAgents\x12#\n" +
-	"\rfailed_agents\x18\x06 \x01(\x05R\ffailedAgents\x12%\n" +
-	"\x0epending_agents\x18\a \x01(\x05R\rpendingAgents\x12#\n" +
-	"\rcurrent_batch\x18\b \x01(\x05R\fcurrentBatch\x12M\n" +
-	"\x0eagent_statuses\x18\t \x03(\v2&.config.v1alpha1.AgentDeploymentStatusR\ragentStatuses\x129\n" +
-	"\n" +
-	"started_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
-	"\fcompleted_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\"A\n" +
-	"\x1aGetDeploymentStatusRequest\x12#\n" +
-	"\rdeployment_id\x18\x01 \x01(\tR\fdeploymentId\"X\n" +
-	"\x1bGetDeploymentStatusResponse\x129\n" +
-	"\x06status\x18\x01 \x01(\v2!.config.v1alpha1.DeploymentStatusR\x06status\"=\n" +
-	"\x16PauseDeploymentRequest\x12#\n" +
-	"\rdeployment_id\x18\x01 \x01(\tR\fdeploymentId\">\n" +
-	"\x17ResumeDeploymentRequest\x12#\n" +
-	"\rdeployment_id\x18\x01 \x01(\tR\fdeploymentId\">\n" +
-	"\x17CancelDeploymentRequest\x12#\n" +
-	"\rdeployment_id\x18\x01 \x01(\tR\fdeploymentId\"N\n" +
-	"\x18DeploymentActionResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"s\n" +
-	"\x16ListDeploymentsRequest\x12H\n" +
-	"\fstate_filter\x18\x01 \x01(\x0e2 .config.v1alpha1.DeploymentStateH\x00R\vstateFilter\x88\x01\x01B\x0f\n" +
-	"\r_state_filter\"^\n" +
-	"\x17ListDeploymentsResponse\x12C\n" +
-	"\vdeployments\x18\x01 \x03(\v2!.config.v1alpha1.DeploymentStatusR\vdeployments*\x7f\n" +
-	"\fConfigSource\x12\x1d\n" +
-	"\x19CONFIG_SOURCE_UNSPECIFIED\x10\x00\x12\x19\n" +
-	"\x15CONFIG_SOURCE_DEFAULT\x10\x01\x12\x1b\n" +
-	"\x17CONFIG_SOURCE_BOOTSTRAP\x10\x02\x12\x18\n" +
-	"\x14CONFIG_SOURCE_MANUAL\x10\x03*\xb8\x01\n" +
-	"\x17ConfigApplicationStatus\x12)\n" +
-	"%CONFIG_APPLICATION_STATUS_UNSPECIFIED\x10\x00\x12%\n" +
-	"!CONFIG_APPLICATION_STATUS_PENDING\x10\x01\x12%\n" +
-	"!CONFIG_APPLICATION_STATUS_APPLIED\x10\x02\x12$\n" +
-	" CONFIG_APPLICATION_STATUS_FAILED\x10\x03*\xed\x01\n" +
-	"\x0fDeploymentState\x12 \n" +
-	"\x1cDEPLOYMENT_STATE_UNSPECIFIED\x10\x00\x12\x1c\n" +
-	"\x18DEPLOYMENT_STATE_PENDING\x10\x01\x12 \n" +
-	"\x1cDEPLOYMENT_STATE_IN_PROGRESS\x10\x02\x12\x1b\n" +
-	"\x17DEPLOYMENT_STATE_PAUSED\x10\x03\x12\x1e\n" +
-	"\x1aDEPLOYMENT_STATE_COMPLETED\x10\x04\x12\x1b\n" +
-	"\x17DEPLOYMENT_STATE_FAILED\x10\x05\x12\x1e\n" +
-	"\x1aDEPLOYMENT_STATE_CANCELLED\x10\x06*\xce\x01\n" +
-	"\x14AgentDeploymentState\x12&\n" +
-	"\"AGENT_DEPLOYMENT_STATE_UNSPECIFIED\x10\x00\x12\"\n" +
-	"\x1eAGENT_DEPLOYMENT_STATE_PENDING\x10\x01\x12#\n" +
-	"\x1fAGENT_DEPLOYMENT_STATE_APPLYING\x10\x02\x12\"\n" +
-	"\x1eAGENT_DEPLOYMENT_STATE_APPLIED\x10\x03\x12!\n" +
-	"\x1dAGENT_DEPLOYMENT_STATE_FAILED\x10\x042\xfb\x0e\n" +
-	"\rConfigService\x12M\n" +
-	"\vValidConfig\x12&.config.v1alpha1.ValidateConfigRequest\x1a\x16.google.protobuf.Empty\x12F\n" +
-	"\tPutConfig\x12!.config.v1alpha1.PutConfigRequest\x1a\x16.google.protobuf.Empty\x12F\n" +
-	"\tGetConfig\x12 .config.v1alpha1.ConfigReference\x1a\x17.config.v1alpha1.Config\x12H\n" +
-	"\fDeleteConfig\x12 .config.v1alpha1.ConfigReference\x1a\x16.google.protobuf.Empty\x12I\n" +
-	"\vListConfigs\x12\x16.google.protobuf.Empty\x1a\".config.v1alpha1.ListConfigReponse\x12C\n" +
-	"\x10GetDefaultConfig\x12\x16.google.protobuf.Empty\x1a\x17.config.v1alpha1.Config\x12M\n" +
-	"\x10SetDefaultConfig\x12!.config.v1alpha1.PutConfigRequest\x1a\x16.google.protobuf.Empty\x12[\n" +
-	"\fAssignConfig\x12$.config.v1alpha1.AssignConfigRequest\x1a%.config.v1alpha1.AssignConfigResponse\x12a\n" +
-	"\x0eGetAgentConfig\x12&.config.v1alpha1.GetAgentConfigRequest\x1a'.config.v1alpha1.GetAgentConfigResponse\x12a\n" +
-	"\x0eUnassignConfig\x12&.config.v1alpha1.UnassignConfigRequest\x1a'.config.v1alpha1.UnassignConfigResponse\x12v\n" +
-	"\x15ListConfigAssignments\x12-.config.v1alpha1.ListConfigAssignmentsRequest\x1a..config.v1alpha1.ListConfigAssignmentsResponse\x12d\n" +
-	"\x0fGetConfigStatus\x12'.config.v1alpha1.GetConfigStatusRequest\x1a(.config.v1alpha1.GetConfigStatusResponse\x12j\n" +
-	"\x11BatchAssignConfig\x12).config.v1alpha1.BatchAssignConfigRequest\x1a*.config.v1alpha1.BatchAssignConfigResponse\x12s\n" +
-	"\x14AssignConfigByLabels\x12,.config.v1alpha1.AssignConfigByLabelsRequest\x1a-.config.v1alpha1.AssignConfigByLabelsResponse\x12o\n" +
-	"\x16StartRollingDeployment\x12).config.v1alpha1.RollingDeploymentRequest\x1a*.config.v1alpha1.RollingDeploymentResponse\x12p\n" +
-	"\x13GetDeploymentStatus\x12+.config.v1alpha1.GetDeploymentStatusRequest\x1a,.config.v1alpha1.GetDeploymentStatusResponse\x12e\n" +
-	"\x0fPauseDeployment\x12'.config.v1alpha1.PauseDeploymentRequest\x1a).config.v1alpha1.DeploymentActionResponse\x12g\n" +
-	"\x10ResumeDeployment\x12(.config.v1alpha1.ResumeDeploymentRequest\x1a).config.v1alpha1.DeploymentActionResponse\x12g\n" +
-	"\x10CancelDeployment\x12(.config.v1alpha1.CancelDeploymentRequest\x1a).config.v1alpha1.DeploymentActionResponse\x12d\n" +
-	"\x0fListDeployments\x12'.config.v1alpha1.ListDeploymentsRequest\x1a(.config.v1alpha1.ListDeploymentsResponseB8Z6github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1b\x06proto3"
+	"extensions\x18\x01 \x03(\v2\x1a.config.v1alpha1.ExtensionR\n" +
+	"extensions\"\xf3\x01\n" +
+	"\bPipeline\x121\n" +
+	"\x04type\x18\x01 \x01(\x0e2\x1d.config.v1alpha1.PipelineTypeR\x04type\x12(\n" +
+	"\rpipeline_name\x18\x02 \x01(\tH\x00R\fpipelineName\x88\x01\x01\x12<\n" +
+	"\x06compat\x18\x03 \x01(\v2$.common.v1alpha1.CompatibilityMatrixR\x06compat\x12:\n" +
+	"\x05value\x18\x04 \x01(\v2$.config.v1alpha1.ComponentDefinitionR\x05valueB\x10\n" +
+	"\x0e_pipeline_name\"M\n" +
+	"\x12PipelineCollection\x127\n" +
+	"\tpipelines\x18\x01 \x03(\v2\x19.config.v1alpha1.PipelineR\tpipelines\"i\n" +
+	"\x13ComponentDefinition\x12!\n" +
+	"\fcontent_type\x18\x01 \x01(\tR\vcontentType\x12\x12\n" +
+	"\x03raw\x18\x02 \x01(\fH\x00R\x03raw\x12\x12\n" +
+	"\x03ref\x18\x03 \x01(\tH\x00R\x03refB\a\n" +
+	"\x05value*\x9f\x01\n" +
+	"\rAssignedState\x12\x1a\n" +
+	"\x16ASSIGNED_STATE_UNKNOWN\x10\x00\x12\x1a\n" +
+	"\x16ASSIGNED_STATE_PENDING\x10\x01\x12\x1a\n" +
+	"\x16ASSIGNED_STATE_PLANNED\x10\x02\x12\x1a\n" +
+	"\x16ASSIGNED_STATE_APPLIED\x10\x03\x12\x1e\n" +
+	"\x1aASSIGNED_STATE_NOT_APPLIED\x10\x04*\x91\x01\n" +
+	"\fPipelineType\x12\x19\n" +
+	"\x15PIPELINE_TYPE_UNKNOWN\x10\x00\x12\x19\n" +
+	"\x15PIPELINE_TYPE_METRICS\x10\x01\x12\x18\n" +
+	"\x14PIPELINE_TYPE_TRACES\x10\x02\x12\x16\n" +
+	"\x12PIPELINE_TYPE_LOGS\x10\x03\x12\x19\n" +
+	"\x15PIPELINE_TYPE_PROFILE\x10\x04B8Z6github.com/otelfleet/otelfleet/pkg/api/config/v1alpha1b\x06proto3"
 
 var (
 	file_pkg_api_config_v1alpha1_config_proto_rawDescOnce sync.Once
@@ -2382,126 +1243,69 @@ func file_pkg_api_config_v1alpha1_config_proto_rawDescGZIP() []byte {
 	return file_pkg_api_config_v1alpha1_config_proto_rawDescData
 }
 
-var file_pkg_api_config_v1alpha1_config_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_pkg_api_config_v1alpha1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
+var file_pkg_api_config_v1alpha1_config_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_pkg_api_config_v1alpha1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_pkg_api_config_v1alpha1_config_proto_goTypes = []any{
-	(ConfigSource)(0),                     // 0: config.v1alpha1.ConfigSource
-	(ConfigApplicationStatus)(0),          // 1: config.v1alpha1.ConfigApplicationStatus
-	(DeploymentState)(0),                  // 2: config.v1alpha1.DeploymentState
-	(AgentDeploymentState)(0),             // 3: config.v1alpha1.AgentDeploymentState
-	(*PutConfigRequest)(nil),              // 4: config.v1alpha1.PutConfigRequest
-	(*ValidateConfigRequest)(nil),         // 5: config.v1alpha1.ValidateConfigRequest
-	(*ListConfigReponse)(nil),             // 6: config.v1alpha1.ListConfigReponse
-	(*ConfigReference)(nil),               // 7: config.v1alpha1.ConfigReference
-	(*Config)(nil),                        // 8: config.v1alpha1.Config
-	(*ConfigRange)(nil),                   // 9: config.v1alpha1.ConfigRange
-	(*Labels)(nil),                        // 10: config.v1alpha1.Labels
-	(*Matcher)(nil),                       // 11: config.v1alpha1.Matcher
-	(*ConfigAssignment)(nil),              // 12: config.v1alpha1.ConfigAssignment
-	(*AssignConfigRequest)(nil),           // 13: config.v1alpha1.AssignConfigRequest
-	(*AssignConfigResponse)(nil),          // 14: config.v1alpha1.AssignConfigResponse
-	(*GetAgentConfigRequest)(nil),         // 15: config.v1alpha1.GetAgentConfigRequest
-	(*GetAgentConfigResponse)(nil),        // 16: config.v1alpha1.GetAgentConfigResponse
-	(*UnassignConfigRequest)(nil),         // 17: config.v1alpha1.UnassignConfigRequest
-	(*UnassignConfigResponse)(nil),        // 18: config.v1alpha1.UnassignConfigResponse
-	(*ListConfigAssignmentsRequest)(nil),  // 19: config.v1alpha1.ListConfigAssignmentsRequest
-	(*ConfigAssignmentInfo)(nil),          // 20: config.v1alpha1.ConfigAssignmentInfo
-	(*ListConfigAssignmentsResponse)(nil), // 21: config.v1alpha1.ListConfigAssignmentsResponse
-	(*GetConfigStatusRequest)(nil),        // 22: config.v1alpha1.GetConfigStatusRequest
-	(*GetConfigStatusResponse)(nil),       // 23: config.v1alpha1.GetConfigStatusResponse
-	(*BatchAssignConfigRequest)(nil),      // 24: config.v1alpha1.BatchAssignConfigRequest
-	(*BatchAssignConfigResponse)(nil),     // 25: config.v1alpha1.BatchAssignConfigResponse
-	(*AssignConfigByLabelsRequest)(nil),   // 26: config.v1alpha1.AssignConfigByLabelsRequest
-	(*AssignConfigByLabelsResponse)(nil),  // 27: config.v1alpha1.AssignConfigByLabelsResponse
-	(*RollingDeploymentRequest)(nil),      // 28: config.v1alpha1.RollingDeploymentRequest
-	(*RollingDeploymentResponse)(nil),     // 29: config.v1alpha1.RollingDeploymentResponse
-	(*AgentDeploymentStatus)(nil),         // 30: config.v1alpha1.AgentDeploymentStatus
-	(*DeploymentStatus)(nil),              // 31: config.v1alpha1.DeploymentStatus
-	(*GetDeploymentStatusRequest)(nil),    // 32: config.v1alpha1.GetDeploymentStatusRequest
-	(*GetDeploymentStatusResponse)(nil),   // 33: config.v1alpha1.GetDeploymentStatusResponse
-	(*PauseDeploymentRequest)(nil),        // 34: config.v1alpha1.PauseDeploymentRequest
-	(*ResumeDeploymentRequest)(nil),       // 35: config.v1alpha1.ResumeDeploymentRequest
-	(*CancelDeploymentRequest)(nil),       // 36: config.v1alpha1.CancelDeploymentRequest
-	(*DeploymentActionResponse)(nil),      // 37: config.v1alpha1.DeploymentActionResponse
-	(*ListDeploymentsRequest)(nil),        // 38: config.v1alpha1.ListDeploymentsRequest
-	(*ListDeploymentsResponse)(nil),       // 39: config.v1alpha1.ListDeploymentsResponse
-	nil,                                   // 40: config.v1alpha1.Labels.LabelsEntry
-	nil,                                   // 41: config.v1alpha1.AssignConfigByLabelsRequest.LabelsEntry
-	nil,                                   // 42: config.v1alpha1.RollingDeploymentRequest.AgentLabelsEntry
-	(*timestamppb.Timestamp)(nil),         // 43: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),                 // 44: google.protobuf.Empty
+	(AssignedState)(0),                    // 0: config.v1alpha1.AssignedState
+	(PipelineType)(0),                     // 1: config.v1alpha1.PipelineType
+	(*AssignedConfig)(nil),                // 2: config.v1alpha1.AssignedConfig
+	(*ResourceEntity)(nil),                // 3: config.v1alpha1.ResourceEntity
+	(*CollectorConfig)(nil),               // 4: config.v1alpha1.CollectorConfig
+	(*CollectorComponents)(nil),           // 5: config.v1alpha1.CollectorComponents
+	(*Receiver)(nil),                      // 6: config.v1alpha1.Receiver
+	(*ReceiverCollection)(nil),            // 7: config.v1alpha1.ReceiverCollection
+	(*Processor)(nil),                     // 8: config.v1alpha1.Processor
+	(*ProcessorCollection)(nil),           // 9: config.v1alpha1.ProcessorCollection
+	(*Exporter)(nil),                      // 10: config.v1alpha1.Exporter
+	(*ExporterCollection)(nil),            // 11: config.v1alpha1.ExporterCollection
+	(*Connector)(nil),                     // 12: config.v1alpha1.Connector
+	(*ConnectorCollection)(nil),           // 13: config.v1alpha1.ConnectorCollection
+	(*Extension)(nil),                     // 14: config.v1alpha1.Extension
+	(*ExtensionCollection)(nil),           // 15: config.v1alpha1.ExtensionCollection
+	(*Pipeline)(nil),                      // 16: config.v1alpha1.Pipeline
+	(*PipelineCollection)(nil),            // 17: config.v1alpha1.PipelineCollection
+	(*ComponentDefinition)(nil),           // 18: config.v1alpha1.ComponentDefinition
+	(*v1alpha1.CollectorConfig)(nil),      // 19: resources.v1alpha1.CollectorConfig
+	(*anypb.Any)(nil),                     // 20: google.protobuf.Any
+	(*v1alpha11.CompatibilityMatrix)(nil), // 21: common.v1alpha1.CompatibilityMatrix
 }
 var file_pkg_api_config_v1alpha1_config_proto_depIdxs = []int32{
-	7,  // 0: config.v1alpha1.PutConfigRequest.ref:type_name -> config.v1alpha1.ConfigReference
-	8,  // 1: config.v1alpha1.PutConfigRequest.config:type_name -> config.v1alpha1.Config
-	8,  // 2: config.v1alpha1.ValidateConfigRequest.config:type_name -> config.v1alpha1.Config
-	7,  // 3: config.v1alpha1.ListConfigReponse.configs:type_name -> config.v1alpha1.ConfigReference
-	40, // 4: config.v1alpha1.Labels.labels:type_name -> config.v1alpha1.Labels.LabelsEntry
-	0,  // 5: config.v1alpha1.ConfigAssignment.source:type_name -> config.v1alpha1.ConfigSource
-	43, // 6: config.v1alpha1.ConfigAssignment.assigned_at:type_name -> google.protobuf.Timestamp
-	0,  // 7: config.v1alpha1.GetAgentConfigResponse.source:type_name -> config.v1alpha1.ConfigSource
-	43, // 8: config.v1alpha1.GetAgentConfigResponse.assigned_at:type_name -> google.protobuf.Timestamp
-	0,  // 9: config.v1alpha1.ConfigAssignmentInfo.source:type_name -> config.v1alpha1.ConfigSource
-	43, // 10: config.v1alpha1.ConfigAssignmentInfo.assigned_at:type_name -> google.protobuf.Timestamp
-	1,  // 11: config.v1alpha1.ConfigAssignmentInfo.status:type_name -> config.v1alpha1.ConfigApplicationStatus
-	20, // 12: config.v1alpha1.ListConfigAssignmentsResponse.assignments:type_name -> config.v1alpha1.ConfigAssignmentInfo
-	20, // 13: config.v1alpha1.GetConfigStatusResponse.assignment:type_name -> config.v1alpha1.ConfigAssignmentInfo
-	41, // 14: config.v1alpha1.AssignConfigByLabelsRequest.labels:type_name -> config.v1alpha1.AssignConfigByLabelsRequest.LabelsEntry
-	42, // 15: config.v1alpha1.RollingDeploymentRequest.agent_labels:type_name -> config.v1alpha1.RollingDeploymentRequest.AgentLabelsEntry
-	3,  // 16: config.v1alpha1.AgentDeploymentStatus.state:type_name -> config.v1alpha1.AgentDeploymentState
-	43, // 17: config.v1alpha1.AgentDeploymentStatus.applied_at:type_name -> google.protobuf.Timestamp
-	2,  // 18: config.v1alpha1.DeploymentStatus.state:type_name -> config.v1alpha1.DeploymentState
-	30, // 19: config.v1alpha1.DeploymentStatus.agent_statuses:type_name -> config.v1alpha1.AgentDeploymentStatus
-	43, // 20: config.v1alpha1.DeploymentStatus.started_at:type_name -> google.protobuf.Timestamp
-	43, // 21: config.v1alpha1.DeploymentStatus.completed_at:type_name -> google.protobuf.Timestamp
-	31, // 22: config.v1alpha1.GetDeploymentStatusResponse.status:type_name -> config.v1alpha1.DeploymentStatus
-	2,  // 23: config.v1alpha1.ListDeploymentsRequest.state_filter:type_name -> config.v1alpha1.DeploymentState
-	31, // 24: config.v1alpha1.ListDeploymentsResponse.deployments:type_name -> config.v1alpha1.DeploymentStatus
-	5,  // 25: config.v1alpha1.ConfigService.ValidConfig:input_type -> config.v1alpha1.ValidateConfigRequest
-	4,  // 26: config.v1alpha1.ConfigService.PutConfig:input_type -> config.v1alpha1.PutConfigRequest
-	7,  // 27: config.v1alpha1.ConfigService.GetConfig:input_type -> config.v1alpha1.ConfigReference
-	7,  // 28: config.v1alpha1.ConfigService.DeleteConfig:input_type -> config.v1alpha1.ConfigReference
-	44, // 29: config.v1alpha1.ConfigService.ListConfigs:input_type -> google.protobuf.Empty
-	44, // 30: config.v1alpha1.ConfigService.GetDefaultConfig:input_type -> google.protobuf.Empty
-	4,  // 31: config.v1alpha1.ConfigService.SetDefaultConfig:input_type -> config.v1alpha1.PutConfigRequest
-	13, // 32: config.v1alpha1.ConfigService.AssignConfig:input_type -> config.v1alpha1.AssignConfigRequest
-	15, // 33: config.v1alpha1.ConfigService.GetAgentConfig:input_type -> config.v1alpha1.GetAgentConfigRequest
-	17, // 34: config.v1alpha1.ConfigService.UnassignConfig:input_type -> config.v1alpha1.UnassignConfigRequest
-	19, // 35: config.v1alpha1.ConfigService.ListConfigAssignments:input_type -> config.v1alpha1.ListConfigAssignmentsRequest
-	22, // 36: config.v1alpha1.ConfigService.GetConfigStatus:input_type -> config.v1alpha1.GetConfigStatusRequest
-	24, // 37: config.v1alpha1.ConfigService.BatchAssignConfig:input_type -> config.v1alpha1.BatchAssignConfigRequest
-	26, // 38: config.v1alpha1.ConfigService.AssignConfigByLabels:input_type -> config.v1alpha1.AssignConfigByLabelsRequest
-	28, // 39: config.v1alpha1.ConfigService.StartRollingDeployment:input_type -> config.v1alpha1.RollingDeploymentRequest
-	32, // 40: config.v1alpha1.ConfigService.GetDeploymentStatus:input_type -> config.v1alpha1.GetDeploymentStatusRequest
-	34, // 41: config.v1alpha1.ConfigService.PauseDeployment:input_type -> config.v1alpha1.PauseDeploymentRequest
-	35, // 42: config.v1alpha1.ConfigService.ResumeDeployment:input_type -> config.v1alpha1.ResumeDeploymentRequest
-	36, // 43: config.v1alpha1.ConfigService.CancelDeployment:input_type -> config.v1alpha1.CancelDeploymentRequest
-	38, // 44: config.v1alpha1.ConfigService.ListDeployments:input_type -> config.v1alpha1.ListDeploymentsRequest
-	44, // 45: config.v1alpha1.ConfigService.ValidConfig:output_type -> google.protobuf.Empty
-	44, // 46: config.v1alpha1.ConfigService.PutConfig:output_type -> google.protobuf.Empty
-	8,  // 47: config.v1alpha1.ConfigService.GetConfig:output_type -> config.v1alpha1.Config
-	44, // 48: config.v1alpha1.ConfigService.DeleteConfig:output_type -> google.protobuf.Empty
-	6,  // 49: config.v1alpha1.ConfigService.ListConfigs:output_type -> config.v1alpha1.ListConfigReponse
-	8,  // 50: config.v1alpha1.ConfigService.GetDefaultConfig:output_type -> config.v1alpha1.Config
-	44, // 51: config.v1alpha1.ConfigService.SetDefaultConfig:output_type -> google.protobuf.Empty
-	14, // 52: config.v1alpha1.ConfigService.AssignConfig:output_type -> config.v1alpha1.AssignConfigResponse
-	16, // 53: config.v1alpha1.ConfigService.GetAgentConfig:output_type -> config.v1alpha1.GetAgentConfigResponse
-	18, // 54: config.v1alpha1.ConfigService.UnassignConfig:output_type -> config.v1alpha1.UnassignConfigResponse
-	21, // 55: config.v1alpha1.ConfigService.ListConfigAssignments:output_type -> config.v1alpha1.ListConfigAssignmentsResponse
-	23, // 56: config.v1alpha1.ConfigService.GetConfigStatus:output_type -> config.v1alpha1.GetConfigStatusResponse
-	25, // 57: config.v1alpha1.ConfigService.BatchAssignConfig:output_type -> config.v1alpha1.BatchAssignConfigResponse
-	27, // 58: config.v1alpha1.ConfigService.AssignConfigByLabels:output_type -> config.v1alpha1.AssignConfigByLabelsResponse
-	29, // 59: config.v1alpha1.ConfigService.StartRollingDeployment:output_type -> config.v1alpha1.RollingDeploymentResponse
-	33, // 60: config.v1alpha1.ConfigService.GetDeploymentStatus:output_type -> config.v1alpha1.GetDeploymentStatusResponse
-	37, // 61: config.v1alpha1.ConfigService.PauseDeployment:output_type -> config.v1alpha1.DeploymentActionResponse
-	37, // 62: config.v1alpha1.ConfigService.ResumeDeployment:output_type -> config.v1alpha1.DeploymentActionResponse
-	37, // 63: config.v1alpha1.ConfigService.CancelDeployment:output_type -> config.v1alpha1.DeploymentActionResponse
-	39, // 64: config.v1alpha1.ConfigService.ListDeployments:output_type -> config.v1alpha1.ListDeploymentsResponse
-	45, // [45:65] is the sub-list for method output_type
-	25, // [25:45] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	19, // 0: config.v1alpha1.AssignedConfig.config:type_name -> resources.v1alpha1.CollectorConfig
+	0,  // 1: config.v1alpha1.AssignedConfig.apply_state:type_name -> config.v1alpha1.AssignedState
+	20, // 2: config.v1alpha1.ResourceEntity.obj:type_name -> google.protobuf.Any
+	21, // 3: config.v1alpha1.CollectorConfig.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	5,  // 4: config.v1alpha1.CollectorConfig.components:type_name -> config.v1alpha1.CollectorComponents
+	7,  // 5: config.v1alpha1.CollectorComponents.receivers:type_name -> config.v1alpha1.ReceiverCollection
+	9,  // 6: config.v1alpha1.CollectorComponents.processors:type_name -> config.v1alpha1.ProcessorCollection
+	11, // 7: config.v1alpha1.CollectorComponents.exporters:type_name -> config.v1alpha1.ExporterCollection
+	13, // 8: config.v1alpha1.CollectorComponents.connectors:type_name -> config.v1alpha1.ConnectorCollection
+	15, // 9: config.v1alpha1.CollectorComponents.extensions:type_name -> config.v1alpha1.ExtensionCollection
+	17, // 10: config.v1alpha1.CollectorComponents.pipelines:type_name -> config.v1alpha1.PipelineCollection
+	21, // 11: config.v1alpha1.Receiver.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 12: config.v1alpha1.Receiver.value:type_name -> config.v1alpha1.ComponentDefinition
+	6,  // 13: config.v1alpha1.ReceiverCollection.receivers:type_name -> config.v1alpha1.Receiver
+	18, // 14: config.v1alpha1.ReceiverCollection.value:type_name -> config.v1alpha1.ComponentDefinition
+	21, // 15: config.v1alpha1.Processor.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 16: config.v1alpha1.Processor.value:type_name -> config.v1alpha1.ComponentDefinition
+	8,  // 17: config.v1alpha1.ProcessorCollection.processors:type_name -> config.v1alpha1.Processor
+	21, // 18: config.v1alpha1.Exporter.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 19: config.v1alpha1.Exporter.value:type_name -> config.v1alpha1.ComponentDefinition
+	10, // 20: config.v1alpha1.ExporterCollection.exporters:type_name -> config.v1alpha1.Exporter
+	21, // 21: config.v1alpha1.Connector.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 22: config.v1alpha1.Connector.value:type_name -> config.v1alpha1.ComponentDefinition
+	12, // 23: config.v1alpha1.ConnectorCollection.connectors:type_name -> config.v1alpha1.Connector
+	21, // 24: config.v1alpha1.Extension.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 25: config.v1alpha1.Extension.value:type_name -> config.v1alpha1.ComponentDefinition
+	14, // 26: config.v1alpha1.ExtensionCollection.extensions:type_name -> config.v1alpha1.Extension
+	1,  // 27: config.v1alpha1.Pipeline.type:type_name -> config.v1alpha1.PipelineType
+	21, // 28: config.v1alpha1.Pipeline.compat:type_name -> common.v1alpha1.CompatibilityMatrix
+	18, // 29: config.v1alpha1.Pipeline.value:type_name -> config.v1alpha1.ComponentDefinition
+	16, // 30: config.v1alpha1.PipelineCollection.pipelines:type_name -> config.v1alpha1.Pipeline
+	31, // [31:31] is the sub-list for method output_type
+	31, // [31:31] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_config_v1alpha1_config_proto_init() }
@@ -2509,17 +1313,24 @@ func file_pkg_api_config_v1alpha1_config_proto_init() {
 	if File_pkg_api_config_v1alpha1_config_proto != nil {
 		return
 	}
-	file_pkg_api_config_v1alpha1_config_proto_msgTypes[15].OneofWrappers = []any{}
-	file_pkg_api_config_v1alpha1_config_proto_msgTypes[34].OneofWrappers = []any{}
+	file_pkg_api_config_v1alpha1_config_proto_msgTypes[2].OneofWrappers = []any{
+		(*CollectorConfig_Raw)(nil),
+		(*CollectorConfig_Components)(nil),
+	}
+	file_pkg_api_config_v1alpha1_config_proto_msgTypes[14].OneofWrappers = []any{}
+	file_pkg_api_config_v1alpha1_config_proto_msgTypes[16].OneofWrappers = []any{
+		(*ComponentDefinition_Raw)(nil),
+		(*ComponentDefinition_Ref)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_config_v1alpha1_config_proto_rawDesc), len(file_pkg_api_config_v1alpha1_config_proto_rawDesc)),
-			NumEnums:      4,
-			NumMessages:   39,
+			NumEnums:      2,
+			NumMessages:   17,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_pkg_api_config_v1alpha1_config_proto_goTypes,
 		DependencyIndexes: file_pkg_api_config_v1alpha1_config_proto_depIdxs,

@@ -12,15 +12,18 @@ import (
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1/v1alpha1connect"
 	"github.com/otelfleet/otelfleet/pkg/config"
-	otelgrpc "github.com/otelfleet/otelfleet/pkg/storage/grpc"
-	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/pebble"
-	"github.com/otelfleet/otelfleet/pkg/storage/schema"
+	otelfleet_svc "github.com/otelfleet/otelfleet/pkg/services"
+	otelpebble "github.com/otelfleet/otelfleet/pkg/storage/kv/driver/pebble"
+	"github.com/otelfleet/otelfleet/pkg/storage/object"
+	"github.com/otelfleet/otelfleet/pkg/storage/object/driver/basekv"
+	otelgrpc "github.com/otelfleet/otelfleet/pkg/storage/object/driver/grpc"
+	"github.com/otelfleet/otelfleet/pkg/storage/transport"
 )
 
 type StorageService struct {
 	logger *slog.Logger
 
-	underlying schema.SchemaProto
+	protoStore object.TypeURLStore
 	cfg        *config.StorageConfig
 
 	services.Service
@@ -31,6 +34,7 @@ type StorageService struct {
 }
 
 var _ services.Service = (*StorageService)(nil)
+var _ otelfleet_svc.HTTPExtension = (*StorageService)(nil)
 
 // var _ types.KVBroker = (*StorageService)(nil)
 
@@ -42,7 +46,7 @@ func NewStorageService(
 		logger: logger,
 		cfg:    cfg,
 	}
-	var underlyingSchema schema.SchemaProto
+	var protoStore object.TypeURLStore
 	if cfg.File != nil {
 		// TODO : this setup logic is a little wonky...
 		kvDb, err := otelpebble.Open(
@@ -56,9 +60,9 @@ func NewStorageService(
 		s.pebbleDB = kvDb
 		broker := otelpebble.NewKVBroker(kvDb)
 		kv := broker.KeyValue("")
-		protoSchema := schema.NewStorageSchemaProto(kv)
-		underlyingSchema = schema.NewStorageSchemaProto(kv)
-		s.KeyValueServiceHandler = otelgrpc.NewGrpcKeyValue(protoSchema)
+		protoSchema := basekv.NewTypeURLStore(kv)
+		protoStore = basekv.NewTypeURLStore(kv)
+		s.KeyValueServiceHandler = transport.NewKVServer(protoSchema)
 	}
 	if cfg.Client != nil {
 		logger.With("client-addr", cfg.Client.HttpAddr).Info("starting storage in remote mode")
@@ -68,10 +72,10 @@ func NewStorageService(
 			"http://"+cfg.Client.HttpAddr,
 			connect.WithHTTPGet(),
 		)
-		underlyingSchema = otelgrpc.NewStorageClient(client)
-		s.KeyValueServiceHandler = otelgrpc.NewErroringServer(connect.CodeUnimplemented, fmt.Errorf("unimplemented"))
+		protoStore = otelgrpc.NewRemoteKV(client)
+		s.KeyValueServiceHandler = transport.NewErroringServer(connect.CodeUnimplemented, fmt.Errorf("unimplemented"))
 	}
-	s.underlying = underlyingSchema
+	s.protoStore = protoStore
 	s.Service = services.NewBasicService(s.starting, s.running, s.stopping)
 	return s, nil
 }
@@ -93,11 +97,11 @@ func (s *StorageService) stopping(_ error) error {
 	return nil
 }
 
-func (s *StorageService) Schema() schema.SchemaProto {
-	return s.underlying
+func (s *StorageService) Schema() object.TypeURLStore {
+	return s.protoStore
 }
 
-func (s *StorageService) ConfigureHTTP(mux *mux.Router) {
+func (s *StorageService) ConfigureHTTP(mux *mux.Router, opts []connect.HandlerOption) {
 	s.logger.Info("configuring routes")
-	v1alpha1connect.RegisterKeyValueServiceHandler(mux, s)
+	v1alpha1connect.RegisterKeyValueServiceHandler(mux, s, opts...)
 }

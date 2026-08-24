@@ -3,23 +3,18 @@ import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { create } from '@bufbuild/protobuf';
 import {
-    AgentDescriptionAndStatusSchema,
-    AgentState,
+    CollectorDescriptionAndStatusSchema,
+    CollectorState,
     ConfigSyncStatus,
-} from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import type { AgentDescriptionAndStatus } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import {
-    ConfigAssignmentInfoSchema,
-    ConfigApplicationStatus,
-} from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
-import type { ConfigAssignmentInfo } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
+} from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
+import type { CollectorDescriptionAndStatus } from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import { Table } from '../Table';
 import { buildAgentColumns } from './agentColumns';
 
 /**
  * The agents table as rendered on the `/agents` page: the generic `Table`
  * driven by `buildAgentColumns` (shared with the live page, so this stays in
- * sync). Covers every connection / health / config-sync / assignment state
+ * sync). Covers every connection / health / config-sync state
  * with mock data — no backend required.
  *
  * Selection, column show/hide (the ☰ menu), and the expandable error row are
@@ -46,21 +41,23 @@ type Story = StoryObj<typeof meta>;
 function mockAgent(init: {
     id: string;
     name: string;
-    state: AgentState;
+    state: CollectorState;
     healthy?: boolean;
     lastError?: string;
     syncStatus: ConfigSyncStatus;
     syncReason?: string;
-}): AgentDescriptionAndStatus {
-    return create(AgentDescriptionAndStatusSchema, {
-        agent: {
+}): CollectorDescriptionAndStatus {
+    return create(CollectorDescriptionAndStatusSchema, {
+        collector: {
             id: init.id,
             friendlyName: init.name,
         },
         status: {
-            state: init.state,
-            configSyncStatus: init.syncStatus,
-            configSyncReason: init.syncReason ?? '',
+            connStatus: { state: init.state },
+            syncStatus: {
+                status: init.syncStatus,
+                configSyncReason: init.syncReason ?? '',
+            },
             // Omit health entirely for the "Unknown" case.
             health: init.healthy === undefined
                 ? undefined
@@ -69,32 +66,18 @@ function mockAgent(init: {
     });
 }
 
-function mockAssignment(init: {
-    agentId: string;
-    configId: string;
-    status: ConfigApplicationStatus;
-    errorMessage?: string;
-}): ConfigAssignmentInfo {
-    return create(ConfigAssignmentInfoSchema, {
-        agentId: init.agentId,
-        configId: init.configId,
-        status: init.status,
-        errorMessage: init.errorMessage ?? '',
-    });
-}
-
-const AGENTS: AgentDescriptionAndStatus[] = [
+const AGENTS: CollectorDescriptionAndStatus[] = [
     mockAgent({
         id: 'agent-web-01',
         name: 'web-collector-01',
-        state: AgentState.CONNECTED,
+        state: CollectorState.CONNECTED,
         healthy: true,
         syncStatus: ConfigSyncStatus.IN_SYNC,
     }),
     mockAgent({
         id: 'agent-edge-eu',
         name: 'edge-collector-eu',
-        state: AgentState.CONNECTED,
+        state: CollectorState.CONNECTED,
         healthy: false,
         lastError: 'exporter "otlphttp": connection refused to https://otel.example.com:4318',
         syncStatus: ConfigSyncStatus.ERROR,
@@ -103,7 +86,7 @@ const AGENTS: AgentDescriptionAndStatus[] = [
     mockAgent({
         id: 'agent-batch-03',
         name: 'batch-collector-03',
-        state: AgentState.CONNECTED,
+        state: CollectorState.CONNECTED,
         healthy: true,
         syncStatus: ConfigSyncStatus.OUT_OF_SYNC,
         syncReason: 'Assigned config newer than reported hash',
@@ -111,46 +94,37 @@ const AGENTS: AgentDescriptionAndStatus[] = [
     mockAgent({
         id: 'agent-apply-04',
         name: 'ingest-collector-04',
-        state: AgentState.CONNECTED,
+        state: CollectorState.CONNECTED,
         healthy: true,
         syncStatus: ConfigSyncStatus.APPLYING,
     }),
     mockAgent({
         id: 'agent-legacy-09',
         name: 'legacy-agent-09',
-        state: AgentState.DISCONNECTED,
+        state: CollectorState.DISCONNECTED,
         // no health -> "Unknown"
         syncStatus: ConfigSyncStatus.UNKNOWN,
     }),
 ];
 
-const ASSIGNMENTS = new Map<string, ConfigAssignmentInfo>([
-    ['agent-web-01', mockAssignment({ agentId: 'agent-web-01', configId: 'prod-traces', status: ConfigApplicationStatus.APPLIED })],
-    ['agent-edge-eu', mockAssignment({ agentId: 'agent-edge-eu', configId: 'edge-eu', status: ConfigApplicationStatus.FAILED, errorMessage: 'invalid exporter endpoint' })],
-    ['agent-batch-03', mockAssignment({ agentId: 'agent-batch-03', configId: 'staging-metrics', status: ConfigApplicationStatus.PENDING })],
-    ['agent-apply-04', mockAssignment({ agentId: 'agent-apply-04', configId: 'prod-traces', status: ConfigApplicationStatus.PENDING })],
-    // agent-legacy-09 intentionally has no assignment -> "(none)"
-]);
-
 // --- Interactive wrapper ---------------------------------------------------
 
 interface AgentsTableDemoProps {
-    data: AgentDescriptionAndStatus[];
-    assignments: Map<string, ConfigAssignmentInfo>;
+    data: CollectorDescriptionAndStatus[];
     selectable: boolean;
     onDelete: (agentId: string, agentName: string) => void;
 }
 
-function AgentsTableDemo({ data, assignments, selectable, onDelete }: AgentsTableDemoProps) {
+function AgentsTableDemo({ data, selectable, onDelete }: AgentsTableDemoProps) {
     const [selectedKeys, setSelectedKeys] = useState<Set<string | number>>(new Set());
-    const columns = buildAgentColumns({ assignments, onDelete });
+    const columns = buildAgentColumns({ onDelete });
 
     return (
-        <Table<AgentDescriptionAndStatus>
+        <Table<CollectorDescriptionAndStatus>
             title="OpenTelemetry Collector agents"
             data={data}
             columns={columns}
-            rowKey={(row) => row.agent?.id ?? ''}
+            rowKey={(row) => row.collector?.id ?? ''}
             selectable={selectable}
             selectedKeys={selectedKeys}
             onSelectionChange={setSelectedKeys}
@@ -165,11 +139,10 @@ function AgentsTableDemo({ data, assignments, selectable, onDelete }: AgentsTabl
 
 // --- Stories ---------------------------------------------------------------
 
-/** Full table with a mix of connection, health, sync, and assignment states. */
+/** Full table with a mix of connection, health, and sync states. */
 export const Default: Story = {
     args: {
         data: AGENTS,
-        assignments: ASSIGNMENTS,
         onDelete: fn(),
     },
 };
@@ -178,7 +151,6 @@ export const Default: Story = {
 export const NonSelectable: Story = {
     args: {
         data: AGENTS,
-        assignments: ASSIGNMENTS,
         selectable: false,
         onDelete: fn(),
     },
@@ -188,7 +160,6 @@ export const NonSelectable: Story = {
 export const SingleAgent: Story = {
     args: {
         data: [AGENTS[0]],
-        assignments: ASSIGNMENTS,
         onDelete: fn(),
     },
 };
@@ -197,7 +168,6 @@ export const SingleAgent: Story = {
 export const Empty: Story = {
     args: {
         data: [],
-        assignments: new Map(),
         onDelete: fn(),
     },
 };

@@ -3,7 +3,15 @@ import type { OTELConfig, OTELPipeline } from "./types";
 import {type Node, type XYPosition, type Edge, MarkerType} from "reactflow"
 const childNodesHeight = 80;
 
+// While the user is typing, the parsed YAML can transiently hold malformed
+// shapes (a receiver list that is still a bare string, a pipeline that is not
+// yet a mapping). Coerce to a string array so downstream `.map` calls never
+// throw on partial input.
+const asStringArray = (value: unknown): string[] =>
+	Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 
+const isObject = (value: unknown): value is Record<string, unknown> =>
+	value != null && typeof value === "object" && !Array.isArray(value);
 
 export const useClientNodes = (value: OTELConfig) => {
     return useMemo(() => calcNodes(value), [value]);
@@ -11,6 +19,9 @@ export const useClientNodes = (value: OTELConfig) => {
 
 const createNode = (pipelineName: string, parentNode: OTELPipeline, height: number, connectors?: object) => {
 	const nodesToAdd: Node[] = [];
+	if (!isObject(parentNode)) {
+		return nodesToAdd;
+	}
 	const keyTraces = Object.keys(parentNode);
 
 	const calcYPosition = (index: number, parentHeight: number, nodes: string[]): number | undefined => {
@@ -52,9 +63,9 @@ const createNode = (pipelineName: string, parentNode: OTELPipeline, height: numb
 		const processorLength = (processors?.length ?? 0) * 200 + 260;
 		return { x: processorLength, y: positionY ?? parentHeight / 2 };
 	};
-	const processors = parentNode.processors;
-	const receivers = parentNode.receivers;
-	const exporters = parentNode.exporters;
+	const processors = asStringArray(parentNode.processors);
+	const receivers = asStringArray(parentNode.receivers);
+	const exporters = asStringArray(parentNode.exporters);
 	keyTraces.forEach((traceItem) => {
 		switch (traceItem) {
 			case "processors":
@@ -132,7 +143,7 @@ const createNode = (pipelineName: string, parentNode: OTELPipeline, height: numb
 export const calcNodes = (value: OTELConfig) => {
     const pipelines = value?.service?.pipelines;
     const connectors = value?.connectors;
-    if (pipelines == null) {
+    if (!isObject(pipelines)) {
         return [];
     }
 
@@ -141,8 +152,11 @@ export const calcNodes = (value: OTELConfig) => {
     let currentY = 0;
 
     for (const [pipelineName, pipeline] of Object.entries(pipelines)) {
-        const receivers = pipeline.receivers?.length ?? 0;
-        const exporters = pipeline.exporters?.length ?? 0;
+        if (!isObject(pipeline)) {
+            continue;
+        }
+        const receivers = asStringArray(pipeline.receivers).length;
+        const exporters = asStringArray(pipeline.exporters).length;
         const maxNodes = Math.max(receivers, exporters, 1);
         const spaceBetweenParents = 40;
         const spaceBetweenNodes = 90;
@@ -157,7 +171,7 @@ export const calcNodes = (value: OTELConfig) => {
             data: {
                 label: pipelineName,
                 parentNode: pipelineName,
-                width: 430 + 200 * (pipeline.processors?.length ?? 0),
+                width: 430 + 200 * asStringArray(pipeline.processors).length,
                 height: actualHeight,
                 type: "parentNodeType",
                 childNodes: createNode(pipelineName, pipeline, actualHeight, connectors),

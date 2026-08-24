@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/tanstack-react';
-import { AgentState, ConfigSyncStatus } from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+import { CollectorState, ConfigSyncStatus } from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import { AgentHeader } from './agentDetail';
 import { mockAgent, mockStatus } from './agentDetailMocks';
 
@@ -40,7 +40,7 @@ export const Disconnected: Story = {
     args: {
         agent: mockAgent(),
         status: mockStatus({
-            state: AgentState.DISCONNECTED,
+            state: CollectorState.DISCONNECTED,
             hasHealth: false,
             configSyncStatus: ConfigSyncStatus.UNKNOWN,
         }),

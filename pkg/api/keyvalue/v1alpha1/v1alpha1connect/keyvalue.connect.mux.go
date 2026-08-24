@@ -49,4 +49,9 @@ func RegisterKeyValueServiceHandler(mux *mux.Router, svc KeyValueServiceHandler,
 		svc.History,
 		opts...,
 	))
+	mux.Handle("/keyvalue.v1alpha1.KeyValueService/Watch", connect.NewServerStreamHandler(
+		"/keyvalue.v1alpha1.KeyValueService/Watch",
+		svc.Watch,
+		opts...,
+	))
 }

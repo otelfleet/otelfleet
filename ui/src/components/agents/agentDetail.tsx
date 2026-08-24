@@ -1,24 +1,21 @@
 import { useState } from 'react';
 import {
-    AgentState as AgentStateEnum,
+    CollectorState as CollectorStateEnum,
     ConfigSyncStatus as ConfigSyncStatusEnum,
-} from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
+} from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import type {
-    AgentDescription,
-    AgentStatus,
+    CollectorDescription,
+    CollectorStatus,
     ComponentHealth,
     KeyValue,
     AnyValue,
     EffectiveConfig,
-} from '../../gen/api/pkg/api/agents/v1alpha1/agents_pb';
-import { ConfigSource } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
-import type { GetAgentConfigResponse } from '../../gen/api/pkg/api/config/v1alpha1/config_pb';
+} from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import {
     Paper,
     Title,
     Text,
     Badge,
-    Button,
     Group,
     Stack,
     Tabs,
@@ -33,14 +30,13 @@ import {
     Select,
 } from '@mantine/core';
 import { DiffEditor } from '@monaco-editor/react';
-import { Editor } from '../Editor';
+import { ConfigViewer } from '../ConfigViewer';
 import { useMonacoTheme } from '../../hooks/useMonacoTheme';
 
 /**
- * The assembled agent-detail view: header, config-assignment panel, and the
- * Health / Details / Effective Config tabs. Purely presentational — the
- * page container ([AgentDetailPage]) handles data fetching and the
- * assign/unassign modals.
+ * The assembled agent-detail view: header and the Health / Details /
+ * Effective Config tabs. Purely presentational — the page container
+ * ([AgentDetailPage]) handles data fetching.
  */
 export const AGENT_TABS = ['health', 'details', 'config', 'history'] as const;
 
@@ -53,19 +49,13 @@ export function isAgentTab(value: string | null | undefined): value is AgentTab 
 export function AgentDetailView({
     agent,
     status,
-    assignment,
-    onAssign,
-    onUnassign,
     history = [],
     historyLoading = false,
     tab,
     onTabChange,
 }: {
-    agent: AgentDescription | null;
-    status: AgentStatus | null;
-    assignment: GetAgentConfigResponse | null;
-    onAssign: () => void;
-    onUnassign: () => void;
+    agent: CollectorDescription | null;
+    status: CollectorStatus | null;
     history?: EffectiveConfig[];
     historyLoading?: boolean;
     tab?: AgentTab;
@@ -74,11 +64,6 @@ export function AgentDetailView({
     return (
         <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
             <AgentHeader agent={agent} status={status} />
-            <ConfigAssignmentSection
-                assignment={assignment}
-                onAssign={onAssign}
-                onUnassign={onUnassign}
-            />
             <Tabs
                 value={tab ?? 'health'}
                 onChange={(value) => onTabChange?.(isAgentTab(value) ? value : 'health')}
@@ -111,14 +96,14 @@ export function AgentDetailView({
     );
 }
 
-export function AgentHeader({ agent, status }: { agent: AgentDescription | null; status: AgentStatus | null }) {
+export function AgentHeader({ agent, status }: { agent: CollectorDescription | null; status: CollectorStatus | null }) {
     const stateColor = {
         0: 'gray',
         1: 'green',
         2: 'red',
-    }[status?.state ?? 0] ?? 'gray';
+    }[status?.connStatus?.state ?? 0] ?? 'gray';
 
-    const stateLabel = AgentStateEnum[status?.state ?? 0]?.replace(/^AGENT_STATE_/, '') ?? 'UNKNOWN';
+    const stateLabel = CollectorStateEnum[status?.connStatus?.state ?? 0]?.replace(/^AGENT_STATE_/, '') ?? 'UNKNOWN';
 
     const configSyncStatusMap: Record<number, { color: string; label: string }> = {
         [ConfigSyncStatusEnum.UNKNOWN]: { color: 'gray', label: 'Unknown' },
@@ -128,7 +113,7 @@ export function AgentHeader({ agent, status }: { agent: AgentDescription | null;
         [ConfigSyncStatusEnum.ERROR]: { color: 'red', label: 'Error' },
     };
 
-    const configStatus = configSyncStatusMap[status?.configSyncStatus ?? 0] ?? { color: 'gray', label: 'Unknown' };
+    const configStatus = configSyncStatusMap[status?.syncStatus?.status ?? 0] ?? { color: 'gray', label: 'Unknown' };
 
     return (
         <Paper p="md" withBorder>
@@ -147,75 +132,6 @@ export function AgentHeader({ agent, status }: { agent: AgentDescription | null;
                     <Badge color={configStatus.color} variant="filled" size="lg">
                         Config Sync: {configStatus.label}
                     </Badge>
-                </Group>
-            </Group>
-        </Paper>
-    );
-}
-
-export function ConfigAssignmentSection({
-    assignment,
-    onAssign,
-    onUnassign,
-}: {
-    assignment: GetAgentConfigResponse | null;
-    onAssign: () => void;
-    onUnassign: () => void;
-}) {
-    const formatDate = (timestamp?: { seconds?: bigint; nanos?: number }) => {
-        if (!timestamp?.seconds) return 'N/A';
-        return new Date(Number(timestamp.seconds) * 1000).toLocaleString();
-    };
-
-    const sourceLabel = {
-        [ConfigSource.UNSPECIFIED]: 'Unknown',
-        [ConfigSource.DEFAULT]: 'Default',
-        [ConfigSource.BOOTSTRAP]: 'Bootstrap',
-        [ConfigSource.MANUAL]: 'Manual',
-    }[assignment?.source ?? ConfigSource.UNSPECIFIED];
-
-    const sourceColor = {
-        [ConfigSource.UNSPECIFIED]: 'gray',
-        [ConfigSource.DEFAULT]: 'blue',
-        [ConfigSource.BOOTSTRAP]: 'violet',
-        [ConfigSource.MANUAL]: 'green',
-    }[assignment?.source ?? ConfigSource.UNSPECIFIED];
-
-    return (
-        <Paper p="md" withBorder>
-            <Group justify="space-between" align="flex-start">
-                <Stack gap="xs">
-                    <Title order={4}>Config Assignment</Title>
-                    {assignment?.configId ? (
-                        <>
-                            <Group gap="lg">
-                                <Stack gap={2}>
-                                    <Text size="sm" c="dimmed">Config</Text>
-                                    <Text fw={500}>{assignment.configId}</Text>
-                                </Stack>
-                                <Stack gap={2}>
-                                    <Text size="sm" c="dimmed">Source</Text>
-                                    <Badge color={sourceColor} variant="light">{sourceLabel}</Badge>
-                                </Stack>
-                                <Stack gap={2}>
-                                    <Text size="sm" c="dimmed">Assigned At</Text>
-                                    <Text size="sm">{formatDate(assignment.assignedAt)}</Text>
-                                </Stack>
-                            </Group>
-                        </>
-                    ) : (
-                        <Text c="dimmed">No config assigned - using default configuration</Text>
-                    )}
-                </Stack>
-                <Group gap="xs">
-                    <Button variant="light" size="sm" onClick={onAssign}>
-                        {assignment?.configId ? 'Change Config' : 'Assign Config'}
-                    </Button>
-                    {assignment?.configId && (
-                        <Button variant="light" color="red" size="sm" onClick={onUnassign}>
-                            Unassign
-                        </Button>
-                    )}
                 </Group>
             </Group>
         </Paper>
@@ -279,7 +195,7 @@ function HealthOverview({ health }: { health: ComponentHealth }) {
     );
 }
 
-export function DetailsTab({ agent }: { agent: AgentDescription | null }) {
+export function DetailsTab({ agent }: { agent: CollectorDescription | null }) {
     if (!agent) {
         return (
             <Alert color="gray" title="No Agent Data">
@@ -441,6 +357,8 @@ function ComponentRows({ componentMap, depth, parentName = '' }: {
     );
 }
 
+const selectableText = { userSelect: 'text' } as const;
+
 function ComponentRow({ name, component, depth, hasChildren }: {
     name: string;
     component: ComponentHealth;
@@ -453,7 +371,7 @@ function ComponentRow({ name, component, depth, hasChildren }: {
         <>
             <Table.Tr
                 onClick={hasChildren ? () => setExpanded(!expanded) : undefined}
-                style={hasChildren ? { cursor: 'pointer' } : undefined}
+                style={hasChildren ? { cursor: 'pointer', userSelect: 'none' } : undefined}
             >
                 <Table.Td>
                     <Box style={{ paddingLeft: depth * 20 }}>
@@ -463,12 +381,12 @@ function ComponentRow({ name, component, depth, hasChildren }: {
                                     {expanded ? '▼' : '▶'}
                                 </Text>
                             )}
-                            <Text fw={depth === 0 ? 600 : 400}>{name}</Text>
+                            <Text fw={depth === 0 ? 600 : 400} style={selectableText}>{name}</Text>
                         </Group>
                     </Box>
                 </Table.Td>
                 <Table.Td>
-                    <Text size="sm">{component.status || 'N/A'}</Text>
+                    <Text size="sm" style={selectableText}>{component.status || 'N/A'}</Text>
                 </Table.Td>
                 <Table.Td>
                     <Badge color={component.healthy ? 'green' : 'red'} variant="filled" size="sm">
@@ -476,7 +394,7 @@ function ComponentRow({ name, component, depth, hasChildren }: {
                     </Badge>
                 </Table.Td>
                 <Table.Td>
-                    <Text size="sm" c={component.lastError ? 'red' : 'dimmed'}>
+                    <Text size="sm" c={component.lastError ? 'red' : 'dimmed'} style={selectableText}>
                         {component.lastError || '-'}
                     </Text>
                 </Table.Td>
@@ -629,10 +547,9 @@ function RevisionConfig({ revision, config, controls }: {
                     {controls}
                 </Group>
             </Group>
-            <Editor
+            <ConfigViewer
                 key={revision}
-                defaultConfig={configContent}
-                readOnly
+                config={configContent}
                 height="100%"
             />
         </Paper>
@@ -702,7 +619,7 @@ function RevisionDiff({ history, target, base, onBaseChange, revisionOf, control
     );
 }
 
-export function EffectiveConfigTab({ status }: { status: AgentStatus | null }) {
+export function EffectiveConfigTab({ status }: { status: CollectorStatus | null }) {
     const configMap = status?.effectiveConfig?.configMap?.configMap;
 
     if (!configMap || Object.keys(configMap).length === 0) {
@@ -725,9 +642,8 @@ export function EffectiveConfigTab({ status }: { status: AgentStatus | null }) {
                 <Title order={4}>Effective Configuration</Title>
                 <Text size="sm" c="dimmed">{configName}</Text>
             </Group>
-            <Editor
-                defaultConfig={configContent}
-                readOnly
+            <ConfigViewer
+                config={configContent}
                 height="100%"
             />
         </Paper>

@@ -1,0 +1,252 @@
+syntax = "proto3";
+package resources.v1alpha1;
+option go_package = "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1";
+
+import "google/protobuf/any.proto";
+
+// ResourceService handles the CRUD operations related to Entities
+// of interest to the control-plane.
+service ResourceService {
+    rpc GetEntity(GetEntityRequest) returns (GetEntityResponse) {}
+    rpc PutEntity(PutEntityRequest) returns (PutEntityResponse) {}
+    rpc DeleteEntity(DeleteEntityRequest) returns (DeleteEntityResponse) {}
+    rpc ListEntity(ListEntityRequest) returns (ListEntityResponse) {}
+    rpc WatchEntity(WatchEntityRequest) returns (stream WatchEntityResponse) {}
+    rpc HistoryEntity(HistoryEntityRequest) returns (HistoryEntityResponse) {}
+}
+
+message GetEntityRequest {
+    string type_url = 1;
+    string key = 2;
+    // Revision to read at; 0 reads the latest.
+    uint64 revision = 3;
+}
+
+message GetEntityResponse {
+    ResourceEntity entity = 1;
+    uint64 revision = 2;
+}
+
+message PutEntityRequest {
+    ResourceEntity entity = 1;
+}
+
+message PutEntityResponse {
+    uint64 revision = 1;
+}
+
+message DeleteEntityRequest {
+    string type_url = 1;
+    string key = 2;
+}
+
+message DeleteEntityResponse {
+    uint64 revision = 1;
+}
+
+message ListEntityRequest {
+    string type_url = 1;
+}
+
+message ListEntityResponse {
+    repeated ResourceEntity entities = 1;
+}
+
+message WatchEntityRequest {
+    string type_url = 1;
+    optional string key_prefix = 2;
+    // Revision to start watching from; 0 starts from the current revision.
+    uint64 revision = 3;
+}
+
+enum WatchEventType {
+    WATCH_EVENT_TYPE_UNKNOWN = 0;
+    WATCH_EVENT_TYPE_PUT = 1;
+    WATCH_EVENT_TYPE_DELETE = 2;
+}
+
+message WatchEntityResponse {
+    WatchEventType type = 1;
+    ResourceEntity current = 2;
+    optional ResourceEntity previous = 3;
+}
+
+message HistoryEntityRequest {
+    string type_url = 1;
+    string key = 2;
+    uint64 offset = 3;
+    uint64 limit = 4;
+}
+
+message HistoryEntityResponse {
+    repeated ResourceEntity entities = 1;
+}
+
+// RegistryService handles pulling & syncing remote pre-bundled remote Entities for otelfleet 
+service DiscoveryService {
+    // TODO:
+}
+
+// TODO : extract to commonv1?
+message Reference {
+    string key = 1;
+    uint64 revision = 2;
+}
+
+
+message ResourceEntity {
+    string type_url = 1;
+    string key = 2;
+    google.protobuf.Any obj = 3;
+}
+
+
+// CollectorConfig is a complete OpenTelemetryConfig
+message CollectorConfig {
+    CompatibilityMatrix compat = 1;
+    string content_type = 2;
+    oneof value {
+        bytes Raw = 3;
+        CollectorComponents components = 4;
+    }
+}
+
+message CollectorComponents {
+    ReceiverCollection receivers = 1;
+    ProcessorCollection processors = 2;
+    ExporterCollection exporters = 3;
+    ConnectorCollection connectors = 4;
+    ExtensionCollection extensions = 5;
+    PipelineCollection pipelines = 6;
+}
+
+// Receiver is an OpenTelemetry receiver
+message Receiver {
+    CompatibilityMatrix compat = 1;
+    ComponentDefinition value = 2;
+}
+
+message ReceiverCollection {
+    repeated Receiver receivers = 1;
+    ComponentDefinition value = 2;
+}
+
+
+// Processor is an OpenTelemetry processor
+message Processor {
+    CompatibilityMatrix compat = 1;
+    ComponentDefinition value = 2;
+}
+
+message ProcessorCollection {
+    repeated Processor processors = 1;
+}
+
+// Exporter is an OpenTelemetry exporter
+message Exporter {
+    CompatibilityMatrix compat = 1;
+    ComponentDefinition value = 2;
+}
+
+message ExporterCollection {
+    repeated Exporter exporters = 1;
+}
+
+// Connector is an OpenTelemetry connector
+message Connector {
+    CompatibilityMatrix compat = 1;
+    ComponentDefinition value = 2;
+}
+
+message ConnectorCollection {
+    repeated Connector connectors = 1;
+}
+
+// Extensions is an OpenTelemetry extension
+message Extension {
+    CompatibilityMatrix compat = 1;
+    ComponentDefinition value = 2;
+}
+
+message ExtensionCollection {
+    repeated Extension extensions = 1;
+}
+
+enum PipelineType {
+    PIPELINE_TYPE_UNKNOWN = 0;
+    PIPELINE_TYPE_METRICS = 1;
+    PIPELINE_TYPE_TRACES = 2;
+    PIPELINE_TYPE_LOGS = 3;
+    PIPELINE_TYPE_PROFILE = 4;
+}
+
+// Pipelines is an OpenTelemetry extension
+message Pipeline {
+    PipelineType type = 1;
+    optional string pipeline_name =2;
+    CompatibilityMatrix compat = 3;
+    ComponentDefinition value = 4;
+}
+
+message PipelineCollection {
+    repeated Pipeline pipelines = 1;
+}
+
+message ComponentDefinition {
+    string content_type = 1;
+    oneof value {
+        // Holds the full content
+        bytes raw = 2;
+        // Holds the reference
+        string ref = 3;
+    }
+}
+
+enum VersionOrdering {
+    VERSION_ORDERING_SEMVER = 0;
+}
+
+message CompatibilityMatrix {
+    repeated VersionConstraits constraints = 1;
+}
+
+message VersionConstraits {
+    VersionOrdering ordering = 1;
+    string distribution = 2;
+    optional string min_version = 3;
+    optional string max_version = 4;
+}
+
+
+// ConfigFilters are used to associate particular configurations to deployed collectors 
+
+message ConfigFilter {
+  optional bool default = 1;
+  ApprovalConfig approval = 2;
+  // TODO : this needs to be enum {Identifying, Non-identifying, Otelfleet} + repeated {Match type, key, value}
+  repeated LabelFilter filters = 3;
+  TargetConfig collector_config = 4;
+}
+
+message LabelFilter {
+  MatchType type = 1;
+  map<string, string> opamp_id_labels = 2;
+  map<string, string> opamp_non_id_labels = 3;
+  map<string, string> otelfleet_labels = 4;
+}
+
+enum MatchType {
+  MATCH_TYPE_UNKNOWN = 0;
+  MATCH_TYPE_EQ = 1;
+  MATCH_TYPE_NEQ = 2;
+  MATCH_TYPE_RE = 3;
+  MATCH_TYPE_NR = 4;
+}
+
+message TargetConfig {
+  string config_ref = 1;
+}
+
+message ApprovalConfig {
+  optional bool requires_approval = 1;
+}
