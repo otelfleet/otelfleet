@@ -12,9 +12,11 @@ import (
 	"github.com/grafana/dskit/services"
 	"github.com/open-telemetry/opamp-go/server"
 	"github.com/open-telemetry/opamp-go/server/types"
+	"github.com/otelfleet/otelfleet/pkg/api/event/v1alpha1"
 	resourcesv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
+	"github.com/otelfleet/otelfleet/pkg/event"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp/handler"
 	opampsync "github.com/otelfleet/otelfleet/pkg/services/opamp/sync"
@@ -44,6 +46,7 @@ type Server struct {
 	deployMgr deployment.Manager
 	services.Service
 	otlpConfig *config.OTLPConfig
+	reporter   event.EventSink
 }
 
 func NewServer(
@@ -52,6 +55,7 @@ func NewServer(
 	otlpServerAddr string,
 	otlpConfig *config.OTLPConfig,
 	deployMgr deployment.Manager,
+	reporter event.EventSink,
 ) *Server {
 	opampSvr := server.New(logutil.NewOpAMPLogger(l))
 	s := &Server{
@@ -68,6 +72,7 @@ func NewServer(
 			Storage:  resourceStorage,
 			Interval: opampsync.DefaultConfigFilterSyncInterval,
 		}),
+		reporter: reporter,
 	}
 
 	s.Service = services.NewBasicService(s.start, s.running, s.stop)
@@ -127,6 +132,7 @@ func (s *Server) OnConnecting(request *http.Request) types.ConnectionResponse {
 			s.otlpConfig,
 			s.deployMgr,
 			s.collectorConfigs,
+			s.reporter,
 		)
 		return types.ConnectionResponse{
 			Accept: accept,
@@ -139,6 +145,10 @@ func (s *Server) OnConnecting(request *http.Request) types.ConnectionResponse {
 			},
 		}
 	}
+
+	s.reporter.Error(context.TODO(), []*v1alpha1.EventRef{}, &v1alpha1.EventDetails{
+		Reason: fmt.Sprintf("rejected agent connection : %s", request.RemoteAddr),
+	})
 
 	return types.ConnectionResponse{
 		Accept: false,

@@ -25,11 +25,13 @@ import (
 	"github.com/grafana/dskit/services"
 	"github.com/grafana/dskit/signals"
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
+	eventv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/event/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
 	logutil "github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/services/authorization"
 	deployment_svc "github.com/otelfleet/otelfleet/pkg/services/deployment"
+	"github.com/otelfleet/otelfleet/pkg/services/event"
 	"github.com/otelfleet/otelfleet/pkg/services/lsp"
 	"github.com/otelfleet/otelfleet/pkg/services/opamp"
 	"github.com/otelfleet/otelfleet/pkg/services/otlp"
@@ -40,6 +42,8 @@ import (
 	"github.com/rs/cors"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+
+	eventsink "github.com/otelfleet/otelfleet/pkg/event"
 )
 
 func initLogger(logFormat string, logLevel dslog.Level) *logger {
@@ -190,37 +194,19 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.logger.With("service", Auth),
 			nil, // TODO: privateKey for secure bootstrap
 			o.tokenStore,
-			// o.configStore,
-			// o.bootstrapConfigStore,
-			// o.assignmentConfigStore,
 		)
 		bootstrapSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
-
 		return bootstrapSvc, nil
 	})
-
-	// mm.RegisterModule(ConfigOTEL, func() (services.Service, error) {
-	// 	cfgServer, err := otelconfig.NewConfigServer(
-	// 		o.logger.With("service", ConfigOTEL),
-	// 		o.configFilterStore,
-	// 	)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	cfgServer.ConfigureHTTP(o.server.HTTP)
-	// 	o.configServer = cfgServer
-
-	// 	return cfgServer, nil
-	// })
 
 	mm.RegisterModule(OpAmp, func() (services.Service, error) {
 		srv := opamp.NewServer(
 			o.logger.With("service", OpAmp),
-			// o.agentRepo,
 			o.store.Schema(),
 			o.server.HTTPListenAddr().String(),
 			o.cfg.OTLP,
 			o.deployMgr,
+			eventsink.NewEventSink(object.NewKeyValueAdapter[*eventv1alpha1.Event](o.store.Schema()), eventsink.GroupCollector),
 		)
 		o.opampServer = srv
 		return srv, nil
@@ -257,6 +243,14 @@ func (o *OtelFleet) setupModuleManager() error {
 	mm.RegisterModule(Resource, func() (services.Service, error) {
 		resourceSvc := resource.NewServer(o.logger.With("service", "resource-server"), o.store.Schema())
 		resourceSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
+
+		// FIXME: for now let's put the event querier on the same API
+		// path as generic control plane resources API.
+		eventSvc := event.NewServer(
+			object.NewKeyValueAdapter[*eventv1alpha1.Event](o.store.Schema()),
+		)
+		eventSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
+
 		return resourceSvc, nil
 	})
 
@@ -309,12 +303,10 @@ func (o *OtelFleet) setupModuleManager() error {
 		DeploymentManager: {ServerService, Storage, OpAmp},
 		OpAmp:             {ServerService, Storage},
 		Auth:              {ServerService, Storage},
-		// ConfigOTEL:   {ServerService, Storage},
-		Resource: {ServerService, Storage},
-		UI:       {ServerService},
-		OTLP:     {ServerService},
-		LSP:      {ServerService},
-		// DeploymentModule: {ServerService, ConfigOTEL, Storage},
+		Resource:          {ServerService, Storage},
+		UI:                {ServerService},
+		OTLP:              {ServerService},
+		LSP:               {ServerService},
 	}
 
 	for mod, targets := range deps {

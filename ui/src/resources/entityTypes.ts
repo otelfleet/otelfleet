@@ -154,3 +154,7 @@ export const COLLECTOR_ENTITY_TYPES: EntityType[] = ENTITY_TYPES.filter((e) => !
 export function getEntityType(slug: string): EntityType | undefined {
   return ENTITY_TYPES.find((e) => e.slug === slug);
 }
+
+export function getEntityTypeByUrl(typeUrl: string): EntityType | undefined {
+  return ENTITY_TYPES.find((e) => e.typeUrl === typeUrl);
+}

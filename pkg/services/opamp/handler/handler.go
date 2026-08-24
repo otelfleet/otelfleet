@@ -13,9 +13,11 @@ import (
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/open-telemetry/opamp-go/server/types"
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
+	eventv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/event/v1alpha1"
 	resourcesv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
+	"github.com/otelfleet/otelfleet/pkg/event"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/router"
 	services_int "github.com/otelfleet/otelfleet/pkg/services"
@@ -25,6 +27,8 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/util"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"github.com/otelfleet/otelfleet/pkg/util/opamputil"
+	"github.com/otelfleet/otelfleet/pkg/util/protoutil"
+	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -57,6 +61,8 @@ type CollectorHandler struct {
 
 	otlpServerAddr string
 	otlpConfig     *config.OTLPConfig
+
+	reporter event.EventSink
 }
 
 func NewCollectorHandler(
@@ -69,6 +75,7 @@ func NewCollectorHandler(
 	otlpConfig *config.OTLPConfig,
 	mgr deployment.Manager,
 	collectorConfigs object.KeyValue[*resourcesv1alpha1.CollectorConfig],
+	reporter event.EventSink,
 ) *CollectorHandler {
 	return &CollectorHandler{
 		ctx:                  ctx,
@@ -80,6 +87,7 @@ func NewCollectorHandler(
 		otlpConfig:           otlpConfig,
 		mgr:                  mgr,
 		collectorConfigs:     collectorConfigs,
+		reporter:             reporter,
 	}
 }
 
@@ -110,6 +118,7 @@ func (s *CollectorHandler) OnMessage(ctx context.Context, conn types.Connection,
 		if msg := s.bootstrap(ctx, logger, instanceUID, message); msg != nil {
 			return msg
 		}
+		s.reportInfo(ctx, "connected")
 	}
 	resp := &protobufs.ServerToAgent{
 		InstanceUid: message.InstanceUid,
@@ -271,11 +280,45 @@ func (s *CollectorHandler) bootstrap(
 	return nil
 }
 
+func (s *CollectorHandler) reportInfo(ctx context.Context, reason string, extraRefs ...*eventv1alpha1.EventRef) {
+	s.reporter.Info(ctx, append([]*eventv1alpha1.EventRef{
+		{
+			TypeUrl: protoutil.GetTypeURL(&v1alpha1.CollectorDescription{}),
+			Key:     lo.FromPtrOr(s.agentID, ""),
+		},
+	}, extraRefs...), &eventv1alpha1.EventDetails{
+		Reason: reason,
+	})
+}
+
+func (s *CollectorHandler) reportError(ctx context.Context, reason string, extraRefs ...*eventv1alpha1.EventRef) {
+	s.reporter.Error(ctx, append([]*eventv1alpha1.EventRef{
+		{
+			TypeUrl: protoutil.GetTypeURL(&v1alpha1.CollectorDescription{}),
+			Key:     lo.FromPtrOr(s.agentID, ""),
+		},
+	}, extraRefs...), &eventv1alpha1.EventDetails{
+		Reason: reason,
+	})
+}
+
+func (s *CollectorHandler) reportWarn(ctx context.Context, reason string, extraRefs ...*eventv1alpha1.EventRef) {
+	s.reporter.Warn(ctx, append([]*eventv1alpha1.EventRef{
+		{
+			TypeUrl: protoutil.GetTypeURL(&v1alpha1.CollectorDescription{}),
+			Key:     lo.FromPtrOr(s.agentID, ""),
+		},
+	}, extraRefs...), &eventv1alpha1.EventDetails{
+		Reason: reason,
+	})
+}
+
 // OnConnectionClose is called when the OpAMP connection is closed.
 func (s *CollectorHandler) OnConnectionClose(conn types.Connection) {
 	remoteAddr := conn.Connection().RemoteAddr().String()
 	logger := s.logger.With("remote_addr", remoteAddr)
-	logger.Info("agent disconnected")
+	logger.Info("collector disconnected")
+	s.reportError(context.TODO(), fmt.Sprintf("disconnected : %s", remoteAddr))
 
 	if s.agentID == nil {
 		return
@@ -384,6 +427,10 @@ func (s *CollectorHandler) checkForConfigUpdate(ctx context.Context, agentID str
 	resolved, err := s.constructConfig(ctx)
 	if err != nil {
 		logger.With("err", err).Error("failed to construct config")
+		s.reportError(ctx, "config sync: failed to get assigned config", &eventv1alpha1.EventRef{
+			TypeUrl: protoutil.GetTypeURL(&resourcesv1alpha1.CollectorConfig{}),
+			Key:     resolved.configRef,
+		})
 		return nil
 	}
 	expectedHash := s.calculateHash(resolved.configMap)
@@ -392,6 +439,15 @@ func (s *CollectorHandler) checkForConfigUpdate(ctx context.Context, agentID str
 	if bytes.Equal(expectedHash, s.appliedConfigHash(ctx, msg)) {
 		logger.Debug("remote collector config up-to-date")
 		return nil
+	}
+	if resolved.fallback {
+		s.reportWarn(ctx, "config sync: no configurations")
+
+	} else {
+		s.reportInfo(ctx, "config sync: assigned config", &eventv1alpha1.EventRef{
+			TypeUrl: protoutil.GetTypeURL(&resourcesv1alpha1.CollectorConfig{}),
+			Key:     resolved.configRef,
+		})
 	}
 
 	logger.Info("pushing remote config to collector", "expected_hash", fmt.Sprintf("%x", expectedHash))
@@ -432,6 +488,7 @@ func (s *CollectorHandler) agentLabels(ctx context.Context) (router.CollectorLab
 type resolvedConfig struct {
 	configMap *protobufs.AgentConfigMap
 	configRef string
+	fallback  bool
 }
 
 func (s *CollectorHandler) filteredConfig(ctx context.Context) (string, error) {
@@ -455,6 +512,7 @@ func (s *CollectorHandler) constructConfig(ctx context.Context) (*resolvedConfig
 	if grpcutil.IsError(codes.NotFound, err) {
 		logger.Info("agent has no assigned config from control plane")
 		return &resolvedConfig{
+			fallback: true,
 			configMap: &protobufs.AgentConfigMap{
 				ConfigMap: map[string]*protobufs.AgentConfigFile{
 					"config.yaml": {
@@ -466,7 +524,7 @@ func (s *CollectorHandler) constructConfig(ctx context.Context) (*resolvedConfig
 			configRef: configRef,
 		}, nil
 	} else if err != nil {
-		return nil, fmt.Errorf("error when getting filtered config : %w", err)
+		panic("bug : unhandled")
 	}
 
 	config, err := s.collectorConfigs.Get(ctx, configRef)

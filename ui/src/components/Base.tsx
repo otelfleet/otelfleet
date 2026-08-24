@@ -1,5 +1,5 @@
 import { useState, useCallback, type FC } from 'react'
-import { Link, Outlet } from '@tanstack/react-router'
+import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import ColorSchemeContext from '../contexts/ColorSchemeContext';
 import { useColorScheme } from '../contexts/useColorScheme';
 import { Notifications } from '@mantine/notifications';
@@ -19,7 +19,7 @@ import {
     type MantineColorScheme,
 } from '@mantine/core';
 import { useDisclosure, useLocalStorage } from '@mantine/hooks'
-import { GitHubLogoIcon, SunIcon, MoonIcon, StackIcon, IdCardIcon, RocketIcon, MixerHorizontalIcon, CubeIcon, ArchiveIcon, FileTextIcon, LockClosedIcon } from '@radix-ui/react-icons';
+import { GitHubLogoIcon, DashboardIcon, SunIcon, MoonIcon, StackIcon, IdCardIcon, RocketIcon, MixerHorizontalIcon, CubeIcon, ArchiveIcon, FileTextIcon, LockClosedIcon } from '@radix-ui/react-icons';
 import { COMPONENT_ENTITY_TYPES, COLLECTOR_ENTITY_TYPES } from '../resources/entityTypes';
 
 
@@ -128,7 +128,12 @@ const ColorSchemeToggle: FC = () => {
 
 const Base: FC = () => {
     const [opened, { toggle }] = useDisclosure();
-    const [active, setActive] = useState<string | null>(null);
+    const pathname = useRouterState({ select: (state) => state.location.pathname });
+    const [openedGroup, setOpenedGroup] = useState<string | null>(null);
+
+    const isCurrent = (to: string) => pathname === to;
+    const groupContains = (prefixes: string[]) => prefixes.some((prefix) => pathname.startsWith(prefix));
+    const toggleGroup = (group: string) => setOpenedGroup((current) => (current === group ? null : group));
     const [componentsOpened, setComponentsOpened] = useState(false);
     const [registriesOpened, setRegistriesOpened] = useState(false);
     const [colorScheme, setColorScheme] = useLocalStorage<MantineColorScheme>({
@@ -183,23 +188,23 @@ const Base: FC = () => {
                 <AppShell.Navbar>
                     <Stack gap="xs">
                         <NavLink
+                            component={Link}
+                            to="/"
                             label="Overview"
                             description="Overview of operations"
-                            opened={active === 'overview'}
-                            active={active === 'overview'}
-                            onClick={() => setActive(active === 'overviwew' ? null : 'overview')}
-                        >
-
-                        </NavLink>
+                            leftSection={<DashboardIcon />}
+                            active={isCurrent('/')}
+                            onClick={() => setOpenedGroup(null)}
+                        />
                         <NavLink
                             label="Management"
                             description="Fleet & Authorization"
-                            opened={active === 'mgmt'}
-                            active={active === 'mgmt'}
-                            onClick={() => setActive(active === 'mgmt' ? null : 'mgmt')}
+                            opened={openedGroup === 'mgmt' || groupContains(['/tokens', '/rbac', '/registries'])}
+                            active={groupContains(['/tokens', '/rbac', '/registries'])}
+                            onClick={() => toggleGroup('mgmt')}
                         >
-                            <NavLink component={Link} to="/tokens" label="API tokens" leftSection={<IdCardIcon />} />
-                            <NavLink component={Link} to="/rbac"   label="RBAC"       leftSection={<LockClosedIcon />} />
+                            <NavLink component={Link} to="/tokens" active={isCurrent("/tokens")} label="API tokens" leftSection={<IdCardIcon />} />
+                            <NavLink component={Link} to="/rbac" active={isCurrent("/rbac")}   label="RBAC"       leftSection={<LockClosedIcon />} />
                             <NavLink
                                 label="Registry"
                                 description="Config & binary registries"
@@ -210,23 +215,24 @@ const Base: FC = () => {
                                     setRegistriesOpened((o) => !o);
                                 }}
                             >
-                                <NavLink component={Link} to="/registries/config" label="Config registry" leftSection={<FileTextIcon />} />
-                                <NavLink component={Link} to="/registries/binary" label="Binary registry" leftSection={<CubeIcon />} />
+                                <NavLink component={Link} to="/registries/config" active={isCurrent("/registries/config")} label="Config registry" leftSection={<FileTextIcon />} />
+                                <NavLink component={Link} to="/registries/binary" active={isCurrent("/registries/binary")} label="Binary registry" leftSection={<CubeIcon />} />
                             </NavLink>
                         </NavLink>
 
                         <NavLink
                             label="Configs"
                             description="Pipelines & exporters"
-                            opened={active === 'configs'}
-                            active={active === 'configs'}
-                            onClick={() => setActive(active === 'configs' ? null : 'configs')}
+                            opened={openedGroup === 'configs' || groupContains(['/resources'])}
+                            active={groupContains(['/resources'])}
+                            onClick={() => toggleGroup('configs')}
                         >
                             {COLLECTOR_ENTITY_TYPES.map((entityType) => (
                                 <NavLink
                                     key={entityType.slug}
                                     label={entityType.label}
                                     leftSection={<entityType.icon />}
+                                    active={isCurrent(`/resources/${entityType.slug}`)}
                                     renderRoot={(props) => (
                                         <Link to="/resources/$type" params={{ type: entityType.slug }} {...props} />
                                     )}
@@ -247,6 +253,7 @@ const Base: FC = () => {
                                         key={entityType.slug}
                                         label={entityType.label}
                                         leftSection={<entityType.icon />}
+                                        active={isCurrent(`/resources/${entityType.slug}`)}
                                         renderRoot={(props) => (
                                             <Link to="/resources/$type" params={{ type: entityType.slug }} {...props} />
                                         )}
@@ -258,12 +265,12 @@ const Base: FC = () => {
                         <NavLink
                             label="Collectors"
                             description="Deployed collectors"
-                            opened={active === 'collectors'}
-                            active={active === 'collectors'}
-                            onClick={() => setActive(active === 'collectors' ? null : 'collectors')}
+                            opened={openedGroup === 'collectors' || groupContains(['/deployments', '/configfilter'])}
+                            active={groupContains(['/deployments', '/configfilter'])}
+                            onClick={() => toggleGroup('collectors')}
                         >
-                            <NavLink component={Link} to="/deployments" label="Deployments" leftSection={<RocketIcon />} />
-                            <NavLink component={Link} to="/configfilter" label="Config Assignment" leftSection={<MixerHorizontalIcon />} />
+                            <NavLink component={Link} to="/deployments" active={isCurrent("/deployments")} label="Deployments" leftSection={<RocketIcon />} />
+                            <NavLink component={Link} to="/configfilter" active={isCurrent("/configfilter")} label="Config Assignment" leftSection={<MixerHorizontalIcon />} />
                         </NavLink>
                     </Stack>
                 </AppShell.Navbar>

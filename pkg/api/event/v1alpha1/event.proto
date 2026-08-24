@@ -1,0 +1,62 @@
+syntax="proto3";
+
+package event.v1alpha1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/otelfleet/otelfleet/pkg/api/event/v1alpha1";
+
+service EventService {
+    rpc GetGroups(GetGroupRequest) returns (GetGroupResponse);
+    rpc List(ListEventRequest) returns (ListEventResponse);
+    rpc Watch(WatchEventRequest) returns (stream WatchEventResponse);
+}
+
+message GetGroupRequest {}
+
+message GetGroupResponse {
+    repeated string groups = 1;
+}
+
+message ListEventRequest {
+    optional EventSeverity severity = 1;
+    string group = 2;
+    // Maximum number of most recently reported events to return; 0 returns all.
+    int32 limit = 3;
+}
+
+message ListEventResponse {
+    repeated Event events = 1;
+}
+
+message WatchEventRequest {
+    optional EventSeverity severity = 1;
+    string group = 2;
+}
+
+message WatchEventResponse {
+    repeated Event events  = 1;
+}
+
+message Event{
+    EventSeverity severity = 1;
+    string group = 2;
+    EventDetails details = 3;
+    repeated EventRef object_refs = 4;
+    google.protobuf.Timestamp reported_at = 5;
+}
+
+message EventRef {
+    string type_url = 1;
+    string key = 2;
+}
+
+message EventDetails {
+    string reason = 1;
+}
+
+enum EventSeverity {
+    EVENT_SEVERITY_INFO = 0;
+    EVENT_SEVERITY_WARN = 1;
+    EVENT_SEVERITY_ERROR = 2;
+}
