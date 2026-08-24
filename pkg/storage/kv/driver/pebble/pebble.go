@@ -9,7 +9,9 @@ import (
 
 	"github.com/cockroachdb/pebble/v2"
 	"github.com/cockroachdb/pebble/v2/vfs"
+	"github.com/otelfleet/otelcol-lsp/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/storage/kv"
+	"github.com/otelfleet/otelfleet/pkg/util/contextutil"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 )
 
@@ -65,12 +67,14 @@ func Open(dirname string, options *pebble.Options) (*pebble.DB, error) {
 }
 
 type KVBroker struct {
-	db *pebble.DB
+	db       *pebble.DB
+	versions *changeVersions
 }
 
 func NewKVBroker(db *pebble.DB) *KVBroker {
 	return &KVBroker{
-		db: db,
+		db:       db,
+		versions: loadChangeVersions(db),
 	}
 }
 
@@ -83,6 +87,8 @@ func (k *KVBroker) newPrefixedKeyValue(prefix string) *prefixedKV {
 		db:      k.db,
 		prefix:  []byte(prefix),
 		notifyC: make(chan kv.WatchEvent, notifyBufferSize),
+		signal:  contextutil.NewSignal(fmt.Sprintf("storage-%s", prefix)),
+		changes: newChangelog(k.db, prefix, k.versions),
 	}
 }
 
@@ -90,6 +96,8 @@ type prefixedKV struct {
 	prefix  []byte
 	db      *pebble.DB
 	notifyC chan kv.WatchEvent
+	signal  *contextutil.Signal
+	changes *changelog
 }
 
 func (k *prefixedKV) key(key string) []byte {
@@ -100,17 +108,19 @@ func (k *prefixedKV) key(key string) []byte {
 	return fullKey
 }
 
-func (k *prefixedKV) Put(_ context.Context, key string, value []byte) error {
-	kvKey := k.key(key)
-	if err := k.db.Set(kvKey, value, &pebble.WriteOptions{}); err != nil {
+func (k *prefixedKV) Put(ctx context.Context, key string, value []byte) error {
+	b := k.db.NewBatch()
+	defer b.Close()
+	if err := b.Set(k.key(key), value, nil); err != nil {
 		return err
 	}
-	// FIXME: blocking, think of a better system here,
-	// we don't want to miss events either...
-	k.notifyC <- kv.WatchEvent{
-		Key:     key,
-		Deleted: false,
+	if err := k.changes.putModifyChange(b, key); err != nil {
+		return err
 	}
+	if err := b.Commit(&pebble.WriteOptions{}); err != nil {
+		return err
+	}
+	k.signal.Broadcast(ctx)
 	return nil
 }
 
@@ -234,27 +244,68 @@ func (k *prefixedKV) ListEntries(ctx context.Context, listPrefix string) ([]kv.K
 }
 
 func (k *prefixedKV) Delete(ctx context.Context, key string) error {
-	return k.db.Delete(k.key(key), &pebble.WriteOptions{})
+	b := k.db.NewBatch()
+	defer b.Close()
+	if err := b.Delete(k.key(key), nil); err != nil {
+		return err
+	}
+	if err := k.changes.putDeleteChange(b, key); err != nil {
+		return err
+	}
+	if err := b.Commit(&pebble.WriteOptions{}); err != nil {
+		return err
+	}
+	k.signal.Broadcast(ctx)
+	return nil
 }
 
 const bufN = 16
 
 func (k *prefixedKV) Watch(ctx context.Context, prefix string) (<-chan kv.WatchEvent, error) {
 	ret := make(chan kv.WatchEvent, bufN)
+	wakeup := k.signal.Bind()
+	cursor := k.changes.currentVersion()
 	go func() {
+		defer close(ret)
+		defer k.signal.Unbind(wakeup)
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case notifyEvt, ok := <-k.notifyC:
+			case _, ok := <-wakeup:
 				if !ok {
 					return
 				}
-				ret <- notifyEvt
+				// TODO : this implementation might be pretty slow
+				next, err := k.drainChanges(ctx, ret, prefix, cursor)
+				if err != nil {
+					logutil.From(ctx).With("prefix", prefix, "err", err).Error("failed to read changelog")
+					return
+				}
+				cursor = next
 			}
 		}
 	}()
 	return ret, nil
+}
+
+func (k *prefixedKV) drainChanges(ctx context.Context, out chan<- kv.WatchEvent, prefix string, cursor uint64) (uint64, error) {
+	changes, err := k.changes.since(ctx, cursor)
+	if err != nil {
+		return cursor, err
+	}
+	for _, c := range changes {
+		cursor = c.version
+		if !matchesWatchPrefix(prefix, c.event.Key) {
+			continue
+		}
+		select {
+		case out <- c.event:
+		case <-ctx.Done():
+			return cursor, ctx.Err()
+		}
+	}
+	return cursor, nil
 }
 
 var _ kv.BaseKV = (*prefixedKV)(nil)
