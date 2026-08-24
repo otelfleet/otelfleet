@@ -66,7 +66,7 @@ export function RouteEditor({
               {opened ? <ChevronDownIcon /> : <ChevronRightIcon />}
             </ActionIcon>
             <Badge variant="light" color={color} size="sm">
-              {badgeLabel ?? (isRoot ? 'root' : `depth ${depth}`)}
+              {badgeLabel ?? (isRoot ? 'default' : `depth ${depth}`)}
             </Badge>
             <Text fw={600} size="sm" c={value.name ? undefined : 'dimmed'}>
               {value.name || 'unnamed route'}
@@ -77,7 +77,7 @@ export function RouteEditor({
               </Text>
             )}
           </Group>
-          {!isRoot && (
+          {onRemove && (
             <ActionIcon color="red" variant="subtle" size="lg" title="Remove route" onClick={onRemove}>
               <TrashIcon />
             </ActionIcon>

@@ -10,6 +10,7 @@ const handleStyle = { backgroundColor: 'transparent', borderColor: 'transparent'
 function accentColor(data: RouteNodeData): string {
   if (data.matched) return 'green';
   if (data.isDef) return 'grape';
+  if (data.isDefault) return 'gray';
   if (data.isRoot) return 'blue';
   return 'gray';
 }
@@ -57,6 +58,8 @@ function RouteNode({ data }: { data: RouteNodeData }) {
           </Group>
           {data.matched ? (
             <Badge size="xs" color="green" variant="filled" leftSection={<CheckCircledIcon />}>match</Badge>
+          ) : data.isDefault ? (
+            <Badge size="xs" variant="light" color="gray">default</Badge>
           ) : data.isRoot ? (
             <Badge size="xs" variant="light" color="blue">root</Badge>
           ) : data.isDef ? (
@@ -66,7 +69,9 @@ function RouteNode({ data }: { data: RouteNodeData }) {
       </Box>
 
       <Stack gap={6} px="xs" py={8}>
-        {data.use !== '' ? (
+        {data.isDefault ? (
+          <Text size="xs" c="dimmed" fs="italic">collectors that match no route</Text>
+        ) : data.use !== '' ? (
           <Text size="xs" c="dimmed">
             uses <Text span fw={600} c="grape">{data.use}</Text>
           </Text>

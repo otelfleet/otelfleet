@@ -21,6 +21,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/services/opamp/handler"
 	opampsync "github.com/otelfleet/otelfleet/pkg/services/opamp/sync"
 	"github.com/otelfleet/otelfleet/pkg/storage/object"
+	"github.com/otelfleet/otelfleet/pkg/util"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -47,6 +48,8 @@ type Server struct {
 	services.Service
 	otlpConfig *config.OTLPConfig
 	reporter   event.EventSink
+
+	nameGen util.NameGenerator
 }
 
 func NewServer(
@@ -73,6 +76,7 @@ func NewServer(
 			Interval: opampsync.DefaultConfigFilterSyncInterval,
 		}),
 		reporter: reporter,
+		nameGen:  *util.NewNameGenerator(nil),
 	}
 
 	s.Service = services.NewBasicService(s.start, s.running, s.stop)
@@ -133,6 +137,7 @@ func (s *Server) OnConnecting(request *http.Request) types.ConnectionResponse {
 			s.deployMgr,
 			s.collectorConfigs,
 			s.reporter,
+			s.nameGen,
 		)
 		return types.ConnectionResponse{
 			Accept: accept,
@@ -146,7 +151,7 @@ func (s *Server) OnConnecting(request *http.Request) types.ConnectionResponse {
 		}
 	}
 
-	s.reporter.Error(context.TODO(), []*v1alpha1.EventRef{}, &v1alpha1.EventDetails{
+	s.reporter.Error(request.Context(), []*v1alpha1.EventRef{}, &v1alpha1.EventDetails{
 		Reason: fmt.Sprintf("rejected agent connection : %s", request.RemoteAddr),
 	})
 

@@ -12,6 +12,18 @@ import (
 	commonv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/common/v1alpha1"
 )
 
+func TestRouter_Empty(t *testing.T) {
+	pb := &v1alpha1.Router{
+		Root:      nil,
+		Defs:      []*v1alpha1.Route{},
+		ConfigRef: "foo",
+	}
+
+	matcher, err := router.NewMatcher(pb)
+	assert.NoError(t, err)
+	assert.NotNil(t, matcher)
+}
+
 func TestRouter_Matching(t *testing.T) {
 	pb := &v1alpha1.Router{
 		ConfigRef: "default_foo",

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Button, Group, Loader, Paper, SegmentedControl, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { ConnectError } from '@connectrpc/connect';
+import { Code, ConnectError } from '@connectrpc/connect';
 import { CheckCircledIcon } from '@radix-ui/react-icons';
 
 import { useClient } from '../api';
@@ -63,7 +63,9 @@ export function ConfigAssignmentPage() {
         if (!cancelled) setValues(toRouterValues(unpackRouter(response.entity?.obj)));
       } catch (error) {
         if (!cancelled) setValues(emptyRouterValues());
-        notifyGRPCError('Failed to load config assignment', error);
+        if (ConnectError.from(error).code !== Code.NotFound) {
+          notifyGRPCError('Failed to load config assignment', error);
+        }
       }
     })();
     return () => { cancelled = true; };

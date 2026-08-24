@@ -1222,9 +1222,11 @@ type CollectorDescription struct {
 	// Attributes that do not necessarily identify the collector but help describe where it runs
 	// (e.g., os.type, os.version, host.*, cloud.*).
 	NonIdentifyingAttributes []*KeyValue `protobuf:"bytes,4,rep,name=non_identifying_attributes,json=nonIdentifyingAttributes,proto3" json:"non_identifying_attributes,omitempty"`
-	Capabilities             []string    `protobuf:"bytes,5,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
-	unknownFields            protoimpl.UnknownFields
-	sizeCache                protoimpl.SizeCache
+	// Attributes that are added by the bootstrap process or manually updated by Users.
+	Attributes    map[string]string `protobuf:"bytes,6,rep,name=attributes,proto3" json:"attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Capabilities  []string          `protobuf:"bytes,5,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CollectorDescription) Reset() {
@@ -1281,6 +1283,13 @@ func (x *CollectorDescription) GetIdentifyingAttributes() []*KeyValue {
 func (x *CollectorDescription) GetNonIdentifyingAttributes() []*KeyValue {
 	if x != nil {
 		return x.NonIdentifyingAttributes
+	}
+	return nil
+}
+
+func (x *CollectorDescription) GetAttributes() map[string]string {
+	if x != nil {
+		return x.Attributes
 	}
 	return nil
 }
@@ -2187,13 +2196,19 @@ const file_pkg_api_deployment_v1alpha1_deployment_proto_rawDesc = "" +
 	"\rfriendly_name\x18\x02 \x01(\tR\ffriendlyName\x12T\n" +
 	"\x16identifying_attributes\x18\x03 \x03(\v2\x1d.deployment.v1alpha1.KeyValueR\x15identifyingAttributes\x12[\n" +
 	"\x1anon_identifying_attributes\x18\x04 \x03(\v2\x1d.deployment.v1alpha1.KeyValueR\x18nonIdentifyingAttributes\x12\"\n" +
-	"\fcapabilities\x18\x05 \x03(\tR\fcapabilities\"\xa2\x02\n" +
+	"\fcapabilities\x18\x05 \x03(\tR\fcapabilities\"\xbc\x03\n" +
 	"\x14CollectorDescription\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12#\n" +
 	"\rfriendly_name\x18\x02 \x01(\tR\ffriendlyName\x12T\n" +
 	"\x16identifying_attributes\x18\x03 \x03(\v2\x1d.deployment.v1alpha1.KeyValueR\x15identifyingAttributes\x12[\n" +
-	"\x1anon_identifying_attributes\x18\x04 \x03(\v2\x1d.deployment.v1alpha1.KeyValueR\x18nonIdentifyingAttributes\x12\"\n" +
-	"\fcapabilities\x18\x05 \x03(\tR\fcapabilities\"Q\n" +
+	"\x1anon_identifying_attributes\x18\x04 \x03(\v2\x1d.deployment.v1alpha1.KeyValueR\x18nonIdentifyingAttributes\x12Y\n" +
+	"\n" +
+	"attributes\x18\x06 \x03(\v29.deployment.v1alpha1.CollectorDescription.AttributesEntryR\n" +
+	"attributes\x12\"\n" +
+	"\fcapabilities\x18\x05 \x03(\tR\fcapabilities\x1a=\n" +
+	"\x0fAttributesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"Q\n" +
 	"\bKeyValue\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x123\n" +
 	"\x05value\x18\x02 \x01(\v2\x1d.deployment.v1alpha1.AnyValueR\x05value\"\xcc\x02\n" +
@@ -2298,7 +2313,7 @@ func file_pkg_api_deployment_v1alpha1_deployment_proto_rawDescGZIP() []byte {
 }
 
 var file_pkg_api_deployment_v1alpha1_deployment_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
+var file_pkg_api_deployment_v1alpha1_deployment_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
 var file_pkg_api_deployment_v1alpha1_deployment_proto_goTypes = []any{
 	(CollectorState)(0),                   // 0: deployment.v1alpha1.CollectorState
 	(ConfigSyncStatus)(0),                 // 1: deployment.v1alpha1.ConfigSyncStatus
@@ -2340,19 +2355,20 @@ var file_pkg_api_deployment_v1alpha1_deployment_proto_goTypes = []any{
 	nil,                                   // 37: deployment.v1alpha1.MatchRouterRequest.IdentifyingLabelsEntry
 	nil,                                   // 38: deployment.v1alpha1.MatchRouterRequest.NonIdentifyingLabelsEntry
 	nil,                                   // 39: deployment.v1alpha1.MatchRouterRequest.OtelfleetLabelsEntry
-	nil,                                   // 40: deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry
-	nil,                                   // 41: deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry
-	(*v1alpha1.Router)(nil),               // 42: route.v1alpha1.Router
-	(*timestamppb.Timestamp)(nil),         // 43: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),                 // 44: google.protobuf.Empty
+	nil,                                   // 40: deployment.v1alpha1.CollectorDescription.AttributesEntry
+	nil,                                   // 41: deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry
+	nil,                                   // 42: deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry
+	(*v1alpha1.Router)(nil),               // 43: route.v1alpha1.Router
+	(*timestamppb.Timestamp)(nil),         // 44: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                 // 45: google.protobuf.Empty
 }
 var file_pkg_api_deployment_v1alpha1_deployment_proto_depIdxs = []int32{
-	42, // 0: deployment.v1alpha1.ValidateRouterRequest.router:type_name -> route.v1alpha1.Router
-	42, // 1: deployment.v1alpha1.PreviewRouterRequest.router:type_name -> route.v1alpha1.Router
+	43, // 0: deployment.v1alpha1.ValidateRouterRequest.router:type_name -> route.v1alpha1.Router
+	43, // 1: deployment.v1alpha1.PreviewRouterRequest.router:type_name -> route.v1alpha1.Router
 	7,  // 2: deployment.v1alpha1.PreviewRouterResponse.old:type_name -> deployment.v1alpha1.RouterConfigAssignment
 	7,  // 3: deployment.v1alpha1.PreviewRouterResponse.new:type_name -> deployment.v1alpha1.RouterConfigAssignment
 	36, // 4: deployment.v1alpha1.RouterConfigAssignment.collectorsToConfigRef:type_name -> deployment.v1alpha1.RouterConfigAssignment.CollectorsToConfigRefEntry
-	42, // 5: deployment.v1alpha1.MatchRouterRequest.router:type_name -> route.v1alpha1.Router
+	43, // 5: deployment.v1alpha1.MatchRouterRequest.router:type_name -> route.v1alpha1.Router
 	37, // 6: deployment.v1alpha1.MatchRouterRequest.identifying_labels:type_name -> deployment.v1alpha1.MatchRouterRequest.IdentifyingLabelsEntry
 	38, // 7: deployment.v1alpha1.MatchRouterRequest.non_identifying_labels:type_name -> deployment.v1alpha1.MatchRouterRequest.NonIdentifyingLabelsEntry
 	39, // 8: deployment.v1alpha1.MatchRouterRequest.otelfleet_labels:type_name -> deployment.v1alpha1.MatchRouterRequest.OtelfleetLabelsEntry
@@ -2373,47 +2389,48 @@ var file_pkg_api_deployment_v1alpha1_deployment_proto_depIdxs = []int32{
 	24, // 23: deployment.v1alpha1.CollectorRegistration.non_identifying_attributes:type_name -> deployment.v1alpha1.KeyValue
 	24, // 24: deployment.v1alpha1.CollectorDescription.identifying_attributes:type_name -> deployment.v1alpha1.KeyValue
 	24, // 25: deployment.v1alpha1.CollectorDescription.non_identifying_attributes:type_name -> deployment.v1alpha1.KeyValue
-	25, // 26: deployment.v1alpha1.KeyValue.value:type_name -> deployment.v1alpha1.AnyValue
-	26, // 27: deployment.v1alpha1.AnyValue.array_value:type_name -> deployment.v1alpha1.ArrayValue
-	27, // 28: deployment.v1alpha1.AnyValue.kvlist_value:type_name -> deployment.v1alpha1.KeyValueList
-	25, // 29: deployment.v1alpha1.ArrayValue.values:type_name -> deployment.v1alpha1.AnyValue
-	24, // 30: deployment.v1alpha1.KeyValueList.values:type_name -> deployment.v1alpha1.KeyValue
-	0,  // 31: deployment.v1alpha1.CollectorConnectionState.state:type_name -> deployment.v1alpha1.CollectorState
-	43, // 32: deployment.v1alpha1.CollectorConnectionState.last_seen:type_name -> google.protobuf.Timestamp
-	43, // 33: deployment.v1alpha1.CollectorConnectionState.connected_at:type_name -> google.protobuf.Timestamp
-	43, // 34: deployment.v1alpha1.CollectorConnectionState.disconnected_at:type_name -> google.protobuf.Timestamp
-	40, // 35: deployment.v1alpha1.ComponentHealth.component_health_map:type_name -> deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry
-	31, // 36: deployment.v1alpha1.EffectiveConfig.config_map:type_name -> deployment.v1alpha1.CollectorConfigMap
-	41, // 37: deployment.v1alpha1.CollectorConfigMap.config_map:type_name -> deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry
-	2,  // 38: deployment.v1alpha1.RemoteConfigStatus.status:type_name -> deployment.v1alpha1.RemoteConfigStatuses
-	0,  // 39: deployment.v1alpha1.ConnectionStatus.state:type_name -> deployment.v1alpha1.CollectorState
-	43, // 40: deployment.v1alpha1.ConnectionStatus.last_seen:type_name -> google.protobuf.Timestamp
-	43, // 41: deployment.v1alpha1.ConnectionStatus.connected_at:type_name -> google.protobuf.Timestamp
-	43, // 42: deployment.v1alpha1.ConnectionStatus.disconnected_at:type_name -> google.protobuf.Timestamp
-	1,  // 43: deployment.v1alpha1.SyncStatus.status:type_name -> deployment.v1alpha1.ConfigSyncStatus
-	29, // 44: deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry.value:type_name -> deployment.v1alpha1.ComponentHealth
-	32, // 45: deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry.value:type_name -> deployment.v1alpha1.CollectorConfigFile
-	12, // 46: deployment.v1alpha1.CollectorService.ListCollectors:input_type -> deployment.v1alpha1.ListCollectorsRequest
-	16, // 47: deployment.v1alpha1.CollectorService.GetCollector:input_type -> deployment.v1alpha1.GetCollectorRequest
-	10, // 48: deployment.v1alpha1.CollectorService.CollectorHistory:input_type -> deployment.v1alpha1.GetCollectorHistoryRequest
-	18, // 49: deployment.v1alpha1.CollectorService.Status:input_type -> deployment.v1alpha1.GetCollectorStatusRequest
-	20, // 50: deployment.v1alpha1.CollectorService.DeleteCollector:input_type -> deployment.v1alpha1.DeleteCollectorRequest
-	3,  // 51: deployment.v1alpha1.CollectorService.ValidateRouter:input_type -> deployment.v1alpha1.ValidateRouterRequest
-	5,  // 52: deployment.v1alpha1.CollectorService.PreviewRouter:input_type -> deployment.v1alpha1.PreviewRouterRequest
-	8,  // 53: deployment.v1alpha1.CollectorService.MatchRouter:input_type -> deployment.v1alpha1.MatchRouterRequest
-	13, // 54: deployment.v1alpha1.CollectorService.ListCollectors:output_type -> deployment.v1alpha1.ListCollectorsResponse
-	17, // 55: deployment.v1alpha1.CollectorService.GetCollector:output_type -> deployment.v1alpha1.GetCollectorResponse
-	11, // 56: deployment.v1alpha1.CollectorService.CollectorHistory:output_type -> deployment.v1alpha1.GetCollectorHistoryResponse
-	19, // 57: deployment.v1alpha1.CollectorService.Status:output_type -> deployment.v1alpha1.GetCollectorStatusResponse
-	44, // 58: deployment.v1alpha1.CollectorService.DeleteCollector:output_type -> google.protobuf.Empty
-	4,  // 59: deployment.v1alpha1.CollectorService.ValidateRouter:output_type -> deployment.v1alpha1.ValidateRouterResponse
-	6,  // 60: deployment.v1alpha1.CollectorService.PreviewRouter:output_type -> deployment.v1alpha1.PreviewRouterResponse
-	9,  // 61: deployment.v1alpha1.CollectorService.MatchRouter:output_type -> deployment.v1alpha1.MatchRouterResponse
-	54, // [54:62] is the sub-list for method output_type
-	46, // [46:54] is the sub-list for method input_type
-	46, // [46:46] is the sub-list for extension type_name
-	46, // [46:46] is the sub-list for extension extendee
-	0,  // [0:46] is the sub-list for field type_name
+	40, // 26: deployment.v1alpha1.CollectorDescription.attributes:type_name -> deployment.v1alpha1.CollectorDescription.AttributesEntry
+	25, // 27: deployment.v1alpha1.KeyValue.value:type_name -> deployment.v1alpha1.AnyValue
+	26, // 28: deployment.v1alpha1.AnyValue.array_value:type_name -> deployment.v1alpha1.ArrayValue
+	27, // 29: deployment.v1alpha1.AnyValue.kvlist_value:type_name -> deployment.v1alpha1.KeyValueList
+	25, // 30: deployment.v1alpha1.ArrayValue.values:type_name -> deployment.v1alpha1.AnyValue
+	24, // 31: deployment.v1alpha1.KeyValueList.values:type_name -> deployment.v1alpha1.KeyValue
+	0,  // 32: deployment.v1alpha1.CollectorConnectionState.state:type_name -> deployment.v1alpha1.CollectorState
+	44, // 33: deployment.v1alpha1.CollectorConnectionState.last_seen:type_name -> google.protobuf.Timestamp
+	44, // 34: deployment.v1alpha1.CollectorConnectionState.connected_at:type_name -> google.protobuf.Timestamp
+	44, // 35: deployment.v1alpha1.CollectorConnectionState.disconnected_at:type_name -> google.protobuf.Timestamp
+	41, // 36: deployment.v1alpha1.ComponentHealth.component_health_map:type_name -> deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry
+	31, // 37: deployment.v1alpha1.EffectiveConfig.config_map:type_name -> deployment.v1alpha1.CollectorConfigMap
+	42, // 38: deployment.v1alpha1.CollectorConfigMap.config_map:type_name -> deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry
+	2,  // 39: deployment.v1alpha1.RemoteConfigStatus.status:type_name -> deployment.v1alpha1.RemoteConfigStatuses
+	0,  // 40: deployment.v1alpha1.ConnectionStatus.state:type_name -> deployment.v1alpha1.CollectorState
+	44, // 41: deployment.v1alpha1.ConnectionStatus.last_seen:type_name -> google.protobuf.Timestamp
+	44, // 42: deployment.v1alpha1.ConnectionStatus.connected_at:type_name -> google.protobuf.Timestamp
+	44, // 43: deployment.v1alpha1.ConnectionStatus.disconnected_at:type_name -> google.protobuf.Timestamp
+	1,  // 44: deployment.v1alpha1.SyncStatus.status:type_name -> deployment.v1alpha1.ConfigSyncStatus
+	29, // 45: deployment.v1alpha1.ComponentHealth.ComponentHealthMapEntry.value:type_name -> deployment.v1alpha1.ComponentHealth
+	32, // 46: deployment.v1alpha1.CollectorConfigMap.ConfigMapEntry.value:type_name -> deployment.v1alpha1.CollectorConfigFile
+	12, // 47: deployment.v1alpha1.CollectorService.ListCollectors:input_type -> deployment.v1alpha1.ListCollectorsRequest
+	16, // 48: deployment.v1alpha1.CollectorService.GetCollector:input_type -> deployment.v1alpha1.GetCollectorRequest
+	10, // 49: deployment.v1alpha1.CollectorService.CollectorHistory:input_type -> deployment.v1alpha1.GetCollectorHistoryRequest
+	18, // 50: deployment.v1alpha1.CollectorService.Status:input_type -> deployment.v1alpha1.GetCollectorStatusRequest
+	20, // 51: deployment.v1alpha1.CollectorService.DeleteCollector:input_type -> deployment.v1alpha1.DeleteCollectorRequest
+	3,  // 52: deployment.v1alpha1.CollectorService.ValidateRouter:input_type -> deployment.v1alpha1.ValidateRouterRequest
+	5,  // 53: deployment.v1alpha1.CollectorService.PreviewRouter:input_type -> deployment.v1alpha1.PreviewRouterRequest
+	8,  // 54: deployment.v1alpha1.CollectorService.MatchRouter:input_type -> deployment.v1alpha1.MatchRouterRequest
+	13, // 55: deployment.v1alpha1.CollectorService.ListCollectors:output_type -> deployment.v1alpha1.ListCollectorsResponse
+	17, // 56: deployment.v1alpha1.CollectorService.GetCollector:output_type -> deployment.v1alpha1.GetCollectorResponse
+	11, // 57: deployment.v1alpha1.CollectorService.CollectorHistory:output_type -> deployment.v1alpha1.GetCollectorHistoryResponse
+	19, // 58: deployment.v1alpha1.CollectorService.Status:output_type -> deployment.v1alpha1.GetCollectorStatusResponse
+	45, // 59: deployment.v1alpha1.CollectorService.DeleteCollector:output_type -> google.protobuf.Empty
+	4,  // 60: deployment.v1alpha1.CollectorService.ValidateRouter:output_type -> deployment.v1alpha1.ValidateRouterResponse
+	6,  // 61: deployment.v1alpha1.CollectorService.PreviewRouter:output_type -> deployment.v1alpha1.PreviewRouterResponse
+	9,  // 62: deployment.v1alpha1.CollectorService.MatchRouter:output_type -> deployment.v1alpha1.MatchRouterResponse
+	55, // [55:63] is the sub-list for method output_type
+	47, // [47:55] is the sub-list for method input_type
+	47, // [47:47] is the sub-list for extension type_name
+	47, // [47:47] is the sub-list for extension extendee
+	0,  // [0:47] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_deployment_v1alpha1_deployment_proto_init() }
@@ -2436,7 +2453,7 @@ func file_pkg_api_deployment_v1alpha1_deployment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_deployment_v1alpha1_deployment_proto_rawDesc), len(file_pkg_api_deployment_v1alpha1_deployment_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   39,
+			NumMessages:   40,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

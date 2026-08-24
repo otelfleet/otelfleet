@@ -17,6 +17,8 @@ service CollectorService {
   rpc DeleteCollector(DeleteCollectorRequest) returns (google.protobuf.Empty);
 
   rpc ValidateRouter(ValidateRouterRequest) returns (ValidateRouterResponse);
+  // TODO : this only shows assigned configs, but we probably want to show which nodes 
+  // collectors get assigned to.
   rpc PreviewRouter(PreviewRouterRequest) returns (PreviewRouterResponse);
   rpc MatchRouter(MatchRouterRequest) returns (MatchRouterResponse);
 }
@@ -143,6 +145,9 @@ message CollectorDescription {
   // Attributes that do not necessarily identify the collector but help describe where it runs
   // (e.g., os.type, os.version, host.*, cloud.*).
   repeated KeyValue non_identifying_attributes = 4;
+
+  // Attributes that are added by the bootstrap process or manually updated by Users.
+  map<string,string> attributes = 6;
 
   repeated string capabilities = 5;
 }

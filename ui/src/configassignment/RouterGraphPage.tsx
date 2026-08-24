@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Box, Button, Group, Loader, Paper, Title } from '@mantine/core';
 import { Pencil1Icon } from '@radix-ui/react-icons';
 import { Panel } from 'reactflow';
+import { Code, ConnectError } from '@connectrpc/connect';
 
 import { useClient } from '../api';
 import { notifyGRPCError } from '../api/notifications';
@@ -10,9 +11,9 @@ import { LabelType } from '../gen/api/pkg/api/common/v1alpha1/common_pb';
 import { CollectorService } from '../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import { ResourceService } from '../gen/api/pkg/api/resources/v1alpha1/resources_pb';
 import { RouteDetailsPanel } from './RouteDetailsPanel';
-import { RouteMatchQuery, labelsByType, type LabelQueryRow, type RouteMatchResult } from './RouteMatchQuery';
+import { RouteMatchQuery, labelsByType, type LabelQueryRow } from './RouteMatchQuery';
 import { RouterGraph } from './RouterGraph';
-import { nodeIdFromIndexPath, type RouteNodeData } from './routeGraph';
+import { DEFAULT_NODE_ID, nodeIdFromIndexPath, type RouteNodeData } from './routeGraph';
 import {
   ROUTER_KEY,
   ROUTER_TYPE_URL,
@@ -26,16 +27,14 @@ import {
 export function RouterGraphPage() {
   const resources = useClient(ResourceService);
   const collectors = useClient(CollectorService);
+  const navigate = useNavigate();
 
   const [values, setValues] = useState<RouterValues | null>(null);
   const [assignment, setAssignment] = useState<{ [key: string]: string }>({});
 
   const [selected, setSelected] = useState<{ id: string; data: RouteNodeData } | null>(null);
 
-  const [queryRows, setQueryRows] = useState<LabelQueryRow[]>([
-    { type: LabelType.LabelTypeIdentifying, key: '', value: '' },
-  ]);
-  const [matchResult, setMatchResult] = useState<RouteMatchResult | undefined>(undefined);
+  const [queryRows, setQueryRows] = useState<LabelQueryRow[]>([]);
   const [matchedNodeId, setMatchedNodeId] = useState<string | undefined>(undefined);
   const [matching, setMatching] = useState(false);
 
@@ -46,12 +45,17 @@ export function RouterGraphPage() {
         const response = await resources.getEntity({ typeUrl: ROUTER_TYPE_URL, key: ROUTER_KEY });
         if (!cancelled) setValues(toRouterValues(unpackRouter(response.entity?.obj)));
       } catch (error) {
-        if (!cancelled) setValues(emptyRouterValues());
+        if (cancelled) return;
+        if (ConnectError.from(error).code === Code.NotFound) {
+          navigate({ to: '/configfilter/editor', replace: true });
+          return;
+        }
+        setValues(emptyRouterValues());
         notifyGRPCError('Failed to load config assignment', error);
       }
     })();
     return () => { cancelled = true; };
-  }, [resources]);
+  }, [resources, navigate]);
 
   useEffect(() => {
     if (!values) return;
@@ -79,6 +83,10 @@ export function RouterGraphPage() {
 
   const handleMatch = useCallback(async () => {
     if (!values) return;
+    if (queryRows.length === 0) {
+      setMatchedNodeId(undefined);
+      return;
+    }
     setMatching(true);
     try {
       const response = await collectors.matchRouter({
@@ -87,13 +95,10 @@ export function RouterGraphPage() {
         nonIdentifyingLabels: labelsByType(queryRows, LabelType.LabelTypeNonIdentifying),
         otelfleetLabels: labelsByType(queryRows, LabelType.LabelTypeOtelfleet),
       });
-      setMatchResult({
-        path: response.routePath,
-        configRef: response.configRef,
-        matched: response.matched,
-      });
       setMatchedNodeId(
-        response.matched ? nodeIdFromIndexPath(response.routeIndexPath.map(Number)) : undefined,
+        response.matched
+          ? nodeIdFromIndexPath(response.routeIndexPath.map(Number))
+          : DEFAULT_NODE_ID,
       );
     } catch (error) {
       notifyGRPCError('Failed to match labels against the router', error);
@@ -101,6 +106,8 @@ export function RouterGraphPage() {
       setMatching(false);
     }
   }, [values, collectors, queryRows]);
+
+  useEffect(() => { handleMatch(); }, [handleMatch]);
 
   return (
     <Box style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', minHeight: 0, gap: 16 }}>
@@ -133,10 +140,8 @@ export function RouterGraphPage() {
               <Panel position="top-left">
                 <RouteMatchQuery
                   rows={queryRows}
-                  result={matchResult}
                   loading={matching}
                   onChange={setQueryRows}
-                  onMatch={handleMatch}
                 />
               </Panel>
             </RouterGraph>

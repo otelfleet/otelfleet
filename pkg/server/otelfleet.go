@@ -39,6 +39,7 @@ import (
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
 	"github.com/otelfleet/otelfleet/pkg/services/ui"
 	"github.com/otelfleet/otelfleet/pkg/storage/object"
+	"github.com/otelfleet/otelfleet/pkg/util/connectutil"
 	"github.com/rs/cors"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -117,7 +118,7 @@ func New(cfg config.Config) (*OtelFleet, error) {
 		logger: l,
 		cfg:    cfg,
 		connectOpts: []connect.HandlerOption{
-			connect.WithInterceptors(validate.NewInterceptor()),
+			connect.WithInterceptors(validate.NewInterceptor(), connectutil.StatusInterceptor()),
 		},
 	}
 

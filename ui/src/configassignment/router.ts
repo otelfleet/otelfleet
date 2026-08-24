@@ -41,7 +41,7 @@ export interface RouteValues {
 
 export interface RouterValues {
   configRef: string;
-  root: RouteValues;
+  root: RouteValues | null;
   defs: RouteValues[];
 }
 
@@ -106,13 +106,13 @@ export function emptyRouteValues(name = ''): RouteValues {
 }
 
 export function emptyRouterValues(): RouterValues {
-  return { configRef: '', root: emptyRouteValues('root'), defs: [] };
+  return { configRef: '', root: null, defs: [] };
 }
 
 export function toRouter(values: RouterValues): Router {
   return create(RouterSchema, {
     configRef: values.configRef,
-    root: toRoute(values.root),
+    root: values.root ? toRoute(values.root) : undefined,
     defs: values.defs.map(toRoute),
   });
 }
@@ -130,7 +130,7 @@ export function toRouterValues(pb?: Router): RouterValues {
   if (!pb) return emptyRouterValues();
   return {
     configRef: pb.configRef,
-    root: pb.root ? toRouteValues(pb.root) : emptyRouteValues('root'),
+    root: pb.root ? toRouteValues(pb.root) : null,
     defs: pb.defs.map(toRouteValues),
   };
 }

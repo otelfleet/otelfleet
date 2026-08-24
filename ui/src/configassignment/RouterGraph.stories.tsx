@@ -29,11 +29,18 @@ export const Empty: Story = {
   args: { value: emptyRouterValues(), assignedConfigRefs: [] },
 };
 
+export const DefaultOnly: Story = {
+  args: {
+    assignedConfigRefs: ['base', 'base'],
+    value: { configRef: 'base', root: null, defs: [] },
+  },
+};
+
 export const Tree: Story = {
   args: {
-    assignedConfigRefs: ['base', 'base', 'production-eu', 'production-us', 'production-us'],
+    assignedConfigRefs: ['base', 'fallback', 'production-eu', 'production-us', 'production-us'],
     value: {
-      configRef: 'base',
+      configRef: 'fallback',
       root: {
         name: 'root',
         configRef: 'base',
