@@ -88,7 +88,7 @@ func (s *Server) start(ctx context.Context) error {
 		return fmt.Errorf("failed to start config filter sync: %w", err)
 	}
 
-	addr := "127.0.0.1:4320"
+	addr := "0.0.0.0:4320"
 	s.logger.With("addr", addr).Info("starting opamp server")
 	settings := server.StartSettings{
 		ListenEndpoint: addr,
