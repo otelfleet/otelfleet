@@ -64,6 +64,9 @@ type CollectorHandler struct {
 	reporter event.EventSink
 
 	nameGen util.NameGenerator
+
+	tlsCertBytes []byte
+	tlsKeyBytes  []byte
 }
 
 func NewCollectorHandler(
@@ -78,6 +81,8 @@ func NewCollectorHandler(
 	collectorConfigs object.KeyValue[*resourcesv1alpha1.CollectorConfig],
 	reporter event.EventSink,
 	nameGen util.NameGenerator,
+	tlsCertBytes []byte,
+	tlsKeyBytes []byte,
 ) *CollectorHandler {
 	return &CollectorHandler{
 		ctx:                  ctx,
@@ -91,6 +96,8 @@ func NewCollectorHandler(
 		collectorConfigs:     collectorConfigs,
 		reporter:             reporter,
 		nameGen:              nameGen,
+		tlsCertBytes:         tlsCertBytes,
+		tlsKeyBytes:          tlsKeyBytes,
 	}
 }
 
@@ -190,37 +197,50 @@ func (s *CollectorHandler) persistAgentInformation(ctx context.Context, msg *pro
 func (s *CollectorHandler) buildTelemetryOptions(ctx context.Context, _ types.Connection, message *protobufs.AgentToServer) (*protobufs.ConnectionSettingsOffers, error) {
 	logger := logutil.FromContext(ctx)
 	resp := &protobufs.ConnectionSettingsOffers{}
+	scheme := "http"
+	var tlsConfig *protobufs.TLSCertificate
+	if len(s.tlsCertBytes) != 0 && len(s.tlsKeyBytes) != 0 {
+		scheme = "https"
+		tlsConfig = &protobufs.TLSCertificate{
+			Cert:       s.tlsCertBytes,
+			PrivateKey: s.tlsKeyBytes,
+		}
+	}
+
 	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnLogs) != 0 {
 		logsAddr := &url.URL{
-			Scheme: "http",
-			Host:   s.otlpServerAddr,
+			Scheme: scheme,
+			Host:   s.otlpConfig.AdvertiseAddr,
 			Path:   path.Join(s.otlpConfig.BasePath, s.otlpConfig.LogsAPIPath),
 		}
 		logger.With("supplied-addr", logsAddr.String()).Debug("agent supports reporting own logs")
 		resp.OwnLogs = &protobufs.TelemetryConnectionSettings{
 			DestinationEndpoint: logsAddr.String(),
+			Certificate:         tlsConfig,
 		}
 	}
 	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnMetrics) != 0 {
 		metricsAddr := &url.URL{
-			Scheme: "http",
-			Host:   s.otlpServerAddr,
+			Scheme: scheme,
+			Host:   s.otlpConfig.AdvertiseAddr,
 			Path:   path.Join(s.otlpConfig.BasePath, s.otlpConfig.MetricsAPIPath),
 		}
 		logger.With("supplied-addr", metricsAddr.String()).Debug("agent supports reporting own metrics")
 		resp.OwnMetrics = &protobufs.TelemetryConnectionSettings{
 			DestinationEndpoint: metricsAddr.String(),
+			Certificate:         tlsConfig,
 		}
 	}
 	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnTraces) != 0 {
 		traceAddr := &url.URL{
-			Scheme: "http",
-			Host:   s.otlpServerAddr,
+			Scheme: scheme,
+			Host:   s.otlpConfig.AdvertiseAddr,
 			Path:   path.Join(s.otlpConfig.BasePath, s.otlpConfig.TraceAPIPath),
 		}
 		logger.With("supplied-addr", traceAddr.String()).Debug("agent supports reporting own tracess")
 		resp.OwnTraces = &protobufs.TelemetryConnectionSettings{
 			DestinationEndpoint: traceAddr.String(),
+			Certificate:         tlsConfig,
 		}
 	}
 

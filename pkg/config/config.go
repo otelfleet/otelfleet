@@ -9,22 +9,27 @@ import (
 )
 
 type Config struct {
-	Services       []string       `yaml:"services"`
-	HttpListenAddr string         `yaml:"http_listen_addr"`
-	GRPCListenAddr string         `yaml:"grpc_listen_addr"`
-	StorageConfig  *StorageConfig `yaml:"storage"`
-	UI             *UIConfig      `yaml:"ui,omitempty"`
-	OTLP           *OTLPConfig    `yaml:"otlp,omitempty"`
-	LSP            *LSPConfig     `yaml:"lsp, omitempty"`
+	Services          []string       `yaml:"services"`
+	HttpListenAddr    string         `yaml:"http_listen_addr"`
+	HttpListenNetwork string         `yaml:"http_listen_network"`
+	GRPCListenAddr    string         `yaml:"grpc_listen_addr"`
+	Certificates      *CertConfig    `yaml:"certs,omitempty"`
+	StorageConfig     *StorageConfig `yaml:"storage,omitempty"`
+	UI                *UIConfig      `yaml:"ui,omitempty"`
+	OTLP              *OTLPConfig    `yaml:"otlp,omitempty"`
+	LSP               *LSPConfig     `yaml:"lsp,omitempty"`
 }
 
 // Sanitize sets sane required defaults if none are present
 func (c *Config) Sanitize() {
 	if c.HttpListenAddr == "" {
-		c.HttpListenAddr = "127.0.0.1:16587"
+		c.HttpListenAddr = "0.0.0.0:16587"
+	}
+	if c.HttpListenNetwork == "" {
+		c.HttpListenNetwork = "tcp4"
 	}
 	if c.GRPCListenAddr == "" {
-		c.GRPCListenAddr = "127.0.0.1:16586"
+		c.GRPCListenAddr = "0.0.0.0:16586"
 	}
 	if len(c.Services) == 0 {
 		c.Services = []string{"all"}
@@ -72,6 +77,11 @@ func (c *Config) Validate() error {
 		}
 	}
 	return nil
+}
+
+type CertConfig struct {
+	CertFile string `yaml:"cert_file"`
+	KeyFile  string `yaml:"key_file"`
 }
 
 type UIConfig struct {
@@ -147,6 +157,7 @@ func (s *StorageConfigClient) Validate() error {
 }
 
 type OTLPConfig struct {
+	AdvertiseAddr  string `yaml:"advertise_addr,omitempty"`
 	BasePath       string `yaml:"base_path"`
 	MetricsAPIPath string `yaml:"metrics_api_path"`
 	LogsAPIPath    string `yaml:"logs_api_path"`
@@ -154,6 +165,9 @@ type OTLPConfig struct {
 }
 
 func (c *OTLPConfig) Sanitize() {
+	if c.AdvertiseAddr == "" {
+		c.AdvertiseAddr = "otelfeet.io"
+	}
 	if c.BasePath == "" {
 		c.BasePath = "/otlp"
 	}

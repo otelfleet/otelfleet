@@ -2,9 +2,11 @@ package opamp
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -29,6 +31,11 @@ type Server struct {
 	logger         *slog.Logger
 	opampSrv       server.OpAMPServer
 	otlpServerAddr string
+
+	certConfig *config.CertConfig
+
+	tlsCertBytes []byte
+	tlsKeyBytes  []byte
 
 	// Keep remoteStatusStore for direct access during config sync checks
 
@@ -59,10 +66,12 @@ func NewServer(
 	otlpConfig *config.OTLPConfig,
 	deployMgr deployment.Manager,
 	reporter event.EventSink,
+	certConfig *config.CertConfig,
 ) *Server {
 	opampSvr := server.New(logutil.NewOpAMPLogger(l))
 	s := &Server{
 		logger:           l,
+		certConfig:       certConfig,
 		deployMgr:        deployMgr,
 		opampSrv:         opampSvr,
 		addrToId:         map[string]string{},
@@ -103,6 +112,29 @@ func (s *Server) start(ctx context.Context) error {
 			},
 		},
 	}
+	if s.certConfig != nil {
+		tlsCertBytes, err := os.ReadFile(s.certConfig.CertFile)
+		if err != nil {
+			return fmt.Errorf("failed to read cert file : %w", err)
+		}
+
+		tlsKeyBytes, err := os.ReadFile(s.certConfig.KeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to read key file : %w", err)
+		}
+
+		s.tlsCertBytes = tlsCertBytes
+		s.tlsKeyBytes = tlsKeyBytes
+
+		cert, err := tls.LoadX509KeyPair(s.certConfig.CertFile, s.certConfig.KeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to load tls config : %w", err)
+		}
+		settings.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{cert},
+		}
+
+	}
 	if err := s.opampSrv.Start(settings); err != nil {
 		s.logger.With("err", err.Error()).Error("failed to start opamp server")
 		return fmt.Errorf("failed to start opamp server: %w", err)
@@ -138,6 +170,8 @@ func (s *Server) OnConnecting(request *http.Request) types.ConnectionResponse {
 			s.collectorConfigs,
 			s.reporter,
 			s.nameGen,
+			s.tlsCertBytes,
+			s.tlsKeyBytes,
 		)
 		return types.ConnectionResponse{
 			Accept: accept,

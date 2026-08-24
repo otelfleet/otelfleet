@@ -4,8 +4,13 @@ services:
     command: ["--config", "/etc/otel/supervisor.yaml"]
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      - "localhost.otelfleet.io:host-gateway"
+    
     volumes:
       - ./supervisor.yaml:/etc/otel/supervisor.yaml:ro
       - ./otel/config.yaml:/etc/otel/config.yaml:ro
       # Anonymous volume: each replica gets its own supervisor state.
       - /etc/otel/supervisor-data
+      - ${HOME}/.local/share/mkcert/rootCA.pem:/etc/ssl/certs/mkcert-rootCA.pem:ro
+    environment:
+      SSL_CERT_FILE: /etc/ssl/certs/mkcert-rootCA.pem

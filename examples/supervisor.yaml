@@ -1,5 +1,5 @@
 server:
-  endpoint: "ws://host.docker.internal:4320/v1/opamp"
+  endpoint: "wss://host.docker.internal:4320/v1/opamp"
   headers:
     X-Auth: "nice auth"
   tls:

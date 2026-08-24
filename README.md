@@ -8,11 +8,19 @@ Otelfleet is built on open standards:
 
 ## Testing
 
-Lightweight Testing:
- 
- ```
- docker run \
-  -v ./examples/supervisor.yaml:/etc/otel/supervisor.yaml \
-  -v ./examples/otel/config.yaml:/etc/otel/config.yaml \
-  ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-opampsupervisor:latest
- ```
+With local TLS:
+
+```
+mkcert -cert-file localhost.otelfleet.io.pem -key-file localhost.otelfleet.io-key.pem   localhost.otelfleet.io host.docker.internal localhost 127.0.0.1 ::1
+```
+
+Need to explicitly set:
+```yaml
+services: 
+  - all
+certs:
+  cert_file: ./localhost.otelfleet.io.pem
+  key_file:  ./localhost.otelfleet.io-key.pem
+otlp:
+  advertise_addr : localhost.otelfleet.io:16587
+```

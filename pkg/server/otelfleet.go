@@ -142,6 +142,7 @@ func New(cfg config.Config) (*OtelFleet, error) {
 	}
 
 	conf := server.Config{
+		HTTPListenNetwork:             cfg.HttpListenNetwork,
 		HTTPListenAddress:             httpListenHost,
 		HTTPListenPort:                httpListenPortNum,
 		GRPCListenAddress:             grpcListenHost,
@@ -151,6 +152,16 @@ func New(cfg config.Config) (*OtelFleet, error) {
 		LogLevel: dslog.Level{
 			Option: level.AllowInfo(),
 		},
+	}
+	if cfg.Certificates != nil {
+		conf.HTTPTLSConfig = server.TLSConfig{
+			TLSCertPath: cfg.Certificates.CertFile,
+			TLSKeyPath:  cfg.Certificates.KeyFile,
+		}
+		conf.GRPCTLSConfig = server.TLSConfig{
+			TLSCertPath: cfg.Certificates.CertFile,
+			TLSKeyPath:  cfg.Certificates.KeyFile,
+		}
 	}
 
 	conf.Log = initLogger(conf.LogFormat, conf.LogLevel)
@@ -208,6 +219,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.cfg.OTLP,
 			o.deployMgr,
 			eventsink.NewEventSink(object.NewKeyValueAdapter[*eventv1alpha1.Event](o.store.Schema()), eventsink.GroupCollector),
+			o.cfg.Certificates,
 		)
 		o.opampServer = srv
 		return srv, nil
