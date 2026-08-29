@@ -11,11 +11,19 @@ export interface RouteNodeData {
   collectors: number;
   isRoot: boolean;
   isDef: boolean;
+  isDefault: boolean;
   selected: boolean;
   matched: boolean;
 }
 
 const ARROW = { type: MarkerType.ArrowClosed, width: 18, height: 18 };
+
+const EDGE_LABEL = {
+  labelStyle: { fill: 'var(--mantine-color-dimmed)', fontSize: 11 },
+  labelBgStyle: { fill: 'var(--mantine-color-body)' },
+  labelBgPadding: [6, 2] as [number, number],
+  labelBgBorderRadius: 4,
+};
 
 const NODE_WIDTH = 260;
 const NODE_HEIGHT = 120;
@@ -29,7 +37,7 @@ const MATCH_TYPE_SYMBOLS: Record<MatchType, string> = {
   [MatchType.NRE]: '!~',
 };
 
-const LABEL_TYPE_NAMES: Record<LabelType, string> = {
+export const LABEL_TYPE_NAMES: Record<LabelType, string> = {
   [LabelType.LabelTypeIdentifying]: 'identity',
   [LabelType.LabelTypeNonIdentifying]: 'environment',
   [LabelType.LabelTypeOtelfleet]: 'user-defined',
@@ -43,6 +51,8 @@ export function describeLabelFilter(filter: LabelFilterValues): string[] {
 }
 
 export const ROOT_NODE_ID = 'root';
+
+export const DEFAULT_NODE_ID = 'default';
 
 export function nodeIdFromIndexPath(indexPath: number[]): string {
   return [ROOT_NODE_ID, ...indexPath].join('-');
@@ -64,11 +74,27 @@ export function buildRouteGraph(
   const edges: Edge[] = [];
   const cursor = { y: 0 };
 
-  addTree(values.root, `root`, 0, { nodes, edges, counts, cursor, isDef: false });
+  const rootY = values.root
+    ? addTree(values.root, ROOT_NODE_ID, 1, { nodes, edges, counts, cursor, isDef: false })
+    : nextRow(cursor);
+
+  nodes.push(defaultNode(values.configRef, counts[values.configRef] ?? 0, rootY));
+  if (values.root) {
+    edges.push({
+      id: `${DEFAULT_NODE_ID}-routes`,
+      source: DEFAULT_NODE_ID,
+      target: ROOT_NODE_ID,
+      markerEnd: ARROW,
+      label: 'routed by',
+      ...EDGE_LABEL,
+    });
+  }
 
   for (const [index, def] of values.defs.entries()) {
     cursor.y += NODE_HEIGHT + ROW_GAP;
-    addTree(def, `def-${index}`, 0, { nodes, edges, counts, cursor, isDef: true });
+    addTree(def, `def-${index}`, 1, {
+      nodes, edges, counts, cursor, isDef: true,
+    });
   }
 
   for (const node of nodes) {
@@ -83,11 +109,32 @@ export function buildRouteGraph(
         style: { strokeDasharray: '4 4' },
         markerEnd: ARROW,
         label: 'use',
+        ...EDGE_LABEL,
       });
     }
   }
 
   return { nodes, edges };
+}
+
+function defaultNode(configRef: string, collectors: number, y: number): Node<RouteNodeData> {
+  return {
+    id: DEFAULT_NODE_ID,
+    type: 'route',
+    position: { x: 0, y },
+    data: {
+      name: 'default config',
+      configRef,
+      use: '',
+      matchers: [],
+      collectors,
+      isRoot: false,
+      isDef: false,
+      isDefault: true,
+      selected: false,
+      matched: false,
+    },
+  };
 }
 
 interface TreeContext {
@@ -99,6 +146,7 @@ interface TreeContext {
 }
 
 function addTree(route: RouteValues, id: string, depth: number, ctx: TreeContext): number {
+  const isRoot = depth === 1 && !ctx.isDef;
   const childCenters = route.routes.map((child, index) =>
     addTree(child, `${id}-${index}`, depth + 1, ctx),
   );
@@ -117,8 +165,9 @@ function addTree(route: RouteValues, id: string, depth: number, ctx: TreeContext
       use: route.use,
       matchers: route.filters.flatMap(describeLabelFilter),
       collectors: ctx.counts[route.configRef] ?? 0,
-      isRoot: depth === 0 && !ctx.isDef,
-      isDef: depth === 0 && ctx.isDef,
+      isRoot,
+      isDef: depth === 1 && ctx.isDef,
+      isDefault: false,
       selected: false,
       matched: false,
     },

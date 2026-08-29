@@ -1,7 +1,7 @@
 import { Button, Group, ActionIcon, Text } from '@mantine/core';
 import { Link } from '@tanstack/react-router';
 import { TrashIcon } from '@radix-ui/react-icons';
-import type { CollectorDescriptionAndStatus } from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
+import type { CollectorView } from '../../gen/api/pkg/api/deployment/v1alpha1/deployment_pb';
 import type { ColumnConfig } from '../Table';
 import {
     StatusBadge,
@@ -20,21 +20,21 @@ export interface BuildAgentColumnsOptions {
  */
 export function buildAgentColumns({
     onDelete,
-}: BuildAgentColumnsOptions): ColumnConfig<CollectorDescriptionAndStatus>[] {
+}: BuildAgentColumnsOptions): ColumnConfig<CollectorView>[] {
     return [
         {
             key: 'name',
             label: 'Name',
             visible: true,
-            render: (_: unknown, row: CollectorDescriptionAndStatus) => {
-                return <Text fw={500}>{row.collector?.friendlyName || 'Unknown'}</Text>
+            render: (_: unknown, row: CollectorView) => {
+                return <Text fw={500}>{row.desc?.friendlyName || 'Unknown'}</Text>
             }
         },
         {
             key: 'connection',
             label: 'Connection',
             visible: true,
-            render: (_: unknown, row: CollectorDescriptionAndStatus) => {
+            render: (_: unknown, row: CollectorView) => {
                 return <StatusBadge state={row.status?.connStatus?.state ?? 0} />
             }
         },
@@ -42,7 +42,7 @@ export function buildAgentColumns({
             key: 'health',
             label: 'Health',
             visible: true,
-            render: (_: unknown, row: CollectorDescriptionAndStatus) => {
+            render: (_: unknown, row: CollectorView) => {
                 return <HealthBadge health={row.status?.health} />
             }
         },
@@ -50,7 +50,7 @@ export function buildAgentColumns({
             key: 'configStatus',
             label: 'Config Sync',
             visible: true,
-            render: (_: unknown, row: CollectorDescriptionAndStatus) => {
+            render: (_: unknown, row: CollectorView) => {
                 return <ConfigSyncStatusBadge
                     status={row.status?.syncStatus?.status}
                     reason={row.status?.syncStatus?.configSyncReason}
@@ -61,11 +61,11 @@ export function buildAgentColumns({
             key: 'actions',
             label: '',
             visible: true,
-            render: (_: unknown, row: CollectorDescriptionAndStatus) => {
-                if (!row.collector?.id) return null;
+            render: (_: unknown, row: CollectorView) => {
+                if (!row.desc?.id) return null;
                 return (
                     <Group gap="xs" justify="center">
-                        <Link to="/deployments/$agentId" params={{ agentId: row.collector.id }}>
+                        <Link to="/deployments/$agentId" params={{ agentId: row.desc.id }}>
                             <Button size="xs" variant="light">
                                 Details
                             </Button>
@@ -74,7 +74,7 @@ export function buildAgentColumns({
                             color="red"
                             variant="subtle"
                             size="lg"
-                            onClick={() => onDelete(row.collector!.id, row.collector!.friendlyName || 'Unknown')}
+                            onClick={() => onDelete(row.desc!.id, row.desc!.friendlyName || 'Unknown')}
                             title="Delete agent"
                         >
                             <TrashIcon width={18} height={18} />

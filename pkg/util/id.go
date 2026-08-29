@@ -1,6 +1,10 @@
 package util
 
-import "github.com/google/uuid"
+import (
+	"net/url"
+
+	"github.com/google/uuid"
+)
 
 // NewUUID generates a new v7 uuid
 func NewUUID() string {
@@ -12,4 +16,12 @@ func NewInstanceUUID() [16]byte {
 	var ret [16]byte
 	copy(ret[:], bytes)
 	return ret
+}
+
+func NewURIFromID(deployID string) *url.URL {
+	return &url.URL{
+		Scheme: "otelfleet",
+		Host:   "collectors",
+		Path:   deployID,
+	}
 }

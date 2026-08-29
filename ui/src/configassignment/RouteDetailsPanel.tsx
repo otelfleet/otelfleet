@@ -15,6 +15,7 @@ export function RouteDetailsPanel({ route, collectors }: RouteDetailsPanelProps)
         <Group justify="space-between" gap="xs">
           <Text fw={600}>{route.name}</Text>
           {route.isRoot && <Badge size="sm" variant="light">root</Badge>}
+          {route.isDefault && <Badge size="sm" variant="light" color="gray">default</Badge>}
           {route.isDef && <Badge size="sm" variant="light" color="grape">def</Badge>}
         </Group>
 
@@ -25,7 +26,9 @@ export function RouteDetailsPanel({ route, collectors }: RouteDetailsPanelProps)
 
         <Stack gap={4}>
           <Text size="xs" c="dimmed">Matchers</Text>
-          {route.use !== '' ? (
+          {route.isDefault ? (
+            <Text size="sm">collectors that match no route</Text>
+          ) : route.use !== '' ? (
             <Text size="sm">uses {route.use}</Text>
           ) : route.matchers.length === 0 ? (
             <Text size="sm">matches every collector</Text>

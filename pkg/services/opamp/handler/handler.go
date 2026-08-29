@@ -15,6 +15,8 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 	eventv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/event/v1alpha1"
 	resourcesv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/auth/authenticator"
+	"github.com/otelfleet/otelfleet/pkg/auth/creds"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
 	"github.com/otelfleet/otelfleet/pkg/event"
@@ -28,7 +30,6 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"github.com/otelfleet/otelfleet/pkg/util/opamputil"
 	"github.com/otelfleet/otelfleet/pkg/util/protoutil"
-	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -56,13 +57,22 @@ type CollectorHandler struct {
 	collectorConfigs object.KeyValue[*resourcesv1alpha1.CollectorConfig]
 
 	// unset until we understand who is who
-	agentID     *string
+	collectorID *string
 	instanceUID *string
 
 	otlpServerAddr string
 	otlpConfig     *config.OTLPConfig
 
 	reporter event.EventSink
+
+	nameGen util.NameGenerator
+
+	// small optimization to prevent duplicate puts to the KV store.
+	previousCapabilies uint64
+
+	agentCA     []byte
+	principal   authenticator.Connection
+	credentials creds.Store
 }
 
 func NewCollectorHandler(
@@ -76,6 +86,10 @@ func NewCollectorHandler(
 	mgr deployment.Manager,
 	collectorConfigs object.KeyValue[*resourcesv1alpha1.CollectorConfig],
 	reporter event.EventSink,
+	nameGen util.NameGenerator,
+	principal authenticator.Connection,
+	credentials creds.Store,
+	agentCa []byte,
 ) *CollectorHandler {
 	return &CollectorHandler{
 		ctx:                  ctx,
@@ -88,6 +102,10 @@ func NewCollectorHandler(
 		mgr:                  mgr,
 		collectorConfigs:     collectorConfigs,
 		reporter:             reporter,
+		nameGen:              nameGen,
+		principal:            principal,
+		agentCA:              agentCa,
+		credentials:          credentials,
 	}
 }
 
@@ -137,7 +155,7 @@ func (s *CollectorHandler) OnMessage(ctx context.Context, conn types.Connection,
 	}
 	resp.ConnectionSettings = connSettings
 
-	if remoteConfig := s.checkForConfigUpdate(ctx, *s.agentID, message); remoteConfig != nil {
+	if remoteConfig := s.checkForConfigUpdate(ctx, *s.collectorID, message); remoteConfig != nil {
 		resp.RemoteConfig = remoteConfig
 	}
 
@@ -154,7 +172,15 @@ func (s *CollectorHandler) persistAgentInformation(ctx context.Context, msg *pro
 	if msg.RemoteConfigStatus != nil {
 		if err := s.handleRemoteConfigStatus(ctx, msg.RemoteConfigStatus); err != nil {
 			logger.With("err", err).Error("failed to handle remote config status message")
-			// ignore status update from returned errors
+			errs = append(errs, err)
+		}
+	}
+	if s.previousCapabilies != msg.Capabilities {
+		if err := s.inst.SetCapabilities(ctx, msg.Capabilities); err != nil {
+			logger.With("err", err).Error("failed to handle remote capabilies update")
+			errs = append(errs, err)
+		} else {
+			s.previousCapabilies = msg.Capabilities
 		}
 	}
 
@@ -184,40 +210,58 @@ func (s *CollectorHandler) persistAgentInformation(ctx context.Context, msg *pro
 	return errors.Join(errs...)
 }
 
+// FIXME: official cmd/opamp-supervisor doesn't support certificates / proxy settings for offerent Telemetry options
 func (s *CollectorHandler) buildTelemetryOptions(ctx context.Context, _ types.Connection, message *protobufs.AgentToServer) (*protobufs.ConnectionSettingsOffers, error) {
 	logger := logutil.FromContext(ctx)
 	resp := &protobufs.ConnectionSettingsOffers{}
+	scheme := "http"
+	var certificate *protobufs.TLSCertificate
+	if s.credentials != nil {
+		scheme = "https"
+		credential, err := s.credentials.Get(ctx, *s.instanceUID)
+		if grpcutil.IsErrorNotFound(err) {
+			credential, err = s.credentials.Issue(ctx, *s.instanceUID)
+		}
+		if err != nil {
+			return nil, err
+		}
+		certificate = credential.TLSCertificate(s.agentCA)
+	}
+
 	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnLogs) != 0 {
 		logsAddr := &url.URL{
-			Scheme: "http",
-			Host:   s.otlpServerAddr,
+			Scheme: scheme,
+			Host:   s.otlpConfig.AdvertiseAddr,
 			Path:   path.Join(s.otlpConfig.BasePath, s.otlpConfig.LogsAPIPath),
 		}
 		logger.With("supplied-addr", logsAddr.String()).Debug("agent supports reporting own logs")
 		resp.OwnLogs = &protobufs.TelemetryConnectionSettings{
 			DestinationEndpoint: logsAddr.String(),
+			Certificate:         certificate,
 		}
 	}
 	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnMetrics) != 0 {
 		metricsAddr := &url.URL{
-			Scheme: "http",
-			Host:   s.otlpServerAddr,
+			Scheme: scheme,
+			Host:   s.otlpConfig.AdvertiseAddr,
 			Path:   path.Join(s.otlpConfig.BasePath, s.otlpConfig.MetricsAPIPath),
 		}
 		logger.With("supplied-addr", metricsAddr.String()).Debug("agent supports reporting own metrics")
 		resp.OwnMetrics = &protobufs.TelemetryConnectionSettings{
 			DestinationEndpoint: metricsAddr.String(),
+			Certificate:         certificate,
 		}
 	}
 	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnTraces) != 0 {
 		traceAddr := &url.URL{
-			Scheme: "http",
-			Host:   s.otlpServerAddr,
+			Scheme: scheme,
+			Host:   s.otlpConfig.AdvertiseAddr,
 			Path:   path.Join(s.otlpConfig.BasePath, s.otlpConfig.TraceAPIPath),
 		}
 		logger.With("supplied-addr", traceAddr.String()).Debug("agent supports reporting own tracess")
 		resp.OwnTraces = &protobufs.TelemetryConnectionSettings{
 			DestinationEndpoint: traceAddr.String(),
+			Certificate:         certificate,
 		}
 	}
 
@@ -252,17 +296,16 @@ func (s *CollectorHandler) bootstrap(
 	}
 	if !ok {
 		logger.Info("registering agent")
-		// TODO : generate new friendly name or infer from original http request headers
-		// Or : from custom auth flows
-		agentID := instanceUID // TODO : same as above
-		if err := s.mgr.Register(ctx, agentID, "foo"); err != nil {
+		collectorID := instanceUID // TODO : same as above
+		collectorName := s.getCollectorName(ctx)
+		if err := s.mgr.Register(ctx, collectorID, collectorName); err != nil {
 			// handle potential error codes here
 			return opamputil.ErrorResponse(message.InstanceUid, opamputil.NewUnavailableError("failed to register agent"))
 		}
 		now := time.Now()
-		s.agentID = &agentID
+		s.collectorID = &collectorID
 		s.instanceUID = &instanceUID
-		s.inst = s.mgr.Instance(agentID)
+		s.inst = s.mgr.Instance(collectorID)
 		if err := s.inst.SetConnectionState(ctx, &v1alpha1.ConnectionStatus{
 			State:          v1alpha1.CollectorState_COLLECTOR_STATE_CONNECTED,
 			LastSeen:       timestamppb.New(now),
@@ -274,43 +317,16 @@ func (s *CollectorHandler) bootstrap(
 		}
 	}
 	// TODO : inconsistent UID handling with above. need to iron that out
-	s.agentID = &instanceUID
+	s.collectorID = &instanceUID
 	s.instanceUID = &instanceUID
 	s.inst = s.mgr.Instance(instanceUID)
 	return nil
 }
 
-func (s *CollectorHandler) reportInfo(ctx context.Context, reason string, extraRefs ...*eventv1alpha1.EventRef) {
-	s.reporter.Info(ctx, append([]*eventv1alpha1.EventRef{
-		{
-			TypeUrl: protoutil.GetTypeURL(&v1alpha1.CollectorDescription{}),
-			Key:     lo.FromPtrOr(s.agentID, ""),
-		},
-	}, extraRefs...), &eventv1alpha1.EventDetails{
-		Reason: reason,
-	})
-}
-
-func (s *CollectorHandler) reportError(ctx context.Context, reason string, extraRefs ...*eventv1alpha1.EventRef) {
-	s.reporter.Error(ctx, append([]*eventv1alpha1.EventRef{
-		{
-			TypeUrl: protoutil.GetTypeURL(&v1alpha1.CollectorDescription{}),
-			Key:     lo.FromPtrOr(s.agentID, ""),
-		},
-	}, extraRefs...), &eventv1alpha1.EventDetails{
-		Reason: reason,
-	})
-}
-
-func (s *CollectorHandler) reportWarn(ctx context.Context, reason string, extraRefs ...*eventv1alpha1.EventRef) {
-	s.reporter.Warn(ctx, append([]*eventv1alpha1.EventRef{
-		{
-			TypeUrl: protoutil.GetTypeURL(&v1alpha1.CollectorDescription{}),
-			Key:     lo.FromPtrOr(s.agentID, ""),
-		},
-	}, extraRefs...), &eventv1alpha1.EventDetails{
-		Reason: reason,
-	})
+func (s *CollectorHandler) getCollectorName(ctx context.Context) string {
+	// TODO : inherit name from bootstrap token
+	// TODO : inherit name from request headers
+	return s.nameGen.Generate(3, "-")
 }
 
 // OnConnectionClose is called when the OpAMP connection is closed.
@@ -320,7 +336,7 @@ func (s *CollectorHandler) OnConnectionClose(conn types.Connection) {
 	logger.Info("collector disconnected")
 	s.reportError(context.TODO(), fmt.Sprintf("disconnected : %s", remoteAddr))
 
-	if s.agentID == nil {
+	if s.collectorID == nil {
 		return
 	}
 
@@ -400,7 +416,7 @@ func (s *CollectorHandler) updateConnectionState(ctx context.Context, msg *proto
 	existingState.Sequence = msg.SequenceNum
 
 	if err := s.inst.SetConnectionState(ctx, existingState); err != nil {
-		s.logger.With("err", err, "agent_id", *s.agentID).Error("failed to persist connection state")
+		s.logger.With("err", err, "agent_id", *s.collectorID).Error("failed to persist connection state")
 	}
 
 	return needsFullState

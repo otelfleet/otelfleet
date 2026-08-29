@@ -2,9 +2,7 @@ package otelconfig
 
 const DefaultOtelConfig = `receivers:
   otlp:
-    protocols:
-      grpc:
-      http:
+    nop:
 
 processors:
   batch:
@@ -14,22 +12,20 @@ exporters:
 
 extensions:
   health_check:
-  pprof:
-  zpages:
 
 service:
-  extensions: [health_check, pprof, zpages]
+  extensions: [health_check]
   pipelines:
     traces:
-      receivers: [otlp]
+      receivers: [nop]
       processors: [batch]
       exporters: [debug]
     metrics:
-      receivers: [otlp]
+      receivers: [nop]
       processors: [batch]
       exporters: [debug]
     logs:
-      receivers: [otlp]
+      receivers: [nop]
       processors: [batch]
       exporters: [debug]
 `

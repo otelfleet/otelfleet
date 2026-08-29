@@ -17,6 +17,8 @@ service CollectorService {
   rpc DeleteCollector(DeleteCollectorRequest) returns (google.protobuf.Empty);
 
   rpc ValidateRouter(ValidateRouterRequest) returns (ValidateRouterResponse);
+  // TODO : this only shows assigned configs, but we probably want to show which nodes 
+  // collectors get assigned to.
   rpc PreviewRouter(PreviewRouterRequest) returns (PreviewRouterResponse);
   rpc MatchRouter(MatchRouterRequest) returns (MatchRouterResponse);
 }
@@ -76,18 +78,12 @@ message ListCollectorsRequest {
 }
 
 message ListCollectorsResponse {
-  repeated CollectorDescriptionAndStatus collectors = 1;
+  repeated CollectorView collectors = 1;
 }
 
 message CollectorView {
-  CollectorRegistration registration = 1;
+  CollectorDescription  desc = 1;
   CollectorStatus       status       = 2;
-}
-
-// Deprecated: use CollectorView.
-message CollectorDescriptionAndStatus {
-  CollectorDescription collector = 1;
-  CollectorStatus      status    = 2;
 }
 
 message GetCollectorRequest {
@@ -119,20 +115,6 @@ message CollectorStatus {
   SyncStatus       sync_status = 5;
 }
 
-message CollectorRegistration {
-  string id            = 1;
-  string friendly_name = 2;
-
-  // Attributes that identify the collector (e.g., service.name, service.version, service.instance.id).
-  repeated KeyValue identifying_attributes = 3;
-
-  // Attributes that do not necessarily identify the collector but help describe where it runs.
-  repeated KeyValue non_identifying_attributes = 4;
-
-  repeated string capabilities = 5;
-}
-
-// Deprecated: use CollectorRegistration.
 message CollectorDescription {
   string id            = 1;
   string friendly_name = 2;
@@ -143,6 +125,9 @@ message CollectorDescription {
   // Attributes that do not necessarily identify the collector but help describe where it runs
   // (e.g., os.type, os.version, host.*, cloud.*).
   repeated KeyValue non_identifying_attributes = 4;
+
+  // Attributes that are added by the bootstrap process or manually updated by Users.
+  map<string,string> attributes = 6;
 
   repeated string capabilities = 5;
 }

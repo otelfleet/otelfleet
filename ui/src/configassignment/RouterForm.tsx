@@ -25,14 +25,33 @@ export function RouterForm({ value, collectorConfigs, onChange }: RouterFormProp
         onChange={(next) => onChange({ ...value, configRef: next ?? '' })}
       />
 
-      <Text fw={500}>Routes</Text>
-      <RouteEditor
-        isRoot
-        value={value.root}
-        collectorConfigs={collectorConfigs}
-        defNames={defNames}
-        onChange={(root) => onChange({ ...value, root })}
-      />
+      <Group justify="space-between">
+        <Text fw={500}>Routes</Text>
+        {value.root === null && (
+          <Button
+            variant="light"
+            size="xs"
+            onClick={() => onChange({ ...value, root: emptyRouteValues() })}
+          >
+            Add route
+          </Button>
+        )}
+      </Group>
+
+      {value.root === null ? (
+        <Text size="xs" c="dimmed">
+          No routes. Every collector receives the default collector config.
+        </Text>
+      ) : (
+        <RouteEditor
+          isRoot
+          value={value.root}
+          collectorConfigs={collectorConfigs}
+          defNames={defNames}
+          onChange={(root) => onChange({ ...value, root })}
+          onRemove={() => onChange({ ...value, root: null })}
+        />
+      )}
 
       <Group justify="space-between">
         <Text fw={500}>Reusable route definitions</Text>

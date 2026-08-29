@@ -3,28 +3,46 @@ package config
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	stdpath "path"
+	"slices"
 	"strings"
+	"time"
+
+	"github.com/otelfleet/otelfleet/pkg/logutil"
 )
 
 type Config struct {
-	Services       []string       `yaml:"services"`
-	HttpListenAddr string         `yaml:"http_listen_addr"`
-	GRPCListenAddr string         `yaml:"grpc_listen_addr"`
-	StorageConfig  *StorageConfig `yaml:"storage"`
-	UI             *UIConfig      `yaml:"ui,omitempty"`
-	OTLP           *OTLPConfig    `yaml:"otlp,omitempty"`
-	LSP            *LSPConfig     `yaml:"lsp, omitempty"`
+	LogConfig         *LogConfig     `yaml:"log,omitempty"`
+	Services          []string       `yaml:"services"`
+	HttpListenAddr    string         `yaml:"http_listen_addr"`
+	HttpListenNetwork string         `yaml:"http_listen_network"`
+	GRPCListenAddr    string         `yaml:"grpc_listen_addr"`
+	Certificates      *CertConfig    `yaml:"certs,omitempty"`
+	StorageConfig     *StorageConfig `yaml:"storage,omitempty"`
+	UI                *UIConfig      `yaml:"ui,omitempty"`
+	OTLP              *OTLPConfig    `yaml:"otlp,omitempty"`
+	LSP               *LSPConfig     `yaml:"lsp,omitempty"`
 }
 
 // Sanitize sets sane required defaults if none are present
 func (c *Config) Sanitize() {
+	if c.LogConfig == nil {
+		c.LogConfig = &LogConfig{
+			Level:  "info",
+			Format: "json",
+		}
+	}
+	c.LogConfig.Sanitize()
 	if c.HttpListenAddr == "" {
-		c.HttpListenAddr = "127.0.0.1:16587"
+		c.HttpListenAddr = "0.0.0.0:16587"
+	}
+	if c.HttpListenNetwork == "" {
+		c.HttpListenNetwork = "tcp4"
 	}
 	if c.GRPCListenAddr == "" {
-		c.GRPCListenAddr = "127.0.0.1:16586"
+		c.GRPCListenAddr = "0.0.0.0:16586"
 	}
 	if len(c.Services) == 0 {
 		c.Services = []string{"all"}
@@ -51,7 +69,14 @@ func (c *Config) Sanitize() {
 	c.OTLP.Sanitize()
 }
 
+func (c *Config) SetupLogger() *slog.Logger {
+	return logutil.NewLogger(c.LogConfig.Level, c.LogConfig.Format)
+}
+
 func (c *Config) Validate() error {
+	if err := c.LogConfig.Validate(); err != nil {
+		return err
+	}
 	if c.HttpListenAddr == "" {
 		return errors.New("http listen address must be set")
 	}
@@ -70,6 +95,88 @@ func (c *Config) Validate() error {
 		if err := c.UI.Validate(); err != nil {
 			return err
 		}
+	}
+	if c.Certificates != nil {
+		if err := c.Certificates.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type LogConfig struct {
+	Level  string
+	Format string
+	// TODO : as otelfleet gets closer to a stable version, have per service/ service component logger configurations.
+}
+
+func (c *LogConfig) Sanitize() {
+	c.Level = strings.ToLower(c.Level)
+	c.Format = strings.ToLower(c.Format)
+}
+
+func (c *LogConfig) Validate() error {
+	if !slices.Contains([]string{
+		"debug",
+		"info",
+		"warn",
+		"error",
+	}, c.Level) {
+		return fmt.Errorf("invalid log level : %s", c.Level)
+	}
+	if !slices.Contains([]string{
+		"color",
+		"json",
+		"none",
+	}, c.Format) {
+		return fmt.Errorf("invalid log format : %s", c.Format)
+	}
+	return nil
+}
+
+type CertConfig struct {
+	Server     ServerCertConfig    `yaml:"server"`
+	Collectors CollectorCertConfig `yaml:"collectors"`
+}
+
+func (c *CertConfig) Validate() error {
+	if err := c.Server.Validate(); err != nil {
+		return err
+	}
+	if err := c.Collectors.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+type ServerCertConfig struct {
+	CertFile string `yaml:"cert_file"`
+	KeyFile  string `yaml:"key_file"`
+}
+
+func (c *ServerCertConfig) Validate() error {
+	if c.CertFile == "" || c.KeyFile == "" {
+		return errors.New("server certificate and key are required")
+	}
+	return nil
+}
+
+type CollectorCertConfig struct {
+	CaCertFile  string        `yaml:"ca_cert_file"`
+	CaKeyFile   string        `yaml:"ca_key_file"`
+	ValidFor    time.Duration `yaml:"valid_for"`
+	RenewBefore time.Duration `yaml:"renew_before"`
+}
+
+func (c *CollectorCertConfig) Validate() error {
+	if c.CaCertFile == "" || c.CaKeyFile == "" {
+		return errors.New("collector CA certificate and key are required")
+	}
+	if c.ValidFor <= 0 {
+		return errors.New("collector certificate valid_for must be positive")
+	}
+	if c.RenewBefore <= 0 || c.RenewBefore >= c.ValidFor {
+		return errors.New("renew_before must be positive and less than valid_for")
 	}
 	return nil
 }
@@ -147,6 +254,8 @@ func (s *StorageConfigClient) Validate() error {
 }
 
 type OTLPConfig struct {
+	ListenAddr     string `yaml:"listen_address"`
+	AdvertiseAddr  string `yaml:"advertise_addr,omitempty"`
 	BasePath       string `yaml:"base_path"`
 	MetricsAPIPath string `yaml:"metrics_api_path"`
 	LogsAPIPath    string `yaml:"logs_api_path"`
@@ -154,6 +263,12 @@ type OTLPConfig struct {
 }
 
 func (c *OTLPConfig) Sanitize() {
+	if c.ListenAddr == "" {
+		c.ListenAddr = "127.0.0.1:10200"
+	}
+	if c.AdvertiseAddr == "" {
+		c.AdvertiseAddr = "otelfeet.io"
+	}
 	if c.BasePath == "" {
 		c.BasePath = "/otlp"
 	}

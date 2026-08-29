@@ -42,16 +42,17 @@ func convert(pb *v1alpha1.Router) (matcher, error) {
 		return matcher{}, fmt.Errorf("duplicate defs in Router")
 	}
 
-	root := pb.GetRoot()
-	curPath := map[string]struct{}{}
-	node, err := convertNode(root, defsMap, curPath)
+	m := matcher{defaultConfigRef: pb.GetConfigRef()}
+	if pb.GetRoot() == nil {
+		return m, nil
+	}
+
+	root, err := convertNode(pb.GetRoot(), defsMap, map[string]struct{}{})
 	if err != nil {
 		return matcher{}, err
 	}
-	return matcher{
-		root:             node,
-		defaultConfigRef: pb.GetConfigRef(),
-	}, nil
+	m.root = &root
+	return m, nil
 
 }
 
@@ -142,14 +143,15 @@ func (n node) matchSelf(ctx context.Context, labels CollectorLabels) bool {
 }
 
 type matcher struct {
-	root             node
+	root             *node
 	defaultConfigRef string
 }
 
 func (m matcher) Match(ctx context.Context, labels CollectorLabels) MatchResult {
-	res, ok := m.root.Match(ctx, labels)
-	if ok {
-		return res
+	if m.root != nil {
+		if res, ok := m.root.Match(ctx, labels); ok {
+			return res
+		}
 	}
 
 	return MatchResult{ConfigRef: m.defaultConfigRef}

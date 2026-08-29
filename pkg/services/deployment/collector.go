@@ -64,15 +64,15 @@ func (a *DeploymentServer) ListCollectors(
 
 	a.logger.With("numCollectors", len(collectors)).Debug("found collectors")
 
-	descAndStatus := make([]*v1alpha1.CollectorDescriptionAndStatus, 0, len(collectors))
-	for _, domainCollector := range collectors {
-		desc, err := domainCollector.GetDescription(ctx)
+	descAndStatus := make([]*v1alpha1.CollectorView, 0, len(collectors))
+	for _, collector := range collectors {
+		desc, err := collector.GetDescription(ctx)
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get collector description: %w", err))
 		}
-		entry := &v1alpha1.CollectorDescriptionAndStatus{Collector: desc}
+		entry := &v1alpha1.CollectorView{Desc: desc}
 		if req.Msg.GetWithStatus() {
-			st, err := domainCollector.Status(ctx)
+			st, err := collector.Status(ctx)
 			if err != nil {
 				return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get collector status: %w", err))
 			}
