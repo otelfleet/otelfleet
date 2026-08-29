@@ -26,3 +26,6 @@ build-dev:
 
 clean:
 	rm -rf ./otelfleet.kv/
+
+example:
+	./examples/certs/generate.sh
