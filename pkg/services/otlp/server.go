@@ -3,11 +3,13 @@ package otlp
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"path"
 
 	"connectrpc.com/connect"
 	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
+	"github.com/otelfleet/otelfleet/pkg/auth/authenticator"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	otelfleet_svc "github.com/otelfleet/otelfleet/pkg/services"
 	collogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
@@ -28,6 +30,7 @@ type Server struct {
 
 	config *config.OTLPConfig
 	services.Service
+	authenticator authenticator.Authenticator
 }
 
 var _ otelfleet_svc.HTTPExtension = (*Server)(nil)
@@ -35,6 +38,7 @@ var _ otelfleet_svc.HTTPExtension = (*Server)(nil)
 func NewServer(
 	l *slog.Logger,
 	config *config.OTLPConfig,
+	authenticator authenticator.Authenticator,
 ) *Server {
 	s := &Server{
 		traceServer: &TracesServer{
@@ -46,7 +50,8 @@ func NewServer(
 		logsServer: &LogsServer{
 			l: l.With("type", "logs"),
 		},
-		config: config,
+		config:        config,
+		authenticator: authenticator,
 	}
 
 	s.Service = services.NewBasicService(s.start, s.running, s.stop)
@@ -73,8 +78,20 @@ func (s *Server) ConfigureGRPC(srv *grpc.Server) {
 }
 
 func (s *Server) ConfigureHTTP(mux *mux.Router, _ []connect.HandlerOption) {
-	mux.HandleFunc(path.Join(s.config.BasePath, s.config.MetricsAPIPath), s.metricsServer.handleMetricsPost)
-	mux.HandleFunc(path.Join(s.config.BasePath, s.config.LogsAPIPath), s.logsServer.handleLogsPost)
-	mux.HandleFunc(path.Join(s.config.BasePath, s.config.TraceAPIPath), s.traceServer.handleTracePost)
-
+	register := func(route string, next http.Handler) {
+		next = s.checkAuth(next)
+		mux.Handle(route, next)
+	}
+	register(
+		path.Join(s.config.BasePath, s.config.MetricsAPIPath),
+		http.HandlerFunc(s.metricsServer.handleMetricsPost),
+	)
+	register(
+		path.Join(s.config.BasePath, s.config.LogsAPIPath),
+		http.HandlerFunc(s.logsServer.handleLogsPost),
+	)
+	register(
+		path.Join(s.config.BasePath, s.config.TraceAPIPath),
+		http.HandlerFunc(s.traceServer.handleTracePost),
+	)
 }

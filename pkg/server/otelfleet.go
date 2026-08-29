@@ -26,6 +26,7 @@ import (
 	"github.com/grafana/dskit/signals"
 	bootstrapv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1"
 	eventv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/event/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/auth/authenticator"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
 	logutil "github.com/otelfleet/otelfleet/pkg/logutil"
@@ -109,6 +110,8 @@ type OtelFleet struct {
 	server     *server.Server
 	serverConf server.Config
 
+	autenticator authenticator.Authenticator
+
 	connectOpts []connect.HandlerOption
 }
 
@@ -155,12 +158,14 @@ func New(cfg config.Config) (*OtelFleet, error) {
 	}
 	if cfg.Certificates != nil {
 		conf.HTTPTLSConfig = server.TLSConfig{
-			TLSCertPath: cfg.Certificates.CertFile,
-			TLSKeyPath:  cfg.Certificates.KeyFile,
+			TLSCertPath: cfg.Certificates.Server.CertFile,
+			TLSKeyPath:  cfg.Certificates.Server.KeyFile,
+			ClientAuth:  "VerifyClientCertIfGiven",
+			ClientCAs:   cfg.Certificates.Collectors.CaCertFile,
 		}
 		conf.GRPCTLSConfig = server.TLSConfig{
-			TLSCertPath: cfg.Certificates.CertFile,
-			TLSKeyPath:  cfg.Certificates.KeyFile,
+			TLSCertPath: cfg.Certificates.Server.CertFile,
+			TLSKeyPath:  cfg.Certificates.Server.KeyFile,
 		}
 	}
 
@@ -207,6 +212,8 @@ func (o *OtelFleet) setupModuleManager() error {
 			nil, // TODO: privateKey for secure bootstrap
 			o.tokenStore,
 		)
+		// TODO : auth should be part of the auth service, currently it's in memory / hacky
+		o.autenticator = authenticator.NewNoop()
 		bootstrapSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 		return bootstrapSvc, nil
 	})
@@ -220,6 +227,7 @@ func (o *OtelFleet) setupModuleManager() error {
 			o.deployMgr,
 			eventsink.NewEventSink(object.NewKeyValueAdapter[*eventv1alpha1.Event](o.store.Schema()), eventsink.GroupCollector),
 			o.cfg.Certificates,
+			o.autenticator,
 		)
 		o.opampServer = srv
 		return srv, nil
@@ -247,7 +255,11 @@ func (o *OtelFleet) setupModuleManager() error {
 	})
 
 	mm.RegisterModule(OTLP, func() (services.Service, error) {
-		otlpSvc := otlp.NewServer(o.logger.With("service", "otlp"), o.cfg.OTLP)
+		otlpSvc := otlp.NewServer(
+			o.logger.With("service", "otlp"),
+			o.cfg.OTLP,
+			o.autenticator,
+		)
 		otlpSvc.ConfigureGRPC(o.server.GRPC)
 		otlpSvc.ConfigureHTTP(o.server.HTTP, o.connectOpts)
 		return otlpSvc, nil
@@ -314,11 +326,11 @@ func (o *OtelFleet) setupModuleManager() error {
 
 		Storage:           {ServerService},
 		DeploymentManager: {ServerService, Storage, OpAmp},
-		OpAmp:             {ServerService, Storage},
+		OpAmp:             {Auth, ServerService, Storage},
 		Auth:              {ServerService, Storage},
 		Resource:          {ServerService, Storage},
 		UI:                {ServerService},
-		OTLP:              {ServerService},
+		OTLP:              {Auth, ServerService},
 		LSP:               {ServerService},
 	}
 

@@ -15,6 +15,8 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 	eventv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/event/v1alpha1"
 	resourcesv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/auth/authenticator"
+	"github.com/otelfleet/otelfleet/pkg/auth/creds"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
 	"github.com/otelfleet/otelfleet/pkg/event"
@@ -65,11 +67,12 @@ type CollectorHandler struct {
 
 	nameGen util.NameGenerator
 
-	tlsCertBytes []byte
-	tlsKeyBytes  []byte
-
 	// small optimization to prevent duplicate puts to the KV store.
 	previousCapabilies uint64
+
+	agentCA     []byte
+	principal   authenticator.Connection
+	credentials creds.Store
 }
 
 func NewCollectorHandler(
@@ -84,8 +87,9 @@ func NewCollectorHandler(
 	collectorConfigs object.KeyValue[*resourcesv1alpha1.CollectorConfig],
 	reporter event.EventSink,
 	nameGen util.NameGenerator,
-	tlsCertBytes []byte,
-	tlsKeyBytes []byte,
+	principal authenticator.Connection,
+	credentials creds.Store,
+	agentCa []byte,
 ) *CollectorHandler {
 	return &CollectorHandler{
 		ctx:                  ctx,
@@ -99,8 +103,9 @@ func NewCollectorHandler(
 		collectorConfigs:     collectorConfigs,
 		reporter:             reporter,
 		nameGen:              nameGen,
-		tlsCertBytes:         tlsCertBytes,
-		tlsKeyBytes:          tlsKeyBytes,
+		principal:            principal,
+		agentCA:              agentCa,
+		credentials:          credentials,
 	}
 }
 
@@ -205,17 +210,22 @@ func (s *CollectorHandler) persistAgentInformation(ctx context.Context, msg *pro
 	return errors.Join(errs...)
 }
 
+// FIXME: official cmd/opamp-supervisor doesn't support certificates / proxy settings for offerent Telemetry options
 func (s *CollectorHandler) buildTelemetryOptions(ctx context.Context, _ types.Connection, message *protobufs.AgentToServer) (*protobufs.ConnectionSettingsOffers, error) {
 	logger := logutil.FromContext(ctx)
 	resp := &protobufs.ConnectionSettingsOffers{}
 	scheme := "http"
-	var tlsConfig *protobufs.TLSCertificate
-	if len(s.tlsCertBytes) != 0 && len(s.tlsKeyBytes) != 0 {
+	var certificate *protobufs.TLSCertificate
+	if s.credentials != nil {
 		scheme = "https"
-		tlsConfig = &protobufs.TLSCertificate{
-			Cert:       s.tlsCertBytes,
-			PrivateKey: s.tlsKeyBytes,
+		credential, err := s.credentials.Get(ctx, *s.instanceUID)
+		if grpcutil.IsErrorNotFound(err) {
+			credential, err = s.credentials.Issue(ctx, *s.instanceUID)
 		}
+		if err != nil {
+			return nil, err
+		}
+		certificate = credential.TLSCertificate(s.agentCA)
 	}
 
 	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnLogs) != 0 {
@@ -227,7 +237,7 @@ func (s *CollectorHandler) buildTelemetryOptions(ctx context.Context, _ types.Co
 		logger.With("supplied-addr", logsAddr.String()).Debug("agent supports reporting own logs")
 		resp.OwnLogs = &protobufs.TelemetryConnectionSettings{
 			DestinationEndpoint: logsAddr.String(),
-			Certificate:         tlsConfig,
+			Certificate:         certificate,
 		}
 	}
 	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnMetrics) != 0 {
@@ -239,7 +249,7 @@ func (s *CollectorHandler) buildTelemetryOptions(ctx context.Context, _ types.Co
 		logger.With("supplied-addr", metricsAddr.String()).Debug("agent supports reporting own metrics")
 		resp.OwnMetrics = &protobufs.TelemetryConnectionSettings{
 			DestinationEndpoint: metricsAddr.String(),
-			Certificate:         tlsConfig,
+			Certificate:         certificate,
 		}
 	}
 	if message.Capabilities&uint64(protobufs.AgentCapabilities_AgentCapabilities_ReportsOwnTraces) != 0 {
@@ -251,7 +261,7 @@ func (s *CollectorHandler) buildTelemetryOptions(ctx context.Context, _ types.Co
 		logger.With("supplied-addr", traceAddr.String()).Debug("agent supports reporting own tracess")
 		resp.OwnTraces = &protobufs.TelemetryConnectionSettings{
 			DestinationEndpoint: traceAddr.String(),
-			Certificate:         tlsConfig,
+			Certificate:         certificate,
 		}
 	}
 

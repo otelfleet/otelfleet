@@ -16,6 +16,8 @@ import (
 	"github.com/open-telemetry/opamp-go/server/types"
 	"github.com/otelfleet/otelfleet/pkg/api/event/v1alpha1"
 	resourcesv1alpha1 "github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
+	"github.com/otelfleet/otelfleet/pkg/auth/authenticator"
+	"github.com/otelfleet/otelfleet/pkg/auth/creds"
 	"github.com/otelfleet/otelfleet/pkg/config"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
 	"github.com/otelfleet/otelfleet/pkg/event"
@@ -34,8 +36,7 @@ type Server struct {
 
 	certConfig *config.CertConfig
 
-	tlsCertBytes []byte
-	tlsKeyBytes  []byte
+	collectorCAPEM []byte
 
 	// Keep remoteStatusStore for direct access during config sync checks
 
@@ -57,6 +58,9 @@ type Server struct {
 	reporter   event.EventSink
 
 	nameGen util.NameGenerator
+
+	authenticator   authenticator.Authenticator
+	credentialStore creds.Store
 }
 
 func NewServer(
@@ -67,6 +71,7 @@ func NewServer(
 	deployMgr deployment.Manager,
 	reporter event.EventSink,
 	certConfig *config.CertConfig,
+	authenticator authenticator.Authenticator,
 ) *Server {
 	opampSvr := server.New(logutil.NewOpAMPLogger(l))
 	s := &Server{
@@ -84,8 +89,9 @@ func NewServer(
 			Storage:  resourceStorage,
 			Interval: opampsync.DefaultConfigFilterSyncInterval,
 		}),
-		reporter: reporter,
-		nameGen:  *util.NewNameGenerator(nil),
+		reporter:      reporter,
+		nameGen:       *util.NewNameGenerator(nil),
+		authenticator: authenticator,
 	}
 
 	s.Service = services.NewBasicService(s.start, s.running, s.stop)
@@ -113,27 +119,26 @@ func (s *Server) start(ctx context.Context) error {
 		},
 	}
 	if s.certConfig != nil {
-		tlsCertBytes, err := os.ReadFile(s.certConfig.CertFile)
+		cert, err := tls.LoadX509KeyPair(
+			s.certConfig.Server.CertFile,
+			s.certConfig.Server.KeyFile,
+		)
 		if err != nil {
-			return fmt.Errorf("failed to read cert file : %w", err)
-		}
-
-		tlsKeyBytes, err := os.ReadFile(s.certConfig.KeyFile)
-		if err != nil {
-			return fmt.Errorf("failed to read key file : %w", err)
-		}
-
-		s.tlsCertBytes = tlsCertBytes
-		s.tlsKeyBytes = tlsKeyBytes
-
-		cert, err := tls.LoadX509KeyPair(s.certConfig.CertFile, s.certConfig.KeyFile)
-		if err != nil {
-			return fmt.Errorf("failed to load tls config : %w", err)
+			return fmt.Errorf("load OpAMP server TLS key pair: %w", err)
 		}
 		settings.TLSConfig = &tls.Config{
+			MinVersion:   tls.VersionTLS12,
 			Certificates: []tls.Certificate{cert},
 		}
 
+		s.credentialStore, err = creds.NewInMem(s.certConfig.Collectors)
+		if err != nil {
+			return fmt.Errorf("initialize collector credential store: %w", err)
+		}
+		s.collectorCAPEM, err = os.ReadFile(s.certConfig.Collectors.CaCertFile)
+		if err != nil {
+			return fmt.Errorf("read collector CA certificate: %w", err)
+		}
 	}
 	if err := s.opampSrv.Start(settings); err != nil {
 		s.logger.With("err", err.Error()).Error("failed to start opamp server")
@@ -150,63 +155,43 @@ func (s *Server) stop(failureCase error) error {
 	return s.opampSrv.Stop(ctxca)
 }
 
-func (s *Server) OnConnecting(request *http.Request) types.ConnectionResponse {
+func (s *Server) OnConnecting(req *http.Request) types.ConnectionResponse {
 	// TODO : handle authentication, authorization,
 	// and maybe there is way to customize available capabilities here
-	accept := s.handleInitialRequest(request)
-	serverConnID := uuid.New().String()
-
-	s.logger.With("server-conn-id", serverConnID).With("remote-addr", request.RemoteAddr).Info("assigned connection ID")
-
-	if accept {
-		handler := handler.NewCollectorHandler(
-			context.TODO(),
-			serverConnID,
-			s.configFilterSync,
-			s.logger,
-			s.otlpServerAddr,
-			s.otlpConfig,
-			s.deployMgr,
-			s.collectorConfigs,
-			s.reporter,
-			s.nameGen,
-			s.tlsCertBytes,
-			s.tlsKeyBytes,
-		)
+	principal, err := s.authenticator.AuthenticateRequest(req.Context(), req)
+	if err != nil {
+		s.reporter.Error(req.Context(), []*v1alpha1.EventRef{}, &v1alpha1.EventDetails{
+			Reason: fmt.Sprintf("rejected agent connection %s : %s", req.RemoteAddr, err.Error()),
+		})
 		return types.ConnectionResponse{
-			Accept: accept,
-			ConnectionCallbacks: types.ConnectionCallbacks{
-				OnConnected:            handler.OnConnected,
-				OnMessage:              handler.OnMessage,
-				OnConnectionClose:      handler.OnConnectionClose,
-				OnReadMessageError:     handler.OnReadMessageError,
-				OnMessageResponseError: handler.OnMessageResponseError,
-			},
+			Accept: false,
 		}
 	}
-
-	s.reporter.Error(request.Context(), []*v1alpha1.EventRef{}, &v1alpha1.EventDetails{
-		Reason: fmt.Sprintf("rejected agent connection : %s", request.RemoteAddr),
-	})
-
+	serverConnID := uuid.New().String()
+	s.logger.With("server-conn-id", serverConnID).With("remote-addr", req.RemoteAddr).Info("assigned connection ID")
+	handler := handler.NewCollectorHandler(
+		context.TODO(),
+		serverConnID,
+		s.configFilterSync,
+		s.logger,
+		s.otlpServerAddr,
+		s.otlpConfig,
+		s.deployMgr,
+		s.collectorConfigs,
+		s.reporter,
+		s.nameGen,
+		principal,
+		s.credentialStore,
+		s.collectorCAPEM,
+	)
 	return types.ConnectionResponse{
-		Accept: false,
+		Accept: true,
+		ConnectionCallbacks: types.ConnectionCallbacks{
+			OnConnected:            handler.OnConnected,
+			OnMessage:              handler.OnMessage,
+			OnConnectionClose:      handler.OnConnectionClose,
+			OnReadMessageError:     handler.OnReadMessageError,
+			OnMessageResponseError: handler.OnMessageResponseError,
+		},
 	}
-
-}
-
-func (s *Server) handleInitialRequest(r *http.Request) bool {
-	// TODO : handle authentication, authorization,
-	customAuthHeader := r.Header.Get("X-Auth")
-	if customAuthHeader != "" {
-		s.logger.Info("agent requested custom authentication method")
-		return true
-	}
-	authHeader := r.Header.Get("Authorization")
-	if authHeader != "" {
-		s.logger.Info("agent requested http authentication method")
-		return true
-	}
-	s.logger.With("type", authHeader).Info("agent could not be authenticated")
-	return false
 }

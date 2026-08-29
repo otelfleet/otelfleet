@@ -1,0 +1,40 @@
+server:
+  endpoint: "wss://127.0.0.1:4320/v1/opamp"
+  headers:
+    X-Auth: "nice auth"
+  tls:
+    ca_file: /etc/otel/certs/server-ca.pem
+
+capabilities:
+  reports_effective_config: true
+  reports_own_metrics: true
+  reports_own_logs: true
+  reports_own_traces: true
+  reports_health: true
+  accepts_remote_config: true
+  reports_remote_config: true
+
+agent:
+  executable: /otelcontribcol
+  passthrough_logs: true
+
+  # This passes config files to the Collector.
+  config_files: 
+    - /etc/otel/config.yaml
+  
+  # This adds CLI arguments to the Collector.
+  args:
+    - ''
+
+  # This adds env vars to the Collector process.
+  env: {}
+
+# The storage can be used for many things:
+# - It stores configuration sent by the OpAMP server so that new collector
+#   processes can start with the most known desired config.
+storage:
+  directory: /etc/otel/supervisor-data2/
+
+telemetry:
+  logs: 
+    level: debug
