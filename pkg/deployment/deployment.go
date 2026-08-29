@@ -8,6 +8,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 type Manager interface {
@@ -21,14 +22,22 @@ type Manager interface {
 	Delete(ctx context.Context, deployID string) error
 }
 
+// FIXME: this is kinda wonky, because we have two competing sources of truth / storage definitions:
+// 1. From the connected collector's reporting
+// 2. From the control plane specific definitions. E.g. attributes
+//
+// I should take a serious look later at how we want to actually organize this information.
 type Instance interface {
+	// control plane
 	GetDescription(ctx context.Context) (*v1alpha1.CollectorDescription, error)
 	Status(ctx context.Context) (*v1alpha1.CollectorStatus, error)
 	History(ctx context.Context, offset, limit uint64) ([]*v1alpha1.EffectiveConfig, error)
 	GetConnectionState(ctx context.Context) (*v1alpha1.ConnectionStatus, error)
 	GetRemoteStatus(ctx context.Context) (*protobufs.RemoteConfigStatus, error)
 
+	// collector
 	SetDescription(ctx context.Context, desc *protobufs.AgentDescription) error
+	SetCapabilities(ctx context.Context, capabilities uint64) error
 	SetConnectionState(ctx context.Context, state *v1alpha1.ConnectionStatus) error
 	SetHealth(ctx context.Context, health *protobufs.ComponentHealth) error
 	SetEffectiveConfig(ctx context.Context, config *protobufs.EffectiveConfig) error
@@ -114,7 +123,13 @@ type instance struct {
 	genericStorage object.TypeURLStore
 }
 
+func (i *instance) capabiliesKey(deployID string) string {
+	return deployID + "-capabilies"
+}
+
 func (i *instance) GetDescription(ctx context.Context) (*v1alpha1.CollectorDescription, error) {
+	// FIXME: maybe we want to return partial messages on error?
+
 	desc, err := getProto[*v1alpha1.CollectorDescription](ctx, i.genericStorage, i.deployID)
 	if err != nil {
 		return nil, err
@@ -125,6 +140,14 @@ func (i *instance) GetDescription(ctx context.Context) (*v1alpha1.CollectorDescr
 	}
 	desc.IdentifyingAttributes = convertKeyValues(attrs.GetIdentifyingAttributes())
 	desc.NonIdentifyingAttributes = convertKeyValues(attrs.GetNonIdentifyingAttributes())
+
+	cap, err := getProto[*wrapperspb.UInt64Value](ctx, i.genericStorage, i.capabiliesKey(i.deployID))
+	if grpcutil.IsErrorNotFound(err) {
+		cap = wrapperspb.UInt64(uint64(0))
+	} else if err != nil {
+		return nil, err
+	}
+	desc.Capabilities = Capabilities(cap.GetValue()).ToStringSlice()
 	return desc, nil
 }
 
@@ -175,6 +198,10 @@ func (i *instance) GetRemoteStatus(ctx context.Context) (*protobufs.RemoteConfig
 
 func (i *instance) SetDescription(ctx context.Context, desc *protobufs.AgentDescription) error {
 	return putProto(ctx, i.genericStorage, i.deployID, desc)
+}
+
+func (i *instance) SetCapabilities(ctx context.Context, cap uint64) error {
+	return putProto(ctx, i.genericStorage, i.capabiliesKey(i.deployID), wrapperspb.UInt64(cap))
 }
 
 func (i *instance) SetConnectionState(ctx context.Context, state *v1alpha1.ConnectionStatus) error {

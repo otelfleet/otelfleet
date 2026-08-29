@@ -67,6 +67,9 @@ type CollectorHandler struct {
 
 	tlsCertBytes []byte
 	tlsKeyBytes  []byte
+
+	// small optimization to prevent duplicate puts to the KV store.
+	previousCapabilies uint64
 }
 
 func NewCollectorHandler(
@@ -164,7 +167,15 @@ func (s *CollectorHandler) persistAgentInformation(ctx context.Context, msg *pro
 	if msg.RemoteConfigStatus != nil {
 		if err := s.handleRemoteConfigStatus(ctx, msg.RemoteConfigStatus); err != nil {
 			logger.With("err", err).Error("failed to handle remote config status message")
-			// ignore status update from returned errors
+			errs = append(errs, err)
+		}
+	}
+	if s.previousCapabilies != msg.Capabilities {
+		if err := s.inst.SetCapabilities(ctx, msg.Capabilities); err != nil {
+			logger.With("err", err).Error("failed to handle remote capabilies update")
+			errs = append(errs, err)
+		} else {
+			s.previousCapabilies = msg.Capabilities
 		}
 	}
 

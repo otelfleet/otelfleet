@@ -68,6 +68,8 @@ type CollectorServiceClient interface {
 	Status(context.Context, *connect.Request[v1alpha1.GetCollectorStatusRequest]) (*connect.Response[v1alpha1.GetCollectorStatusResponse], error)
 	DeleteCollector(context.Context, *connect.Request[v1alpha1.DeleteCollectorRequest]) (*connect.Response[emptypb.Empty], error)
 	ValidateRouter(context.Context, *connect.Request[v1alpha1.ValidateRouterRequest]) (*connect.Response[v1alpha1.ValidateRouterResponse], error)
+	// TODO : this only shows assigned configs, but we probably want to show which nodes
+	// collectors get assigned to.
 	PreviewRouter(context.Context, *connect.Request[v1alpha1.PreviewRouterRequest]) (*connect.Response[v1alpha1.PreviewRouterResponse], error)
 	MatchRouter(context.Context, *connect.Request[v1alpha1.MatchRouterRequest]) (*connect.Response[v1alpha1.MatchRouterResponse], error)
 }
@@ -195,6 +197,8 @@ type CollectorServiceHandler interface {
 	Status(context.Context, *connect.Request[v1alpha1.GetCollectorStatusRequest]) (*connect.Response[v1alpha1.GetCollectorStatusResponse], error)
 	DeleteCollector(context.Context, *connect.Request[v1alpha1.DeleteCollectorRequest]) (*connect.Response[emptypb.Empty], error)
 	ValidateRouter(context.Context, *connect.Request[v1alpha1.ValidateRouterRequest]) (*connect.Response[v1alpha1.ValidateRouterResponse], error)
+	// TODO : this only shows assigned configs, but we probably want to show which nodes
+	// collectors get assigned to.
 	PreviewRouter(context.Context, *connect.Request[v1alpha1.PreviewRouterRequest]) (*connect.Response[v1alpha1.PreviewRouterResponse], error)
 	MatchRouter(context.Context, *connect.Request[v1alpha1.MatchRouterRequest]) (*connect.Response[v1alpha1.MatchRouterResponse], error)
 }
