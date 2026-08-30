@@ -10,8 +10,10 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/config"
 	_ "github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/server"
+	"github.com/otelfleet/otelfleet/pkg/util/traceutil"
 	"github.com/otelfleet/otelfleet/pkg/version"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel"
 	"gopkg.in/yaml.v3"
 )
 
@@ -46,7 +48,14 @@ func BuildRootCommand() *cobra.Command {
 				os.Exit(1)
 			}
 
-			srv, err := server.New(*cfg)
+			tp, err := traceutil.InitTracer(cmd.Context())
+			if err != nil {
+				logger.With("err", err).Error("failed to setup tracer provider")
+				os.Exit(1)
+			}
+			otel.SetTracerProvider(tp)
+
+			srv, err := server.New(*cfg, tp)
 			if err != nil {
 				logger.With("err", err).Error("failed to construct server")
 				os.Exit(1)

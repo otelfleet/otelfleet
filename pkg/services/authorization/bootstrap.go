@@ -13,7 +13,6 @@ import (
 	cryptoecdh "crypto/ecdh"
 
 	"connectrpc.com/connect"
-	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
 	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jws"
@@ -46,7 +45,7 @@ type BootstrapServer struct {
 	bootstrapper Bootstrapper
 }
 
-var _ otelfleetsvc.HTTPExtension = (*BootstrapServer)(nil)
+var _ otelfleetsvc.HTTPService = (*BootstrapServer)(nil)
 
 var _ bootstrapconnect.TokenServiceHandler = (*BootstrapServer)(nil)
 var _ bootstrapconnect.BootstrapServiceHandler = (*BootstrapServer)(nil)
@@ -72,10 +71,10 @@ func (b *BootstrapServer) running(ctx context.Context) error {
 	return nil
 }
 
-func (b *BootstrapServer) ConfigureHTTP(mux *mux.Router, opts []connect.HandlerOption) {
+func (b *BootstrapServer) ConfigureHTTP(reg otelfleetsvc.HTTPRegistrar) {
 	b.logger.Info("configuring routes")
-	bootstrapconnect.RegisterTokenServiceHandler(mux, b, opts...)
-	bootstrapconnect.RegisterBootstrapServiceHandler(mux, b, opts...)
+	bootstrapconnect.RegisterTokenServiceHandler(reg.Router(), b, reg.ConnectOptions()...)
+	bootstrapconnect.RegisterBootstrapServiceHandler(reg.Router(), b, reg.ConnectOptions()...)
 }
 
 func (b *BootstrapServer) CreateToken(ctx context.Context, connectReq *connect.Request[v1alpha1bootstrap.CreateTokenRequest]) (*connect.Response[v1alpha1bootstrap.BootstrapToken], error) {

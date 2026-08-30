@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	"connectrpc.com/connect"
-	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelcol-lsp/pkg/lsp"
@@ -30,7 +28,7 @@ type Server struct {
 }
 
 var _ services.Service = (*Server)(nil)
-var _ otelfleet_svc.HTTPExtension = (*Server)(nil)
+var _ otelfleet_svc.HTTPService = (*Server)(nil)
 
 func NewLSPServer(
 	l *slog.Logger,
@@ -91,8 +89,8 @@ func (s *Server) stop(error) error {
 	return nil
 }
 
-func (s *Server) ConfigureHTTP(mux *mux.Router, _ []connect.HandlerOption) {
-	mux.HandleFunc("/lsp", func(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ConfigureHTTP(reg otelfleet_svc.HTTPRegistrar) {
+	reg.HandleFunc("/lsp", func(w http.ResponseWriter, r *http.Request) {
 		handler := s.lspHandler.Load()
 		if handler == nil {
 			w.WriteHeader(http.StatusServiceUnavailable)

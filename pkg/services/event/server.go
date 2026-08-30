@@ -5,7 +5,6 @@ import (
 	"sort"
 
 	"connectrpc.com/connect"
-	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/api/event/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/event/v1alpha1/v1alpha1connect"
@@ -19,7 +18,7 @@ type Server struct {
 	services.Service
 }
 
-var _ otelfleet_svc.HTTPExtension = (*Server)(nil)
+var _ otelfleet_svc.HTTPService = (*Server)(nil)
 var _ v1alpha1connect.EventServiceHandler = (*Server)(nil)
 
 // FIXME: this is not optimized. We need some querying / indexing primitives in storage layer
@@ -143,6 +142,6 @@ func (s *Server) Watch(ctx context.Context, req *connect.Request[v1alpha1.WatchE
 	}
 }
 
-func (s *Server) ConfigureHTTP(mux *mux.Router, opts []connect.HandlerOption) {
-	v1alpha1connect.RegisterEventServiceHandler(mux, s, opts...)
+func (s *Server) ConfigureHTTP(reg otelfleet_svc.HTTPRegistrar) {
+	v1alpha1connect.RegisterEventServiceHandler(reg.Router(), s, reg.ConnectOptions()...)
 }

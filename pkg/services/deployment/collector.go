@@ -6,7 +6,6 @@ import (
 	"log/slog"
 
 	"connectrpc.com/connect"
-	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1/v1alpha1connect"
@@ -30,7 +29,7 @@ type DeploymentServer struct {
 }
 
 var _ v1alpha1connect.CollectorServiceHandler = (*DeploymentServer)(nil)
-var _ otelfleetsvc.HTTPExtension = (*DeploymentServer)(nil)
+var _ otelfleetsvc.HTTPService = (*DeploymentServer)(nil)
 
 func NewDeploymentServer(
 	logger *slog.Logger,
@@ -49,9 +48,9 @@ func (a *DeploymentServer) running(ctx context.Context) error {
 	return nil
 }
 
-func (a *DeploymentServer) ConfigureHTTP(mux *mux.Router, opts []connect.HandlerOption) {
+func (a *DeploymentServer) ConfigureHTTP(reg otelfleetsvc.HTTPRegistrar) {
 	a.logger.Info("configuring routes")
-	v1alpha1connect.RegisterCollectorServiceHandler(mux, a, opts...)
+	v1alpha1connect.RegisterCollectorServiceHandler(reg.Router(), a, reg.ConnectOptions()...)
 }
 
 func (a *DeploymentServer) ListCollectors(

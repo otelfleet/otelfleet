@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"strings"
 
-	"connectrpc.com/connect"
 	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/config"
@@ -26,7 +25,7 @@ type UIService struct {
 	proxy   http.Handler
 }
 
-var _ otelfleetsvc.HTTPExtension = (*UIService)(nil)
+var _ otelfleetsvc.HTTPService = (*UIService)(nil)
 
 func NewUIService(logger *slog.Logger, cfg *config.UIConfig) (*UIService, error) {
 	u := &UIService{
@@ -97,27 +96,48 @@ func serveIndex(w http.ResponseWriter, index []byte) {
 	_, _ = w.Write(index)
 }
 
-func (u *UIService) ConfigureHTTP(router *mux.Router, _ []connect.HandlerOption) {
+func (u *UIService) ConfigureHTTP(reg otelfleetsvc.HTTPRegistrar) {
 	u.logger.With("prefix", u.cfg.PathPrefix, "proxy", u.proxy != nil).Info("mounting UI on shared listener")
-	u.mount(router)
+	u.mountWithRegistrar(reg)
 }
 
+// mount remains as a small uninstrumented helper for focused router tests.
 func (u *UIService) mount(router *mux.Router) {
+	u.mountWithRegistrar(uiMuxRegistrar{router})
+}
+
+type uiRegistrar interface {
+	Handle(pattern string, handler http.Handler) *mux.Route
+	HandleFunc(pattern string, handler http.HandlerFunc) *mux.Route
+	HandlePrefix(prefix string, handler http.Handler) *mux.Route
+}
+
+type uiMuxRegistrar struct{ *mux.Router }
+
+func (r uiMuxRegistrar) HandleFunc(pattern string, handler http.HandlerFunc) *mux.Route {
+	return r.Router.HandleFunc(pattern, handler)
+}
+
+func (r uiMuxRegistrar) HandlePrefix(prefix string, handler http.Handler) *mux.Route {
+	return r.PathPrefix(prefix).Handler(handler)
+}
+
+func (u *UIService) mountWithRegistrar(reg uiRegistrar) {
 	prefix := strings.TrimRight(u.cfg.PathPrefix, "/")
 	if prefix == "" {
-		router.PathPrefix("/").Handler(u.handler)
+		reg.HandlePrefix("/", u.handler)
 		return
 	}
-	router.PathPrefix(prefix + "/").Handler(http.StripPrefix(prefix, u.handler))
-	router.Path(prefix).Handler(http.StripPrefix(prefix, u.handler))
+	reg.HandlePrefix(prefix+"/", http.StripPrefix(prefix, u.handler))
+	reg.Handle(prefix, http.StripPrefix(prefix, u.handler))
 
 	// Only register the catch-all when standalone; in all-in-one it would
 	// shadow the API modules' routes on the shared listener.
 	if u.proxy != nil {
-		router.PathPrefix("/").Handler(u.proxy)
+		reg.HandlePrefix("/", u.proxy)
 		return
 	}
-	router.Path("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	reg.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, prefix+"/", http.StatusFound)
 	})
 }

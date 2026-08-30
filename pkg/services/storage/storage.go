@@ -8,7 +8,6 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/cockroachdb/pebble/v2"
-	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1/v1alpha1connect"
 	"github.com/otelfleet/otelfleet/pkg/config"
@@ -34,7 +33,7 @@ type StorageService struct {
 }
 
 var _ services.Service = (*StorageService)(nil)
-var _ otelfleet_svc.HTTPExtension = (*StorageService)(nil)
+var _ otelfleet_svc.HTTPService = (*StorageService)(nil)
 
 // var _ types.KVBroker = (*StorageService)(nil)
 
@@ -101,7 +100,7 @@ func (s *StorageService) Schema() object.TypeURLStore {
 	return s.protoStore
 }
 
-func (s *StorageService) ConfigureHTTP(mux *mux.Router, opts []connect.HandlerOption) {
+func (s *StorageService) ConfigureHTTP(reg otelfleet_svc.HTTPRegistrar) {
 	s.logger.Info("configuring routes")
-	v1alpha1connect.RegisterKeyValueServiceHandler(mux, s, opts...)
+	v1alpha1connect.RegisterKeyValueServiceHandler(reg.Router(), s, reg.ConnectOptions()...)
 }
