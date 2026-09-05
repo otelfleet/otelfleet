@@ -8,6 +8,11 @@ import (
 	"strings"
 
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
+	"github.com/otelfleet/otelfleet/pkg/util/serviceutil"
+	"github.com/otelfleet/otelfleet/pkg/util/traceutil"
+	"go.opentelemetry.io/otel/attribute"
+	otelcode "go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 )
 
@@ -21,12 +26,17 @@ func (a *mtlsAuthenticator) AuthenticateRequest(
 	ctx context.Context,
 	req *http.Request,
 ) (Connection, error) {
-	if err := ctx.Err(); err != nil {
-		return Connection{}, err
-	}
+	ctx, span := traceutil.Continue(
+		ctx, serviceutil.Auth.Name(), "authenticator.AuthenticateRequest",
+		trace.WithAttributes(
+			attribute.String("AuthMethod", string(AuthMethodMTLS)),
+		),
+	)
+	defer span.End()
 	if req.TLS == nil ||
 		len(req.TLS.VerifiedChains) == 0 ||
 		len(req.TLS.PeerCertificates) == 0 {
+		span.SetStatus(otelcode.Error, "Unauthenticated - no client cert")
 		return Connection{}, grpcutil.Error(
 			codes.Unauthenticated,
 			fmt.Errorf("verified collector client certificate is required"),
@@ -36,6 +46,7 @@ func (a *mtlsAuthenticator) AuthenticateRequest(
 	leaf := req.TLS.PeerCertificates[0]
 	principalID, ok := CollectorIdentityFromCertificate(leaf)
 	if !ok {
+		span.SetStatus(otelcode.Error, "Unauthenticated - no valid collector identity")
 		return Connection{}, grpcutil.Error(
 			codes.Unauthenticated,
 			fmt.Errorf("verified client certificate has no valid collector identity"),

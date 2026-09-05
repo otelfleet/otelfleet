@@ -26,7 +26,10 @@ import (
 	opampsync "github.com/otelfleet/otelfleet/pkg/services/opamp/sync"
 	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/util"
+	"github.com/otelfleet/otelfleet/pkg/util/serviceutil"
+	"github.com/otelfleet/otelfleet/pkg/util/traceutil"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	otelcode "go.opentelemetry.io/otel/codes"
 )
 
 type Server struct {
@@ -156,10 +159,13 @@ func (s *Server) stop(failureCase error) error {
 }
 
 func (s *Server) OnConnecting(req *http.Request) types.ConnectionResponse {
+	ctx, span := traceutil.Continue(req.Context(), serviceutil.ServerService.Name(), "OpAmp.OnConnecting")
+	defer span.End()
 	// TODO : handle authentication, authorization,
 	// and maybe there is way to customize available capabilities here
-	principal, err := s.authenticator.AuthenticateRequest(req.Context(), req)
+	principal, err := s.authenticator.AuthenticateRequest(ctx, req)
 	if err != nil {
+		span.SetStatus(otelcode.Error, "Rejected")
 		s.reporter.Error(req.Context(), []*v1alpha1.EventRef{}, &v1alpha1.EventDetails{
 			Reason: fmt.Sprintf("rejected agent connection %s : %s", req.RemoteAddr, err.Error()),
 		})
@@ -170,6 +176,7 @@ func (s *Server) OnConnecting(req *http.Request) types.ConnectionResponse {
 	serverConnID := uuid.New().String()
 	s.logger.With("server-conn-id", serverConnID).With("remote-addr", req.RemoteAddr).Info("assigned connection ID")
 	handler := handler.NewCollectorHandler(
+		// make sure we don't add span here
 		context.TODO(),
 		serverConnID,
 		s.configFilterSync,

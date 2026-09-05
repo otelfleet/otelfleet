@@ -2,7 +2,6 @@ package otlp
 
 import (
 	"context"
-	"log/slog"
 	"net/http"
 	"path"
 
@@ -34,20 +33,13 @@ var _ otelfleet_svc.HTTPService = (*Server)(nil)
 var _ otelfleet_svc.GRPCService = (*Server)(nil)
 
 func NewServer(
-	l *slog.Logger,
 	config *config.OTLPConfig,
 	authenticator authenticator.Authenticator,
 ) *Server {
 	s := &Server{
-		traceServer: &TracesServer{
-			l: l.With("type", "traces"),
-		},
-		metricsServer: &MetricsServer{
-			l: l.With("type", "metrics"),
-		},
-		logsServer: &LogsServer{
-			l: l.With("type", "logs"),
-		},
+		traceServer:   &TracesServer{},
+		metricsServer: &MetricsServer{},
+		logsServer:    &LogsServer{},
 		config:        config,
 		authenticator: authenticator,
 	}

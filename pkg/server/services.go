@@ -24,14 +24,16 @@ import (
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
 	"github.com/otelfleet/otelfleet/pkg/services/ui"
 	"github.com/otelfleet/otelfleet/pkg/storage/object"
+	su "github.com/otelfleet/otelfleet/pkg/util/serviceutil"
 	"github.com/rs/cors"
+	"github.com/samber/lo"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
 	eventsink "github.com/otelfleet/otelfleet/pkg/event"
 )
 
-func (o *OtelFleet) configureExtensions(name string, svc services.Service) {
+func (o *OtelFleet) configureExtensions(name su.Module, svc services.Service) {
 	httpExt, ok := svc.(otelfleet_svc.HTTPService)
 	if ok {
 		httpExt.ConfigureHTTP(o.httpInstrumentation.ForService(name))
@@ -44,8 +46,8 @@ func (o *OtelFleet) configureExtensions(name string, svc services.Service) {
 
 // Wraps module manager register module, and automatically configures extra
 // server-side functionality based on available interface implementations
-func (o *OtelFleet) RegisterModule(name string, initFn func() (services.Service, error)) {
-	o.mm.RegisterModule(name, func() (services.Service, error) {
+func (o *OtelFleet) RegisterModule(name su.Module, initFn func() (services.Service, error)) {
+	o.mm.RegisterModule(name.Str(), func() (services.Service, error) {
 		svc, err := initFn()
 		if err != nil {
 			return nil, err
@@ -56,8 +58,8 @@ func (o *OtelFleet) RegisterModule(name string, initFn func() (services.Service,
 }
 
 // Same as RegisterModule, but invisible to users
-func (o *OtelFleet) RegisterModuleInvisible(name string, initFn func() (services.Service, error)) {
-	o.mm.RegisterModule(name, func() (services.Service, error) {
+func (o *OtelFleet) RegisterModuleInvisible(name su.Module, initFn func() (services.Service, error)) {
+	o.mm.RegisterModule(name.Str(), func() (services.Service, error) {
 		svc, err := initFn()
 		if err != nil {
 			return nil, err
@@ -69,14 +71,19 @@ func (o *OtelFleet) RegisterModuleInvisible(name string, initFn func() (services
 
 func (o *OtelFleet) setupModuleManager() error {
 	mm := modules.NewManager(o.serverConf.Log)
-	mm.RegisterModule(All, nil)
-	mm.RegisterModule(Gateway, nil)
+	mm.RegisterModule(su.All.Str(), nil)
+	mm.RegisterModule(su.Gateway.Str(), nil)
 	o.mm = mm
 
-	o.RegisterModuleInvisible(Storage, func() (services.Service, error) {
+	o.RegisterModuleInvisible(su.Storage, func() (services.Service, error) {
+		clientOpts, err := otelfleet_svc.ConnectClientOptions(o.tracers.Provider(su.Storage))
+		if err != nil {
+			return nil, fmt.Errorf("configure storage client instrumentation: %w", err)
+		}
 		storeSvc, err := storagesvc.NewStorageService(
-			o.logger.With("service", Storage),
+			o.logger.With("service", su.Storage.Str()),
 			o.cfg.StorageConfig,
+			clientOpts...,
 		)
 		if err != nil {
 			return nil, err
@@ -88,9 +95,8 @@ func (o *OtelFleet) setupModuleManager() error {
 		return storeSvc, nil
 	})
 
-	o.RegisterModule(Auth, func() (services.Service, error) {
+	o.RegisterModule(su.Auth, func() (services.Service, error) {
 		bootstrapSvc := authorization.NewBootstrapServer(
-			o.logger.With("service", Auth),
 			nil, // TODO: privateKey for secure bootstrap
 			o.tokenStore,
 		)
@@ -99,9 +105,9 @@ func (o *OtelFleet) setupModuleManager() error {
 		return bootstrapSvc, nil
 	})
 
-	o.RegisterModule(OpAmp, func() (services.Service, error) {
+	o.RegisterModule(su.OpAmp, func() (services.Service, error) {
 		srv := opamp.NewServer(
-			o.logger.With("service", OpAmp),
+			o.logger.With("service", su.OpAmp.Str()),
 			o.store.Schema(),
 			o.server.HTTPListenAddr().String(),
 			o.cfg.OTLP,
@@ -114,17 +120,13 @@ func (o *OtelFleet) setupModuleManager() error {
 		return srv, nil
 	})
 
-	o.RegisterModule(DeploymentManager, func() (services.Service, error) {
-		srv := deployment_svc.NewDeploymentServer(
-			o.logger.With("service", DeploymentManager),
-			o.deployMgr,
-		)
+	o.RegisterModule(su.DeploymentManager, func() (services.Service, error) {
+		srv := deployment_svc.NewDeploymentServer(o.deployMgr)
 		return srv, nil
 	})
 
-	o.RegisterModule(UI, func() (services.Service, error) {
+	o.RegisterModule(su.UI, func() (services.Service, error) {
 		uiSvc, err := ui.NewUIService(
-			o.logger.With("service", UI),
 			o.cfg.UI,
 		)
 		if err != nil {
@@ -133,21 +135,20 @@ func (o *OtelFleet) setupModuleManager() error {
 		return uiSvc, nil
 	})
 
-	o.RegisterModule(OTLP, func() (services.Service, error) {
+	o.RegisterModule(su.OTLP, func() (services.Service, error) {
 		otlpSvc := otlp.NewServer(
-			o.logger.With("service", "otlp"),
 			o.cfg.OTLP,
 			o.autenticator,
 		)
 		return otlpSvc, nil
 	})
 
-	o.RegisterModule(Resource, func() (services.Service, error) {
-		resourceSvc := resource.NewServer(o.logger.With("service", "resource-server"), o.store.Schema())
+	o.RegisterModule(su.Resource, func() (services.Service, error) {
+		resourceSvc := resource.NewServer(o.store.Schema())
 		return resourceSvc, nil
 	})
 
-	o.RegisterModule(Events, func() (services.Service, error) {
+	o.RegisterModule(su.Events, func() (services.Service, error) {
 		// FIXME: for now let's put the event querier on the same API
 		// path as generic control plane resources API.
 		eventSvc := event.NewServer(
@@ -156,7 +157,7 @@ func (o *OtelFleet) setupModuleManager() error {
 		return eventSvc, nil
 	})
 
-	o.RegisterModule(LSP, func() (services.Service, error) {
+	o.RegisterModule(su.LSP, func() (services.Service, error) {
 		lspService := lsp.NewLSPServer(
 			o.logger.With("service", "lsp"),
 			o.cfg.LSP,
@@ -164,12 +165,12 @@ func (o *OtelFleet) setupModuleManager() error {
 		return lspService, nil
 	})
 
-	o.RegisterModuleInvisible(ServerService, func() (services.Service, error) {
+	o.RegisterModuleInvisible(su.ServerService, func() (services.Service, error) {
 		servicesToWaitFor := func() []services.Service {
 			svs := []services.Service(nil)
 			for m, s := range o.serviceMap {
 				// Server should not wait for itself.
-				if m != ServerService {
+				if m != su.ServerService.Str() {
 					svs = append(svs, s)
 				}
 			}
@@ -190,28 +191,30 @@ func (o *OtelFleet) setupModuleManager() error {
 	})
 
 	// Add dependencies
-	deps := map[string][]string{
-		All: {
-			Gateway, UI,
+	deps := map[su.Module][]su.Module{
+		su.All: {
+			su.Gateway, su.UI,
 		},
-		Gateway: {
-			Auth, OpAmp, DeploymentManager, OTLP, Resource, Events, LSP,
+		su.Gateway: {
+			su.Auth, su.OpAmp, su.DeploymentManager, su.OTLP, su.Resource, su.Events, su.LSP,
 		},
-		ServerService: {},
+		su.ServerService: {},
 
-		Storage:           {ServerService},
-		DeploymentManager: {ServerService, Storage, OpAmp},
-		OpAmp:             {Auth, ServerService, Storage},
-		Auth:              {ServerService, Storage},
-		Events:            {ServerService, Storage},
-		Resource:          {ServerService, Storage},
-		UI:                {ServerService},
-		OTLP:              {Auth, ServerService},
-		LSP:               {ServerService},
+		su.Storage:           {su.ServerService},
+		su.DeploymentManager: {su.ServerService, su.Storage, su.OpAmp},
+		su.OpAmp:             {su.Auth, su.ServerService, su.Storage},
+		su.Auth:              {su.ServerService, su.Storage},
+		su.Events:            {su.ServerService, su.Storage},
+		su.Resource:          {su.ServerService, su.Storage},
+		su.UI:                {su.ServerService},
+		su.OTLP:              {su.Auth, su.ServerService},
+		su.LSP:               {su.ServerService},
 	}
 
 	for mod, targets := range deps {
-		if err := mm.AddDependency(mod, targets...); err != nil {
+		if err := mm.AddDependency(mod.Str(), lo.Map(targets, func(s su.Module, _ int) string {
+			return s.Str()
+		})...); err != nil {
 			return err
 		}
 	}
@@ -219,6 +222,9 @@ func (o *OtelFleet) setupModuleManager() error {
 	o.mm = mm
 	o.deps = deps
 	for _, curSvc := range o.cfg.Services {
+		if !o.mm.IsModuleRegistered(curSvc) {
+			return fmt.Errorf("unknown service target %q (registered targets: %v)", curSvc, o.mm.UserVisibleModuleNames())
+		}
 		curDeps := o.mm.DependenciesForModule(curSvc)
 		for _, m := range o.mm.UserVisibleModuleNames() {
 			ix := sort.SearchStrings(curDeps, m)

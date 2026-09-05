@@ -10,7 +10,9 @@ import (
 	"connectrpc.com/otelconnect"
 	"github.com/gorilla/mux"
 	"github.com/otelfleet/otelfleet/pkg/logutil"
+	"github.com/otelfleet/otelfleet/pkg/util/serviceutil"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 )
@@ -27,40 +29,60 @@ type GRPCRegistrar interface {
 	RegisterService(desc *grpc.ServiceDesc, impl any)
 }
 
+type TracerProviderFactory interface {
+	Provider(service serviceutil.Module) trace.TracerProvider
+}
+
 type HTTPInstrumentation struct {
 	router         *mux.Router
 	logger         *slog.Logger
-	tracerProvider trace.TracerProvider
+	tracers        TracerProviderFactory
 	connectOptions []connect.HandlerOption
-	connectTracing connect.Interceptor
 }
 
-func NewHTTPInstrumentation(router *mux.Router, logger *slog.Logger, tp trace.TracerProvider, opts ...connect.HandlerOption) (*HTTPInstrumentation, error) {
+func NewHTTPInstrumentation(router *mux.Router, logger *slog.Logger, tracers TracerProviderFactory, opts ...connect.HandlerOption) *HTTPInstrumentation {
+	return &HTTPInstrumentation{
+		router: router, logger: logger, tracers: tracers,
+		connectOptions: append([]connect.HandlerOption(nil), opts...),
+	}
+}
+
+func (i *HTTPInstrumentation) ForService(name serviceutil.Module) HTTPRegistrar {
+	logger := i.logger.With("service", name.Str())
+	tp := i.tracers.Provider(name)
 	otelInterceptor, err := otelconnect.NewInterceptor(
 		otelconnect.WithTracerProvider(tp),
+		otelconnect.WithPropagator(otel.GetTextMapPropagator()),
+		otelconnect.WithTrustRemote(),
+		otelconnect.WithoutMetrics(),
+		otelconnect.WithoutServerPeerAttributes(),
+	)
+	if err != nil {
+		panic(err) // All options are static and validated by construction.
+	}
+	opts := []connect.HandlerOption{connect.WithInterceptors(
+		otelInterceptor,
+		connectLoggingInterceptor{logger: logger},
+	)}
+	opts = append(opts, i.connectOptions...)
+	return &httpRegistrar{router: i.router, logger: logger, tracerProvider: tp, connectOptions: opts}
+}
+
+// ConnectClientOptions instruments an outbound Connect client. The interceptor
+// injects the active context into request headers, allowing a remote service's
+// server span to continue the caller's trace.
+func ConnectClientOptions(tp trace.TracerProvider) ([]connect.ClientOption, error) {
+	interceptor, err := otelconnect.NewInterceptor(
+		otelconnect.WithTracerProvider(tp),
+		otelconnect.WithPropagator(otel.GetTextMapPropagator()),
+		otelconnect.WithTrustRemote(),
 		otelconnect.WithoutMetrics(),
 		otelconnect.WithoutServerPeerAttributes(),
 	)
 	if err != nil {
 		return nil, err
 	}
-	return &HTTPInstrumentation{
-		router: router, logger: logger, tracerProvider: tp,
-		connectOptions: append([]connect.HandlerOption(nil), opts...),
-		connectTracing: otelInterceptor,
-	}, nil
-}
-
-func (i *HTTPInstrumentation) ForService(name string) HTTPRegistrar {
-	logger := i.logger.With("service", name)
-	// Tracing and logging are outermost so rejected requests are observable and
-	// the request logger can include the active span IDs.
-	opts := []connect.HandlerOption{connect.WithInterceptors(
-		i.connectTracing,
-		connectLoggingInterceptor{logger: logger},
-	)}
-	opts = append(opts, i.connectOptions...)
-	return &httpRegistrar{router: i.router, logger: logger, tracerProvider: i.tracerProvider, connectOptions: opts}
+	return []connect.ClientOption{connect.WithInterceptors(interceptor)}, nil
 }
 
 type httpRegistrar struct {
@@ -89,7 +111,7 @@ func (r *httpRegistrar) wrapHTTP(next http.Handler) http.Handler {
 		logger := requestLogger(r.logger, req.Context()).With("method", req.Method, "path", req.URL.Path)
 		req = req.WithContext(logutil.WithContext(req.Context(), logger))
 		next.ServeHTTP(w, req)
-		logger.Debug("request completed", "duration", time.Since(started))
+		logger.Log(req.Context(), logutil.LevelTrace, "duration", time.Since(started))
 	})
 	return otelhttp.NewHandler(logged, "http.server",
 		otelhttp.WithTracerProvider(r.tracerProvider),
@@ -111,7 +133,7 @@ func (i connectLoggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 		started := time.Now()
 		logger := requestLogger(i.logger, ctx).With("procedure", req.Spec().Procedure)
 		resp, err := next(logutil.WithContext(ctx, logger), req)
-		logger.Debug("request completed", "duration", time.Since(started), "code", connect.CodeOf(err))
+		logger.Log(ctx, logutil.LevelTrace, "request completed", "duration", time.Since(started), "code", connect.CodeOf(err))
 		return resp, err
 	}
 }
@@ -123,7 +145,7 @@ func (i connectLoggingInterceptor) WrapStreamingHandler(next connect.StreamingHa
 		started := time.Now()
 		logger := requestLogger(i.logger, ctx).With("procedure", conn.Spec().Procedure)
 		err := next(logutil.WithContext(ctx, logger), conn)
-		logger.Debug("request completed", "duration", time.Since(started), "code", connect.CodeOf(err))
+		logger.Log(ctx, logutil.LevelTrace, "request completed", "duration", time.Since(started), "code", connect.CodeOf(err))
 		return err
 	}
 }
@@ -134,6 +156,37 @@ func requestLogger(logger *slog.Logger, ctx context.Context) *slog.Logger {
 	}
 	return logger
 }
+
+func GRPCUnaryInstrumentation(logger *slog.Logger, tp trace.TracerProvider) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+		ctx, span := tp.Tracer("github.com/otelfleet/otelfleet/grpc").Start(ctx, info.FullMethod, trace.WithSpanKind(trace.SpanKindServer))
+		defer span.End()
+		reqLog := requestLogger(logger, ctx).With("procedure", info.FullMethod)
+		started := time.Now()
+		resp, err := handler(logutil.WithContext(ctx, reqLog), req)
+		reqLog.Log(ctx, logutil.LevelTrace, "request completed", "duration", time.Since(started), "error", err)
+		return resp, err
+	}
+}
+
+func GRPCStreamInstrumentation(logger *slog.Logger, tp trace.TracerProvider) grpc.StreamServerInterceptor {
+	return func(srv any, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		ctx, span := tp.Tracer("github.com/otelfleet/otelfleet/grpc").Start(stream.Context(), info.FullMethod, trace.WithSpanKind(trace.SpanKindServer))
+		defer span.End()
+		reqLog := requestLogger(logger, ctx).With("procedure", info.FullMethod)
+		started := time.Now()
+		err := handler(srv, contextServerStream{ServerStream: stream, ctx: logutil.WithContext(ctx, reqLog)})
+		reqLog.Log(ctx, logutil.LevelTrace, "request completed", "duration", time.Since(started), "error", err)
+		return err
+	}
+}
+
+type contextServerStream struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+func (s contextServerStream) Context() context.Context { return s.ctx }
 
 type HTTPService interface {
 	ConfigureHTTP(HTTPRegistrar)

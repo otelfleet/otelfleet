@@ -9,19 +9,11 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/storage/kv"
 	"github.com/otelfleet/otelfleet/pkg/storage/kv/revision"
 	"github.com/otelfleet/otelfleet/pkg/storage/object"
-	"google.golang.org/protobuf/proto"
+	"github.com/otelfleet/otelfleet/pkg/util/serviceutil"
+	"github.com/otelfleet/otelfleet/pkg/util/traceutil"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/types/known/anypb"
-)
-
-var (
-	marshalOptions = proto.MarshalOptions{
-		AllowPartial:  true,
-		Deterministic: true,
-	}
-	unmarshalOptions = proto.UnmarshalOptions{
-		AllowPartial:   true,
-		DiscardUnknown: true,
-	}
 )
 
 const (
@@ -53,10 +45,18 @@ func (s *StorageProtoObject) keyPath(typeURL, key string) string {
 }
 
 func (s *StorageProtoObject) Put(ctx context.Context, typeURL string, key string, revision uint64, obj *anypb.Any) (*keyvalue_v1alpha1.KeyValueObject, error) {
+	ctx, span := traceutil.Continue(ctx, "kv.object.Put", serviceutil.Storage, trace.WithAttributes(
+		attribute.String("typeURL", typeURL),
+	))
+	defer span.End()
 	return s.revisions.Put(ctx, s.keyPath(typeURL, key), typeURL, revision, obj)
 }
 
 func (s *StorageProtoObject) Get(ctx context.Context, typeURL string, key string) (*keyvalue_v1alpha1.KeyValueObject, error) {
+	ctx, span := traceutil.Continue(ctx, "kv.object.Get", serviceutil.Storage, trace.WithAttributes(
+		attribute.String("typeURL", typeURL),
+	))
+	defer span.End()
 	return s.revisions.Get(ctx, s.keyPath(typeURL, key))
 }
 
@@ -65,6 +65,10 @@ func (s *StorageProtoObject) GetRevision(ctx context.Context, typeURL, key strin
 }
 
 func (s *StorageProtoObject) ListKeys(ctx context.Context, typeURL string) ([]string, error) {
+	ctx, span := traceutil.Continue(ctx, "kv.object.ListKeys", serviceutil.Storage, trace.WithAttributes(
+		attribute.String("typeURL", typeURL),
+	))
+	defer span.End()
 	latest, err := s.revisions.ListLatest(ctx, s.protoPath(typeURL))
 	if err != nil {
 		return nil, err
@@ -78,6 +82,10 @@ func (s *StorageProtoObject) ListKeys(ctx context.Context, typeURL string) ([]st
 }
 
 func (s *StorageProtoObject) List(ctx context.Context, typeURL string) ([]*keyvalue_v1alpha1.KeyValueObject, error) {
+	ctx, span := traceutil.Continue(ctx, "kv.object.List", serviceutil.Storage, trace.WithAttributes(
+		attribute.String("typeURL", typeURL),
+	))
+	defer span.End()
 	latest, err := s.revisions.ListLatest(ctx, s.protoPath(typeURL))
 	if err != nil {
 		return nil, err
@@ -95,10 +103,18 @@ func (s *StorageProtoObject) List(ctx context.Context, typeURL string) ([]*keyva
 }
 
 func (s *StorageProtoObject) Delete(ctx context.Context, typeURL, key string) error {
+	ctx, span := traceutil.Continue(ctx, "kv.object.Delete", serviceutil.Storage, trace.WithAttributes(
+		attribute.String("typeURL", typeURL),
+	))
+	defer span.End()
 	return s.revisions.Delete(ctx, s.keyPath(typeURL, key))
 }
 
 func (s *StorageProtoObject) History(ctx context.Context, typeURL, key string, offset, limit uint64) (*keyvalue_v1alpha1.GetHistoryResponse, error) {
+	ctx, span := traceutil.Continue(ctx, "kv.object.History", serviceutil.Storage, trace.WithAttributes(
+		attribute.String("typeURL", typeURL),
+	))
+	defer span.End()
 	base := s.keyPath(typeURL, key)
 	resp, err := s.revisions.History(ctx, base, offset, limit)
 	if err != nil {
@@ -109,6 +125,10 @@ func (s *StorageProtoObject) History(ctx context.Context, typeURL, key string, o
 }
 
 func (s *StorageProtoObject) Watch(ctx context.Context, typeURL, prefix string) (<-chan *keyvalue_v1alpha1.WatchEvent, error) {
+	ctx, span := traceutil.Continue(ctx, "kv.object.Watch.start", serviceutil.Storage, trace.WithAttributes(
+		attribute.String("typeURL", typeURL),
+	))
+	defer span.End()
 	base := s.keyPath(typeURL, prefix)
 	resp, err := s.revisions.Watch(ctx, base)
 	if err != nil {

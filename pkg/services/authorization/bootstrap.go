@@ -5,7 +5,6 @@ import (
 	"crypto"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -20,6 +19,7 @@ import (
 	bootstrapconnect "github.com/otelfleet/otelfleet/pkg/api/bootstrap/v1alpha1/v1alpha1connect"
 	"github.com/otelfleet/otelfleet/pkg/bootstrap"
 	"github.com/otelfleet/otelfleet/pkg/ecdh"
+	"github.com/otelfleet/otelfleet/pkg/logutil"
 	otelfleetsvc "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
@@ -32,14 +32,13 @@ import (
 // for secure vs insecure implementations
 type Bootstrapper interface {
 	VerifyToken(context.Context, http.Header) (token string, err error)
-	DeriveSharedSecret(*v1alpha1bootstrap.BootstrapAuthRequest) (sharedSecret []byte, keypair ecdh.EphemeralKeyPair, err error)
+	DeriveSharedSecret(context.Context, *v1alpha1bootstrap.BootstrapAuthRequest) (sharedSecret []byte, keypair ecdh.EphemeralKeyPair, err error)
 }
 
 type BootstrapServer struct {
 	tokenStore object.KeyValue[*v1alpha1bootstrap.BootstrapToken]
 
 	privateKey crypto.Signer
-	logger     *slog.Logger
 	services.Service
 
 	bootstrapper Bootstrapper
@@ -51,15 +50,13 @@ var _ bootstrapconnect.TokenServiceHandler = (*BootstrapServer)(nil)
 var _ bootstrapconnect.BootstrapServiceHandler = (*BootstrapServer)(nil)
 
 func NewBootstrapServer(
-	logger *slog.Logger,
 	privateKey crypto.Signer,
 	tokenStore object.KeyValue[*v1alpha1bootstrap.BootstrapToken],
 ) *BootstrapServer {
 	b := &BootstrapServer{
 		tokenStore:   tokenStore,
 		privateKey:   privateKey,
-		logger:       logger,
-		bootstrapper: NewBootstrapper(logger, tokenStore, privateKey),
+		bootstrapper: NewBootstrapper(tokenStore, privateKey),
 	}
 
 	b.Service = services.NewBasicService(nil, b.running, nil)
@@ -72,7 +69,6 @@ func (b *BootstrapServer) running(ctx context.Context) error {
 }
 
 func (b *BootstrapServer) ConfigureHTTP(reg otelfleetsvc.HTTPRegistrar) {
-	b.logger.Info("configuring routes")
 	bootstrapconnect.RegisterTokenServiceHandler(reg.Router(), b, reg.ConnectOptions()...)
 	bootstrapconnect.RegisterBootstrapServiceHandler(reg.Router(), b, reg.ConnectOptions()...)
 }
@@ -106,9 +102,9 @@ func (b *BootstrapServer) ListTokens(ctx context.Context, _ *connect.Request[emp
 	}
 	now := time.Now()
 	for _, token := range tokens {
-		b.logger.With("expire", token.Expiry.AsTime(), "now", now).Debug("token expiry check")
+		logutil.FromContext(ctx).With("expire", token.Expiry.AsTime(), "now", now).Debug("token expiry check")
 		if token.Expiry.AsTime().Before(now) {
-			go b.gc(token.ID)
+			go b.gc(context.WithoutCancel(ctx), token.ID)
 		}
 	}
 
@@ -123,7 +119,7 @@ func (b *BootstrapServer) DeleteToken(ctx context.Context, connectReq *connect.R
 	if err := req.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	b.logger.With("key", req.ID).Debug("deleting key")
+	logutil.FromContext(ctx).With("key", req.ID).Debug("deleting key")
 	if err := b.tokenStore.Delete(ctx, req.ID); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -134,18 +130,18 @@ func (b *BootstrapServer) Signatures(ctx context.Context, req *connect.Request[e
 	signatures := map[string][]byte{}
 	tokenList, err := b.tokenStore.List(ctx)
 	if err != nil {
-		b.logger.With("err", err).Error("failed to list tokens")
+		logutil.FromContext(ctx).With("err", err).Error("failed to list tokens")
 		return nil, grpcutil.ErrorInternal(err)
 	}
 	for _, tok := range tokenList {
 		rawToken, err := bootstrap.FromBootstrapToken(tok)
 		if err != nil {
-			b.logger.With("err", err).Error("failed to convert bootstrap token")
+			logutil.FromContext(ctx).With("err", err).Error("failed to convert bootstrap token")
 			return nil, grpcutil.ErrorInternal(err)
 		}
 		sig, err := rawToken.SignDetached(b.privateKey)
 		if err != nil {
-			b.logger.With("err", err).Error("failed to sign token")
+			logutil.FromContext(ctx).With("err", err).Error("failed to sign token")
 			return nil, grpcutil.ErrorInternal(err)
 		}
 		signatures[rawToken.HexID()] = sig
@@ -177,12 +173,12 @@ func (b *BootstrapServer) Bootstrap(ctx context.Context, req *connect.Request[v1
 		return nil, err
 	}
 
-	sharedSecret, ekp, err := b.bootstrapper.DeriveSharedSecret(req.Msg)
+	sharedSecret, ekp, err := b.bootstrapper.DeriveSharedSecret(ctx, req.Msg)
 	if err != nil {
 		return nil, grpcutil.ErrorInvalid(err)
 	}
 
-	b.logger.With("shared-secret", sharedSecret).Info("got shared secret")
+	logutil.FromContext(ctx).With("shared-secret", sharedSecret).Info("got shared secret")
 	return connect.NewResponse(
 		&v1alpha1bootstrap.BootstrapAuthResponse{
 			ServerPubKey: ekp.PublicKey.Bytes(),
@@ -190,38 +186,35 @@ func (b *BootstrapServer) Bootstrap(ctx context.Context, req *connect.Request[v1
 	), nil
 }
 
-func (b *BootstrapServer) gc(key string) {
-	b.logger.With("key", key).Debug("garbage collecting token")
+func (b *BootstrapServer) gc(parent context.Context, key string) {
+	logger := logutil.FromContext(parent).With("key", key)
+	logger.Debug("garbage collecting token")
 
 	go func() {
-		ctx, ca := context.WithTimeout(context.Background(), time.Minute)
+		ctx, ca := context.WithTimeout(parent, time.Minute)
 		defer ca()
 		if err := b.tokenStore.Delete(ctx, key); err != nil {
-			b.logger.With("key", key, "err", err).Error("failed to delete token")
+			logger.With("err", err).Error("failed to delete token")
 		}
 	}()
 }
 
-type noopBootstrapper struct {
-	logger *slog.Logger
-}
+type noopBootstrapper struct{}
 
-func NewNoopBootstrapper(logger *slog.Logger) *noopBootstrapper {
-	return &noopBootstrapper{
-		logger: logger.With("bootstrapper", "no-op"),
-	}
+func NewNoopBootstrapper() *noopBootstrapper {
+	return &noopBootstrapper{}
 }
 
 var _ Bootstrapper = (*noopBootstrapper)(nil)
 
-func (n *noopBootstrapper) VerifyToken(_ context.Context, headers http.Header) (string, error) {
+func (n *noopBootstrapper) VerifyToken(ctx context.Context, headers http.Header) (string, error) {
 	token := strings.TrimSpace(headers.Get("Authorization"))
-	n.logger.With("token", token).Debug("verified token")
+	logutil.FromContext(ctx).With("bootstrapper", "no-op", "token", token).Debug("verified token")
 	return token, nil
 }
 
-func (n *noopBootstrapper) DeriveSharedSecret(*v1alpha1bootstrap.BootstrapAuthRequest) (sharedSecret []byte, keyapir ecdh.EphemeralKeyPair, err error) {
-	n.logger.Debug("derived shared secret")
+func (n *noopBootstrapper) DeriveSharedSecret(ctx context.Context, _ *v1alpha1bootstrap.BootstrapAuthRequest) (sharedSecret []byte, keyapir ecdh.EphemeralKeyPair, err error) {
+	logutil.FromContext(ctx).With("bootstrapper", "no-op").Debug("derived shared secret")
 	return []byte{}, ecdh.EphemeralKeyPair{
 		PublicKey:  &cryptoecdh.PublicKey{},
 		PrivateKey: &cryptoecdh.PrivateKey{},
@@ -229,7 +222,6 @@ func (n *noopBootstrapper) DeriveSharedSecret(*v1alpha1bootstrap.BootstrapAuthRe
 }
 
 type secureBootstrapper struct {
-	logger     *slog.Logger
 	tokenStore object.KeyValue[*v1alpha1bootstrap.BootstrapToken]
 	privateKey crypto.Signer
 }
@@ -237,12 +229,10 @@ type secureBootstrapper struct {
 var _ Bootstrapper = (*secureBootstrapper)(nil)
 
 func NewSecureBootstrapper(
-	logger *slog.Logger,
 	tokenStore object.KeyValue[*v1alpha1bootstrap.BootstrapToken],
 	privateKey crypto.Signer,
 ) *secureBootstrapper {
 	return &secureBootstrapper{
-		logger:     logger.With("bootstrapper", "secure"),
 		tokenStore: tokenStore,
 		privateKey: privateKey,
 	}
@@ -274,7 +264,7 @@ func (s *secureBootstrapper) VerifyToken(ctx context.Context, headers http.Heade
 	return id, nil
 }
 
-func (s *secureBootstrapper) DeriveSharedSecret(bootstrapReq *v1alpha1bootstrap.BootstrapAuthRequest) ([]byte, ecdh.EphemeralKeyPair, error) {
+func (s *secureBootstrapper) DeriveSharedSecret(_ context.Context, bootstrapReq *v1alpha1bootstrap.BootstrapAuthRequest) ([]byte, ecdh.EphemeralKeyPair, error) {
 	kp := ecdh.EphemeralKeyPair{}
 	ekp := ecdh.NewEphemeralKeyPair()
 	clientPubKey, err := ecdh.ClientPubKey(bootstrapReq)

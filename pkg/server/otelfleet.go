@@ -32,7 +32,7 @@ import (
 	storagesvc "github.com/otelfleet/otelfleet/pkg/services/storage"
 	"github.com/otelfleet/otelfleet/pkg/storage/object"
 	"github.com/otelfleet/otelfleet/pkg/util/connectutil"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"github.com/otelfleet/otelfleet/pkg/util/serviceutil"
 )
 
 func initLogger(logFormat string, logLevel dslog.Level) *logger {
@@ -57,38 +57,13 @@ type logger struct {
 	log.Logger
 }
 
-// The various modules that make up OtelFleet
-const (
-	All               = "all"
-	Storage           = "storage"
-	Auth              = "authorization"
-	ServerService     = "server"
-	OpAmp             = "opamp"
-	ConfigOTEL        = "config-otel"
-	DeploymentManager = "deployment-manager"
-	// DeploymentModule = "deployment"
-	LSP = "lsp"
-	// UI serves the web UI. Attached to the all-in-one target only.
-	UI = "ui"
-	// Embedded OTLP service
-	OTLP = "otlp"
-	// Resource server is the API over the first class resources in the data layer.
-	Resource = "resource"
-	// Events server is the API responsible for listing/watching events.
-	Events = "events"
-	// Gatewat acts as the control plane service. This is the public
-	// entry point for all other services, whether other services
-	// run in-process or not
-	Gateway = "gateway"
-)
-
 type OtelFleet struct {
-	logger *slog.Logger
-	tp     *sdktrace.TracerProvider
-	cfg    config.Config
+	logger  *slog.Logger
+	cfg     config.Config
+	tracers otelfleet_svc.TracerProviderFactory
 
 	mm   *modules.Manager
-	deps map[string][]string
+	deps map[serviceutil.Module][]serviceutil.Module
 
 	store      *storagesvc.StorageService
 	tokenStore object.KeyValue[*bootstrapv1alpha1.BootstrapToken]
@@ -107,12 +82,12 @@ type OtelFleet struct {
 	grpcInstrumentation *otelfleet_svc.GRPCInstrumentation
 }
 
-func New(cfg config.Config, tp *sdktrace.TracerProvider) (*OtelFleet, error) {
+func New(cfg config.Config, tracers otelfleet_svc.TracerProviderFactory) (*OtelFleet, error) {
 	l := slog.Default()
 	f := &OtelFleet{
-		logger: l,
-		tp:     tp,
-		cfg:    cfg,
+		logger:  l,
+		cfg:     cfg,
+		tracers: tracers,
 		connectOpts: []connect.HandlerOption{
 			connect.WithInterceptors(validate.NewInterceptor(), connectutil.StatusInterceptor()),
 		},
@@ -149,6 +124,12 @@ func New(cfg config.Config, tp *sdktrace.TracerProvider) (*OtelFleet, error) {
 			Option: level.AllowInfo(),
 		},
 	}
+	conf.GRPCMiddleware = append(conf.GRPCMiddleware,
+		otelfleet_svc.GRPCUnaryInstrumentation(l.With("service", serviceutil.OTLP), tracers.Provider(serviceutil.OTLP)),
+	)
+	conf.GRPCStreamMiddleware = append(conf.GRPCStreamMiddleware,
+		otelfleet_svc.GRPCStreamInstrumentation(l.With("service", serviceutil.OTLP), tracers.Provider(serviceutil.OTLP)),
+	)
 	if cfg.Certificates != nil {
 		conf.HTTPTLSConfig = server.TLSConfig{
 			TLSCertPath: cfg.Certificates.Server.CertFile,
@@ -170,10 +151,7 @@ func New(cfg config.Config, tp *sdktrace.TracerProvider) (*OtelFleet, error) {
 	}
 	f.server = srv
 	f.serverConf = conf
-	f.httpInstrumentation, err = otelfleet_svc.NewHTTPInstrumentation(srv.HTTP, l, tp, f.connectOpts...)
-	if err != nil {
-		return nil, fmt.Errorf("configure HTTP instrumentation: %w", err)
-	}
+	f.httpInstrumentation = otelfleet_svc.NewHTTPInstrumentation(srv.HTTP, l, tracers, f.connectOpts...)
 	f.grpcInstrumentation = otelfleet_svc.NewGRPCInstrumentation(srv.GRPC)
 
 	if err := f.setupModuleManager(); err != nil {

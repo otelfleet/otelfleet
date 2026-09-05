@@ -20,8 +20,6 @@ import (
 )
 
 type StorageService struct {
-	logger *slog.Logger
-
 	protoStore object.TypeURLStore
 	cfg        *config.StorageConfig
 
@@ -40,10 +38,10 @@ var _ otelfleet_svc.HTTPService = (*StorageService)(nil)
 func NewStorageService(
 	logger *slog.Logger,
 	cfg *config.StorageConfig,
+	clientOpts ...connect.ClientOption,
 ) (*StorageService, error) {
 	s := &StorageService{
-		logger: logger,
-		cfg:    cfg,
+		cfg: cfg,
 	}
 	var protoStore object.TypeURLStore
 	if cfg.File != nil {
@@ -65,11 +63,12 @@ func NewStorageService(
 	}
 	if cfg.Client != nil {
 		logger.With("client-addr", cfg.Client.HttpAddr).Info("starting storage in remote mode")
+		options := append([]connect.ClientOption{connect.WithHTTPGet()}, clientOpts...)
 		client := v1alpha1connect.NewKeyValueServiceClient(
 			http.DefaultClient,
 			// TODO : we need to validate the address is valid
 			"http://"+cfg.Client.HttpAddr,
-			connect.WithHTTPGet(),
+			options...,
 		)
 		protoStore = otelgrpc.NewRemoteKV(client)
 		s.KeyValueServiceHandler = transport.NewErroringServer(connect.CodeUnimplemented, fmt.Errorf("unimplemented"))
@@ -101,6 +100,5 @@ func (s *StorageService) Schema() object.TypeURLStore {
 }
 
 func (s *StorageService) ConfigureHTTP(reg otelfleet_svc.HTTPRegistrar) {
-	s.logger.Info("configuring routes")
 	v1alpha1connect.RegisterKeyValueServiceHandler(reg.Router(), s, reg.ConnectOptions()...)
 }

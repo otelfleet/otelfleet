@@ -3,7 +3,6 @@ package deployment
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"connectrpc.com/connect"
 	"github.com/grafana/dskit/services"
@@ -11,6 +10,7 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/api/deployment/v1alpha1/v1alpha1connect"
 	routev1alpha1 "github.com/otelfleet/otelfleet/pkg/api/route/v1alpha1"
 	"github.com/otelfleet/otelfleet/pkg/deployment"
+	"github.com/otelfleet/otelfleet/pkg/logutil"
 	"github.com/otelfleet/otelfleet/pkg/router"
 	otelfleetsvc "github.com/otelfleet/otelfleet/pkg/services"
 	"github.com/otelfleet/otelfleet/pkg/util"
@@ -21,8 +21,6 @@ import (
 )
 
 type DeploymentServer struct {
-	logger *slog.Logger
-
 	mgr deployment.Manager
 
 	services.Service
@@ -31,13 +29,9 @@ type DeploymentServer struct {
 var _ v1alpha1connect.CollectorServiceHandler = (*DeploymentServer)(nil)
 var _ otelfleetsvc.HTTPService = (*DeploymentServer)(nil)
 
-func NewDeploymentServer(
-	logger *slog.Logger,
-	mgr deployment.Manager,
-) *DeploymentServer {
+func NewDeploymentServer(mgr deployment.Manager) *DeploymentServer {
 	a := &DeploymentServer{
-		logger: logger,
-		mgr:    mgr,
+		mgr: mgr,
 	}
 	a.Service = services.NewBasicService(nil, a.running, nil)
 	return a
@@ -49,7 +43,6 @@ func (a *DeploymentServer) running(ctx context.Context) error {
 }
 
 func (a *DeploymentServer) ConfigureHTTP(reg otelfleetsvc.HTTPRegistrar) {
-	a.logger.Info("configuring routes")
 	v1alpha1connect.RegisterCollectorServiceHandler(reg.Router(), a, reg.ConnectOptions()...)
 }
 
@@ -61,7 +54,7 @@ func (a *DeploymentServer) ListCollectors(
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to list collectors: %w", err))
 	}
 
-	a.logger.With("numCollectors", len(collectors)).Debug("found collectors")
+	logutil.FromContext(ctx).With("numCollectors", len(collectors)).Debug("found collectors")
 
 	descAndStatus := make([]*v1alpha1.CollectorView, 0, len(collectors))
 	for _, collector := range collectors {
@@ -133,17 +126,18 @@ func (a *DeploymentServer) DeleteCollector(ctx context.Context, req *connect.Req
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("collector_id must not be empty"))
 	}
 
-	a.logger.With("collector_id", collectorID).Info("deleting collector")
+	logger := logutil.FromContext(ctx).With("collector_id", collectorID)
+	logger.Info("deleting collector")
 
 	if err := a.mgr.Delete(ctx, collectorID); err != nil {
 		if status.Code(err) == codes.NotFound {
 			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("collector not found: %s", collectorID))
 		}
-		a.logger.With("collector_id", collectorID, "err", err).Error("failed to delete collector")
+		logger.With("err", err).Error("failed to delete collector")
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to delete collector: %w", err))
 	}
 
-	a.logger.With("collector_id", collectorID).Info("collector deleted successfully")
+	logger.Info("collector deleted successfully")
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
@@ -151,7 +145,7 @@ func (a *DeploymentServer) CollectorHistory(ctx context.Context, req *connect.Re
 	collectorID := req.Msg.GetCollectorId()
 	offset, limit := req.Msg.GetOffset(), req.Msg.GetLimit()
 
-	a.logger.With("collector_id", collectorID).Debug("requesting collector history")
+	logutil.FromContext(ctx).With("collector_id", collectorID).Debug("requesting collector history")
 	inst, err := a.mgr.Get(ctx, collectorID)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {

@@ -2,7 +2,6 @@ package resource
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/api/resources/v1alpha1"
@@ -22,7 +21,6 @@ type Server struct {
 var _ otelfleet_svc.HTTPService = (*Server)(nil)
 
 func NewServer(
-	l *slog.Logger,
 	genericStorage object.TypeURLStore,
 ) *Server {
 	s := &Server{

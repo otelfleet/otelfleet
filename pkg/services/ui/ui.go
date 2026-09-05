@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -19,7 +18,6 @@ import (
 type UIService struct {
 	services.Service
 
-	logger  *slog.Logger
 	cfg     *config.UIConfig
 	handler http.Handler
 	proxy   http.Handler
@@ -27,10 +25,9 @@ type UIService struct {
 
 var _ otelfleetsvc.HTTPService = (*UIService)(nil)
 
-func NewUIService(logger *slog.Logger, cfg *config.UIConfig) (*UIService, error) {
+func NewUIService(cfg *config.UIConfig) (*UIService, error) {
 	u := &UIService{
-		logger: logger,
-		cfg:    cfg,
+		cfg: cfg,
 	}
 
 	handler, err := u.buildHandler()
@@ -97,7 +94,6 @@ func serveIndex(w http.ResponseWriter, index []byte) {
 }
 
 func (u *UIService) ConfigureHTTP(reg otelfleetsvc.HTTPRegistrar) {
-	u.logger.With("prefix", u.cfg.PathPrefix, "proxy", u.proxy != nil).Info("mounting UI on shared listener")
 	u.mountWithRegistrar(reg)
 }
 
