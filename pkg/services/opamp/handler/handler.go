@@ -30,6 +30,8 @@ import (
 	"github.com/otelfleet/otelfleet/pkg/util/grpcutil"
 	"github.com/otelfleet/otelfleet/pkg/util/opamputil"
 	"github.com/otelfleet/otelfleet/pkg/util/protoutil"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -40,6 +42,7 @@ var _ services_int.OpAmpServerHandler = (*CollectorHandler)(nil)
 type CollectorHandler struct {
 	ctx    context.Context
 	logger *slog.Logger
+	tracer trace.Tracer
 
 	// serverAssignedConnID is a temporary ID
 	// assigned by the server to identify the agent
@@ -106,6 +109,7 @@ func NewCollectorHandler(
 		principal:            principal,
 		agentCA:              agentCa,
 		credentials:          credentials,
+		tracer:               otel.Tracer("OpAmp"),
 	}
 }
 
@@ -115,6 +119,8 @@ func NewCollectorHandler(
 // OnConnected is called when an incoming OpAMP connection is successfully
 // established after OnConnecting() returns.
 func (s *CollectorHandler) OnConnected(ctx context.Context, conn types.Connection) {
+	ctx, span := s.tracer.Start(ctx, "OpAmp.OnConnected")
+	defer span.End()
 	s.logger.With("addr", conn.Connection().RemoteAddr().String()).Info("agent connected")
 }
 
@@ -126,6 +132,8 @@ func (s *CollectorHandler) OnConnected(ctx context.Context, conn types.Connectio
 // For plain HTTP requests once OnMessage returns and the response is sent
 // to the Agent the OnConnectionClose message will be called immediately.
 func (s *CollectorHandler) OnMessage(ctx context.Context, conn types.Connection, message *protobufs.AgentToServer) *protobufs.ServerToAgent {
+	ctx, span := s.tracer.Start(ctx, "OpAmp.OnMessage")
+	defer span.End()
 	instanceUID := fmt.Sprintf("%x", message.InstanceUid)
 	logger := s.logger.With("instance-uid", instanceUID)
 	logger.With("sequenceNum", message.SequenceNum).Debug("received message from agent")
@@ -133,6 +141,7 @@ func (s *CollectorHandler) OnMessage(ctx context.Context, conn types.Connection,
 
 	// bootstrap
 	if s.instanceUID == nil {
+		span.AddEvent("bootstrap")
 		if msg := s.bootstrap(ctx, logger, instanceUID, message); msg != nil {
 			return msg
 		}
@@ -143,6 +152,7 @@ func (s *CollectorHandler) OnMessage(ctx context.Context, conn types.Connection,
 	}
 	// Update connection state and check for sequence gaps
 	needsFullState := s.updateConnectionState(ctx, message)
+	span.AddEvent("updated connection state")
 
 	if err := s.persistAgentInformation(ctx, message); err != nil {
 		return opamputil.ErrorResponse(message.InstanceUid, opamputil.NewUnavailableError(err.Error()))
@@ -331,6 +341,9 @@ func (s *CollectorHandler) getCollectorName(ctx context.Context) string {
 
 // OnConnectionClose is called when the OpAMP connection is closed.
 func (s *CollectorHandler) OnConnectionClose(conn types.Connection) {
+	ctx := context.TODO()
+	ctx, span := s.tracer.Start(ctx, "OpAmp.OnConnectionClose")
+	defer span.End()
 	remoteAddr := conn.Connection().RemoteAddr().String()
 	logger := s.logger.With("remote_addr", remoteAddr)
 	logger.Info("collector disconnected")
@@ -341,7 +354,6 @@ func (s *CollectorHandler) OnConnectionClose(conn types.Connection) {
 	}
 
 	// Persist disconnected state
-	ctx := context.Background()
 	existingState, err := s.inst.GetConnectionState(ctx)
 	if err != nil {
 		if grpcutil.IsErrorNotFound(err) {
@@ -363,6 +375,8 @@ func (s *CollectorHandler) OnConnectionClose(conn types.Connection) {
 
 // OnReadMessageError is called when an error occurs while reading or deserializing a message.
 func (s *CollectorHandler) OnReadMessageError(conn types.Connection, mt int, msgByte []byte, err error) {
+	_, span := s.tracer.Start(context.TODO(), "OpAmp.OnReadMessageError")
+	defer span.End()
 	s.logger.
 		With("remote-addr", conn.Connection().RemoteAddr().String()).
 		With("msg", string(msgByte)).
@@ -372,6 +386,8 @@ func (s *CollectorHandler) OnReadMessageError(conn types.Connection, mt int, msg
 
 // OnMessageResponseError is called when an error occurs while sending the response message from the OnMessage loop.
 func (s *CollectorHandler) OnMessageResponseError(conn types.Connection, message *protobufs.ServerToAgent, err error) {
+	_, span := s.tracer.Start(context.TODO(), "OpAmp.OnReadMessageError")
+	defer span.End()
 	s.logger.
 		With("remote-addr", conn.Connection().RemoteAddr().String()).
 		With("msg", string(message.String())).

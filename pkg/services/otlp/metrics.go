@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 
+	"github.com/otelfleet/otelfleet/pkg/logutil"
 	colmetricspb "go.opentelemetry.io/proto/otlp/collector/metrics/v1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -14,12 +14,11 @@ import (
 )
 
 type MetricsServer struct {
-	l *slog.Logger
 	colmetricspb.UnsafeMetricsServiceServer
 }
 
 func (s *MetricsServer) Export(ctx context.Context, req *colmetricspb.ExportMetricsServiceRequest) (*colmetricspb.ExportMetricsServiceResponse, error) {
-	s.l.Info("received")
+	logutil.FromContext(ctx).With("signal", "metrics").Info("received")
 	return &colmetricspb.ExportMetricsServiceResponse{}, nil
 }
 

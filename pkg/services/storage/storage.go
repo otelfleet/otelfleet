@@ -8,7 +8,6 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/cockroachdb/pebble/v2"
-	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/api/keyvalue/v1alpha1/v1alpha1connect"
 	"github.com/otelfleet/otelfleet/pkg/config"
@@ -21,8 +20,6 @@ import (
 )
 
 type StorageService struct {
-	logger *slog.Logger
-
 	protoStore object.TypeURLStore
 	cfg        *config.StorageConfig
 
@@ -34,17 +31,17 @@ type StorageService struct {
 }
 
 var _ services.Service = (*StorageService)(nil)
-var _ otelfleet_svc.HTTPExtension = (*StorageService)(nil)
+var _ otelfleet_svc.HTTPService = (*StorageService)(nil)
 
 // var _ types.KVBroker = (*StorageService)(nil)
 
 func NewStorageService(
 	logger *slog.Logger,
 	cfg *config.StorageConfig,
+	clientOpts ...connect.ClientOption,
 ) (*StorageService, error) {
 	s := &StorageService{
-		logger: logger,
-		cfg:    cfg,
+		cfg: cfg,
 	}
 	var protoStore object.TypeURLStore
 	if cfg.File != nil {
@@ -66,11 +63,12 @@ func NewStorageService(
 	}
 	if cfg.Client != nil {
 		logger.With("client-addr", cfg.Client.HttpAddr).Info("starting storage in remote mode")
+		options := append([]connect.ClientOption{connect.WithHTTPGet()}, clientOpts...)
 		client := v1alpha1connect.NewKeyValueServiceClient(
 			http.DefaultClient,
 			// TODO : we need to validate the address is valid
 			"http://"+cfg.Client.HttpAddr,
-			connect.WithHTTPGet(),
+			options...,
 		)
 		protoStore = otelgrpc.NewRemoteKV(client)
 		s.KeyValueServiceHandler = transport.NewErroringServer(connect.CodeUnimplemented, fmt.Errorf("unimplemented"))
@@ -101,7 +99,6 @@ func (s *StorageService) Schema() object.TypeURLStore {
 	return s.protoStore
 }
 
-func (s *StorageService) ConfigureHTTP(mux *mux.Router, opts []connect.HandlerOption) {
-	s.logger.Info("configuring routes")
-	v1alpha1connect.RegisterKeyValueServiceHandler(mux, s, opts...)
+func (s *StorageService) ConfigureHTTP(reg otelfleet_svc.HTTPRegistrar) {
+	v1alpha1connect.RegisterKeyValueServiceHandler(reg.Router(), s, reg.ConnectOptions()...)
 }

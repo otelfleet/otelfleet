@@ -2,12 +2,9 @@ package otlp
 
 import (
 	"context"
-	"log/slog"
 	"net/http"
 	"path"
 
-	"connectrpc.com/connect"
-	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
 	"github.com/otelfleet/otelfleet/pkg/auth/authenticator"
 	"github.com/otelfleet/otelfleet/pkg/config"
@@ -15,7 +12,6 @@ import (
 	collogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
 	colmetricspb "go.opentelemetry.io/proto/otlp/collector/metrics/v1"
 	coltracespb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -33,23 +29,17 @@ type Server struct {
 	authenticator authenticator.Authenticator
 }
 
-var _ otelfleet_svc.HTTPExtension = (*Server)(nil)
+var _ otelfleet_svc.HTTPService = (*Server)(nil)
+var _ otelfleet_svc.GRPCService = (*Server)(nil)
 
 func NewServer(
-	l *slog.Logger,
 	config *config.OTLPConfig,
 	authenticator authenticator.Authenticator,
 ) *Server {
 	s := &Server{
-		traceServer: &TracesServer{
-			l: l.With("type", "traces"),
-		},
-		metricsServer: &MetricsServer{
-			l: l.With("type", "metrics"),
-		},
-		logsServer: &LogsServer{
-			l: l.With("type", "logs"),
-		},
+		traceServer:   &TracesServer{},
+		metricsServer: &MetricsServer{},
+		logsServer:    &LogsServer{},
 		config:        config,
 		authenticator: authenticator,
 	}
@@ -71,16 +61,16 @@ func (s *Server) stop(error) error {
 	return nil
 }
 
-func (s *Server) ConfigureGRPC(srv *grpc.Server) {
-	srv.RegisterService(&colmetricspb.MetricsService_ServiceDesc, s.metricsServer)
-	srv.RegisterService(&coltracespb.TraceService_ServiceDesc, s.traceServer)
-	srv.RegisterService(&collogspb.LogsService_ServiceDesc, s.logsServer)
+func (s *Server) ConfigureGRPC(reg otelfleet_svc.GRPCRegistrar) {
+	reg.RegisterService(&colmetricspb.MetricsService_ServiceDesc, s.metricsServer)
+	reg.RegisterService(&coltracespb.TraceService_ServiceDesc, s.traceServer)
+	reg.RegisterService(&collogspb.LogsService_ServiceDesc, s.logsServer)
 }
 
-func (s *Server) ConfigureHTTP(mux *mux.Router, _ []connect.HandlerOption) {
+func (s *Server) ConfigureHTTP(reg otelfleet_svc.HTTPRegistrar) {
 	register := func(route string, next http.Handler) {
 		next = s.checkAuth(next)
-		mux.Handle(route, next)
+		reg.Handle(route, next)
 	}
 	register(
 		path.Join(s.config.BasePath, s.config.MetricsAPIPath),

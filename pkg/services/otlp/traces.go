@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 
+	"github.com/otelfleet/otelfleet/pkg/logutil"
 	coltracespb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -14,12 +14,11 @@ import (
 )
 
 type TracesServer struct {
-	l *slog.Logger
 	coltracespb.UnsafeTraceServiceServer
 }
 
 func (s *TracesServer) Export(ctx context.Context, req *coltracespb.ExportTraceServiceRequest) (*coltracespb.ExportTraceServiceResponse, error) {
-	s.l.Info("received")
+	logutil.FromContext(ctx).With("signal", "traces").Info("received")
 	return &coltracespb.ExportTraceServiceResponse{}, nil
 }
 
